@@ -1,0 +1,9 @@
+const OTP_TYPE = {
+    ENABLE_2FA: 'ENABLE_2FA',
+    DISABLE_2FA: 'DISABLE_2FA',
+    RESET_PASSWORD: 'RESET_PASSWORD',
+    LOGIN_2FA: 'LOGIN_2FA',
+
+}
+
+export default OTP_TYPE;

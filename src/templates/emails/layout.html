@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>{{subject}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        /* Một số client vẫn hỗ trợ style trong <style>, phần còn lại để inline */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .wrap {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f5f7fa;
+            padding: 24px 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            color: #222;
+        }
+
+        .header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .brand {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 0.2px;
+        }
+
+        .content {
+            padding: 24px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .footer {
+            padding: 16px 24px 24px 24px;
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+            border-top: 1px solid #eef2f7;
+            background: #fafafa;
+        }
+
+        .muted {
+            color: #6b7280;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            background: #2563eb;
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        /* Preheader ẩn cho preview trong hộp thư */
+        .preheader {
+            display: none !important;
+            visibility: hidden;
+            opacity: 0;
+            height: 0;
+            width: 0;
+            overflow: hidden;
+            mso-hide: all;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Preheader (ẩn) -->
+    <div class="preheader">{{preheader}}</div>
+
+    <div class="wrap">
+        <div class="container">
+            <div class="header">
+                <div class="brand">{{appName}}</div>
+            </div>
+
+            <div class="content">
+                {{{body}}}
+            </div>
+
+            <div class="footer">
+                Đây là email tự động từ hệ thống {{appName}}.<br />
+                © {{year}} {{appName}}. All rights reserved.
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
