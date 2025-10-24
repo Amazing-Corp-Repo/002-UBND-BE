@@ -14,13 +14,13 @@ pipeline {
       }
     }
     stage('Checkout') {
-      when { expression { def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,''); return b ==~ /longt.*/ } }
+      when { anyOf { branch 'longt2'; changeRequest() } }
       steps {
         checkout scm
       }
     }
     stage('Prepare .env from Jenkins Secret') {
-      when { expression { def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,''); return b ==~ /longt.*/ } }
+      when { branch 'longt2' }
       steps {
         script {
           // Create a secret file credential in Jenkins with ID: 'ubnd_env_file'
@@ -32,20 +32,20 @@ pipeline {
       }
     }
     stage('Build') {
-      when { expression { def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,''); return b ==~ /longt.*/ } }
+      when { anyOf { branch 'longt2'; changeRequest() } }
       steps {
         sh "${COMPOSE_CMD} build"
       }
     }
     stage('Migrate DB (Prisma)') {
-      when { expression { def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,''); return b ==~ /longt.*/ } }
+      when { branch 'longt2' }
       steps {
         // Run migrations if present; else push schema
         sh "${COMPOSE_CMD} run --rm app sh -lc 'npx prisma migrate deploy || npx prisma db push'"
       }
     }
     stage('Deploy Up') {
-      when { expression { def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,''); return b ==~ /longt.*/ } }
+      when { branch 'longt2' }
       steps {
         sh "${COMPOSE_CMD} up -d"
       }
