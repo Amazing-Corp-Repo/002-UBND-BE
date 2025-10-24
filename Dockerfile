@@ -5,7 +5,9 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 COPY package*.json ./
-RUN npm ci
+# Skip lifecycle scripts (postinstall) during dependency install to avoid
+# running `prisma generate` before schema is available in the image.
+RUN npm ci --ignore-scripts
 
 # Copy prisma schema and generate client during build
 COPY prisma ./prisma
