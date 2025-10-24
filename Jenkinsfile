@@ -44,7 +44,7 @@ pipeline {
       }
     }
     stage('Deploy Up') {
-      when { branch 'longt' }
+      when { branch 'longt2' }
       steps {
         sh "${COMPOSE_CMD} up -d"
       }
