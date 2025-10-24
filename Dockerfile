@@ -27,5 +27,5 @@ RUN chown -R nodeuser:nodegrp /app
 
 USER nodeuser
 
-EXPOSE 8080
+EXPOSE 8880
 CMD ["npm", "run", "start"]

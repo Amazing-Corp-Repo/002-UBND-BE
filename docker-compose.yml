@@ -5,11 +5,11 @@ services:
     build: .
     container_name: ubnd_api
     environment:
-      - PORT=8080
+      - PORT=8880
       - PREFIX_API=/api
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "8880:8080"
     restart: unless-stopped
 
