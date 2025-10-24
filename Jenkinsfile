@@ -4,13 +4,10 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
   }
-  environment {
-    COMPOSE_CMD = 'docker compose'
-  }
   stages {
     stage('Debug Info') {
       steps {
-        sh 'echo BRANCH_NAME=$BRANCH_NAME && echo GIT_BRANCH=$GIT_BRANCH && hostname && ${COMPOSE_CMD} version || true'
+        sh 'echo BRANCH_NAME=$BRANCH_NAME && echo GIT_BRANCH=$GIT_BRANCH && hostname && docker --version && docker info >/dev/null || true'
       }
     }
     stage('Checkout') {
@@ -31,23 +28,49 @@ pipeline {
         }
       }
     }
-    stage('Build') {
+    stage('Build Image') {
       when { anyOf { branch 'longt2'; changeRequest() } }
       steps {
-        sh "${COMPOSE_CMD} build"
+        sh '''
+          set -e
+          IMAGE_NAME=ubnd-api
+          IMAGE_TAG=$(echo ${GIT_COMMIT:-latest} | cut -c1-7)
+          echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
+          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+          echo ${IMAGE_TAG} > .image_tag
+        '''
       }
     }
     stage('Migrate DB (Prisma)') {
       when { branch 'longt2' }
       steps {
-        // Run migrations if present; else push schema
-        sh "${COMPOSE_CMD} run --rm app sh -lc 'npx prisma migrate deploy || npx prisma db push'"
+        sh '''
+          set -e
+          IMAGE_NAME=ubnd-api
+          IMAGE_TAG=$(cat .image_tag)
+          echo "Running migrations with ${IMAGE_NAME}:${IMAGE_TAG}"
+          docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma migrate deploy || npx prisma db push'
+        '''
       }
     }
-    stage('Deploy Up') {
+    stage('Deploy') {
       when { branch 'longt2' }
       steps {
-        sh "${COMPOSE_CMD} up -d"
+        sh '''
+          set -e
+          IMAGE_NAME=ubnd-api
+          IMAGE_TAG=$(cat .image_tag)
+          CONTAINER_NAME=ubnd_api
+          # Stop/remove old container if exists
+          docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
+          # Run new container
+          docker run -d \
+            --name ${CONTAINER_NAME} \
+            --restart unless-stopped \
+            --env-file ./.env \
+            -p 8880:8880 \
+            ${IMAGE_NAME}:${IMAGE_TAG}
+        '''
       }
     }
   }
@@ -56,7 +79,7 @@ pipeline {
       echo 'Build failed. Check logs.'
     }
     success {
-      echo 'Deployment successful on branch longt*.'
+      echo 'Build completed. Deploy runs only on branch longt2.'
     }
   }
 }
