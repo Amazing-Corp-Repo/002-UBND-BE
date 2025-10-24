@@ -8,8 +8,8 @@ const toUserResponse = (user) => {
         vaiTro: user.vai_tro,
         xacThucHaiYeuTo: user.is_enable_two_factor,
         trangThai: user.trang_thai,
-        ngayTao: user.ngay_tao,
-        ngayCapNhap: user.ngay_cap_nhap,
+        ngayTao: user.thoi_gian_tao,
+        ngayCapNhap: user.thoi_gian_cap_nhap,
     };
 }
 

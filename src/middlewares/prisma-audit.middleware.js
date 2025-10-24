@@ -31,10 +31,10 @@ export default async function registerPrismaAudit() {
 
                     const extraFields = {};
                     if (operation === "update") {
-                        extraFields.ngay_cap_nhap = now;
+                        extraFields.thoi_gian_cap_nhap = now;
                         extraFields.nguoi_cap_nhap = userId;
                     } else if (operation === "create") {
-                        extraFields.ngay_tao = now;
+                        extraFields.thoi_gian_tao = now;
                         extraFields.nguoi_tao = userId;
                     }
 
