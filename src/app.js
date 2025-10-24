@@ -61,6 +61,11 @@ app.use('/api-docs/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 const server = http.createServer(app);
 
 initSocket(server);
+
+// Lightweight health endpoint for container/platform checks
+app.get('/health', (req, res) => {
+    res.status(200).send('ok');
+});
 server.listen(PORT, () => {
     console.log(`Server is running on port: ${PORT}`);
 });
