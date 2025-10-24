@@ -11,13 +11,23 @@ pipeline {
       }
     }
     stage('Checkout') {
-      when { anyOf { branch 'longt2'; changeRequest() } }
+      when {
+        expression {
+          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
+          return b == 'longt2' || env.CHANGE_ID
+        }
+      }
       steps {
         checkout scm
       }
     }
     stage('Prepare .env from Jenkins Secret') {
-      when { branch 'longt2' }
+      when {
+        expression {
+          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
+          return b == 'longt2'
+        }
+      }
       steps {
         script {
           // Create a secret file credential in Jenkins with ID: 'ubnd_env_file'
@@ -29,7 +39,12 @@ pipeline {
       }
     }
     stage('Build Image') {
-      when { anyOf { branch 'longt2'; changeRequest() } }
+      when {
+        expression {
+          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
+          return b == 'longt2' || env.CHANGE_ID
+        }
+      }
       steps {
         sh '''
           set -e
@@ -42,7 +57,12 @@ pipeline {
       }
     }
     stage('Migrate DB (Prisma)') {
-      when { branch 'longt2' }
+      when {
+        expression {
+          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
+          return b == 'longt2'
+        }
+      }
       steps {
         sh '''
           set -e
@@ -54,7 +74,12 @@ pipeline {
       }
     }
     stage('Deploy') {
-      when { branch 'longt2' }
+      when {
+        expression {
+          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
+          return b == 'longt2'
+        }
+      }
       steps {
         sh '''
           set -e
