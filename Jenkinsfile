@@ -7,10 +7,6 @@ pipeline {
   environment {
     COMPOSE_CMD = 'docker compose'
   }
-  triggers {
-    // Use your webhook (recommended) or enable polling as fallback
-    // pollSCM('H/5 * * * *')
-  }
   stages {
     stage('Checkout') {
       when { branch 'longt2' }
@@ -59,4 +55,3 @@ pipeline {
     }
   }
 }
-
