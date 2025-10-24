@@ -3,7 +3,6 @@ import UserRepository from "../repositories/user.repository.js";
 import jwtUtils from "../utils/jwt.util.js";
 import RefreshTokenService from "./refresh-token.service.js";
 import { compare, hash } from "../utils/bcrypt.util.js";
-import { withAudit } from "../middlewares/prisma-audit.middleware.js";
 import OTP_TYPE from "../constants/otp.constants.js";
 import OTPService from "./otp.service.js";
 import UserSessionLogRepository from "../repositories/user-session-log.repository.js";
@@ -81,9 +80,8 @@ const AuthService = {
             throw new BaseError(401, "Mật khẩu hiện tại không đúng");
         }
         const hashedPassword = await hash(mat_khau_moi);
-        await withAudit(async (auditFields) => {
-            return await UserRepository.updateUser(userId, { mat_khau: hashedPassword }, auditFields);
-        }, userId);
+
+        return await UserRepository.updateUser(userId, { mat_khau: hashedPassword });
     },
 
     async enableOrDisableTwoFactorAuth(userId) {
@@ -140,9 +138,8 @@ const AuthService = {
         }
         const hashedPassword = await hash(newPassword);
 
-        await withAudit(async (auditFields) => {
-            return await UserRepository.updateUser(user.id, { mat_khau: hashedPassword }, auditFields);
-        }, user.id);
+
+        await UserRepository.updateUser(user.id, { mat_khau: hashedPassword });
 
         await RefreshTokenService.revokeAllForUser(user.id, ip);
 
@@ -185,13 +182,8 @@ const AuthService = {
 
         const newStatus = !user.is_enable_two_factor;
 
-        await withAudit(async (auditFields) => {
-            await UserRepository.updateUser(
-                userId,
-                { is_enable_two_factor: newStatus },
-                auditFields
-            );
-        }, userId);
+
+        await UserRepository.updateUser(userId, { is_enable_two_factor: newStatus });
 
         return { is_enable_two_factor: newStatus };
     }

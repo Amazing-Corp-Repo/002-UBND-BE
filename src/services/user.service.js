@@ -5,7 +5,6 @@ import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
-import { withAudit } from "../middlewares/prisma-audit.middleware.js";
 
 const UserService = {
     async getUserById(userId) {
@@ -23,9 +22,7 @@ const UserService = {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
 
-        const userUpdated = await withAudit(async (auditFields) => {
-            return await UserRepository.updateUser(userId, { full_name: fullName, phone }, auditFields);
-        }, userId);
+        let userUpdated = await UserRepository.updateUser(userId, { full_name: fullName, phone });
 
         return toUserResponse(userUpdated);
     },
@@ -61,7 +58,7 @@ const UserService = {
                 password: matKhau,
             }
         );
-        
+
         return {
             message: `Tài khoản đã được tạo và gửi mật khẩu tới ${email}`,
             user: toUserResponse(newUser),

@@ -10,8 +10,8 @@ const UserController = {
 
     async updateProfile(req, res) {
         const userId = req.payload.userId;
-        const { fullName, phone } = req.body;
-        const result = await UserService.updateUserProfile(userId, fullName, phone);
+        const { hoVaTen, soDienThoai } = req.body;
+        const result = await UserService.updateUserProfile(userId, hoVaTen, soDienThoai);
         return successResponse(res, result, 'Cập nhật thông tin cá nhân thành công');
     },
 

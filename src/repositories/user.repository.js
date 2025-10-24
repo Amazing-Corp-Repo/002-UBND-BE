@@ -13,13 +13,10 @@ const UserRepository = {
         });
     },
 
-    async updateUser(userId, updateData, auditFields = {}) {
+    async updateUser(userId, updateData) {
         return await prisma.nguoi_dung.update({
             where: { id: userId },
-            data: {
-                ...updateData,
-                ...auditFields,
-            },
+            data: updateData
         });
     },
 

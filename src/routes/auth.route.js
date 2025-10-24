@@ -20,8 +20,4 @@ authRoute.post('/verify-2fa', validate(VerifyTwoFactorAuthRequest), clientInfo, 
 
 authRoute.post('/send-otp', validate(SendOTPRequest), AuthController.sendOTP);
 
-authRoute.get('/test', authenticate, (req, res) => {
-    res.json({ message: 'Authenticated access granted' });
-});
-
 export default authRoute;

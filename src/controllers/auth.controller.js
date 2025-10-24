@@ -27,8 +27,8 @@ const AuthController = {
 
     async changePassword(req, res) {
         const userId = req.payload.userId;
-        const { mat_khau_hien_tai, mat_khau_moi } = req.body;
-        await AuthService.changePassword(userId, mat_khau_hien_tai, mat_khau_moi);
+        const { matKhauHienTai, matKhauMoi } = req.body;
+        await AuthService.changePassword(userId, matKhauHienTai, matKhauMoi);
         return successResponse(res, null, "Đổi mật khẩu thành công");
     },
 

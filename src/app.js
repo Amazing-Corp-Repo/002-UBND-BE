@@ -10,11 +10,15 @@ import rateLimit from 'express-rate-limit';
 import { errorResponse } from './utils/response.util.js';
 import http from 'http';
 import { initSocket } from './realtime/socket/index.js';
+import prisma from "./config/database.config.js";
+import registerPrismaAudit from './middlewares/prisma-audit.middleware.js';
 
 const app = express();
 const PORT = env.PORT;
 const ALLOWED_CORS_ORIGIN = env.CORS_ORIGIN;
 const PREFIX_API = env.PREFIX_API
+const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
+const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -43,8 +47,8 @@ app.use(express.json());
 app.use(express.static('.'));
 
 const apiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 phút
-    max: 100,             // tối đa 100 request trong 1 phút
+    windowMs: RATE_LIMIT_WINDOW_MS, // 1 phút
+    max: RATE_LIMIT_MAX,             // tối đa 100 request trong 1 phút
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res, next) => {
@@ -59,6 +63,9 @@ app.use(errorHandler);
 app.use('/api-docs/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const server = http.createServer(app);
+
+await prisma.$connect();
+await registerPrismaAudit();
 
 initSocket(server);
 server.listen(PORT, () => {

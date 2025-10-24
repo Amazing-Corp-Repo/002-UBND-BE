@@ -16,6 +16,8 @@ const env = {
     MAIL_USER: process.env.MAIL_USER,
     MAIL_PASS: process.env.MAIL_PASS,
     OTP_EXPIRE_MINUTES: process.env.OTP_EXPIRE_MINUTES,
+    RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS,
+    RATE_LIMIT_MAX: process.env.RATE_LIMIT_MAX,
 }
 
 export default env;

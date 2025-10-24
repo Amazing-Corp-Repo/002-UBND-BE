@@ -39,6 +39,13 @@ export const authenticate = async (req, res, next) => {
     if (decoded.ip !== ip) {
         throw new BaseError(401, 'IP không khớp với IP khi đăng nhập');
     }
+
+    global.prisma_user_id = decoded.userId;
+
+    res.on("finish", () => {
+        delete global.prisma_user_id;
+    });
+    
     next();
 
 };
