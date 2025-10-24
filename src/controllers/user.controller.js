@@ -28,5 +28,11 @@ const UserController = {
         const result = await UserService.createAccount(tenDangNhap, email, matKhau, vaiTro, currentUser);
         return successResponse(res, result.user, result.message);
     },
+
+    async updateProfileByAdmin(req, res) {
+        const { userId, hoVaTen, soDienThoai, vaiTro, trangThai } = req.body;
+        const result = await UserService.updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, trangThai);
+        return successResponse(res, result, 'Cập nhật thông tin người dùng thành công');
+    }
 }
 export default UserController;

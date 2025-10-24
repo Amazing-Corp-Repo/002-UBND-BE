@@ -52,6 +52,40 @@ const UserSwagger = {
             responses: {}
         }
     },
+    '/api/users': {
+        put: {
+            tags: ['Users'],
+            summary: 'Update user profile',
+            description: 'Update the profile information of the currently authenticated user',
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: UserSchemas.UpdateProfileRequest
+                    }
+                }
+            },
+            responses: {}
+        }
+    },
+    '/api/users/update-by-admin': {
+        put: {
+            tags: ['Users'],
+            summary: 'Update user profile by admin',
+            description: 'Update the profile information of a user by an admin',
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: UserSchemas.UpdateProfileByAdminRequest
+                    }
+                }
+            },
+            responses: {}
+        }
+    }
 };
 
 export default UserSwagger;

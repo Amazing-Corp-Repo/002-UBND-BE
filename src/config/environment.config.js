@@ -18,6 +18,7 @@ const env = {
     OTP_EXPIRE_MINUTES: process.env.OTP_EXPIRE_MINUTES,
     RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS,
     RATE_LIMIT_MAX: process.env.RATE_LIMIT_MAX,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
 }
 
 export default env;

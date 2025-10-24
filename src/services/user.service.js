@@ -22,7 +22,10 @@ const UserService = {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
 
-        let userUpdated = await UserRepository.updateUser(userId, { full_name: fullName, phone });
+        let userUpdated = await UserRepository.updateUser(
+            userId,
+            { ho_va_ten: fullName, so_dien_thoai: phone }
+        );
 
         return toUserResponse(userUpdated);
     },
@@ -63,6 +66,18 @@ const UserService = {
             message: `Tài khoản đã được tạo và gửi mật khẩu tới ${email}`,
             user: toUserResponse(newUser),
         };
+    },
+
+    async updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, trangThai) {
+        const user = await UserRepository.findById(userId);
+        if (!user) {
+            throw new BaseError(404, 'Không tìm thấy người dùng');
+        }
+        let userUpdated = await UserRepository.updateUser(
+            userId,
+            { ho_va_ten: hoVaTen, so_dien_thoai: soDienThoai, vai_tro: vaiTro, trang_thai: trangThai }
+        );
+        return toUserResponse(userUpdated);
     }
 }
 
