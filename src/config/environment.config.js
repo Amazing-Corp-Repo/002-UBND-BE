@@ -1,11 +1,12 @@
 import 'dotenv/config';
 
 const env = {
-    PORT: process.env.PORT,
+    // Thêm giá trị mặc định để tránh undefined khi thiếu .env
+    PORT: process.env.PORT || 8080,
     CORS_ORIGIN: process.env.CORS_ORIGIN
         ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
         : ['*'],
-    PREFIX_API: process.env.PREFIX_API,
+    PREFIX_API: process.env.PREFIX_API || '/api',
     ADMIN_USERNAME: process.env.ADMIN_USERNAME,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
     ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
