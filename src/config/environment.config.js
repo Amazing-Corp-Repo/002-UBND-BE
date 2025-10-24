@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 const env = {
     // Thêm giá trị mặc định để tránh undefined khi thiếu .env
-    PORT: process.env.PORT || 8080,
+    PORT: process.env.PORT || 8880,
     CORS_ORIGIN: process.env.CORS_ORIGIN
         ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
         : ['*'],
