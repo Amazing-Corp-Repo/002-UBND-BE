@@ -4,6 +4,10 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
   }
+  environment {
+    DOCKER_CLIENT_TIMEOUT = '300'
+    DOCKER_BUILDKIT = '1'
+  }
   stages {
     stage('Debug Info') {
       steps {
@@ -46,14 +50,18 @@ pipeline {
         }
       }
       steps {
-        sh '''
-          set -e
-          IMAGE_NAME=ubnd-api
-          IMAGE_TAG=$(echo ${GIT_COMMIT:-latest} | cut -c1-7)
-          echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
-          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-          echo ${IMAGE_TAG} > .image_tag
-        '''
+        retry(3) {
+          sh '''
+            set -e
+            IMAGE_NAME=ubnd-api
+            IMAGE_TAG=$(echo ${GIT_COMMIT:-latest} | cut -c1-7)
+            echo "Pulling base image node:22-alpine (best-effort)"
+            docker pull node:22-alpine || true
+            echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
+            docker build --pull -t ${IMAGE_NAME}:${IMAGE_TAG} .
+            echo ${IMAGE_TAG} > .image_tag
+          '''
+        }
       }
     }
     stage('Migrate DB (Prisma)') {
