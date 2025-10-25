@@ -55,7 +55,7 @@ const OTPService = {
                 );
                 break;
             default:
-                throw new BaseError("Loại OTP không hợp lệ");
+                throw new BaseError(500, "Loại OTP không hợp lệ");
         }
         return otpCode;
     },
@@ -63,7 +63,7 @@ const OTPService = {
     async verifyOTP(userId, otpCode, otpType) {
         const otpRecord = await OTPRepository.findValidOTP(userId, otpCode, otpType);
         if (!otpRecord) {
-            throw new Error("OTP không hợp lệ hoặc đã hết hạn");
+            throw new BaseError(400, "OTP không hợp lệ hoặc đã hết hạn");
         }
         await OTPRepository.markUsed(otpRecord.id);
         return true;
