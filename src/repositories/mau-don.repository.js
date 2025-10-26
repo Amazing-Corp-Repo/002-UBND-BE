@@ -1,6 +1,6 @@
 import prisma from "../config/database.config.js";
 
-const ThuTucRepository = {
+const MauDonRepository = {
     // Lấy thông tin thủ tục theo id
     async findById(thuTucId) {
         return await prisma.thu_tuc_hanh_chinh.findUnique({
@@ -42,7 +42,7 @@ const ThuTucRepository = {
     },
 
     // Kiểm tra thủ tục có tồn tại không
-    async exists(thuTucId) {
+    async existsThuTuc(thuTucId) {
         const count = await prisma.thu_tuc_hanh_chinh.count({
             where: {
                 id: thuTucId,
@@ -53,4 +53,5 @@ const ThuTucRepository = {
     }
 };
 
-export default ThuTucRepository;
+export default MauDonRepository;
+

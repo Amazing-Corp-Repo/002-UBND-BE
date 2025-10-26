@@ -1,7 +1,7 @@
-import ThuTucRepository from "../repositories/thu-tuc.repository.js";
+import MauDonRepository from "../repositories/mau-don.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 
-const ThuTucService = {
+const MauDonService = {
     /**
      * Lấy danh sách mẫu đơn theo id thủ tục
      * @param {string} thuTucId - ID của thủ tục hành chính
@@ -9,13 +9,13 @@ const ThuTucService = {
      */
     async getMauDonByThuTucId(thuTucId) {
         // Kiểm tra thủ tục có tồn tại không
-        const exists = await ThuTucRepository.exists(thuTucId);
+        const exists = await MauDonRepository.existsThuTuc(thuTucId);
         if (!exists) {
             throw new BaseError(404, "Không tìm thấy thủ tục hành chính");
         }
 
         // Lấy danh sách mẫu đơn
-        const mauDonList = await ThuTucRepository.getMauDonByThuTucId(thuTucId);
+        const mauDonList = await MauDonRepository.getMauDonByThuTucId(thuTucId);
 
         // Transform data để trả về format phù hợp
         return mauDonList.map(item => ({
@@ -32,4 +32,5 @@ const ThuTucService = {
     }
 };
 
-export default ThuTucService;
+export default MauDonService;
+
