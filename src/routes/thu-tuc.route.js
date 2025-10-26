@@ -7,7 +7,6 @@ const thuTucRoute = express.Router();
 
 thuTucRoute.get(
   "",
-  validate(SearchThuTucQuery, "query"),
   ThuTucController.search
 );
 
