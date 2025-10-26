@@ -95,12 +95,12 @@ model co_so_dich_vu_cong {
   dia_chi                                                  String?              @db.VarChar(500)
   so_dien_thoai                                            String?              @db.VarChar(20)
   mo_ta                                                    String?
-  toa_do_gps                                               String?              @db.VarChar(100)
   is_removed                                               Boolean?             @default(false)
   nguoi_tao                                                String?              @db.Uuid
   nguoi_cap_nhap                                           String?              @db.Uuid
   thoi_gian_tao                                            DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhap                                       DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  link_google_map                                          String?              @db.VarChar(500)
   uy_ban                                                   uy_ban?              @relation(fields: [id_uy_ban], references: [id], onUpdate: NoAction, map: "fk_co_so_dich_vu_cong_uy_ban")
   nguoi_dung_co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_cap_nhap")
   nguoi_dung_co_so_dich_vu_cong_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_tao")
@@ -144,7 +144,7 @@ model thu_tuc_hanh_chinh {
   ma_loai_thu_tuc                                          String                        @unique @db.VarChar(50)
   ten_thu_tuc                                              String                        @db.VarChar(255)
   ma_thu_tuc                                               String                        @unique @db.VarChar(50)
-  co_quan_ban_hanh                                         Int
+  co_quan_ban_hanh                                         String                        @db.VarChar(255)
   doi_tuong_thuc_hien                                      String?                       @db.VarChar(255)
   url_thong_tin_chi_tiet_pdf                               String?                       @db.VarChar(500)
   yeu_cau_dieu_kien_chung                                  String?
@@ -207,7 +207,6 @@ model uy_ban {
   email                                        String?              @db.VarChar(100)
   gio_lam_viec                                 String?              @db.VarChar(255)
   link_google_map                              String?              @db.VarChar(500)
-  toa_do_gps                                   String?              @db.VarChar(100)
   is_removed                                   Boolean?             @default(false)
   nguoi_tao                                    String?              @db.Uuid
   nguoi_cap_nhap                               String?              @db.Uuid

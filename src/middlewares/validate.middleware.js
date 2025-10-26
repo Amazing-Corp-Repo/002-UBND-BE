@@ -1,8 +1,12 @@
 import { BaseError } from "../utils/base-error.util.js";
 
-const validate = (schema) => {
+const validate = (schema, source = 'body') => {
     return (req, res, next) => {
-        const { error, value } = schema.validate(req.body, { abortEarly: false });
+        const dataToValidate = source === 'params' ? req.params : 
+                               source === 'query' ? req.query : 
+                               req.body;
+        
+        const { error, value } = schema.validate(dataToValidate, { abortEarly: false });
         if (error) {
             // gom lỗi chi tiết
             const details = error.details.map((err) => ({
@@ -14,7 +18,14 @@ const validate = (schema) => {
             throw new BaseError(400, "Dữ liệu không hợp lệ", details);
         }
 
-        req.body = value;
+        // Cập nhật data vào đúng source
+        if (source === 'params') {
+            req.params = value;
+        } else if (source === 'query') {
+            req.query = value;
+        } else {
+            req.body = value;
+        }
         next();
     };
 };
