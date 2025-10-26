@@ -22,13 +22,6 @@ const ThuTucService = {
     return procedure;
   },
 
-  async getAllThuTuc(page, size) {
-    const { procedures, total } =
-      await ThuTucRepository.getAllThuTucWithBasicDetails(page, size);
-    const pagination = createPagination(page, size, total);
-    return { procedures, pagination };
-  },
-
   async getFullProcedureDetails(procedureId) {
     const procedure = await ThuTucRepository.getThuTucAllDetails(procedureId);
 

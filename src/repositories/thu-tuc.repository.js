@@ -2,28 +2,28 @@ import prisma from "../config/database.config.js"
 
 
 const buildBaseWhere = () => ({
-  NOT: { is_removed: true },
+    NOT: { is_removed: true },
 });
 
 const buildKeywordCondition = (keyword) => ({
-  OR: [
-    { ten_thu_tuc: { contains: keyword, mode: "insensitive" } },
-    { ma_thu_tuc: { contains: keyword, mode: "insensitive" } },
-    { ten_loai_thu_tuc: { contains: keyword, mode: "insensitive" } },
-    { yeu_cau_dieu_kien_chung: { contains: keyword, mode: "insensitive" } },
-  ],
+    OR: [
+        { ten_thu_tuc: { contains: keyword, mode: "insensitive" } },
+        { ma_thu_tuc: { contains: keyword, mode: "insensitive" } },
+        { ten_loai_thu_tuc: { contains: keyword, mode: "insensitive" } },
+        { yeu_cau_dieu_kien_chung: { contains: keyword, mode: "insensitive" } },
+    ],
 });
 
 const buildLinhVucCondition = (linhVucId) => ({
-  thu_tuc_hanh_chinh_linh_vuc: {
-    some: {
-      id_linh_vuc: linhVucId,
+    thu_tuc_hanh_chinh_linh_vuc: {
+        some: {
+            id_linh_vuc: linhVucId,
+        },
     },
-  },
 });
 
 const ThuTucRepository = {
-     async getThuTucById(procedureId) {
+    async getThuTucById(procedureId) {
         return await prisma.thu_tuc_hanh_chinh.findUnique({
             where: { id: procedureId },
         });
@@ -39,95 +39,95 @@ const ThuTucRepository = {
                     thu_tuc_hanh_chinh_linh_vuc: {
                         include: {
                             linh_vuc: true // Lấy chi tiết
-                        }                   
-                },
+                        }
+                    },
 
-                co_so_dich_vu_cong: {
+                    co_so_dich_vu_cong: {
                         include: {
-                            uy_ban: true 
+                            uy_ban: true
                         }
                     }
                 },
-                where: {is_removed: false},
+                where: { is_removed: false },
                 orderBy: {
-                    thoi_gian_tao: 'desc' 
+                    thoi_gian_tao: 'desc'
                 }
-                
+
             }),
             // truy vấn thứ hai
             prisma.thu_tuc_hanh_chinh.count({
-                where: {is_removed: false}
-    })
+                where: { is_removed: false }
+            })
         ]);
-        return {procedures, total}
+        return { procedures, total }
     },
 
     async getThuTucAllDetails(procedureId) {
         return await prisma.thu_tuc_hanh_chinh.findUnique({
-            where: {id: procedureId},
+            where: { id: procedureId },
             include: {
-                 thu_tuc_hanh_chinh_linh_vuc: {
+                thu_tuc_hanh_chinh_linh_vuc: {
                     include: {
                         linh_vuc: true
                     }
                 },
 
-                 co_so_dich_vu_cong: {
-                    where: { is_removed: false }, 
+                co_so_dich_vu_cong: {
+                    where: { is_removed: false },
                     include: {
-                        uy_ban: true 
-                }
-            },
-               trinh_tu_thuc_hien_thu_tuc: { 
-                    orderBy:{thu_tu_buoc: 'asc'},
-                    where: {is_removed: false}
+                        uy_ban: true
+                    }
                 },
-                thu_tuc_hanh_chinh_mau_don: { 
-                    where: {mau_don: {is_removed: false}},
+                trinh_tu_thuc_hien_thu_tuc: {
+                    orderBy: { thu_tu_buoc: 'asc' },
+                    where: { is_removed: false }
+                },
+                thu_tuc_hanh_chinh_mau_don: {
+                    where: { mau_don: { is_removed: false } },
                     include: {
                         mau_don: true
                     }
-                },  
+                },
                 cach_thuc_thuc_hien: {
                     where: { is_removed: false },
-                    orderBy: { hinh_thuc_ap_dung: 'asc' } 
+                    orderBy: { hinh_thuc_ap_dung: 'asc' }
                 },
                 nguoi_dung_thu_tuc_hanh_chinh_nguoi_taoTonguoi_dung: true,
                 nguoi_dung_thu_tuc_hanh_chinh_nguoi_cap_nhapTonguoi_dung: true,
             }
         })
     },
-  
-  async getAllThuTuc() {
-    return prisma.thu_tuc_hanh_chinh.findMany({
-      where: buildBaseWhere(),
-      orderBy: { ten_thu_tuc: "asc" },
-    });
-  },
 
-  async searchThuTuc({ keyword, linhVucId } = {}) {
-    const where = buildBaseWhere();
-    const andConditions = [];
+    async getAllThuTuc() {
+        return prisma.thu_tuc_hanh_chinh.findMany({
+            where: buildBaseWhere(),
+            orderBy: { ten_thu_tuc: "asc" },
+        });
+    },
 
-    if (keyword) {
-      andConditions.push(buildKeywordCondition(keyword));
-    }
+    async searchThuTuc({ keyword, linhVucId } = {}) {
+        const where = buildBaseWhere();
+        const andConditions = [];
 
-    if (linhVucId) {
-      andConditions.push(buildLinhVucCondition(linhVucId));
-    }
+        if (keyword) {
+            andConditions.push(buildKeywordCondition(keyword));
+        }
 
-    if (andConditions.length) {
-      where.AND = andConditions;
-    }
+        if (linhVucId) {
+            andConditions.push(buildLinhVucCondition(linhVucId));
+        }
 
-    return prisma.thu_tuc_hanh_chinh.findMany({
-      where,
-      orderBy: { ten_thu_tuc: "asc" },
-    });
-  },
-  
-  async findById(thuTucId) {
+        if (andConditions.length) {
+            where.AND = andConditions;
+        }
+
+        return prisma.thu_tuc_hanh_chinh.findMany({
+            where,
+            orderBy: { ten_thu_tuc: "asc" },
+        });
+    },
+
+    async findById(thuTucId) {
         return await prisma.thu_tuc_hanh_chinh.findUnique({
             where: { id: thuTucId },
             include: {
@@ -136,11 +136,11 @@ const ThuTucRepository = {
                         mau_don: true
                     }
                 }
-            }
+            }    
         });
     },
-  
-  async getMauDonByThuTucId(thuTucId) {
+
+    async getMauDonByThuTucId(thuTucId) {
         const thuTuc = await prisma.thu_tuc_hanh_chinh.findUnique({
             where: { id: thuTucId },
             include: {
@@ -164,8 +164,8 @@ const ThuTucRepository = {
 
         return thuTuc?.thu_tuc_hanh_chinh_mau_don || [];
     },
-  
-  async exists(thuTucId) {
+
+    async exists(thuTucId) {
         const count = await prisma.thu_tuc_hanh_chinh.count({
             where: {
                 id: thuTucId,

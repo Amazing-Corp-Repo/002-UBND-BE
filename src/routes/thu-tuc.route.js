@@ -4,11 +4,6 @@ import ThuTucController from '../controllers/thu-tuc.controller.js'
 const thuTucRoute = express.Router();
 
 thuTucRoute.get(
-    '',  
-    ThuTucController.getAllThuTuc
-);
-
-thuTucRoute.get(
     '/:id',
     ThuTucController.getThuTucBasicDetails
 );
@@ -19,8 +14,8 @@ thuTucRoute.get(
 );
 
 thuTucRoute.get(
-  "",
-  ThuTucController.search
+    "",
+    ThuTucController.search
 );
 
 thuTucRoute.get('/:id/mau-don', ThuTucController.getMauDonByThuTucId);
