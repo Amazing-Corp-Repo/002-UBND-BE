@@ -1,5 +1,5 @@
 const ThuTucSwagger = {
-    '/api/thu-tucs': {
+    '/api/thu-tuc': {
         get: {
             tags: ['Thu Tuc'],
             summary: 'Search administrative procedures',
@@ -26,26 +26,7 @@ const ThuTucSwagger = {
                     },
                 },
             ],
-            responses: {
-                200: {
-                    description: 'Matching administrative procedures.',
-                    content: {
-                        'application/json': {
-                            schema: {
-                                type: 'object',
-                                properties: {
-                                    success: { type: 'boolean' },
-                                    message: { type: 'string' },
-                                    data: {
-                                        type: 'array',
-                                        items: { type: 'object' },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
+            responses: {},
         },
     },
 };
