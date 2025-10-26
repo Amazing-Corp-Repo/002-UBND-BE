@@ -4,6 +4,9 @@ import FileService from "./file.service.js";
 
 const MauDonService = {
     async createMauDon(tenMauDon, moTa, file) {
+        if (!file || file.length === 0) {
+            throw new BaseError(400, 'Vui lòng tải lên file mẫu đơn');
+        }
         const firstFile = file?.[0];
         let data = {
             ten_mau_don: tenMauDon,

@@ -235,9 +235,5 @@ model cach_thuc_thuc_hien {
   thoi_gian_cap_nhap                                        DateTime?           @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   nguoi_dung_cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung nguoi_dung?         @relation("cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_cap_nhap")
   nguoi_dung_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung      nguoi_dung?         @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_tao")
-<<<<<<< HEAD
-  thu_tuc_hanh_chinh                                        thu_tuc_hanh_chinh? @relation(fields: [id_thu_tuc], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_thu_tuc")
-=======
   thu_tuc_hanh_chinh                                        thu_tuc_hanh_chinh? @relation(fields: [id_thu_tuc], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_thu_tuc")
->>>>>>> minhkha_dev
 }
