@@ -217,3 +217,21 @@ model uy_ban {
   nguoi_dung_uy_ban_nguoi_cap_nhapTonguoi_dung nguoi_dung?          @relation("uy_ban_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_uy_ban_nguoi_cap_nhap")
   nguoi_dung_uy_ban_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("uy_ban_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_uy_ban_nguoi_tao")
 }
+
+model cach_thuc_thuc_hien {
+  id                    String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_thu_tuc            String?     @db.Uuid // Thay đổi từ INT sang String? vì id_thu_tuc của bạn là UUID
+  hinh_thuc_ap_dung     String      @db.VarChar(255) // Có thể đổi thành Enum nếu bạn muốn giới hạn giá trị
+  mo_ta_chi_tiet        String?
+  thoi_han_giai_quyet   String?
+  le_phi                Decimal?    @default(0.00) @db.Decimal(10, 2)
+  ghi_chu_le_phi        String?
+  is_removed            Boolean?    @default(false)
+  nguoi_tao             String?     @db.Uuid
+  nguoi_cap_nhap        String?     @db.Uuid
+  thoi_gian_tao         DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhap    DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thu_tuc_hanh_chinh    thu_tuc_hanh_chinh? @relation(fields: [id_thu_tuc], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_thu_tuc")
+  nguoi_dung_nguoi_cap_nhapTonguoi_dung nguoi_dung? @relation("cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_cap_nhap")
+  nguoi_dung_nguoi_taoTonguoi_dung      nguoi_dung? @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_tao")
+}
