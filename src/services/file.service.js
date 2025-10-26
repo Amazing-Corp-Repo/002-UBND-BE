@@ -1,37 +1,33 @@
+import fs from "fs-extra";
 import path from "path";
-import UPLOAD_TYPE from "../constants/upload-type.constant.js";
-import UserService from "./user.service.js";
-import fs from "fs";
-import { BaseError } from "../utils/base-error.util.js";
 
 const FileService = {
-    async uploadFile(req) {
-        const relativeDir = path.relative(process.cwd(), req.file.destination);
-        const url = path.join(relativeDir, req.file.filename).replace(/\\/g, "/");
-        if (!req.file) {
-            throw new BaseError(400, "No file uploaded");
-        }
+    async deleteFile(relativePath) {
+        try {
+            const fullPath = path.join(process.cwd(), relativePath);
+            console.log("🔍 Đường dẫn đầy đủ của file:", fullPath);
 
-        switch (req.query.type) {
-            case UPLOAD_TYPE.AVATAR:
-                await UserService.uploadAvatar(req.payload.userId, url);
-                break;
-            default:
-                throw new BaseError(400, "Invalid upload type");
-        }
+            if (await fs.pathExists(fullPath)) {
+                await fs.remove(fullPath);
+                console.log(`✅ Đã xóa file: ${fullPath}`);
 
-        return url;
-    },
+                // 🔍 Kiểm tra thư mục cha
+                const parentDir = path.dirname(fullPath);
+                const files = await fs.readdir(parentDir);
 
-    async deleteFile(filePath) {
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error("❌ Không xóa được file:", err.message);
+                if (files.length === 0) {
+                    await fs.remove(parentDir);
+                    console.log(`🗑️ Thư mục rỗng đã bị xóa: ${parentDir}`);
+                } else {
+                    console.log(`📁 Thư mục ${parentDir} vẫn còn ${files.length} file, không xóa.`);
+                }
             } else {
-                console.log(`🗑️ File đã bị xóa: ${filePath}`);
+                console.warn(`⚠️ File không tồn tại: ${fullPath}`);
             }
-        });
-    }
-}
+        } catch (err) {
+            console.error("❌ Lỗi khi xóa file:", err.message);
+        }
+    },
+};
 
 export default FileService;
