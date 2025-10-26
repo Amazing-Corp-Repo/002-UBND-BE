@@ -33,7 +33,24 @@ const UserSwagger = {
                 }
             ],
             responses: {}
+        },
+
+        put: {
+            tags: ['Users'],
+            summary: 'Update user profile',
+            description: 'Update the profile information of the currently authenticated user',
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: UserSchemas.UpdateProfileRequest
+                    }
+                }
+            },
+            responses: {}
         }
+
     },
     '/api/users/create-account': {
         post: {
@@ -46,23 +63,6 @@ const UserSwagger = {
                 content: {
                     'application/json': {
                         schema: UserSchemas.CreateAccountRequest
-                    }
-                }
-            },
-            responses: {}
-        }
-    },
-    '/api/users': {
-        put: {
-            tags: ['Users'],
-            summary: 'Update user profile',
-            description: 'Update the profile information of the currently authenticated user',
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-                required: true,
-                content: {
-                    'application/json': {
-                        schema: UserSchemas.UpdateProfileRequest
                     }
                 }
             },

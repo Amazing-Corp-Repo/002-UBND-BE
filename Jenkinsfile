@@ -106,6 +106,39 @@ pipeline {
         '''
       }
     }
+    stage('Cleanup Old Images') {
+      when {
+        expression {
+          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
+          return b == 'longt2'
+        }
+      }
+      steps {
+        sh '''
+          set -e
+          IMAGE_NAME=ubnd-api
+          KEEP=3
+          # Get unique image IDs for the repository, newest first
+          IDS=$(docker images --format '{{.Repository}} {{.ID}}' | awk -v name="$IMAGE_NAME" '$1==name{print $2}' | awk '!seen[$0]++')
+          COUNT=0
+          DELETE_IDS=""
+          for id in $IDS; do
+            COUNT=$((COUNT+1))
+            if [ $COUNT -gt $KEEP ]; then
+              DELETE_IDS="$DELETE_IDS $id"
+            fi
+          done
+          if [ -n "$DELETE_IDS" ]; then
+            echo "Removing old images (keeping $KEEP): $DELETE_IDS"
+            docker rmi -f $DELETE_IDS || true
+          else
+            echo "No old images to remove for $IMAGE_NAME"
+          fi
+          # Also remove dangling layers
+          docker image prune -f || true
+        '''
+      }
+    }
   }
   post {
     failure {

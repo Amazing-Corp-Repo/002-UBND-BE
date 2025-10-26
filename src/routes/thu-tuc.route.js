@@ -1,21 +1,28 @@
 import express from 'express';
 import ThuTucController from '../controllers/thu-tuc.controller.js'
 
-const thuTucRouter = express.Router();
+const thuTucRoute = express.Router();
 
-thuTucRouter.get(
+thuTucRoute.get(
     '',  
     ThuTucController.getAllThuTuc
 );
 
-thuTucRouter.get(
+thuTucRoute.get(
     '/:id',
     ThuTucController.getThuTucBasicDetails
 );
 
-thuTucRouter.get(
+thuTucRoute.get(
     '/:id/details',
     ThuTucController.getFullThuTucDetails
 );
 
-export default thuTucRouter;
+thuTucRoute.get(
+  "",
+  ThuTucController.search
+);
+
+thuTucRoute.get('/:id/mau-don', ThuTucController.getMauDonByThuTucId);
+
+export default thuTucRoute;
