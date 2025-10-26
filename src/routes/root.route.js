@@ -1,6 +1,7 @@
 import express from 'express';
 import authRoute from './auth.route.js';
 import userRoute from './user.route.js';
+import thuTucRouter from './thu-tuc.route.js';
 import mauDonRouter from './mau-don.route.js';
 import uyBanRouter from './uy-ban.route.js';
 import thuTucRoute from './thu-tuc.route.js';

@@ -1,7 +1,22 @@
-import express from "express";
-import ThuTucController from "../controllers/thu-tuc.controller.js";
+import express from 'express';
+import ThuTucController from '../controllers/thu-tuc.controller.js'
 
 const thuTucRoute = express.Router();
+
+thuTucRoute.get(
+    '',  
+    ThuTucController.getAllThuTuc
+);
+
+thuTucRoute.get(
+    '/:id',
+    ThuTucController.getThuTucBasicDetails
+);
+
+thuTucRoute.get(
+    '/:id/details',
+    ThuTucController.getFullThuTucDetails
+);
 
 thuTucRoute.get(
   "",
