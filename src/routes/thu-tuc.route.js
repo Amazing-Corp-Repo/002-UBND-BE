@@ -1,28 +1,21 @@
-// src/routes/thu-tuc.route.js
 import express from 'express';
-import validate from '../middlewares/validate.middleware.js';
-import ThuTucController from '../controllers/thu-tuc.controller.js';
-import { GetThuTucQuerySchema, ThuTucIdParamSchema } from '../validators/thu-tuc.validator.js'; 
+import ThuTucController from '../controllers/thu-tuc.controller.js'
 
+const thuTucRouter = express.Router();
 
-const router = express.Router();
-
-router.get(
+thuTucRouter.get(
     '',  
-    validate(GetThuTucQuerySchema, 'query'),
     ThuTucController.getAllThuTuc
 );
 
-router.get(
+thuTucRouter.get(
     '/:id',
-    validate(ThuTucIdParamSchema, 'params'), // Validate ID trong URL params
-    ThuTucController.getThuTucById
+    ThuTucController.getThuTucBasicDetails
 );
 
-router.get(
+thuTucRouter.get(
     '/:id/details',
-    validate(ThuTucIdParamSchema, 'params'), // Validate ID trong URL params
     ThuTucController.getFullThuTucDetails
 );
 
-export default router;
+export default thuTucRouter;

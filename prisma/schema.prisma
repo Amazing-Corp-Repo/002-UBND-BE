@@ -7,6 +7,85 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model audit_logs {
+  id           String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  table_name   String      @db.VarChar(100)
+  record_id    String      @db.Uuid
+  action       String      @db.VarChar(10)
+  old_data     Json?
+  new_data     Json?
+  performed_by String?     @db.Uuid
+  performed_at DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung   nguoi_dung? @relation(fields: [performed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_logs_nguoi_dung")
+}
+
+model cach_thuc_thuc_hien {
+  id                                                        String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_thu_tuc                                                String?             @db.Uuid
+  hinh_thuc_ap_dung                                         String              @db.VarChar(255)
+  mo_ta_chi_tiet                                            String?
+  thoi_gian_giai_quyet                                      String?
+  le_phi                                                    Decimal?            @default(0) @db.Decimal(10, 2)
+  ghi_chu_le_phi                                            String?
+  is_removed                                                Boolean?            @default(false)
+  nguoi_tao                                                 String?             @db.Uuid
+  nguoi_cap_nhap                                            String?             @db.Uuid
+  thoi_gian_tao                                             DateTime?           @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhap                                        DateTime?           @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung_cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung nguoi_dung?         @relation("cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_cap_nhap")
+  nguoi_dung_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung      nguoi_dung?         @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_tao")
+  thu_tuc_hanh_chinh                                        thu_tuc_hanh_chinh? @relation(fields: [id_thu_tuc], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_thu_tuc")
+}
+
+model co_so_dich_vu_cong {
+  id                                                       String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_uy_ban                                                String?              @db.Uuid
+  ten_co_so                                                String               @db.VarChar(255)
+  dia_chi                                                  String?              @db.VarChar(500)
+  so_dien_thoai                                            String?              @db.VarChar(20)
+  mo_ta                                                    String?
+  is_removed                                               Boolean?             @default(false)
+  nguoi_tao                                                String?              @db.Uuid
+  nguoi_cap_nhap                                           String?              @db.Uuid
+  thoi_gian_tao                                            DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhap                                       DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  link_google_map                                          String?              @db.VarChar(500)
+  uy_ban                                                   uy_ban?              @relation(fields: [id_uy_ban], references: [id], onUpdate: NoAction, map: "fk_co_so_dich_vu_cong_uy_ban")
+  nguoi_dung_co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_cap_nhap")
+  nguoi_dung_co_so_dich_vu_cong_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_tao")
+  thu_tuc_hanh_chinh                                       thu_tuc_hanh_chinh[]
+}
+
+model linh_vuc {
+  id                                             String                        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ten_linh_vuc                                   String                        @unique @db.VarChar(255)
+  mo_ta                                          String?
+  is_remove                                      Boolean?                      @default(false)
+  nguoi_tao                                      String?                       @db.Uuid
+  nguoi_cap_nhap                                 String?                       @db.Uuid
+  thoi_gian_tao                                  DateTime?                     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhap                             DateTime?                     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung_linh_vuc_nguoi_cap_nhapTonguoi_dung nguoi_dung?                   @relation("linh_vuc_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_nguoi_cap_nhap")
+  nguoi_dung_linh_vuc_nguoi_taoTonguoi_dung      nguoi_dung?                   @relation("linh_vuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_nguoi_tao")
+  thu_tuc_hanh_chinh_linh_vuc                    thu_tuc_hanh_chinh_linh_vuc[]
+}
+
+model mau_don {
+  id                                            String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ten_mau_don                                   String                       @db.VarChar(255)
+  mo_ta                                         String?
+  url_file_pdf                                  String                       @db.VarChar(500)
+  kich_thuoc_file_mb                            Decimal?                     @db.Decimal(10, 2)
+  is_removed                                    Boolean?                     @default(false)
+  nguoi_tao                                     String?                      @db.Uuid
+  nguoi_cap_nhap                                String?                      @db.Uuid
+  thoi_gian_tao                                 DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhap                            DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung_mau_don_nguoi_cap_nhapTonguoi_dung nguoi_dung?                  @relation("mau_don_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_cap_nhap")
+  nguoi_dung_mau_don_nguoi_taoTonguoi_dung      nguoi_dung?                  @relation("mau_don_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_tao")
+  thu_tuc_hanh_chinh_mau_don                    thu_tuc_hanh_chinh_mau_don[]
+}
+
 model nguoi_dung {
   id                                                                               String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   ten_dang_nhap                                                                    String                       @unique @db.VarChar(100)
@@ -22,6 +101,8 @@ model nguoi_dung {
   thoi_gian_tao                                                                    DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhap                                                               DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   audit_logs                                                                       audit_logs[]
+  cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung               cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung")
+  cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung                    cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung")
   co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung                 co_so_dich_vu_cong[]         @relation("co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung")
   co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_taoTonguoi_dung                      co_so_dich_vu_cong[]         @relation("co_so_dich_vu_cong_nguoi_taoTonguoi_dung")
   linh_vuc_linh_vuc_nguoi_cap_nhapTonguoi_dung                                     linh_vuc[]                   @relation("linh_vuc_nguoi_cap_nhapTonguoi_dung")
@@ -65,78 +146,6 @@ model refresh_token {
   nguoi_dung             nguoi_dung @relation(fields: [nguoi_dung_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_fresh_token_nguoi_dung")
 }
 
-model user_session_logs {
-  id                  String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  nguoi_dung_id       String     @db.Uuid
-  ip                  String?    @db.Inet
-  device              String?    @db.VarChar(100)
-  thoi_gian_dang_nhap DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_dang_xuat DateTime?  @db.Timestamp(6)
-  is_active           Boolean?   @default(true)
-  nguoi_dung          nguoi_dung @relation(fields: [nguoi_dung_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_user_session_logs_nguoi_dung")
-}
-
-model audit_logs {
-  id           String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  table_name   String      @db.VarChar(100)
-  record_id    String      @db.Uuid
-  action       String      @db.VarChar(10)
-  old_data     Json?
-  new_data     Json?
-  performed_by String?     @db.Uuid
-  performed_at DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  nguoi_dung   nguoi_dung? @relation(fields: [performed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_logs_nguoi_dung")
-}
-
-model co_so_dich_vu_cong {
-  id                                                       String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  id_uy_ban                                                String?              @db.Uuid
-  ten_co_so                                                String               @db.VarChar(255)
-  dia_chi                                                  String?              @db.VarChar(500)
-  so_dien_thoai                                            String?              @db.VarChar(20)
-  mo_ta                                                    String?
-  toa_do_gps                                               String?              @db.VarChar(100)
-  is_removed                                               Boolean?             @default(false)
-  nguoi_tao                                                String?              @db.Uuid
-  nguoi_cap_nhap                                           String?              @db.Uuid
-  thoi_gian_tao                                            DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_cap_nhap                                       DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  uy_ban                                                   uy_ban?              @relation(fields: [id_uy_ban], references: [id], onUpdate: NoAction, map: "fk_co_so_dich_vu_cong_uy_ban")
-  nguoi_dung_co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_cap_nhap")
-  nguoi_dung_co_so_dich_vu_cong_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_tao")
-  thu_tuc_hanh_chinh                                       thu_tuc_hanh_chinh[]
-}
-
-model linh_vuc {
-  id                                             String                        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  ten_linh_vuc                                   String                        @unique @db.VarChar(255)
-  mo_ta                                          String?
-  is_remove                                      Boolean?                      @default(false)
-  nguoi_tao                                      String?                       @db.Uuid
-  nguoi_cap_nhap                                 String?                       @db.Uuid
-  thoi_gian_tao                                  DateTime?                     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_cap_nhap                             DateTime?                     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  nguoi_dung_linh_vuc_nguoi_cap_nhapTonguoi_dung nguoi_dung?                   @relation("linh_vuc_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_nguoi_cap_nhap")
-  nguoi_dung_linh_vuc_nguoi_taoTonguoi_dung      nguoi_dung?                   @relation("linh_vuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_nguoi_tao")
-  thu_tuc_hanh_chinh_linh_vuc                    thu_tuc_hanh_chinh_linh_vuc[]
-}
-
-model mau_don {
-  id                                            String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  ten_mau_don                                   String                       @db.VarChar(255)
-  mo_ta                                         String?
-  url_file_pdf                                  String                       @db.VarChar(500)
-  kich_thuoc_file_mb                            Decimal?                     @db.Decimal(10, 2)
-  is_removed                                    Boolean?                     @default(false)
-  nguoi_tao                                     String?                      @db.Uuid
-  nguoi_cap_nhap                                String?                      @db.Uuid
-  thoi_gian_tao                                 DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_cap_nhap                            DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  nguoi_dung_mau_don_nguoi_cap_nhapTonguoi_dung nguoi_dung?                  @relation("mau_don_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_cap_nhap")
-  nguoi_dung_mau_don_nguoi_taoTonguoi_dung      nguoi_dung?                  @relation("mau_don_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_tao")
-  thu_tuc_hanh_chinh_mau_don                    thu_tuc_hanh_chinh_mau_don[]
-}
-
 model thu_tuc_hanh_chinh {
   id                                                       String                        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   id_co_so_dich_vu_cong                                    String?                       @db.Uuid
@@ -144,7 +153,7 @@ model thu_tuc_hanh_chinh {
   ma_loai_thu_tuc                                          String                        @unique @db.VarChar(50)
   ten_thu_tuc                                              String                        @db.VarChar(255)
   ma_thu_tuc                                               String                        @unique @db.VarChar(50)
-  co_quan_ban_hanh                                         Int
+  co_quan_ban_hanh                                         String                        @db.VarChar(255)
   doi_tuong_thuc_hien                                      String?                       @db.VarChar(255)
   url_thong_tin_chi_tiet_pdf                               String?                       @db.VarChar(500)
   yeu_cau_dieu_kien_chung                                  String?
@@ -154,6 +163,7 @@ model thu_tuc_hanh_chinh {
   nguoi_cap_nhap                                           String?                       @db.Uuid
   thoi_gian_tao                                            DateTime?                     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhap                                       DateTime?                     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  cach_thuc_thuc_hien                                      cach_thuc_thuc_hien[]
   co_so_dich_vu_cong                                       co_so_dich_vu_cong?           @relation(fields: [id_co_so_dich_vu_cong], references: [id], onUpdate: NoAction, map: "fk_thu_tuc_hanh_chinh_co_so_dich_vu_cong")
   nguoi_dung_thu_tuc_hanh_chinh_nguoi_cap_nhapTonguoi_dung nguoi_dung?                   @relation("thu_tuc_hanh_chinh_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_thu_tuc_hanh_chinh_nguoi_cap_nhap")
   nguoi_dung_thu_tuc_hanh_chinh_nguoi_taoTonguoi_dung      nguoi_dung?                   @relation("thu_tuc_hanh_chinh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_thu_tuc_hanh_chinh_nguoi_tao")
@@ -199,6 +209,17 @@ model trinh_tu_thuc_hien_thu_tuc {
   thu_tuc_hanh_chinh                                               thu_tuc_hanh_chinh @relation(fields: [id_thu_tuc], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_trinh_tu_thuc_hien_thu_tuc_thu_tuc")
 }
 
+model user_session_logs {
+  id                  String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  nguoi_dung_id       String     @db.Uuid
+  ip                  String?    @db.Inet
+  device              String?    @db.VarChar(100)
+  thoi_gian_dang_nhap DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_dang_xuat DateTime?  @db.Timestamp(6)
+  is_active           Boolean?   @default(true)
+  nguoi_dung          nguoi_dung @relation(fields: [nguoi_dung_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_user_session_logs_nguoi_dung")
+}
+
 model uy_ban {
   id                                           String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   ten_don_vi                                   String               @db.VarChar(255)
@@ -207,7 +228,6 @@ model uy_ban {
   email                                        String?              @db.VarChar(100)
   gio_lam_viec                                 String?              @db.VarChar(255)
   link_google_map                              String?              @db.VarChar(500)
-  toa_do_gps                                   String?              @db.VarChar(100)
   is_removed                                   Boolean?             @default(false)
   nguoi_tao                                    String?              @db.Uuid
   nguoi_cap_nhap                               String?              @db.Uuid
@@ -216,22 +236,4 @@ model uy_ban {
   co_so_dich_vu_cong                           co_so_dich_vu_cong[]
   nguoi_dung_uy_ban_nguoi_cap_nhapTonguoi_dung nguoi_dung?          @relation("uy_ban_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_uy_ban_nguoi_cap_nhap")
   nguoi_dung_uy_ban_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("uy_ban_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_uy_ban_nguoi_tao")
-}
-
-model cach_thuc_thuc_hien {
-  id                    String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  id_thu_tuc            String?     @db.Uuid // Thay đổi từ INT sang String? vì id_thu_tuc của bạn là UUID
-  hinh_thuc_ap_dung     String      @db.VarChar(255) // Có thể đổi thành Enum nếu bạn muốn giới hạn giá trị
-  mo_ta_chi_tiet        String?
-  thoi_han_giai_quyet   String?
-  le_phi                Decimal?    @default(0.00) @db.Decimal(10, 2)
-  ghi_chu_le_phi        String?
-  is_removed            Boolean?    @default(false)
-  nguoi_tao             String?     @db.Uuid
-  nguoi_cap_nhap        String?     @db.Uuid
-  thoi_gian_tao         DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_cap_nhap    DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thu_tuc_hanh_chinh    thu_tuc_hanh_chinh? @relation(fields: [id_thu_tuc], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_thu_tuc")
-  nguoi_dung_nguoi_cap_nhapTonguoi_dung nguoi_dung? @relation("cach_thuc_thuc_hien_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_cap_nhap")
-  nguoi_dung_nguoi_taoTonguoi_dung      nguoi_dung? @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_tao")
 }

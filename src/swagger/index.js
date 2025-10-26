@@ -2,7 +2,7 @@ import AuthSwagger from '../swagger/auth.swagger.js';
 import env from '../config/environment.config.js';
 import UserSwagger from './user.swagger.js';
 import UploadFileSwagger from './files.swagger.js';
-import thuTucSwagger from './thu-tuc.swagger.js';
+import ThuTucSwagger from './thu-tuc.swagger.js';
 
 const swaggerDocument = {
 
@@ -23,7 +23,7 @@ const swaggerDocument = {
         ...AuthSwagger,
         ...UserSwagger,
         ...UploadFileSwagger,
-        ...thuTucSwagger,
+        ...ThuTucSwagger,
     },
 
     components: {
