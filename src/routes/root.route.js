@@ -9,7 +9,7 @@ const rootRouter = express.Router();
 rootRouter.use('/auths', authRoute);
 rootRouter.use('/users', userRoute);
 rootRouter.use('/files', fileRoute);
-rootRouter.use('/thu-tucs', thuTucRoute);
+rootRouter.use('/thu-tuc', thuTucRoute);
 
 export default rootRouter;
 

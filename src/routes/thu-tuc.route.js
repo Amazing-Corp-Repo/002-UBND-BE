@@ -10,4 +10,6 @@ thuTucRoute.get(
   ThuTucController.search
 );
 
+thuTucRoute.get('/:id/mau-don', ThuTucController.getMauDonByThuTucId);
+
 export default thuTucRoute;
