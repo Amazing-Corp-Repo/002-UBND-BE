@@ -1,13 +1,28 @@
 import ThuTucRepository from "../repositories/thu-tuc.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 
+const normalizeParam = (value) => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+};
+
 const ThuTucService = {
-    /**
-     * Lấy danh sách mẫu đơn theo id thủ tục
-     * @param {string} thuTucId - ID của thủ tục hành chính
-     * @returns {Promise<Array>} Danh sách mẫu đơn kèm thông tin chi tiết
-     */
-    async getMauDonByThuTucId(thuTucId) {
+  async searchThuTuc(filters = {}) {
+    const normalizedKeyword = normalizeParam(filters.keyword);
+    const normalizedLinhVucId = normalizeParam(filters.linhVucId);
+
+    if (!normalizedKeyword && !normalizedLinhVucId) {
+      return ThuTucRepository.getAllThuTuc();
+    }
+
+    return ThuTucRepository.searchThuTuc({
+      keyword: normalizedKeyword,
+      linhVucId: normalizedLinhVucId,
+    });
+  },
+  
+  async getMauDonByThuTucId(thuTucId) {
         // Kiểm tra thủ tục có tồn tại không
         const exists = await ThuTucRepository.exists(thuTucId);
         if (!exists) {
@@ -18,7 +33,7 @@ const ThuTucService = {
         const mauDonList = await ThuTucRepository.getMauDonByThuTucId(thuTucId);
 
         return mauDonList;
-    }
+    },
 };
 
 export default ThuTucService;
