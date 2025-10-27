@@ -3,4 +3,6 @@ import LinhVucController from "../controllers/linh-vuc.controller.js";
 
 const linhVucRoute = express.Router();
 
+linhVucRoute.get("/", LinhVucController.getAll);
+
 export default linhVucRoute;
