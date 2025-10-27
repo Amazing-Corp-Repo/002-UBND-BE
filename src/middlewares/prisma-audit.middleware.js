@@ -13,13 +13,13 @@ export default async function registerPrismaAudit() {
             $allModels: {
                 async $allOperations({ model, operation, args, query }) {
                     if (excludedModels.includes(model.toLowerCase())) return query(args);
-                    if (!["create", "update"].includes(operation)) return query(args);
+                    if (!["create", "update", "delete"].includes(operation)) return query(args);
 
                     const userId = global.prisma_user_id || null;
                     const now = new Date().toISOString();
 
                     let oldRecord = null;
-                    if (operation === "update" && args?.where?.id) {
+                    if (["create", "update", "delete"].includes(operation) && args?.where?.id) {
                         try {
                             oldRecord = await prisma[model.toLowerCase()].findUnique({
                                 where: { id: args.where.id },
@@ -54,6 +54,7 @@ export default async function registerPrismaAudit() {
                             },
                         });
                     } catch (err) {
+                        console.log(result);
                         console.error(`[AUDIT] Lỗi khi ghi log cho ${model}:`, err.message);
                     }
 
