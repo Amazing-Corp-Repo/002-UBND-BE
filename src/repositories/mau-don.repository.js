@@ -26,6 +26,27 @@ const MauDonRepository = {
         });
         return count > 0;
     },
+
+    async findManyByIds(list, is_removed = false) {
+        if (!Array.isArray(list) || list.length === 0) {
+            return [];
+        }
+
+        const ids = list
+            .map(item => item.id)
+            .filter(id => !!id);
+
+        if (ids.length === 0) {
+            return [];
+        }
+
+        return await prisma.mau_don.findMany({
+            where: {
+                id: { in: ids },
+                is_removed,
+            },
+        });
+    },
 };
 
 export default MauDonRepository;
