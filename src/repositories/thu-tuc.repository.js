@@ -387,6 +387,21 @@ const ThuTucRepository = {
                 }
             });
         });
+    },
+
+    async getMauDonByThuTucId(thuTucId) {
+        const list = await prisma.thu_tuc_hanh_chinh_mau_don.findMany({
+            where: {
+                id_thu_tuc: thuTucId,
+                mau_don: { is_removed: false },
+            },
+            include: {
+                mau_don: true,
+            },
+        });
+
+        // chỉ trả ra danh sách mau_don
+        return list.map(item => item.mau_don);
     }
 };
 
