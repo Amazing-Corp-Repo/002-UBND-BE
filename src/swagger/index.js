@@ -4,6 +4,8 @@ import UserSwagger from './user.swagger.js';
 import MauDonSwagger from './mau-don.swagger.js';
 import UyBanSwagger from './uy-ban.swagger.js';
 import ThuTucSwagger from './thu-tuc.swagger.js';
+import CoSoDichVuCongSwagger from './co-so-dich-vu-cong.swagger.js';
+import LinhVucSwagger from './linh-vuc.swagger.js';
 
 const swaggerDocument = {
 
@@ -26,6 +28,8 @@ const swaggerDocument = {
         ...MauDonSwagger,
         ...UyBanSwagger,
         ...ThuTucSwagger,
+        ...CoSoDichVuCongSwagger,
+        ...LinhVucSwagger,
     },
 
     components: {
