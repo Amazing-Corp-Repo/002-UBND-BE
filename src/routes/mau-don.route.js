@@ -31,5 +31,16 @@ mauDonRouter.put("/:id",
     MauDonController.updateMauDon
 );
 
+mauDonRouter.get("/",
+    authenticate,
+    MauDonController.getAllMauDon
+);
+
+mauDonRouter.delete("/:id",
+    authenticate,
+    authorize([ROLE.ADMIN]),
+    MauDonController.deleteMauDon
+);
+
 
 export default mauDonRouter;

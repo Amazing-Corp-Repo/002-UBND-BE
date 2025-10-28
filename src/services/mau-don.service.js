@@ -49,6 +49,28 @@ const MauDonService = {
 
         return await MauDonRepository.updateMauDon(id, data);
     },
+
+    async getAllMauDon(is_removed) {
+        return await MauDonRepository.getAllMauDon(is_removed);
+    },
+
+    async deleteMauDon(id) {
+        const existing = await MauDonRepository.getMauDonById(id);
+        if (!existing) {
+            throw new BaseError('Mẫu đơn không tồn tại');
+        }
+        const isInUse = await MauDonRepository.checkMauDonInThuTuc(id);
+        if (isInUse) {
+            throw new BaseError(400, 'Mẫu đơn đang được sử dụng trong thủ tục, không thể xóa');
+        }
+        if (!existing.is_removed) {
+            throw new BaseError(400, 'Vui lòng đánh dấu mẫu đơn là đã xóa trước khi xoá vĩnh viễn');
+        }
+        if (existing.url_file_pdf) {
+            await FileService.deleteFile(existing.url_file_pdf);
+        }
+        await MauDonRepository.deleteMauDon(id);
+    }
 };
 
 export default MauDonService;
