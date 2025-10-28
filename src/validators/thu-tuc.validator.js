@@ -28,12 +28,6 @@ export const CreateThuTucRequest = Joi.object({
         .messages({
             'string.max': 'Đối tượng thực hiện không được vượt quá 255 ký tự',
         }),
-    url_pdf: Joi.string()
-        .uri()
-        .optional()
-        .messages({
-            'string.uri': 'URL PDF không hợp lệ',
-        }),
     yeuCauDieuKienChung: Joi.string()
         .optional(),
     soQuyetDinh: Joi.string()
@@ -173,12 +167,6 @@ export const UpdateThuTucRequest = Joi.object({
         .optional()
         .messages({
             'string.max': 'Đối tượng thực hiện không được vượt quá 255 ký tự',
-        }),
-    url_pdf: Joi.string()
-        .uri()
-        .optional()
-        .messages({
-            'string.uri': 'URL PDF không hợp lệ',
         }),
     yeuCauDieuKienChung: Joi.string()
         .optional(),

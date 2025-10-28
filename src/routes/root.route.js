@@ -6,6 +6,8 @@ import uyBanRouter from './uy-ban.route.js';
 import thuTucRoute from './thu-tuc.route.js';
 import linhVucRoute from './linh-vuc.route.js';
 import coSoDichVuCongRoute from './co-so-dich-vu-cong.route.js';
+import tinTucRouter from './tin-tuc.route.js';
+import danhMucTinTucRouter from './danh-muc-tin-tuc.route.js';
 
 const rootRouter = express.Router();
 
@@ -16,6 +18,8 @@ rootRouter.use('/uy-ban', uyBanRouter);
 rootRouter.use('/thu-tuc', thuTucRoute);
 rootRouter.use('/linh-vuc', linhVucRoute);
 rootRouter.use('/co-so-dich-vu-cong', coSoDichVuCongRoute);
+rootRouter.use('/tin-tuc', tinTucRouter);
+rootRouter.use('/danh-muc-tin-tuc', danhMucTinTucRouter);
 
 export default rootRouter;
 
