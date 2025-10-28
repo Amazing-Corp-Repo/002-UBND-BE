@@ -90,6 +90,9 @@ const ThuTucService = {
     if (!exists) {
       throw new BaseError(404, "Không tìm thấy thủ tục hành chính để xóa");
     }
+    if (exists.is_removed === false) {
+      throw new BaseError(400, "Chỉ có thể xóa thủ tục hành chính đã được đánh dấu là đã xóa");
+    }
     await ThuTucRepository.hardDeleteThuTuc(thuTucId);
   },
 
@@ -124,6 +127,11 @@ const ThuTucService = {
 
     return await ThuTucRepository.updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, url_pdf, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
   },
+
+  async getAllForMobile(id_linh_vuc) {
+    const thuTucs = await ThuTucRepository.getAllForMobile(id_linh_vuc);
+    return thuTucs;
+  }
 
 };
 

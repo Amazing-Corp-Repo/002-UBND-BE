@@ -37,6 +37,12 @@ const ThuTucController = {
         const { idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, url_pdf, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, isRemoved } = req.body;
         const updatedThuTuc = await ThuTucService.updateThuTuc(id, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, url_pdf, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
         return successResponse(res, updatedThuTuc, "Cập nhật thủ tục thành công");
+    },
+
+    async getAllForMobile(req, res) {
+        const { id_linh_vuc } = req.query;
+        const result = await ThuTucService.getAllForMobile(id_linh_vuc);
+        return successResponse(res, result, "Lấy danh sách thủ tục cho mobile thành công");
     }
 };
 

@@ -47,6 +47,25 @@ const MauDonRepository = {
             },
         });
     },
+
+
+    async getAllMauDon(is_removed) {
+        const where = {
+            ...(is_removed !== undefined && is_removed !== ''
+                ? { is_removed: is_removed === 'true' }
+                : {}),
+        }
+        return await prisma.mau_don.findMany({
+            where,
+            orderBy: { thoi_gian_tao: 'desc' },
+        });
+    },
+
+    async deleteMauDon(id) {
+        return await prisma.mau_don.delete({
+            where: { id }
+        });
+    }
 };
 
 export default MauDonRepository;

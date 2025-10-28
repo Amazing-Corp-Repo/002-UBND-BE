@@ -128,6 +128,21 @@ const ThuTucSwagger = {
             responses: {}
         },
     },
+    '/api/thu-tuc/all': {
+        get: {
+            tags: ['ThuTuc'],
+            summary: 'Lấy danh sách thủ tục cho mobile',
+            description: 'Lấy tất cả các thủ tục hành chính, có thể lọc theo lĩnh vực, dành cho ứng dụng mobile.',
+            parameters: [
+                {
+                    name: 'id_linh_vuc',
+                    in: 'query',
+                    description: 'Mã định danh lĩnh vực ở định dạng UUID để lọc theo lĩnh vực.',
+                }
+            ],
+            responses: {},
+        },
+    },
 };
 
 export default ThuTucSwagger;

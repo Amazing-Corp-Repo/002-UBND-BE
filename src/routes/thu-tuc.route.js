@@ -7,6 +7,8 @@ import { CreateThuTucRequest, UpdateThuTucRequest } from '../validators/thu-tuc.
 
 const thuTucRoute = express.Router();
 
+thuTucRoute.get('/all', ThuTucController.getAllForMobile);
+
 thuTucRoute.get(
     '/:id',
     ThuTucController.getThuTucById

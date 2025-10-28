@@ -16,6 +16,22 @@ const MauDonSwagger = {
                 }
             },
             responses: {}
+        },
+        get: {
+            tags: ['MauDon'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Get All Mau Don',
+            description: 'Retrieve all Mau Don records, optionally filtered by removal status',
+            parameters: [
+                {
+                    name: 'isRemoved',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'boolean' },
+                    description: 'Filter by removal status (true or false)',
+                }
+            ],
+            responses: {}
         }
     },
     '/api/mau-don/{id}': {
@@ -41,6 +57,22 @@ const MauDonSwagger = {
                     }
                 }
             },
+            responses: {}
+        },
+        delete: {
+            tags: ['MauDon'],
+            summary: 'Delete Mau Don',
+            security: [{ bearerAuth: [] }],
+            description: 'Delete a Mau Don record by ID',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'ID of the Mau Don to delete',
+                }
+            ],
             responses: {}
         }
     }

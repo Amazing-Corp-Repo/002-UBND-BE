@@ -402,6 +402,56 @@ const ThuTucRepository = {
 
         // chỉ trả ra danh sách mau_don
         return list.map(item => item.mau_don);
+    },
+
+    async getAllForMobile(id_linh_vuc) {
+        const where = {
+            is_removed: false,
+            ...(id_linh_vuc
+                ? {
+                    thu_tuc_hanh_chinh_linh_vuc: {
+                        some: { id_linh_vuc },
+                    },
+                }
+                : {}),
+        };
+        const data = await prisma.thu_tuc_hanh_chinh.findMany({
+            where,
+            orderBy: { thoi_gian_tao: 'desc' },
+            include: {
+                // 1️⃣ Cách thức thực hiện
+                cach_thuc_thuc_hien: {
+                    select: {
+                        hinh_thuc_ap_dung: true,
+                        le_phi: true,
+                        thoi_gian_giai_quyet: true,
+                    },
+                },
+
+                // 2️⃣ Lĩnh vực
+                thu_tuc_hanh_chinh_linh_vuc: {
+                    include: {
+                        linh_vuc: {
+                            select: { ten_linh_vuc: true },
+                        },
+                    },
+                },
+            },
+        });
+
+        // 4️⃣ Chuẩn hoá dữ liệu trả về cho mobile
+        return data.map(tt => ({
+            id: tt.id,
+            ten_thu_tuc: tt.ten_thu_tuc,
+            so_quyet_dinh: tt.so_quyet_dinh,
+            doi_tuong_thuc_hien: tt.doi_tuong_thuc_hien,
+            cach_thuc: tt.cach_thuc_thuc_hien?.map(c => ({
+                hinh_thuc_ap_dung: c.hinh_thuc_ap_dung,
+                le_phi: c.le_phi,
+                thoi_gian_giai_quyet: c.thoi_gian_giai_quyet,
+            })),
+            linh_vuc: tt.thu_tuc_hanh_chinh_linh_vuc?.map(l => l.linh_vuc.ten_linh_vuc),
+        }));
     }
 };
 
