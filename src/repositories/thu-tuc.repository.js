@@ -452,6 +452,14 @@ const ThuTucRepository = {
             })),
             linh_vuc: tt.thu_tuc_hanh_chinh_linh_vuc?.map(l => l.linh_vuc.ten_linh_vuc),
         }));
+    },
+
+    async getThuTucById(thuTucId) {
+        return await prisma.thu_tuc_hanh_chinh.findUnique({
+            where: {
+                id: thuTucId
+            },
+        });
     }
 };
 
