@@ -32,30 +32,13 @@ const LinhVucService = {
         }
 
         const normalizedName = this._capitalizeFirst(ten_linh_vuc);
-        // Kiểm tra tên lĩnh vực có trùng với lĩnh vực khác không
         const duplicate = await LinhVucRepository.findByTenLinhVucExcludeId(normalizedName, id, false);
         if (duplicate) {
             throw new BaseError(400, "Tên lĩnh vực đã tồn tại trong lĩnh vực khác");
         }
 
-        // Cập nhật lĩnh vực
         const updatedLinhVuc = await LinhVucRepository.update(id, normalizedName, mo_ta, is_remove, nguoi_cap_nhap);
         return updatedLinhVuc;
-    },
-
-    async softDelete(id, nguoi_cap_nhap) {
-        const existing = await LinhVucRepository.findById(id);
-        if (!existing) {
-            throw new BaseError(404, "Không tìm thấy lĩnh vực để xóa");
-        }
-
-        const linkedCount = await LinhVucRepository.countThuTucLinks(id);
-        if (linkedCount > 0) {
-            throw new BaseError(400, "Không thể xóa mềm. Vẫn còn thủ tục đang liên quan đến lĩnh vực này");
-        }
-
-        // Sử dụng hàm update chung với is_remove = true
-        return await LinhVucRepository.update(id, existing.ten_linh_vuc, existing.mo_ta, true, nguoi_cap_nhap);
     },
 
     async hardDelete(id) {

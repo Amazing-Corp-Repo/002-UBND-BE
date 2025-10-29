@@ -22,13 +22,6 @@ const LinhVucController = {
         return successResponse(res, updatedLinhVuc, "Cập nhật lĩnh vực thành công");
     },
 
-    async softDelete(req, res) {
-        const { id } = req.params;
-        const nguoi_cap_nhap = req.payload.userId;
-        const result = await LinhVucService.softDelete(id, nguoi_cap_nhap);
-        return successResponse(res, result, "Xóa mềm lĩnh vực thành công");
-    },
-
     async hardDelete(req, res) {
         const { id } = req.params;
         await LinhVucService.hardDelete(id);
