@@ -54,7 +54,7 @@ const MauDonRepository = {
             ...(is_removed !== undefined && is_removed !== ''
                 ? { is_removed: is_removed === 'true' }
                 : {}),
-                ...(search
+            ...(search
                 ? {
                     OR: [{ ten_mau_don: { contains: search, mode: "insensitive" } }],
                 }
@@ -76,7 +76,38 @@ const MauDonRepository = {
         return await prisma.mau_don.findFirst({
             where: { ma_mau_don: maMauDon }
         });
-    }
+    },
+
+    async getMauDonByTenMauDon(tenMauDon) {
+        return await prisma.mau_don.findFirst({
+            where: { ten_mau_don: tenMauDon }
+        });
+    },
+
+    async findByNameOrCodeExcludeId(id, tenMauDon, maMauDon) {
+        return await prisma.mau_don.findFirst({
+            where: {
+                is_removed: false,
+                id: { not: id },
+                OR: [
+                    { ten_mau_don: tenMauDon },
+                    { ma_mau_don: maMauDon },
+                ],
+            },
+        });
+    },
+
+    async findByNameOrCode(tenMauDon, maMauDon) {
+        return await prisma.mau_don.findFirst({
+            where: {
+                is_removed: false,
+                OR: [
+                    { ten_mau_don: tenMauDon },
+                    { ma_mau_don: maMauDon },
+                ],
+            },
+        });
+    },
 };
 
 export default MauDonRepository;
