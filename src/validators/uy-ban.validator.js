@@ -27,13 +27,52 @@ export const CreateUyBanRequest = Joi.object({
         .messages({
             'string.email': 'Email không hợp lệ',
         }),
-    gioLamViec: Joi.string()
-        .max(100)
-        .required()
-        .messages({
-            'string.max': 'Giờ làm việc không được vượt quá 100 ký tự',
-            'any.required': 'Giờ làm việc là bắt buộc',
+    gioLamViec: Joi.object({
+        buoi_sang: Joi.object({
+            tu: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ bắt đầu buổi sáng không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ bắt đầu buổi sáng là bắt buộc',
+                }),
+            den: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ kết thúc buổi sáng không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ kết thúc buổi sáng là bắt buộc',
+                }),
+        }).required().messages({
+            'any.required': 'Thông tin buổi sáng là bắt buộc',
         }),
+        buoi_chieu: Joi.object({
+            tu: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ bắt đầu buổi chiều không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ bắt đầu buổi chiều là bắt buộc',
+                }),
+            den: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ kết thúc buổi chiều không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ kết thúc buổi chiều là bắt buộc',
+                }),
+        }).required().messages({
+            'any.required': 'Thông tin buổi chiều là bắt buộc',
+        }),
+        ghi_chu: Joi.string()
+            .max(500)
+            .optional()
+            .messages({
+                'string.max': 'Ghi chú không được vượt quá 500 ký tự',
+            }),
+    }).required().messages({
+        'any.required': 'Giờ làm việc là bắt buộc',
+    }),
     linkGoogleMap: Joi.string()
         .uri()
         .optional()
@@ -69,13 +108,52 @@ export const UpdateUyBanRequest = Joi.object({
         .messages({
             'string.email': 'Email không hợp lệ',
         }),
-    gioLamViec: Joi.string()
-        .max(100)
-        .required()
-        .messages({
-            'string.max': 'Giờ làm việc không được vượt quá 100 ký tự',
-            'any.required': 'Giờ làm việc là bắt buộc',
+    gioLamViec: Joi.object({
+        buoi_sang: Joi.object({
+            tu: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ bắt đầu buổi sáng không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ bắt đầu buổi sáng là bắt buộc',
+                }),
+            den: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ kết thúc buổi sáng không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ kết thúc buổi sáng là bắt buộc',
+                }),
+        }).required().messages({
+            'any.required': 'Thông tin buổi sáng là bắt buộc',
         }),
+        buoi_chieu: Joi.object({
+            tu: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ bắt đầu buổi chiều không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ bắt đầu buổi chiều là bắt buộc',
+                }),
+            den: Joi.string()
+                .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+                .required()
+                .messages({
+                    'string.pattern.base': 'Giờ kết thúc buổi chiều không hợp lệ (định dạng HH:mm)',
+                    'any.required': 'Giờ kết thúc buổi chiều là bắt buộc',
+                }),
+        }).required().messages({
+            'any.required': 'Thông tin buổi chiều là bắt buộc',
+        }),
+        ghi_chu: Joi.string()
+            .max(500)
+            .optional()
+            .messages({
+                'string.max': 'Ghi chú không được vượt quá 500 ký tự',
+            }),
+    }).required().messages({
+        'any.required': 'Giờ làm việc là bắt buộc',
+    }),
     linkGoogleMap: Joi.string()
         .uri()
         .optional()
