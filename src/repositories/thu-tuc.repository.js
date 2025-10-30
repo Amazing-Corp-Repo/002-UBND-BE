@@ -458,6 +458,15 @@ const ThuTucRepository = {
                 id: thuTucId
             },
         });
+    },
+
+    async findByCoSoDichVuCongId(id_co_so_dich_vu_cong) {
+        return await prisma.thu_tuc_hanh_chinh.findMany({
+            where: {
+                id_co_so_dich_vu_cong,
+                is_removed: false,
+            },
+        });
     }
 };
 
