@@ -35,6 +35,7 @@ const ThuTucService = {
       doi_tuong_thuc_hien: item.doi_tuong_thuc_hien,
       so_quyet_dinh: item.so_quyet_dinh,
       co_so_dich_vu_cong: item.co_so_dich_vu_cong?.ten_co_so || null,
+      so_dien_thoai_co_so: item.co_so_dich_vu_cong?.so_dien_thoai || null,
       linh_vuc: item.thu_tuc_hanh_chinh_linh_vuc.map(lv => lv.linh_vuc.ten_linh_vuc),
       is_removed: item.is_removed,
       thoi_gian_tao: item.thoi_gian_tao,

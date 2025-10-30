@@ -8,8 +8,8 @@ const LinhVucService = {
         if (!trimmed) return trimmed;
         return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
     },
-    async getAll(is_removed) {
-        const linhVucs = await LinhVucRepository.getAll(is_removed);
+    async getAll(is_removed, searchTerm) {
+        const linhVucs = await LinhVucRepository.getAll(is_removed, searchTerm);
         return linhVucs;
     },
 

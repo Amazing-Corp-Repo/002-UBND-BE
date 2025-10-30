@@ -3,8 +3,12 @@ import { successResponse } from "../utils/response.util.js";
 
 const LinhVucController = {
     async getAll(req, res) {
-        const { is_removed } = req.query;
-        const linhVucs = await LinhVucService.getAll(is_removed);
+        const { is_removed, search } = req.query;
+        const searchTerm =
+            typeof search === "string" && search.trim() !== ""
+                ? search.trim()
+                : undefined;
+        const linhVucs = await LinhVucService.getAll(is_removed, searchTerm);
         return successResponse(res, linhVucs, "Lấy danh sách lĩnh vực thành công");
     },
 

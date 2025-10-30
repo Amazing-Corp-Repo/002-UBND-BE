@@ -1,9 +1,10 @@
+import e from "express";
 import MauDonRepository from "../repositories/mau-don.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import FileService from "./file.service.js";
 
 const MauDonService = {
-    async createMauDon(tenMauDon, moTa, file) {
+    async createMauDon(tenMauDon, moTa, maMauDon, file) {
         if (!file || file.length === 0) {
             throw new BaseError(400, 'Vui lòng tải lên file mẫu đơn');
         }
@@ -11,6 +12,7 @@ const MauDonService = {
         let data = {
             ten_mau_don: tenMauDon,
             mo_ta: moTa,
+            ma_mau_don: maMauDon.toUpperCase(),
             url_file_pdf: firstFile.relativeUrl,
             kich_thuoc_file_mb: firstFile.sizeMB,
         };
@@ -30,10 +32,18 @@ const MauDonService = {
                 throw new BaseError(400, 'Mẫu đơn đang được sử dụng trong thủ tục, không thể xóa');
             }
         }
+
+        if (isRemoved === false && existing.is_removed) {
+            const maMauDonConflict = await MauDonRepository.getMauDonByMaMauDon(existing.ma_mau_don);
+            if (maMauDonConflict && maMauDonConflict.id !== id) {
+                throw new BaseError(400, `Mã mẫu đơn ${existing.ma_mau_don} đã được sử dụng`);
+            }
+        }
         
         let data = {
             ten_mau_don: tenMauDon,
             mo_ta: moTa,
+            ma_mau_don: maMauDon,
             is_removed: isRemoved,
         };
 
@@ -50,8 +60,11 @@ const MauDonService = {
         return await MauDonRepository.updateMauDon(id, data);
     },
 
-    async getAllMauDon(is_removed) {
-        return await MauDonRepository.getAllMauDon(is_removed);
+    async getAllMauDon(is_removed, search) {
+        if (search) {
+            search = search.toUpperCase();
+        }
+        return await MauDonRepository.getAllMauDon(is_removed, search);
     },
 
     async deleteMauDon(id) {

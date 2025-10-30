@@ -2,6 +2,7 @@ import Joi from "joi";
 
 export const CreateCoSoDichVuCongRequest = Joi.object({
     idUyBan: Joi.string()
+        .trim()
         .guid({ version: ['uuidv4'] })
         .required()
         .messages({
@@ -9,6 +10,7 @@ export const CreateCoSoDichVuCongRequest = Joi.object({
             'any.required': 'ID Ủy ban là bắt buộc',
         }),
     tenCoSo: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -16,22 +18,26 @@ export const CreateCoSoDichVuCongRequest = Joi.object({
             'any.required': 'Tên cơ sở là bắt buộc',
         }),
     diaChi: Joi.string()
+        .trim()
         .max(500)
         .optional()
         .messages({
             'string.max': 'Địa chỉ không được vượt quá 500 ký tự',
         }),
     soDienThoai: Joi.string()
+        .trim()
         .optional()
         .messages({
             'string.pattern.base': 'Số điện thoại phải là chuỗi số từ 10 đến 20 ký tự',
         }),
     moTa: Joi.string()
+        .trim()
         .optional()
         .messages({
             'string.base': 'Mô tả phải là chuỗi',
         }),
     linkGoogleMap: Joi.string()
+        .trim()
         .uri()
         .max(500)
         .optional()
@@ -43,6 +49,7 @@ export const CreateCoSoDichVuCongRequest = Joi.object({
 
 export const UpdateCoSoDichVuCongRequest = Joi.object({
     idUyBan: Joi.string()
+        .trim()
         .guid({ version: ['uuidv4'] })
         .required()
         .messages({
@@ -50,6 +57,7 @@ export const UpdateCoSoDichVuCongRequest = Joi.object({
             'any.required': 'ID Ủy ban là bắt buộc',
         }),
     tenCoSo: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -57,22 +65,26 @@ export const UpdateCoSoDichVuCongRequest = Joi.object({
             'any.required': 'Tên cơ sở là bắt buộc',
         }),
     diaChi: Joi.string()
+        .trim()
         .max(500)
         .optional()
         .messages({
             'string.max': 'Địa chỉ không được vượt quá 500 ký tự',
         }),
     soDienThoai: Joi.string()
+        .trim()
         .optional()
         .messages({
             'string.pattern.base': 'Số điện thoại phải là chuỗi số từ 10 đến 20 ký tự',
         }),
     moTa: Joi.string()
+        .trim()
         .optional()
         .messages({
             'string.base': 'Mô tả phải là chuỗi',
         }),
     linkGoogleMap: Joi.string()
+        .trim()
         .uri()
         .max(500)
         .optional()

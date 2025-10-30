@@ -2,7 +2,6 @@ import CoSoDichVuCongRepository from "../repositories/co-so-dich-vu-cong.reposit
 import UyBanRepository from "../repositories/uy-ban.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import ThuTucRepository from "../repositories/thu-tuc.repository.js";
-import e from "express";
 
 const CoSoDichCongService = {
     async getAll(isRemoved, search = "") {

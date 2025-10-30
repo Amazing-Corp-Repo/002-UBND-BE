@@ -2,11 +2,13 @@ import Joi from 'joi';
 
 export const CreateAccountRequest = Joi.object({
     tenDangNhap: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Tên đăng nhập không được để trống',
         }),
     email: Joi.string()
+        .trim()
         .email()
         .required()
         .messages({
@@ -14,6 +16,7 @@ export const CreateAccountRequest = Joi.object({
             'any.required': 'Email là bắt buộc',
         }),
     matKhau: Joi.string()
+        .trim()
         .min(6)
         .required()
         .messages({
@@ -21,6 +24,7 @@ export const CreateAccountRequest = Joi.object({
             'any.required': 'Mật khẩu là bắt buộc',
         }),
     vaiTro: Joi.string()
+        .trim()
         .valid('ADMIN', 'NHAN_VIEN', 'LANH_DAO', 'PHO_CHU_TICH', 'CHU_TICH', 'KHU_PHO')
         .required()
         .messages({
@@ -31,11 +35,13 @@ export const CreateAccountRequest = Joi.object({
 
 export const UpdateProfileRequest = Joi.object({
     hoVaTen: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Họ và tên không được để trống',
         }),
     soDienThoai: Joi.string()
+        .trim()
         .pattern(/^[0-9]{10,15}$/)
         .required()
         .messages({
@@ -46,16 +52,19 @@ export const UpdateProfileRequest = Joi.object({
 
 export const UpdateProfileByAdminRequest = Joi.object({
     userId: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'User ID không được để trống',
         }),
     hoVaTen: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Họ và tên không được để trống',
         }),
     soDienThoai: Joi.string()
+        .trim()
         .pattern(/^[0-9]{10,15}$/)
         .required()
         .messages({
@@ -63,6 +72,7 @@ export const UpdateProfileByAdminRequest = Joi.object({
             'any.required': 'Số điện thoại là bắt buộc',
         }),
     vaiTro: Joi.string()
+        .trim()
         .valid('ADMIN', 'NHAN_VIEN', 'LANH_DAO', 'PHO_CHU_TICH', 'CHU_TICH', 'KHU_PHO')
         .required()
         .messages({
