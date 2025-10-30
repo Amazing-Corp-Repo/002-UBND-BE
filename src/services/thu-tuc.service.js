@@ -4,6 +4,7 @@ import { createPagination } from "../utils/response.util.js";
 import CoSoDichVuCongRepository from "../repositories/co-so-dich-vu-cong.repository.js";
 import LinhVucRepository from "../repositories/linh-vuc.repository.js";
 import MauDonRepository from "../repositories/mau-don.repository.js";
+import { capitalizeWords } from "../utils/string.util.js";
 
 const ThuTucService = {
   async getThuTucById(procedureId) {
@@ -25,7 +26,7 @@ const ThuTucService = {
       size,
       is_removed,
       id_linh_vuc,
-      search,
+      search = search ? capitalizeWords(search) : "",
     );
 
     const data = thuTucs.map(item => ({
@@ -35,6 +36,7 @@ const ThuTucService = {
       doi_tuong_thuc_hien: item.doi_tuong_thuc_hien,
       so_quyet_dinh: item.so_quyet_dinh,
       co_so_dich_vu_cong: item.co_so_dich_vu_cong?.ten_co_so || null,
+      so_dien_thoai_co_so: item.co_so_dich_vu_cong?.so_dien_thoai || null,
       linh_vuc: item.thu_tuc_hanh_chinh_linh_vuc.map(lv => lv.linh_vuc.ten_linh_vuc),
       is_removed: item.is_removed,
       thoi_gian_tao: item.thoi_gian_tao,
@@ -59,7 +61,8 @@ const ThuTucService = {
   },
 
   async createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = []) {
-
+    tenThuTuc = capitalizeWords(tenThuTuc);
+    maThuTuc = maThuTuc.toUpperCase();
     const existingCoso = await CoSoDichVuCongRepository.findById(idCoSoDichVuCong, false);
     const existingThuTuc = await ThuTucRepository.findByMaAndTenThuTuc(maThuTuc, tenThuTuc, false);
     const existingLinhVucs = await LinhVucRepository.findManyByIds(danhSachLinhVucIds, false);
@@ -97,7 +100,8 @@ const ThuTucService = {
   },
 
   async updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = []) {
-
+    tenThuTuc = capitalizeWords(tenThuTuc);
+    maThuTuc = maThuTuc.toUpperCase();
     const existingThuTuc = await ThuTucRepository.getThuTucById(thuTucId);
 
     if (!existingThuTuc) {

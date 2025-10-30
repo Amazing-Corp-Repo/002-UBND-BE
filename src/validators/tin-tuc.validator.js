@@ -1,13 +1,15 @@
 import Joi from "joi";
-import  TIN_TUC from "../constants/tin-tuc.constant.js";
+import TIN_TUC from "../constants/tin-tuc.constant.js";
 
 export const UploadFileDinhKemRequest = Joi.object({
     idTinTuc: Joi.string()
+        .trim()
         .optional()
 });
 
 export const UpdateTinTucRequest = Joi.object({
     idDanhMuc: Joi.string()
+        .trim()
         .uuid()
         .required()
         .messages({
@@ -15,6 +17,7 @@ export const UpdateTinTucRequest = Joi.object({
             'string.uuid': 'ID danh mục không hợp lệ'
         }),
     tieuDe: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -22,11 +25,13 @@ export const UpdateTinTucRequest = Joi.object({
             'any.required': 'Tiêu đề là bắt buộc'
         }),
     noiDung: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Nội dung là bắt buộc'
         }),
     trangThai: Joi.string()
+        .trim()
         .valid(...Object.values(TIN_TUC))
         .required()
         .messages({
@@ -34,6 +39,7 @@ export const UpdateTinTucRequest = Joi.object({
             'any.only': `Trạng thái không hợp lệ, giá trị hợp lệ: ${Object.values(TIN_TUC).join(', ')}`
         }),
     tacGia: Joi.string()
+        .trim()
         .max(255)
         .optional()
         .messages({
@@ -48,6 +54,7 @@ export const UpdateTinTucRequest = Joi.object({
 
 export const CreateTinTucRequest = Joi.object({
     idDanhMuc: Joi.string()
+        .trim()
         .uuid()
         .required()
         .messages({
@@ -55,6 +62,7 @@ export const CreateTinTucRequest = Joi.object({
             'string.uuid': 'ID danh mục không hợp lệ'
         }),
     tieuDe: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -62,11 +70,13 @@ export const CreateTinTucRequest = Joi.object({
             'any.required': 'Tiêu đề là bắt buộc'
         }),
     noiDung: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Nội dung là bắt buộc'
         }),
     trangThai: Joi.string()
+        .trim()
         .valid(...Object.values(TIN_TUC))
         .required()
         .messages({
@@ -74,6 +84,7 @@ export const CreateTinTucRequest = Joi.object({
             'any.only': `Trạng thái không hợp lệ, giá trị hợp lệ: ${Object.values(TIN_TUC).join(', ')}`
         }),
     tacGia: Joi.string()
+        .trim()
         .max(255)
         .optional()
         .messages({

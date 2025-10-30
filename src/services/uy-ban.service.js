@@ -1,8 +1,10 @@
 import UyBanRepository from "../repositories/uy-ban.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { capitalizeWords } from "../utils/string.util.js";
 
 const UyBanService = {
     async create(tenDonVi, diaChi, soDienThoai, email, gioLamViec, linkGoogleMap) {
+        tenDonVi = capitalizeWords(tenDonVi);
         const existingUyBan = await UyBanRepository.findFirst();
         if (existingUyBan) {
             throw new BaseError(400,'Đã có ủy ban trong hệ thống');
@@ -23,6 +25,7 @@ const UyBanService = {
     },
 
     async update(id, tenDonVi, diaChi, soDienThoai, email, gioLamViec, linkGoogleMap) {
+        tenDonVi = capitalizeWords(tenDonVi);
         const uyBan = await UyBanRepository.findById(id);
         if (!uyBan) {
             throw new BaseError(404, 'Ủy ban không tồn tại');

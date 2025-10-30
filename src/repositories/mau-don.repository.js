@@ -49,10 +49,15 @@ const MauDonRepository = {
     },
 
 
-    async getAllMauDon(is_removed) {
+    async getAllMauDon(is_removed, search) {
         const where = {
             ...(is_removed !== undefined && is_removed !== ''
                 ? { is_removed: is_removed === 'true' }
+                : {}),
+                ...(search
+                ? {
+                    OR: [{ ten_mau_don: { contains: search, mode: "insensitive" } }],
+                }
                 : {}),
         }
         return await prisma.mau_don.findMany({
@@ -64,6 +69,12 @@ const MauDonRepository = {
     async deleteMauDon(id) {
         return await prisma.mau_don.delete({
             where: { id }
+        });
+    },
+
+    async getMauDonByMaMauDon(maMauDon) {
+        return await prisma.mau_don.findFirst({
+            where: { ma_mau_don: maMauDon }
         });
     }
 };

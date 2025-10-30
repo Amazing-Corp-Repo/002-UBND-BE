@@ -2,6 +2,7 @@ import Joi from "joi";
 
 export const CreateUyBanRequest = Joi.object({
     tenDonVi: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -9,6 +10,7 @@ export const CreateUyBanRequest = Joi.object({
             'any.required': 'Tên ủy ban là bắt buộc',
         }),
     diaChi: Joi.string()
+        .trim()
         .max(500)
         .required()
         .messages({
@@ -16,6 +18,7 @@ export const CreateUyBanRequest = Joi.object({
             'any.required': 'Địa chỉ là bắt buộc',
         }),
     soDienThoai: Joi.string()
+        .trim()
         .pattern(/^[0-9]{10,15}$/)
         .required()
         .messages({
@@ -23,6 +26,7 @@ export const CreateUyBanRequest = Joi.object({
             'any.required': 'Số điện thoại là bắt buộc',
         }),
     email: Joi.string()
+        .trim()
         .email()
         .messages({
             'string.email': 'Email không hợp lệ',
@@ -83,6 +87,7 @@ export const CreateUyBanRequest = Joi.object({
 
 export const UpdateUyBanRequest = Joi.object({
     tenDonVi: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -90,6 +95,7 @@ export const UpdateUyBanRequest = Joi.object({
             'any.required': 'Tên ủy ban là bắt buộc',
         }),
     diaChi: Joi.string()
+        .trim()
         .max(500)
         .required()
         .messages({
@@ -97,6 +103,7 @@ export const UpdateUyBanRequest = Joi.object({
             'any.required': 'Địa chỉ là bắt buộc',
         }),
     soDienThoai: Joi.string()
+        .trim()
         .pattern(/^[0-9]{10,15}$/)
         .required()
         .messages({
@@ -104,6 +111,7 @@ export const UpdateUyBanRequest = Joi.object({
             'any.required': 'Số điện thoại là bắt buộc',
         }),
     email: Joi.string()
+        .trim()
         .email()
         .messages({
             'string.email': 'Email không hợp lệ',
@@ -111,6 +119,7 @@ export const UpdateUyBanRequest = Joi.object({
     gioLamViec: Joi.object({
         buoi_sang: Joi.object({
             tu: Joi.string()
+                .trim()
                 .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
                 .required()
                 .messages({
@@ -118,6 +127,7 @@ export const UpdateUyBanRequest = Joi.object({
                     'any.required': 'Giờ bắt đầu buổi sáng là bắt buộc',
                 }),
             den: Joi.string()
+                .trim()
                 .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
                 .required()
                 .messages({
@@ -129,6 +139,7 @@ export const UpdateUyBanRequest = Joi.object({
         }),
         buoi_chieu: Joi.object({
             tu: Joi.string()
+                .trim()
                 .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
                 .required()
                 .messages({
@@ -136,6 +147,7 @@ export const UpdateUyBanRequest = Joi.object({
                     'any.required': 'Giờ bắt đầu buổi chiều là bắt buộc',
                 }),
             den: Joi.string()
+                .trim()
                 .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
                 .required()
                 .messages({
@@ -146,6 +158,7 @@ export const UpdateUyBanRequest = Joi.object({
             'any.required': 'Thông tin buổi chiều là bắt buộc',
         }),
         ghi_chu: Joi.string()
+            .trim()
             .max(500)
             .optional()
             .messages({
@@ -155,6 +168,7 @@ export const UpdateUyBanRequest = Joi.object({
         'any.required': 'Giờ làm việc là bắt buộc',
     }),
     linkGoogleMap: Joi.string()
+        .trim()
         .uri()
         .optional()
         .messages({

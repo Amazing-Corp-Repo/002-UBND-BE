@@ -36,7 +36,6 @@ mauDonRouter.put("/:id",
 );
 
 mauDonRouter.get("/",
-    authenticate,
     MauDonController.getAllMauDon
 );
 

@@ -2,11 +2,13 @@ import Joi from 'joi';
 
 export const LoginRequest = Joi.object({
     tenDangNhap: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Tên đăng nhập là bắt buộc',
         }),
     matKhau: Joi.string()
+        .trim()
         .min(6)
         .required()
         .messages({
@@ -17,6 +19,7 @@ export const LoginRequest = Joi.object({
 
 export const RefreshTokenRequest = Joi.object({
     refreshToken: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Refresh token là bắt buộc',
@@ -25,6 +28,7 @@ export const RefreshTokenRequest = Joi.object({
 
 export const LogoutRequest = Joi.object({
     refreshToken: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Refresh token là bắt buộc',
@@ -33,6 +37,7 @@ export const LogoutRequest = Joi.object({
 
 export const ChangePasswordRequest = Joi.object({
     matKhauHienTai: Joi.string()
+        .trim()
         .min(6)
         .required()
         .messages({
@@ -40,6 +45,7 @@ export const ChangePasswordRequest = Joi.object({
             'any.required': 'Mật khẩu hiện tại là bắt buộc',
         }),
     matKhauMoi: Joi.string()
+        .trim()
         .min(6)
         .required()
         .messages({
@@ -50,6 +56,7 @@ export const ChangePasswordRequest = Joi.object({
 
 export const VerifyTwoFactorAuthRequest = Joi.object({
     otp: Joi.string()
+        .trim()
         .length(6)
         .required()
         .messages({
@@ -57,6 +64,7 @@ export const VerifyTwoFactorAuthRequest = Joi.object({
             'any.required': 'OTP là bắt buộc',
         }),
     tenDangNhap: Joi.string()
+        .trim()
         .required()
         .messages({
             'any.required': 'Tên đăng nhập là bắt buộc',
@@ -65,6 +73,7 @@ export const VerifyTwoFactorAuthRequest = Joi.object({
 
 export const SendOTPRequest = Joi.object({
     email: Joi.string()
+        .trim()
         .email()
         .required()
         .messages({
@@ -75,6 +84,7 @@ export const SendOTPRequest = Joi.object({
 
 export const ResetPasswordRequest = Joi.object({
     email: Joi.string()
+        .trim()
         .email()
         .required()
         .messages({
@@ -82,6 +92,7 @@ export const ResetPasswordRequest = Joi.object({
             'any.required': 'Email là bắt buộc',
         }),
     newPassword: Joi.string()
+        .trim()
         .min(6)
         .required()
         .messages({
@@ -89,6 +100,7 @@ export const ResetPasswordRequest = Joi.object({
             'any.required': 'Mật khẩu mới là bắt buộc',
         }),
     otp: Joi.string()
+        .trim()
         .length(6)
         .required()
         .messages({
@@ -99,6 +111,7 @@ export const ResetPasswordRequest = Joi.object({
 
 export const VerifyEnableOrDisable2FARequest = Joi.object({
     otp: Joi.string()
+        .trim()
         .length(6)
         .required()
         .messages({

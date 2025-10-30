@@ -5,7 +5,7 @@ import TIN_TUC from "../constants/tin-tuc.constant.js";
 import FileService from "./file.service.js";
 import { createPagination } from "../utils/response.util.js";
 import DanhMucTinTucRepository from "../repositories/danh-muc-tin-tuc.repository.js";
-import e from "express";
+import { capitalizeWords } from "../utils/string.util.js";
 
 const TinTucService = {
     async uploadFile(idTinTuc, file = []) {
@@ -33,7 +33,8 @@ const TinTucService = {
     },
 
     async updateTinTuc(id, idDanhMuc, tieuDe, noiDung, trangThai, tacGia, isRemoved, file = []) {
-
+        tieuDe = capitalizeWords(tieuDe);
+        tacGia = tacGia ? capitalizeWords(tacGia) : tacGia;
         const exsitsting = await TinTucRepository.findById(id);
         if (!exsitsting) {
             throw new BaseError(404, 'Tin tức không tồn tại');
@@ -64,7 +65,6 @@ const TinTucService = {
                 throw new BaseError(400, 'Ảnh đại diện tin tức là bắt buộc để xuất bản tin tức');
             }
             // Gửi thông báo xuất bản tin tức
-            console.log('Gửi thông báo xuất bản tin tức');
             data.is_noti = true;
         }
 
@@ -106,7 +106,8 @@ const TinTucService = {
     },
 
     async createTinTuc(idDanhMuc, tieuDe, noiDung, trangThai, tacGia, file) {
-
+        tieuDe = capitalizeWords(tieuDe);
+        tacGia = tacGia ? capitalizeWords(tacGia) : tacGia;
         if (!file || file.length === 0) {
             throw new BaseError(400, 'Ảnh đại diện tin tức là bắt buộc');
         }
@@ -131,7 +132,6 @@ const TinTucService = {
                 throw new BaseError(400, 'Ảnh đại diện tin tức là bắt buộc để xuất bản tin tức');
             }
             // Gửi thông báo xuất bản tin tức
-            console.log('Gửi thông báo xuất bản tin tức');
 
             data.is_noti = true;
         }

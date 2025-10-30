@@ -9,12 +9,12 @@ export const createPagination = (currentPage, pageSize, totalItems) => {
     };
 };
 
-export const successResponse = (res, data = {}, message = "Success", pagintation = null) => {
+export const successResponse = (res, data = {}, message = "Success", pagination = null) => {
     return res.json({
         success: true,
         data,
         message,
-        pagintation,
+        pagination,
     });
 };
 
