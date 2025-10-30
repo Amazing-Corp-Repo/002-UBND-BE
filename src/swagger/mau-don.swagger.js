@@ -19,7 +19,6 @@ const MauDonSwagger = {
         },
         get: {
             tags: ['MauDon'],
-            security: [{ bearerAuth: [] }],
             summary: 'Get All Mau Don',
             description: 'Retrieve all Mau Don records, optionally filtered by removal status',
             parameters: [
@@ -29,6 +28,13 @@ const MauDonSwagger = {
                     required: false,
                     schema: { type: 'boolean' },
                     description: 'Filter by removal status (true or false)',
+                },
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'string' },
+                    description: 'Search keyword in Mau Don name',
                 }
             ],
             responses: {}

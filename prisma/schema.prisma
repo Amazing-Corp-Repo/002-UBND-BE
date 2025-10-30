@@ -81,6 +81,7 @@ model mau_don {
   nguoi_cap_nhap                                String?                      @db.Uuid
   thoi_gian_tao                                 DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhap                            DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  ma_mau_don                                    String?                      @db.VarChar(50)
   nguoi_dung_mau_don_nguoi_cap_nhapTonguoi_dung nguoi_dung?                  @relation("mau_don_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_cap_nhap")
   nguoi_dung_mau_don_nguoi_taoTonguoi_dung      nguoi_dung?                  @relation("mau_don_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_tao")
   thu_tuc_hanh_chinh_mau_don                    thu_tuc_hanh_chinh_mau_don[]
@@ -246,13 +247,13 @@ model uy_ban {
   dia_chi_tru_so                               String?              @db.VarChar(500)
   so_dien_thoai                                String?              @db.VarChar(20)
   email                                        String?              @db.VarChar(100)
-  gio_lam_viec                                 String?              @db.VarChar(255)
   link_google_map                              String?              @db.VarChar(500)
   is_removed                                   Boolean?             @default(false)
   nguoi_tao                                    String?              @db.Uuid
   nguoi_cap_nhap                               String?              @db.Uuid
   thoi_gian_tao                                DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhap                           DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  gio_lam_viec                                 Json?
   co_so_dich_vu_cong                           co_so_dich_vu_cong[]
   nguoi_dung_uy_ban_nguoi_cap_nhapTonguoi_dung nguoi_dung?          @relation("uy_ban_nguoi_cap_nhapTonguoi_dung", fields: [nguoi_cap_nhap], references: [id], onUpdate: NoAction, map: "fk_uy_ban_nguoi_cap_nhap")
   nguoi_dung_uy_ban_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("uy_ban_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_uy_ban_nguoi_tao")

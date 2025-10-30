@@ -1,8 +1,10 @@
 import DanhMucTinTucRepository from "../repositories/danh-muc-tin-tuc.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { capitalizeWords } from "../utils/string.util.js";
 
 const DanhMucTinTucService = {
     async create(tenDanhMuc, moTa) {
+        tenDanhMuc = capitalizeWords(tenDanhMuc);
         const existingDanhMuc = await DanhMucTinTucRepository.findByTenDanhMuc(tenDanhMuc, false);
 
         if (existingDanhMuc) {
@@ -17,6 +19,7 @@ const DanhMucTinTucService = {
 
 
     async update (id, tenDanhMuc, moTa, isRemoved) {
+        tenDanhMuc = capitalizeWords(tenDanhMuc);
         const existingDanhMuc = await DanhMucTinTucRepository.findById(id);
 
         if (!existingDanhMuc) {

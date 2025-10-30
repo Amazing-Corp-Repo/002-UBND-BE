@@ -10,7 +10,6 @@ const CoSoDichVuCongRepository = {
     },
 
     async getAll(is_removed, search) {
-        console.log(is_removed, search);
         const where = {
             ...(is_removed !== undefined && is_removed !== ""
                 ? { is_removed: is_removed === "true" }

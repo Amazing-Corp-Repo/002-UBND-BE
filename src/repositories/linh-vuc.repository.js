@@ -15,13 +15,17 @@ const LinhVucRepository = {
         });
     },
 
-    async getAll(is_removed) {
+    async getAll(is_removed, search) {
         const where = {
-            ...(is_removed !== undefined && is_removed !== ''
-                ? { is_remove: is_removed === 'true' }
+            ...(is_removed !== undefined && is_removed !== ""
+                ? { is_removed: is_removed === "true" }
                 : {}),
-        }
-        console.log(where);
+            ...(search
+                ? {
+                    OR: [{ ten_linh_vuc: { contains: search, mode: "insensitive" } }],
+                }
+                : {}),
+        };
         return await prisma.linh_vuc.findMany({
             where,
         });

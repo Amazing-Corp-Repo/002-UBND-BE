@@ -2,20 +2,20 @@ import CoSoDichVuCongRepository from "../repositories/co-so-dich-vu-cong.reposit
 import UyBanRepository from "../repositories/uy-ban.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import ThuTucRepository from "../repositories/thu-tuc.repository.js";
-import e from "express";
+import { capitalizeWords } from "../utils/string.util.js";
 
 const CoSoDichCongService = {
     async getAll(isRemoved, search = "") {
         const result = await CoSoDichVuCongRepository.getAll(
             isRemoved,
-            search.toUpperCase(),
+            search ? capitalizeWords(search) : "",
         );
 
         return result;
     },
 
     async create(idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap) {
-
+        tenCoSo = capitalizeWords(tenCoSo);
         const existingCoSo = await CoSoDichVuCongRepository.findByName(tenCoSo);
         if (existingCoSo) {
             throw new BaseError(400, 'Cơ sở dịch vụ công với tên đã tồn tại');
@@ -35,6 +35,7 @@ const CoSoDichCongService = {
     },
 
     async update(id, idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, isRemoved) {
+        tenCoSo = capitalizeWords(tenCoSo);
         const existingCoSo = await CoSoDichVuCongRepository.findById(id);
         if (!existingCoSo) {
             throw new BaseError(404, 'Cơ sở dịch vụ công không tồn tại');

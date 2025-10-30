@@ -15,6 +15,13 @@ const LinhVucSwagger = {
             type: "boolean",
           },
         },
+        {
+          name: "search",
+          in: "query",
+          description: "Từ khóa tìm kiếm trong tên lĩnh vực",
+          required: false,
+          schema: { type: "string" },
+        },
       ],
       responses: {},
     },

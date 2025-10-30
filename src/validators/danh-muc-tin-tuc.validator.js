@@ -2,6 +2,7 @@ import Joi from 'joi';
 
 export const CreateDanhMucTinTucRequest = Joi.object({
     tenDanhMuc: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -9,11 +10,13 @@ export const CreateDanhMucTinTucRequest = Joi.object({
             'any.required': 'Tên danh mục là bắt buộc'
         }),
     moTa: Joi.string()
+        .trim()
         .optional()
 });
 
 export const UpdateDanhMucTinTucRequest = Joi.object({
     tenDanhMuc: Joi.string()
+        .trim()
         .max(255)
         .required()
         .messages({
@@ -21,6 +24,7 @@ export const UpdateDanhMucTinTucRequest = Joi.object({
             'any.required': 'Tên danh mục là bắt buộc'
         }),
     moTa: Joi.string()
+        .trim()
         .optional(),
     isRemoved: Joi.boolean()
         .required()
