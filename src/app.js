@@ -52,7 +52,7 @@ const apiLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res, next) => {
-        return errorResponse(res, { message: "Too many requests, please try again later" }, 429);
+        return errorResponse(res, { message: "Too many requests, please try again later." }, 429);
     }
 });
 
