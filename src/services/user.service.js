@@ -5,6 +5,7 @@ import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
+import { capitalizeWords } from "../utils/string.util.js";
 
 const UserService = {
     async getUserById(userId) {
@@ -16,6 +17,7 @@ const UserService = {
     },
 
     async updateUserProfile(userId, fullName, phone) {
+        fullName = capitalizeWords(fullName);
         const user = await UserRepository.findById(userId);
 
         if (!user) {

@@ -1,20 +1,16 @@
 import LinhVucRepository from "../repositories/linh-vuc.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { capitalizeWords } from "../utils/string.util.js";
 
 const LinhVucService = {
-    _capitalizeFirst(str) {
-        if (typeof str !== 'string') return str;
-        const trimmed = str.trim();
-        if (!trimmed) return trimmed;
-        return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    },
     async getAll(is_removed, searchTerm) {
+        searchTerm = searchTerm ? capitalizeWords(searchTerm) : "";
         const linhVucs = await LinhVucRepository.getAll(is_removed, searchTerm);
         return linhVucs;
     },
 
     async create(ten_linh_vuc, mo_ta) {
-        const normalizedName = this._capitalizeFirst(ten_linh_vuc);
+        const normalizedName = capitalizeWords(ten_linh_vuc);
         const existing = await LinhVucRepository.findByTenLinhVuc(normalizedName, false);
         if (existing) {
             throw new BaseError(400, "Tên lĩnh vực đã tồn tại");
@@ -31,7 +27,7 @@ const LinhVucService = {
             throw new BaseError(404, "Không tìm thấy lĩnh vực để cập nhật");
         }
 
-        const normalizedName = this._capitalizeFirst(ten_linh_vuc);
+        const normalizedName = capitalizeWords(ten_linh_vuc);
         const duplicate = await LinhVucRepository.findByTenLinhVucExcludeId(normalizedName, id, false);
         if (duplicate) {
             throw new BaseError(400, "Tên lĩnh vực đã tồn tại trong lĩnh vực khác");
