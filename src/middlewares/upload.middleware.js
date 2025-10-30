@@ -32,6 +32,7 @@ export const createUploader = ({
                     const dateFolder = vnTime.toISOString().split("T")[0]; 
                     req.uploadFolderPath = path.join(
                         process.cwd(),
+                        "src",
                         "public",
                         "uploads",
                         type,
