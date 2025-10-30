@@ -29,7 +29,7 @@ export const createUploader = ({
                 if (!req.uploadFolderPath) {
                     const now = new Date();
                     const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-                    const dateFolder = vnTime.toISOString().split("T")[0]; 
+                    const dateFolder = vnTime.toISOString().split("T")[0];
                     req.uploadFolderPath = path.join(
                         process.cwd(),
                         "src",
@@ -75,7 +75,7 @@ export const createUploader = ({
 
     return (req, res, next) => {
         uploader(req, res, async (err) => {
-            
+
             if (err instanceof multer.MulterError) {
                 await cleanupUploadFolder(req);
                 switch (err.code) {
@@ -93,8 +93,8 @@ export const createUploader = ({
             }
 
             req.files = req.files.map((f) => {
-                const publicRoot = path.join(process.cwd());
-                const relativePath = path.relative(publicRoot, f.path).replace(/\\/g, "/");
+                const publicDir = path.join(process.cwd(), "src", "public");
+                const relativePath = path.relative(publicDir, f.path).replace(/\\/g, "/");
                 const sizeMB = +(f.size / (1024 * 1024)).toFixed(2);
                 return {
                     ...f,
