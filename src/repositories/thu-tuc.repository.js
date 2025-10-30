@@ -288,7 +288,7 @@ const ThuTucRepository = {
         });
     },
 
-    async createThuTuc(id_co_so_dich_vu_cong, ten_thu_tuc, ma_thu_tuc, doi_tuong_thuc_hien, url_pdf, yeu_cau_dieu_kien_chung, so_quyet_dinh, danh_sach_linh_vuc_ids, danh_sach_mau_don, cach_thu_thuc_hien, trinh_tu_thuc_hien) {
+    async createThuTuc(id_co_so_dich_vu_cong, ten_thu_tuc, ma_thu_tuc, doi_tuong_thuc_hien, yeu_cau_dieu_kien_chung, so_quyet_dinh, danh_sach_linh_vuc_ids, danh_sach_mau_don, cach_thu_thuc_hien, trinh_tu_thuc_hien) {
         return await prisma.$transaction(async (tx) => {
             const newThuTuc = await tx.thu_tuc_hanh_chinh.create({
                 data: {
@@ -296,7 +296,6 @@ const ThuTucRepository = {
                     ten_thu_tuc,
                     ma_thu_tuc,
                     doi_tuong_thuc_hien,
-                    url_thong_tin_chi_tiet_pdf: url_pdf,
                     yeu_cau_dieu_kien_chung,
                     so_quyet_dinh,
                 },
@@ -354,7 +353,7 @@ const ThuTucRepository = {
         });
     },
 
-    async updateThuTuc(thuTucId, id_co_so_dich_vu_cong, ten_thu_tuc, ma_thu_tuc, doi_tuong_thuc_hien, url_pdf, yeu_cau_dieu_kien_chung, so_quyet_dinh, is_removed, danh_sach_linh_vuc_ids, danh_sach_mau_don, cach_thu_thuc_hien, trinh_tu_thuc_hien) {
+    async updateThuTuc(thuTucId, id_co_so_dich_vu_cong, ten_thu_tuc, ma_thu_tuc, doi_tuong_thuc_hien, yeu_cau_dieu_kien_chung, so_quyet_dinh, is_removed, danh_sach_linh_vuc_ids, danh_sach_mau_don, cach_thu_thuc_hien, trinh_tu_thuc_hien) {
         return await prisma.$transaction(async (tx) => {
             const updatedThuTuc = await tx.thu_tuc_hanh_chinh.update({
                 where: { id: thuTucId },
@@ -363,7 +362,6 @@ const ThuTucRepository = {
                     ten_thu_tuc,
                     ma_thu_tuc,
                     doi_tuong_thuc_hien,
-                    url_thong_tin_chi_tiet_pdf: url_pdf,
                     yeu_cau_dieu_kien_chung,
                     so_quyet_dinh,
                     is_removed,
@@ -458,6 +456,15 @@ const ThuTucRepository = {
         return await prisma.thu_tuc_hanh_chinh.findUnique({
             where: {
                 id: thuTucId
+            },
+        });
+    },
+
+    async findByCoSoDichVuCongId(id_co_so_dich_vu_cong) {
+        return await prisma.thu_tuc_hanh_chinh.findMany({
+            where: {
+                id_co_so_dich_vu_cong,
+                is_removed: false,
             },
         });
     }

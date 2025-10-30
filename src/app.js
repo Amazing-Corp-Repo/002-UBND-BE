@@ -44,7 +44,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(express.static('.'));
+app.use(express.static('src/public'));
 
 const apiLimiter = rateLimit({
     windowMs: RATE_LIMIT_WINDOW_MS, // 1 phút

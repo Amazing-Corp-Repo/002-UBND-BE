@@ -58,7 +58,7 @@ const ThuTucService = {
     return mauDonList;
   },
 
-  async createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, url_pdf, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = []) {
+  async createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = []) {
 
     const existingCoso = await CoSoDichVuCongRepository.findById(idCoSoDichVuCong, false);
     const existingThuTuc = await ThuTucRepository.findByMaAndTenThuTuc(maThuTuc, tenThuTuc, false);
@@ -81,7 +81,7 @@ const ThuTucService = {
       throw new BaseError(400, "Một hoặc nhiều mẫu đơn không tồn tại");
     }
 
-    const newThuTuc = await ThuTucRepository.createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, url_pdf, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
+    const newThuTuc = await ThuTucRepository.createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
     return newThuTuc;
   },
 
@@ -96,7 +96,7 @@ const ThuTucService = {
     await ThuTucRepository.hardDeleteThuTuc(thuTucId);
   },
 
-  async updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, url_pdf, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = []) {
+  async updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = []) {
 
     const existingThuTuc = await ThuTucRepository.getThuTucById(thuTucId);
 
@@ -125,7 +125,7 @@ const ThuTucService = {
       throw new BaseError(400, "Một hoặc nhiều mẫu đơn không tồn tại");
     }
 
-    return await ThuTucRepository.updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, url_pdf, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
+    return await ThuTucRepository.updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
   },
 
   async getAllForMobile(id_linh_vuc) {
