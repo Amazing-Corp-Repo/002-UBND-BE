@@ -26,7 +26,7 @@ const MauDonService = {
         return await MauDonRepository.createMauDon(data);
     },
 
-    async updateMauDon(id, tenMauDon, moTa, isRemoved, file) {
+    async updateMauDon(id, tenMauDon, moTa, maMauDon, isRemoved, file) {
         tenMauDon = capitalizeWords(tenMauDon);
         maMauDon = maMauDon.toUpperCase();
         const existing = await MauDonRepository.getMauDonById(id);
