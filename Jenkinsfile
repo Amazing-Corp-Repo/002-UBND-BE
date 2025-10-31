@@ -9,6 +9,27 @@ pipeline {
     DOCKER_BUILDKIT = '1'
   }
   stages {
+    stage('Init Config') {
+      steps {
+        script {
+          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
+          // Map branch -> port and env credential ID
+          def branchMap = [
+            'longt2': [port: '8880', credId: 'ubnd_env_file_longt2'],
+            'staging': [port: '8882', credId: 'ubnd_env_file_staging']
+          ]
+          if (branchMap.containsKey(b)) {
+            env.DEPLOY = 'true'
+            env.DEPLOY_BRANCH = b
+            env.DEPLOY_PORT = branchMap[b].port
+            env.CONTAINER_NAME = ("ubnd_api_" + b).replaceAll('[^A-Za-z0-9_]', '_')
+            env.ENV_CRED_ID = branchMap[b].credId
+          } else {
+            env.DEPLOY = 'false'
+          }
+        }
+      }
+    }
     stage('Debug Info') {
       steps {
         sh 'echo BRANCH_NAME=$BRANCH_NAME && echo GIT_BRANCH=$GIT_BRANCH && hostname && docker --version && docker info >/dev/null || true'
@@ -16,10 +37,7 @@ pipeline {
     }
     stage('Checkout') {
       when {
-        expression {
-          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
-          return b == 'longt2' || env.CHANGE_ID
-        }
+        expression { return env.DEPLOY == 'true' || env.CHANGE_ID }
       }
       steps {
         checkout scm
@@ -27,16 +45,17 @@ pipeline {
     }
     stage('Prepare .env from Jenkins Secret') {
       when {
-        expression {
-          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
-          return b == 'longt2'
-        }
+        expression { return env.DEPLOY == 'true' }
       }
       steps {
         script {
-          // Create a secret file credential in Jenkins with ID: 'ubnd_env_file'
-          // type: Secret file, content: full .env
-          withCredentials([file(credentialsId: 'ubnd_env_file', variable: 'ENV_FILE')]) {
+          // Create secret file credentials per branch in Jenkins:
+          // - ID: 'ubnd_env_file_longt2'  -> .env for longt2
+          // - ID: 'ubnd_env_file_staging' -> .env for staging
+          if (!env.ENV_CRED_ID) {
+            error 'ENV_CRED_ID is not set for this branch; check branchMap.'
+          }
+          withCredentials([file(credentialsId: env.ENV_CRED_ID, variable: 'ENV_FILE')]) {
             sh 'cp "$ENV_FILE" ./.env'
           }
         }
@@ -44,10 +63,7 @@ pipeline {
     }
     stage('Build Image') {
       when {
-        expression {
-          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
-          return b == 'longt2' || env.CHANGE_ID
-        }
+        expression { return env.DEPLOY == 'true' || env.CHANGE_ID }
       }
       steps {
         retry(3) {
@@ -66,34 +82,43 @@ pipeline {
     }
     stage('Migrate DB (Prisma)') {
       when {
-        expression {
-          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
-          return b == 'longt2'
-        }
+        expression { return env.DEPLOY == 'true' }
       }
       steps {
         sh '''
           set -e
           IMAGE_NAME=ubnd-api
           IMAGE_TAG=$(cat .image_tag)
-          echo "Running migrations with ${IMAGE_NAME}:${IMAGE_TAG}"
-          docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma migrate deploy || npx prisma db push'
+          BRANCH=$(echo ${BRANCH_NAME:-${GIT_BRANCH:-}} | sed 's#^origin/##')
+          echo "Checking DB migration need for branch: ${BRANCH}"
+          if [ "${BRANCH}" = "longt2" ]; then
+            echo "Primary branch detected; running migrations."
+            docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma migrate deploy || npx prisma db push'
+          else
+            echo "Non-primary branch; only migrate if DB not initialized."
+            DB_STATUS=$(docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc "npx prisma migrate status --json | node -e \"let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{let j=JSON.parse(s||'{}');console.log(j.databaseSchemaStatus||'');}catch(e){}})\"" 2>/dev/null || true)
+            echo "Prisma databaseSchemaStatus: ${DB_STATUS}"
+            if [ "${DB_STATUS}" = "DatabaseIsNotInitialized" ]; then
+              echo "Database is not initialized. Applying schema (db push)."
+              docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma db push'
+            else
+              echo "Database exists; skipping migration on branch ${BRANCH}."
+            fi
+          fi
         '''
       }
     }
     stage('Deploy') {
       when {
-        expression {
-          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
-          return b == 'longt2'
-        }
+        expression { return env.DEPLOY == 'true' }
       }
       steps {
         sh '''
           set -e
           IMAGE_NAME=ubnd-api
           IMAGE_TAG=$(cat .image_tag)
-          CONTAINER_NAME=ubnd_api
+          CONTAINER_NAME=${CONTAINER_NAME}
+          PORT=${DEPLOY_PORT}
           # Stop/remove old container if exists
           docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
           # Run new container
@@ -101,17 +126,15 @@ pipeline {
             --name ${CONTAINER_NAME} \
             --restart unless-stopped \
             --env-file ./.env \
-            -p 8880:8880 \
+            -e PORT=${PORT} \
+            -p ${PORT}:${PORT} \
             ${IMAGE_NAME}:${IMAGE_TAG}
         '''
       }
     }
     stage('Cleanup Old Images') {
       when {
-        expression {
-          def b = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//,'')
-          return b == 'longt2'
-        }
+        expression { return env.DEPLOY == 'true' }
       }
       steps {
         sh '''
@@ -145,7 +168,7 @@ pipeline {
       echo 'Build failed. Check logs.'
     }
     success {
-      echo 'Build completed. Deploy runs only on branch longt2.'
+      echo 'Build completed. Deploy runs on branches: longt2, staging.'
     }
   }
 }
