@@ -95,15 +95,8 @@ pipeline {
             echo "Primary branch detected; running migrations."
             docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma migrate deploy || npx prisma db push'
           else
-            echo "Non-primary branch; only migrate if DB not initialized."
-            DB_STATUS=$(docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc "npx prisma migrate status --json | node -e \"let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{let j=JSON.parse(s||'{}');console.log(j.databaseSchemaStatus||'');}catch(e){}})\"" 2>/dev/null || true)
-            echo "Prisma databaseSchemaStatus: ${DB_STATUS}"
-            if [ "${DB_STATUS}" = "DatabaseIsNotInitialized" ]; then
-              echo "Database is not initialized. Applying schema (db push)."
-              docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma db push'
-            else
-              echo "Database exists; skipping migration on branch ${BRANCH}."
-            fi
+            echo "Non-primary branch; applying schema idempotently (db push)."
+            docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma db push'
           fi
         '''
       }
