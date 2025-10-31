@@ -12,6 +12,7 @@ import http from 'http';
 import { initSocket } from './realtime/socket/index.js';
 import prisma from "./config/database.config.js";
 import registerPrismaAudit from './middlewares/prisma-audit.middleware.js';
+import basicAuth from "express-basic-auth";
 
 const app = express();
 const PORT = env.PORT;
@@ -60,7 +61,15 @@ app.use(PREFIX_API, apiLimiter, rootRouter);
 CreateAccountSeed();
 app.use(errorHandler);
 
-app.use('/api-docs/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(
+    '/api-docs/',
+    basicAuth({
+        users: { admin: "123456" },
+        challenge: true,
+    }),
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument)
+);
 
 const server = http.createServer(app);
 

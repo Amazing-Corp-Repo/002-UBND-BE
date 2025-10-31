@@ -3,6 +3,7 @@ const UPLOAD_TYPE = {
     MAU_DON: "MAU_DON",
     PHAN_ANH: "PHAN_ANH",
     TIN_TUC: "TIN_TUC",
+    LICH_TIEP_DAN: "LICH_TIEP_DAN",
 };
 
 export default UPLOAD_TYPE;

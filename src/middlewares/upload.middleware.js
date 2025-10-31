@@ -4,7 +4,7 @@ import fs from "fs-extra";
 import { BaseError } from "../utils/base-error.util.js";
 import { toSnakeCaseNonAccent } from "../utils/string.util.js";
 
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf"];
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/csv", "application/vnd.ms-excel"];
 
 const cleanupUploadFolder = async (req) => {
     if (req.uploadFolderPath && (await fs.pathExists(req.uploadFolderPath))) {
@@ -64,6 +64,7 @@ export const createUploader = ({
     });
 
     const fileFilter = (req, file, cb) => {
+        console.log("🔍 Kiểu file:", file.mimetype);
         if (!ALLOWED_TYPES.includes(file.mimetype)) {
             return cb(new BaseError(400, `File "${file.originalname}" không hợp lệ`));
         }
