@@ -7,6 +7,7 @@ pipeline {
   environment {
     DOCKER_CLIENT_TIMEOUT = '300'
     DOCKER_BUILDKIT = '1'
+// hello
   }
   stages {
     stage('Init Config') {
