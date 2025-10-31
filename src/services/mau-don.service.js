@@ -5,11 +5,16 @@ import FileService from "./file.service.js";
 
 const MauDonService = {
     async createMauDon(tenMauDon, moTa, maMauDon, file) {
-        tenMauDon = capitalizeWords(tenMauDon);
-        maMauDon = maMauDon.toUpperCase();
         if (!file || file.length === 0) {
             throw new BaseError(400, 'Vui lòng tải lên file mẫu đơn');
         }
+        tenMauDon = capitalizeWords(tenMauDon);
+        maMauDon = maMauDon.toUpperCase();
+        const existing = await MauDonRepository.findByNameOrCode(tenMauDon, maMauDon);
+        if (existing) {
+            throw new BaseError(400, `Tên mẫu đơn hoặc mã mẫu đơn đã được sử dụng`);
+        }
+
         const firstFile = file?.[0];
         let data = {
             ten_mau_don: tenMauDon,
@@ -21,13 +26,19 @@ const MauDonService = {
         return await MauDonRepository.createMauDon(data);
     },
 
-    async updateMauDon(id, tenMauDon, moTa, isRemoved, file) {
+    async updateMauDon(id, tenMauDon, moTa, maMauDon, isRemoved, file) {
         tenMauDon = capitalizeWords(tenMauDon);
         maMauDon = maMauDon.toUpperCase();
         const existing = await MauDonRepository.getMauDonById(id);
         if (!existing) {
-            throw new BaseError('Mẫu đơn không tồn tại');
+            throw new BaseError(400, 'Mẫu đơn không tồn tại');
         }
+
+        const conflict = await MauDonRepository.findByNameOrCodeExcludeId(id, tenMauDon, maMauDon);
+        if (conflict) {
+            throw new BaseError(400, `Tên mẫu đơn hoặc mã mẫu đơn đã được sử dụng`);
+        }
+
         isRemoved = isRemoved === "true" ? true : isRemoved === "false" ? false : undefined;
 
         if (isRemoved === true) {
