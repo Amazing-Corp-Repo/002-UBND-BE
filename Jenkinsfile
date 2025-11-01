@@ -6,7 +6,9 @@ pipeline {
   }
   environment {
     DOCKER_CLIENT_TIMEOUT = '300'
-    DOCKER_BUILDKIT = '1'
+    // BuildKit triggers need for buildx on some Docker versions in CI
+    // Disable to avoid 'buildx missing or broken' error on agents without the plugin
+    DOCKER_BUILDKIT = '0'
 // hello
   }
   stages {
