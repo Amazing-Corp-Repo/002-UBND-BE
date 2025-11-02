@@ -20,6 +20,7 @@ const PREFIX_API = env.PREFIX_API
 const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
 const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
 
+
 app.use(cors({
     origin: (origin, callback) => {
         // Nếu không có origin (ví dụ: từ Postman), cho phép tất cả
