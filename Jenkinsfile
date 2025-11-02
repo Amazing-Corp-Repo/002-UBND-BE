@@ -119,6 +119,7 @@ pipeline {
           docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
           # Run new container
           docker run -d \
+            --v /var/www/public:/app/src/public 
             --name ${CONTAINER_NAME} \
             --restart unless-stopped \
             --env-file ./.env \
