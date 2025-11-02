@@ -10,8 +10,8 @@ import rateLimit from 'express-rate-limit';
 import { errorResponse } from './utils/response.util.js';
 import http from 'http';
 import { initSocket } from './realtime/socket/index.js';
-import prisma from "./config/database.config.js";
-import registerPrismaAudit from './middlewares/prisma-audit.middleware.js';
+// import prisma from "./config/database.config.js";
+// import registerPrismaAudit from './middlewares/prisma-audit.middleware.js';
 import basicAuth from "express-basic-auth";
 
 const app = express();
@@ -73,8 +73,8 @@ app.use(
 
 const server = http.createServer(app);
 
-await prisma.$connect();
-await registerPrismaAudit();
+// await prisma.$connect();
+// await registerPrismaAudit();
 
 initSocket(server);
 

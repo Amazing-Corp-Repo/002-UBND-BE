@@ -4,13 +4,14 @@ import env from "../config/environment.config.js";
 const jwtUtils = {
     //Generate access token
     signAccessToken(user, ip) {
-        const payload = { userId: user.id, username: user.username, role: user.vai_tro, ip };
+        console.log(user)
+        const payload = { userId: user.id, username: user.ten_dang_nhap, role: user.vai_tro, ip };
         return jwt.sign(payload, env.ACCESS_TOKEN_SECRET, { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN });
     },
 
     //Generate refresh token
     signRefreshToken(user, ip) {
-        const payload = { userId: user.id, username: user.username, role: user.vai_tro, ip };
+        const payload = { userId: user.id, username: user.ten_dang_nhap, role: user.vai_tro, ip };
         return jwt.sign(payload, env.REFRESH_TOKEN_SECRET, { expiresIn: env.REFRESH_TOKEN_EXPIRES_IN });
     },
 

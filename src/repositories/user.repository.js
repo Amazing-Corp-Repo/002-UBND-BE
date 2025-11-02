@@ -3,7 +3,10 @@ import prisma from "../config/database.config.js";
 const UserRepository = {
     async findUserByUsername(ten_dang_nhap) {
         return await prisma.nguoi_dung.findUnique({
-            where: { ten_dang_nhap }
+            where: { 
+                ten_dang_nhap,
+                is_delete: false
+            }
         });
     },
 

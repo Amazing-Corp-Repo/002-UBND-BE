@@ -13,7 +13,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 
@@ -30,7 +30,7 @@ const AuthService = {
 
         await UserSessionLogRepository.endSession(user.id);
         await UserSessionLogRepository.createLog({
-            nguoi_dung_id: user.id,
+            id_nguoi_dung: user.id,
             ip: ip,
             device: device
         });
@@ -38,8 +38,8 @@ const AuthService = {
         const accessToken = jwtUtils.signAccessToken(user, ip);
         const refreshToken = await RefreshTokenService.generate(user, ip, device);
         return {
-            accessToken,
-            refreshToken
+            access_token: accessToken,
+            refresh_token: refreshToken
         };
     },
 

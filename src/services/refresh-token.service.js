@@ -19,7 +19,7 @@ const RefreshTokenService = {
         // Lưu vào DB
 
         await RefreshTokenRepository.create({
-            nguoi_dung_id: user.id,
+            id_nguoi_dung: user.id,
             token_hash,
             expires_at: new Date(Date.now() + ms(REFRESH_TOKEN_EXPIRES_IN)).toISOString(),
             created_by_ip,
