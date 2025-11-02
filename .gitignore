@@ -501,4 +501,11 @@ used queries
 1
 /src/generated/prisma
 .env
-src/public/uploads/
+# Ignore mọi thứ dưới uploads
+src/public/uploads/**
+
+# Nhưng KHÔNG ignore thư mục (dấu / ở cuối rất quan trọng)
+!src/public/uploads/**/
+
+# Và vẫn giữ các file đánh dấu thư mục nếu cần
+!src/public/uploads/**/.gitkeep
