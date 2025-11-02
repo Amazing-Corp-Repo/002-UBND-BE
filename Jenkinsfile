@@ -115,17 +115,25 @@ pipeline {
           IMAGE_TAG=$(cat .image_tag)
           CONTAINER_NAME=${CONTAINER_NAME}
           PORT=${DEPLOY_PORT}
-          # Stop/remove old container if exists
+
           docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
-          mkdir -p /var/www/public/uploads
-          chown -R 1000:1000 /var/www/public/uploads
-          # Run new container
-          docker run -d -v /var/www/public/uploads:/app/src/public/uploads:rw \
+
+          APP_UID=$(docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'id -u')
+          APP_GID=$(docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'id -g')
+
+          # Chuẩn hoá quyền host path qua helper container (root)
+          docker run --rm -v /var/www/public:/mnt alpine:3.20 sh -lc "
+            set -e
+            install -d -m 775 -o ${APP_UID} -g ${APP_GID} /mnt/uploads
+          "
+
+          docker run -d \
             --name ${CONTAINER_NAME} \
             --restart unless-stopped \
             --env-file ./.env \
             -e PORT=${PORT} \
             -p ${PORT}:${PORT} \
+            -v /var/www/public/uploads:/app/src/public/uploads:rw \
             ${IMAGE_NAME}:${IMAGE_TAG}
         '''
       }
