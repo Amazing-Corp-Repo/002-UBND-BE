@@ -117,8 +117,10 @@ pipeline {
           PORT=${DEPLOY_PORT}
           # Stop/remove old container if exists
           docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
+          sudo mkdir -p /var/www/public/uploads
+          sudo chown -R 1000:1000 /var/www/public/uploads
           # Run new container
-          docker run -d -v /var/www/public:/app/src/public \
+          docker run -d -v /var/www/public/uploads:/app/src/public/uploads:rw \
             --name ${CONTAINER_NAME} \
             --restart unless-stopped \
             --env-file ./.env \
