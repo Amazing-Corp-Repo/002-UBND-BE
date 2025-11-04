@@ -22,6 +22,7 @@ const env = {
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     SWAGGER_USERNAME: process.env.SWAGGER_USERNAME,
     SWAGGER_PASSWORD: process.env.SWAGGER_PASSWORD,
+    DATABASE_URL: process.env.DATABASE_URL,
 }
 
 export default env;
