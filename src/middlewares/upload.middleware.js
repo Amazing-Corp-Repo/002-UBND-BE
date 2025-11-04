@@ -4,7 +4,7 @@ import fs from "fs-extra";
 import { BaseError } from "../utils/base-error.util.js";
 import { toSnakeCaseNonAccent } from "../utils/string.util.js";
 
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/csv", "application/vnd.ms-excel"];
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/csv", "application/vnd.ms-excel", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
 
 const cleanupUploadFolder = async (req) => {
     if (req.uploadFolderPath && (await fs.pathExists(req.uploadFolderPath))) {

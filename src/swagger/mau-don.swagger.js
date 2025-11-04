@@ -6,7 +6,7 @@ const MauDonSwagger = {
             tags: ['MauDon'],
             summary: 'Create Mau Don',
             security: [{ bearerAuth: [] }],
-            description: 'Create a new Mau Don record',
+            description: 'Tạo mới mẫu đơn',
             requestBody: {
                 required: true,
                 content: {
@@ -20,21 +20,21 @@ const MauDonSwagger = {
         get: {
             tags: ['MauDon'],
             summary: 'Get All Mau Don',
-            description: 'Retrieve all Mau Don records, optionally filtered by removal status',
+            description: 'Lấy tất cả mẫu đơn; có thể lọc theo trạng thái hoạt động',
             parameters: [
                 {
-                    name: 'isRemoved',
+                    name: 'isActive',
                     in: 'query',
                     required: false,
                     schema: { type: 'boolean' },
-                    description: 'Filter by removal status (true or false)',
+                    description: 'Lọc theo trạng thái hoạt động (true hoặc false)',
                 },
                 {
                     name: 'search',
                     in: 'query',
                     required: false,
                     schema: { type: 'string' },
-                    description: 'Search keyword in Mau Don name',
+                    description: 'Từ khóa tìm kiếm trong tên mẫu đơn',
                 }
             ],
             responses: {}
@@ -45,14 +45,14 @@ const MauDonSwagger = {
             tags: ['MauDon'],
             summary: 'Update Mau Don',
             security: [{ bearerAuth: [] }],
-            description: 'Update an existing Mau Don record by ID',
+            description: 'Cập nhật mẫu đơn theo ID',
             parameters: [
                 {
                     name: 'id',
                     in: 'path',
                     required: true,
                     schema: { type: 'string' },
-                    description: 'ID of the Mau Don to update',
+                    description: 'ID mẫu đơn cần cập nhật',
                 }
             ],
             requestBody: {
@@ -69,16 +69,42 @@ const MauDonSwagger = {
             tags: ['MauDon'],
             summary: 'Delete Mau Don',
             security: [{ bearerAuth: [] }],
-            description: 'Delete a Mau Don record by ID',
+            description: 'Xóa mẫu đơn theo ID',
             parameters: [
                 {
                     name: 'id',
                     in: 'path',
                     required: true,
                     schema: { type: 'string' },
-                    description: 'ID of the Mau Don to delete',
+                    description: 'ID mẫu đơn cần xóa',
                 }
             ],
+            responses: {}
+        }
+    },
+    '/api/mau-don/update-status/{id}': {
+        put: {
+            tags: ['MauDon'],
+            summary: 'Update Mau Don Status',
+            security: [{ bearerAuth: [] }],
+            description: 'Cập nhật trạng thái hoạt động của mẫu đơn theo ID',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'ID mẫu đơn cần cập nhật trạng thái',
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: MauDonSchemas.UpdateStatusMauDonRequestSchema,
+                    }
+                }
+            },
             responses: {}
         }
     }

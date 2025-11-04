@@ -3,7 +3,7 @@ import prisma from "../config/database.config.js";
 const UserRepository = {
     async findUserByUsername(ten_dang_nhap) {
         return await prisma.nguoi_dung.findUnique({
-            where: { 
+            where: {
                 ten_dang_nhap,
                 is_delete: false
             }
@@ -25,16 +25,29 @@ const UserRepository = {
 
     async findById(userId) {
         return await prisma.nguoi_dung.findUnique({
-            where: { id: userId }
+            where: {
+                id: userId,
+                is_delete: false
+            }
         });
     },
 
-    async getAllUsers(page, size) {
+    async getAllUsers(page, size, isActive) {
+        const where = {
+            ...(isActive !== undefined && isActive !== ""
+                ? { is_active: isActive === "true" }
+                : {}),
+        };
         const skip = (page - 1) * size;
         const [users, total] = await Promise.all([
             prisma.nguoi_dung.findMany({
                 skip,
                 take: size,
+                where: {
+                    ...where,
+                    is_delete: false
+                },
+                orderBy: { ten_dang_nhap: 'asc' }
             }),
             prisma.nguoi_dung.count()
         ]);
@@ -48,20 +61,38 @@ const UserRepository = {
                 OR: [
                     { ten_dang_nhap },
                     { email }
-                ]
+                ],
+                is_delete: false
             }
         });
     },
 
     async findByUsername(ten_dang_nhap) {
         return await prisma.nguoi_dung.findFirst({
-            where: { ten_dang_nhap }
+            where: {
+                ten_dang_nhap,
+                is_delete: false
+            }
         });
     },
 
     async findByEmail(email) {
         return await prisma.nguoi_dung.findFirst({
-            where: { email }
+            where: {
+                email,
+                is_delete: false
+            }
+        });
+    },
+
+    async updateStatusByAdmin(userId, isActive, currentUser) {
+        return await prisma.nguoi_dung.update({
+            where: { id: userId },
+            data: {
+                is_active: isActive,
+                nguoi_cap_nhat: currentUser,
+                thoi_gian_cap_nhat: new Date().toISOString()
+            }
         });
     }
 }

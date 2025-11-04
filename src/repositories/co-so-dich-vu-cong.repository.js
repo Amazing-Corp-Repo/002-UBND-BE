@@ -9,16 +9,17 @@ const CoSoDichVuCongRepository = {
         });
     },
 
-    async getAll(is_removed, search) {
+    async getAll(isActive, search) {
         const where = {
-            ...(is_removed !== undefined && is_removed !== ""
-                ? { is_removed: is_removed === "true" }
+            ...(isActive !== undefined && isActive !== ""
+                ? { is_active: isActive === "true" }
                 : {}),
             ...(search
                 ? {
                     OR: [{ ten_co_so: { contains: search, mode: "insensitive" } }],
                 }
                 : {}),
+            is_delete: false,
         };
         const items = await prisma.co_so_dich_vu_cong.findMany({
             where,
@@ -33,21 +34,14 @@ const CoSoDichVuCongRepository = {
         return await prisma.co_so_dich_vu_cong.findFirst({
             where: {
                 ten_co_so: tenCoSo,
-                is_removed: false,
+                is_delete: false,
             },
         });
     },
 
-    async create (idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap) {
+    async create(data) {
         return await prisma.co_so_dich_vu_cong.create({
-            data: {
-                id_uy_ban: idUyBan,
-                ten_co_so: tenCoSo,
-                dia_chi: diaChi,
-                so_dien_thoai: soDienThoai,
-                mo_ta: moTa,
-                link_google_map: linkGoogleMap,
-            }
+            data
         });
     },
 
@@ -56,25 +50,17 @@ const CoSoDichVuCongRepository = {
             where: {
                 ten_co_so: tenCoSo,
                 id: { not: id },
-                is_removed: false,
+                is_delete: false,
             },
         });
     },
 
-    async update(id, idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, isRemoved) {
+    async update(id, data) {
         return await prisma.co_so_dich_vu_cong.update({
             where: {
                 id,
             },
-            data: {
-                id_uy_ban: idUyBan,
-                ten_co_so: tenCoSo,
-                dia_chi: diaChi,
-                so_dien_thoai: soDienThoai,
-                mo_ta: moTa,
-                link_google_map: linkGoogleMap,
-                is_removed: isRemoved,
-            }
+            data
         });
     },
 

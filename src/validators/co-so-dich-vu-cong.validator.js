@@ -1,14 +1,6 @@
 import Joi from "joi";
 
 export const CreateCoSoDichVuCongRequest = Joi.object({
-    idUyBan: Joi.string()
-        .trim()
-        .guid({ version: ['uuidv4'] })
-        .required()
-        .messages({
-            'string.guid': 'ID Ủy ban không hợp lệ (phải là UUID v4)',
-            'any.required': 'ID Ủy ban là bắt buộc',
-        }),
     tenCoSo: Joi.string()
         .trim()
         .max(255)
@@ -21,18 +13,21 @@ export const CreateCoSoDichVuCongRequest = Joi.object({
         .trim()
         .max(500)
         .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Địa chỉ không được vượt quá 500 ký tự',
         }),
     soDienThoai: Joi.string()
         .trim()
         .optional()
+        .allow(null, '')
         .messages({
             'string.pattern.base': 'Số điện thoại phải là chuỗi số từ 10 đến 20 ký tự',
         }),
     moTa: Joi.string()
         .trim()
         .optional()
+        .allow(null, '')
         .messages({
             'string.base': 'Mô tả phải là chuỗi',
         }),
@@ -41,6 +36,7 @@ export const CreateCoSoDichVuCongRequest = Joi.object({
         .uri()
         .max(500)
         .optional()
+        .allow(null, '')
         .messages({
             'string.uri': 'Link Google Map không hợp lệ',
             'string.max': 'Link Google Map không được vượt quá 500 ký tự',
@@ -48,14 +44,6 @@ export const CreateCoSoDichVuCongRequest = Joi.object({
 });
 
 export const UpdateCoSoDichVuCongRequest = Joi.object({
-    idUyBan: Joi.string()
-        .trim()
-        .guid({ version: ['uuidv4'] })
-        .required()
-        .messages({
-            'string.guid': 'ID Ủy ban không hợp lệ (phải là UUID v4)',
-            'any.required': 'ID Ủy ban là bắt buộc',
-        }),
     tenCoSo: Joi.string()
         .trim()
         .max(255)
@@ -68,18 +56,21 @@ export const UpdateCoSoDichVuCongRequest = Joi.object({
         .trim()
         .max(500)
         .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Địa chỉ không được vượt quá 500 ký tự',
         }),
     soDienThoai: Joi.string()
         .trim()
         .optional()
+        .allow(null, '')
         .messages({
             'string.pattern.base': 'Số điện thoại phải là chuỗi số từ 10 đến 20 ký tự',
         }),
     moTa: Joi.string()
         .trim()
         .optional()
+        .allow(null, '')
         .messages({
             'string.base': 'Mô tả phải là chuỗi',
         }),
@@ -88,12 +79,17 @@ export const UpdateCoSoDichVuCongRequest = Joi.object({
         .uri()
         .max(500)
         .optional()
+        .allow(null, '')
         .messages({
             'string.uri': 'Link Google Map không hợp lệ',
             'string.max': 'Link Google Map không được vượt quá 500 ký tự',
         }),
-    isRemoved: Joi.boolean()
+});
+
+export const UpdateStatusCoSoDichVuCongRequest = Joi.object({
+    isActive: Joi.boolean()
+        .required()
         .messages({
-            'boolean.base': 'isRemoved phải là kiểu boolean',
+            'any.required': 'Trạng thái hoạt động là bắt buộc',
         }),
 });

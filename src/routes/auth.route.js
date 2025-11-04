@@ -4,6 +4,8 @@ import { ChangePasswordRequest, LoginRequest, LogoutRequest, RefreshTokenRequest
 import AuthController from '../controllers/auth.controller.js';
 import { clientInfo } from '../middlewares/client-info.middleware.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
+import { audit_logs } from '../middlewares/audit-logs.middleware.js';
+import AUDIT_LOGS from '../constants/audit-logs-action.constant.js';
 
 const authRoute = express.Router();
 
@@ -11,11 +13,29 @@ authRoute.post('/login', validate(LoginRequest), clientInfo, AuthController.logi
 authRoute.post('/logout', validate(LogoutRequest), clientInfo, AuthController.logout);
 authRoute.put('/refresh-token', validate(RefreshTokenRequest), clientInfo, AuthController.refreshToken);
 
-authRoute.put('/change-password', authenticate, validate(ChangePasswordRequest), AuthController.changePassword);
+authRoute.put(
+    '/change-password',
+    authenticate,
+    validate(ChangePasswordRequest),
+    audit_logs(AUDIT_LOGS.UPDATE, 'user'),
+    AuthController.changePassword
+);
+
 authRoute.put('/reset-password', validate(ResetPasswordRequest), clientInfo, AuthController.resetPassword);
 
-authRoute.post('/enable-or-disable-2fa', authenticate, clientInfo, AuthController.enableOrDisableTwoFactorAuth);
-authRoute.post('/verify-enable-or-disable-2fa', authenticate, validate(VerifyEnableOrDisable2FARequest), AuthController.verifyEnableOrDisable2FA);
+authRoute.post('/enable-or-disable-2fa',
+    authenticate,
+    clientInfo,
+    audit_logs(AUDIT_LOGS.UPDATE, 'user'),
+    AuthController.enableOrDisableTwoFactorAuth
+);
+authRoute.post(
+    '/verify-enable-or-disable-2fa',
+    authenticate,
+    validate(VerifyEnableOrDisable2FARequest),
+    audit_logs(AUDIT_LOGS.UPDATE, 'user'),
+    AuthController.verifyEnableOrDisable2FA
+);
 authRoute.post('/verify-2fa', validate(VerifyTwoFactorAuthRequest), clientInfo, AuthController.verifyTwoFactorAuth);
 
 authRoute.post('/send-otp', validate(SendOTPRequest), AuthController.sendOTP);

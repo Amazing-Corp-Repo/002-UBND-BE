@@ -79,10 +79,12 @@ export const UpdateProfileByAdminRequest = Joi.object({
             'any.only': 'Vai trò không hợp lệ',
             'any.required': 'Vai trò là bắt buộc',
         }),
-    trangThai: Joi.boolean()
+});
+
+export const UpdateStatusByAdminRequest = Joi.object({
+    isActive: Joi.boolean()
         .required()
         .messages({
-            'boolean.base': 'Trạng thái phải là true hoặc false',
-            'any.required': 'Trạng thái là bắt buộc',
+            'any.required': 'Trạng thái hoạt động là bắt buộc',
         }),
 });

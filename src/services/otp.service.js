@@ -14,7 +14,7 @@ const OTPService = {
         const expires_at = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000).toISOString();
 
         await OTPRepository.create({
-            nguoi_dung_id: userId,
+            id_nguoi_dung: userId,
             ma_otp: otpCode,
             loai_otp: otpType,
             expires_at,

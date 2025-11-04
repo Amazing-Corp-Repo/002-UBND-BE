@@ -1,7 +1,7 @@
 import prisma from "../config/database.config.js";
 
 const LinhVucRepository = {
-    async findManyByIds(ids, is_removed = false) {
+    async findManyByIds(ids, is_active = true) {
         if (ids.length === 0) {
             return [];
         }
@@ -10,32 +10,34 @@ const LinhVucRepository = {
                 id: {
                     in: ids,
                 },
-                is_remove: is_removed,
+                is_active,
+                is_delete: false,
             },
         });
     },
 
-    async getAll(is_removed, search) {
+    async getAll(isActive, search) {
         const where = {
-            ...(is_removed !== undefined && is_removed !== ""
-                ? { is_remove: is_removed === "true" }
+            ...(isActive !== undefined && isActive !== ""
+                ? { is_active: isActive === "true" }
                 : {}),
             ...(search
                 ? {
                     OR: [{ ten_linh_vuc: { contains: search, mode: "insensitive" } }],
                 }
                 : {}),
+            is_delete: false,
         };
         return await prisma.linh_vuc.findMany({
             where,
         });
     },
 
-    async findByTenLinhVuc(ten_linh_vuc, is_removed = false) {
+    async findByTenLinhVuc(ten_linh_vuc) {
         return await prisma.linh_vuc.findFirst({
             where: {
                 ten_linh_vuc,
-                is_remove: is_removed,
+                is_delete: false,
             },
         });
     },
@@ -46,34 +48,26 @@ const LinhVucRepository = {
         });
     },
 
-    async findByTenLinhVucExcludeId(ten_linh_vuc, excludeId, is_removed = false) {
+    async findByTenLinhVucExcludeId(ten_linh_vuc, excludeId) {
         return await prisma.linh_vuc.findFirst({
             where: {
                 ten_linh_vuc,
-                is_remove: is_removed,
+                is_delete: false,
                 NOT: { id: excludeId },
             },
         });
     },
 
-    async create(ten_linh_vuc, mo_ta) {
+    async create(data) {
         return await prisma.linh_vuc.create({
-            data: {
-                ten_linh_vuc,
-                mo_ta: mo_ta || null,
-            },
+            data,
         });
     },
 
-    async update(id, ten_linh_vuc, mo_ta, is_remove, nguoi_cap_nhap) {
+    async update(id, data) {
         return await prisma.linh_vuc.update({
             where: { id },
-            data: {
-                ten_linh_vuc,
-                mo_ta: mo_ta !== undefined ? (mo_ta || null) : undefined,
-                is_remove: is_remove !== undefined ? is_remove : undefined,
-                nguoi_cap_nhap,
-            },
+            data
         });
     },
 
@@ -81,14 +75,11 @@ const LinhVucRepository = {
         return await prisma.thu_tuc_hanh_chinh_linh_vuc.count({
             where: {
                 id_linh_vuc,
-                thu_tuc_hanh_chinh: { is_removed: false },
+                thu_tuc_hanh_chinh: {
+                    is_active: true, 
+                    is_delete: false 
+                },
             },
-        });
-    },
-
-    async hardDelete(id) {
-        return await prisma.linh_vuc.delete({
-            where: { id },
         });
     },
 };
