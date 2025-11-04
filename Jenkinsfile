@@ -90,23 +90,26 @@ pipeline {
           set -e
           IMAGE_NAME=ubnd-api
           IMAGE_TAG=$(cat .image_tag)
-          BRANCH=$(echo $(git rev-parse --abbrev-ref HEAD) | sed 's#^origin/##')
 
-          echo "Applying Prisma migrations on branch: ${BRANCH}"
+          # Nếu không có migrations -> skip để tránh P3005
+          if [ ! -d prisma/migrations ] || [ -z "$(ls -A prisma/migrations 2>/dev/null || true)" ]; then
+            echo "No prisma/migrations found; skip migrate deploy this run."
+            exit 0
+          fi
 
-          # (Tuỳ chọn nhưng nên có) Tạo schema nếu chưa tồn tại
+          # (tuỳ chọn) đảm bảo schema tồn tại
           if [ -f prisma/init.sql ]; then
             echo "Ensuring DB schema exists via prisma/init.sql..."
             docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc \
               'npx prisma db execute --file prisma/init.sql --schema prisma/schema.prisma'
           fi
 
-          # Áp dụng migration đã commit (idempotent, safe cho mọi branch)
           docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc \
             'npx prisma migrate deploy'
         '''
       }
     }
+
 
     stage('Deploy') {
       when {
