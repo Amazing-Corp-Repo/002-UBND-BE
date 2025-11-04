@@ -5,20 +5,20 @@ const CoSoDichVuCongSwagger = {
         get: {
             tags: ['CoSoDichVuCong'],
             summary: 'Lấy danh sách Cơ sở dịch vụ công',
-            description: 'Trả về danh sách các cơ sở dịch vụ công với phân trang, tìm kiếm và lọc trạng thái xóa mềm.',
+            description: 'Trả về danh sách các cơ sở dịch vụ công, tìm kiếm và lọc trạng thái.',
             parameters: [
                 {
-                    name: 'isRemoved',
+                    name: 'isActive',
                     in: 'query',
                     required: false,
                     schema: { type: 'boolean' },
-                    description: 'Bộ lọc trạng thái xóa mềm (true/false). Nếu không có, sẽ không lọc theo trạng thái xóa.'
+                    description: 'Bộ lọc trạng thái. Nếu không có, sẽ không lọc theo trạng thái xóa.'
                 },
                 {
                     name: 'search',
                     in: 'query',
                     required: false,
-                    description: 'Từ khóa tìm kiếm trong tên cơ sở, địa chỉ, số điện thoại.'
+                    description: 'Từ khóa tìm kiếm trong tên cơ sở.'
                 }
             ],
             responses: {},
@@ -91,6 +91,31 @@ const CoSoDichVuCongSwagger = {
                     description: 'Mã định danh của cơ sở dịch vụ công cần xóa vĩnh viễn',
                 },
             ],
+            responses: {},
+        },
+    },
+    '/api/co-so-dich-vu-cong/update-status/{id}': {
+        put: {
+            tags: ['CoSoDichVuCong'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Cập nhật trạng thái hoạt động của Cơ sở dịch vụ công',
+            description: 'Cập nhật trạng thái hoạt động (kích hoạt/hủy kích hoạt) của một cơ sở dịch vụ công dựa trên mã định danh duy nhất.',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    description: 'Mã định danh của cơ sở dịch vụ công cần cập nhật trạng thái',
+                },
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: CoSoDichVuCongSchemas.UpdateStatusCoSoDichVuCongRequest,
+                    },
+                },
+            },
             responses: {},
         },
     },

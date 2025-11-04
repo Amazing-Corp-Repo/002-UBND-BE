@@ -1,79 +1,92 @@
-import express from 'express';
-import env from './config/environment.config.js';
-import cors from 'cors';
-import rootRouter from './routes/root.route.js';
-import swaggerDocument from './swagger/index.js';
-import swaggerUi from 'swagger-ui-express';
+import express from "express";
+import env from "./config/environment.config.js";
+import cors from "cors";
+import rootRouter from "./routes/root.route.js";
+import swaggerDocument from "./swagger/index.js";
+import swaggerUi from "swagger-ui-express";
 import { errorHandler } from "./middlewares/error-handle.middleware.js";
-import { CreateAccountSeed } from './seeds/create-account.seed.js';
-import rateLimit from 'express-rate-limit';
-import { errorResponse } from './utils/response.util.js';
-import http from 'http';
-import { initSocket } from './realtime/socket/index.js';
-import prisma from "./config/database.config.js";
-import registerPrismaAudit from './middlewares/prisma-audit.middleware.js';
+import { CreateAccountSeed } from "./seeds/create-account.seed.js";
+import rateLimit from "express-rate-limit";
+import { errorResponse } from "./utils/response.util.js";
+import http from "http";
+import { initSocket } from "./realtime/socket/index.js";
+import basicAuth from "express-basic-auth";
 
 const app = express();
 const PORT = env.PORT;
 const ALLOWED_CORS_ORIGIN = env.CORS_ORIGIN;
-const PREFIX_API = env.PREFIX_API
+const PREFIX_API = env.PREFIX_API;
 const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
 const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
+const SWAGGER_USERNAME = env.SWAGGER_USERNAME;
+const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD;
+const DATABASE_URL = env.DATABASE_URL;
 
-
-app.use(cors({
+console.log("Database URL:", DATABASE_URL);
+app.use(
+  cors({
     origin: (origin, callback) => {
-        // Nếu không có origin (ví dụ: từ Postman), cho phép tất cả
-        if (!origin) return callback(null, true);
+      // Nếu không có origin (ví dụ: từ Postman), cho phép tất cả
+      if (!origin) return callback(null, true);
 
-        // Nếu CORS_ORIGIN là '*' thì cho phép tất cả các domain
-        if (ALLOWED_CORS_ORIGIN.includes('*')) {
-            return callback(null, true);
-        }
+      // Nếu CORS_ORIGIN là '*' thì cho phép tất cả các domain
+      if (ALLOWED_CORS_ORIGIN.includes("*")) {
+        return callback(null, true);
+      }
 
-        // Kiểm tra xem origin có trong whitelist không
-        if (ALLOWED_CORS_ORIGIN.includes(origin)) {
-            console.log(`Allowed by CORS: ${origin}`);  // Log các domain được phép
-            return callback(null, true);
-        }
+      // Kiểm tra xem origin có trong whitelist không
+      if (ALLOWED_CORS_ORIGIN.includes(origin)) {
+        console.log(`Allowed by CORS: ${origin}`); // Log các domain được phép
+        return callback(null, true);
+      }
 
-        // Nếu không có trong whitelist -> block
-        console.log(`Not allowed by CORS: ${origin}`);  // Log các domain không được phép
-        return callback(new Error(`Not allowed by CORS: ${origin}`));
+      // Nếu không có trong whitelist -> block
+      console.log(`Not allowed by CORS: ${origin}`); // Log các domain không được phép
+      return callback(new Error(`Not allowed by CORS: ${origin}`));
     },
-    credentials: true  // Cho phép cookie, token
-}));
+    credentials: true, // Cho phép cookie, token
+  })
+);
 
 app.use(express.json());
-app.use(express.static('src/public'));
+app.use(express.static("src/public"));
 
 const apiLimiter = rateLimit({
-    windowMs: RATE_LIMIT_WINDOW_MS, // 1 phút
-    max: RATE_LIMIT_MAX,             // tối đa 100 request trong 1 phút
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res, next) => {
-        return errorResponse(res, { message: "Too many requests, please try again later." }, 429);
-    }
+  windowMs: RATE_LIMIT_WINDOW_MS, // 1 phút
+  max: RATE_LIMIT_MAX, // tối đa 100 request trong 1 phút
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next) => {
+    return errorResponse(
+      res,
+      { message: "Too many requests, please try again later." },
+      429
+    );
+  },
 });
 
 app.use(PREFIX_API, apiLimiter, rootRouter);
 CreateAccountSeed();
 app.use(errorHandler);
 
-app.use('/api-docs/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(
+  "/api-docs/",
+  basicAuth({
+    users: { [SWAGGER_USERNAME]: SWAGGER_PASSWORD },
+    challenge: true,
+  }),
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument)
+);
 
 const server = http.createServer(app);
-
-await prisma.$connect();
-await registerPrismaAudit();
 
 initSocket(server);
 
 // Lightweight health endpoint for container/platform checks
-app.get('/health', (req, res) => {
-    res.status(200).send('ok');
+app.get("/health", (req, res) => {
+  res.status(200).send("ok");
 });
 server.listen(PORT, () => {
-    console.log(`Server is running on port: ${PORT}`);
+  console.log(`Server is running on port: ${PORT}`);
 });

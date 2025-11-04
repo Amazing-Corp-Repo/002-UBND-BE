@@ -5,7 +5,7 @@ import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
-import { capitalizeWords } from "../utils/string.util.js";
+import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const UserService = {
     async getUserById(userId) {
@@ -13,6 +13,7 @@ const UserService = {
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
+        console.log(user);
         return toUserResponse(user);
     },
 
@@ -26,14 +27,14 @@ const UserService = {
 
         let userUpdated = await UserRepository.updateUser(
             userId,
-            { ho_va_ten: fullName, so_dien_thoai: phone }
+            { ho_va_ten: fullName, so_dien_thoai: phone, nguoi_cap_nhat: userId, thoi_gian_cap_nhat: new Date().toISOString() }
         );
 
         return toUserResponse(userUpdated);
     },
 
-    async getAllUsers(page, size) {
-        const { users, total } = await UserRepository.getAllUsers(page, size);
+    async getAllUsers(page, size, isActive) {
+        const { users, total } = await UserRepository.getAllUsers(page, size, isActive);
         const userResponses = users.map(user => toUserResponse(user));
         const pagintation = createPagination(page, size, total);
         return { data: userResponses, pagintation };
@@ -70,14 +71,47 @@ const UserService = {
         };
     },
 
-    async updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, trangThai) {
+    async updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, currentUser) {
         const user = await UserRepository.findById(userId);
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
         let userUpdated = await UserRepository.updateUser(
             userId,
-            { ho_va_ten: hoVaTen, so_dien_thoai: soDienThoai, vai_tro: vaiTro, trang_thai: trangThai }
+            { ho_va_ten: hoVaTen, so_dien_thoai: soDienThoai, vai_tro: vaiTro, nguoi_cap_nhat: currentUser, thoi_gian_cap_nhat: new Date().toISOString() }
+        );
+        return toUserResponse(userUpdated);
+    },
+
+    async deleteUser(userId, currentUser) {
+        const user = await UserRepository.findById(userId);
+        if (!user) {
+            throw new BaseError(404, 'Không tìm thấy người dùng');
+        }
+        if (user.is_active) {
+            throw new BaseError(400, 'Không thể xóa người dùng đang hoạt động. Vui lòng vô hiệu hóa người dùng trước khi xóa.');
+        }
+        await UserRepository.updateUser(
+            userId,
+            {
+                is_delete: true,
+                ten_dang_nhap: appendDeleteSuffixc(user.ten_dang_nhap),
+                email: appendDeleteSuffixc(user.email),
+                nguoi_cap_nhat: currentUser,
+                thoi_gian_cap_nhat: new Date().toISOString()
+            }
+        );
+    },
+
+    async updateStatusByAdmin(userId, isActive, currentUser) {
+        const user = await UserRepository.findById(userId);
+        if (!user) {
+            throw new BaseError(404, 'Không tìm thấy người dùng');
+        }
+        let userUpdated = await UserRepository.updateStatusByAdmin(
+            userId,
+            isActive,
+            currentUser,
         );
         return toUserResponse(userUpdated);
     }

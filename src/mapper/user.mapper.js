@@ -1,15 +1,15 @@
 const toUserResponse = (user) => {
     return {
         id: user.id,
-        tenDangNhap: user.ten_dang_nhap,
-        hoVaTen: user.ho_va_ten,
+        ten_dang_nhap: user.ten_dang_nhap,
+        ho_va_ten: user.ho_va_ten,
         email: user.email,
-        soDienThoai: user.so_dien_thoai,
-        vaiTro: user.vai_tro,
-        xacThucHaiYeuTo: user.is_enable_two_factor,
-        trangThai: user.trang_thai,
-        ngayTao: user.thoi_gian_tao,
-        ngayCapNhap: user.thoi_gian_cap_nhap,
+        so_dien_thoai: user.so_dien_thoai,
+        vai_tro: user.vai_tro,
+        xac_thuc_hai_yeu_to: user.is_enable_two_factor,
+        is_active: user.is_active,
+        thoi_gian_tao: user.thoi_gian_tao,
+        thoi_gian_cap_nhat: user.thoi_gian_cap_nhat,
     };
 }
 

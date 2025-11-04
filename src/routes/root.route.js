@@ -8,6 +8,7 @@ import linhVucRoute from './linh-vuc.route.js';
 import coSoDichVuCongRoute from './co-so-dich-vu-cong.route.js';
 import tinTucRouter from './tin-tuc.route.js';
 import danhMucTinTucRouter from './danh-muc-tin-tuc.route.js';
+import lichTiepDanRouter from './lich-tiep-dan.route.js';
 
 const rootRouter = express.Router();
 
@@ -20,6 +21,7 @@ rootRouter.use('/linh-vuc', linhVucRoute);
 rootRouter.use('/co-so-dich-vu-cong', coSoDichVuCongRoute);
 rootRouter.use('/tin-tuc', tinTucRouter);
 rootRouter.use('/danh-muc-tin-tuc', danhMucTinTucRouter);
+rootRouter.use('/lich-tiep-dan', lichTiepDanRouter);
 
 export default rootRouter;
 

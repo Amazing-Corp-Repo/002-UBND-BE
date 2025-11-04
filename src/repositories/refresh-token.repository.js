@@ -27,7 +27,7 @@ const RefreshTokenRepository = {
         return await prisma.refresh_token.updateMany({
             where: {
                 is_revoked: false,
-                nguoi_dung_id: userId
+                id_nguoi_dung: userId
             },
             data: {
                 is_revoked: true,

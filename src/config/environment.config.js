@@ -20,6 +20,9 @@ const env = {
     RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS,
     RATE_LIMIT_MAX: process.env.RATE_LIMIT_MAX,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    SWAGGER_USERNAME: process.env.SWAGGER_USERNAME,
+    SWAGGER_PASSWORD: process.env.SWAGGER_PASSWORD,
+    DATABASE_URL: process.env.DATABASE_URL,
 }
 
 export default env;

@@ -1,5 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
+import ExcelJS from "exceljs";
 
 const FileService = {
     async deleteFile(relativePath) {
@@ -27,6 +28,37 @@ const FileService = {
         } catch (err) {
             console.error("❌ Lỗi khi xóa file:", err.message);
         }
+    },
+
+    async readSpreadsheetFile(filePath) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(filePath);
+        const worksheet = workbook.worksheets[0];
+
+        const rows = [];
+        let headers = [];
+
+        worksheet.eachRow((row, rowNumber) => {
+            const values = row.values.slice(1);
+            if (rowNumber === 1) {
+                headers = values.map((v) => String(v || "").trim());
+            } else {
+                const obj = {};
+                headers.forEach((key, i) => {
+                    obj[key] = values[i] ?? null;
+                });
+                rows.push(obj);
+            }
+        });
+        try {
+            const parentDir = path.dirname(filePath);
+            await fs.remove(parentDir);
+            console.log(`✅ Đã xóa file sau khi đọc: ${filePath}`);
+        } catch (err) {
+            console.error("❌ Lỗi khi xóa file sau khi đọc:", err.message);
+        }
+
+        return rows;
     },
 };
 

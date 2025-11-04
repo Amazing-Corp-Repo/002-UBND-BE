@@ -7,7 +7,7 @@ const LinhVucSwagger = {
       summary: "Lấy danh sách lĩnh vực",
       parameters: [
         {
-          name: "is_removed",
+          name: "isActive",
           in: "query",
           description: "Bộ lọc lĩnh vực đã bị xóa hay chưa (true/false)",
           required: false,
@@ -34,10 +34,6 @@ const LinhVucSwagger = {
         content: {
           "application/json": {
             schema: LinhVucSchemas.CreateLinhVucRequest,
-            example: {
-              ten_linh_vuc: "Thủ tục hành chính",
-              mo_ta: "Mô tả về lĩnh vực thủ tục hành chính",
-            },
           },
         },
       },
@@ -67,11 +63,6 @@ const LinhVucSwagger = {
         content: {
           "application/json": {
             schema: LinhVucSchemas.UpdateLinhVucRequest,
-            example: {
-              ten_linh_vuc: "Thủ tục hành chính (đã cập nhật)",
-              mo_ta: "Mô tả đã được cập nhật về lĩnh vực thủ tục hành chính",
-              is_remove: false,
-            },
           },
         },
       },
@@ -79,7 +70,7 @@ const LinhVucSwagger = {
     },
     delete: {
       tags: ["LinhVuc"],
-      summary: "Xóa cứng lĩnh vực",
+      summary: "Xóa lĩnh vực",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -89,6 +80,31 @@ const LinhVucSwagger = {
           schema: { type: "string", format: "uuid" },
         },
       ],
+      responses: {},
+    },
+  },
+
+  "/api/linh-vuc/update-status/{id}": {
+    put: {
+      tags: ["LinhVuc"],
+      summary: "Cập nhật trạng thái hoạt động của lĩnh vực",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { 
+          name: "id", 
+          in: "path", 
+          required: true,
+          schema: { type: "string", format: "uuid" } 
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: LinhVucSchemas.UpdateLinhVucStatusRequest,
+          },
+        },
+      },
       responses: {},
     },
   },

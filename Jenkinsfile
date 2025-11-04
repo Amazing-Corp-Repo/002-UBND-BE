@@ -83,6 +83,7 @@ pipeline {
         }
       }
     }
+
     stage('Migrate DB (Prisma)') {
       when {
         expression { return env.DEPLOY == 'true' }
@@ -104,6 +105,8 @@ pipeline {
         '''
       }
     }
+
+
     stage('Deploy') {
       when {
         expression { return env.DEPLOY == 'true' }

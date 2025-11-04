@@ -3,14 +3,14 @@ import { successResponse } from "../utils/response.util.js";
 
 const CoSoDichVuCongController = {
     async getAll(req, res) {
-        const { isRemoved, search } = req.query;
+        const { isActive, search } = req.query;
         const searchTerm =
             typeof search === "string" && search.trim() !== ""
                 ? search.trim()
                 : undefined;
 
         const result = await CoSoDichVuCongService.getAll(
-            isRemoved,
+            isActive,
             searchTerm
         );
         return successResponse(res, result, "Lấy danh sách cơ sở dịch vụ công");
@@ -18,20 +18,20 @@ const CoSoDichVuCongController = {
 
     async create(req, res) {
         const {
-            idUyBan,
             tenCoSo,
             diaChi,
             soDienThoai,
             moTa,
             linkGoogleMap
         } = req.body;
+        const currentUser = req.payload.userId
         const result = await CoSoDichVuCongService.create(
-            idUyBan,
             tenCoSo,
             diaChi,
             soDienThoai,
             moTa,
-            linkGoogleMap
+            linkGoogleMap,
+            currentUser
         );
         return successResponse(res, result, "Tạo mới cơ sở dịch vụ công thành công");
     },
@@ -45,30 +45,41 @@ const CoSoDichVuCongController = {
     async update(req, res) {
         const { id } = req.params;
         const {
-            idUyBan,
             tenCoSo,
             diaChi,
             soDienThoai,
             moTa,
             linkGoogleMap,
-            isRemoved
         } = req.body;
+        const currentUser = req.payload.userId
         const result = await CoSoDichVuCongService.update(
             id,
-            idUyBan,
             tenCoSo,
             diaChi,
             soDienThoai,
             moTa,
             linkGoogleMap,
-            isRemoved
+            currentUser
         );
         return successResponse(res, result, "Cập nhật cơ sở dịch vụ công thành công");
     },
 
+    async updateStatus(req, res) {
+        const { id } = req.params;
+        const { isActive } = req.body;
+        const currentUser = req.payload.userId
+        const result = await CoSoDichVuCongService.updateStatus(
+            id,
+            isActive,
+            currentUser
+        );
+        return successResponse(res, result, "Cập nhật trạng thái cơ sở dịch vụ công thành công");
+    },
+
     async delete(req, res) {
         const { id } = req.params;
-        await CoSoDichVuCongService.delete(id);
+        const currentUser = req.payload.userId
+        await CoSoDichVuCongService.delete(id, currentUser);
         return successResponse(res, null, "Xóa cơ sở dịch vụ công thành công");
     }
 };
