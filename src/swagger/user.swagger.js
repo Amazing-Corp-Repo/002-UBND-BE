@@ -4,8 +4,8 @@ const UserSwagger = {
     '/api/users/my-profile': {
         get: {
             tags: ['Users'],
-            summary: 'Get my profile',
-            description: 'Fetch the profile of the currently authenticated user',
+            summary: 'Lấy hồ sơ của tôi',
+            description: 'Lấy thông tin hồ sơ của người dùng đang đăng nhập',
             security: [{ bearerAuth: [] }],
             responses: {}
         },
@@ -14,22 +14,29 @@ const UserSwagger = {
         get: {
             tags: ['Users'],
             security: [{ bearerAuth: [] }],
-            summary: 'Get all users with pagination',
-            description: 'Retrieve a paginated list of all users. Requires page and size query parameters.',
+            summary: 'Lấy danh sách người dùng có phân trang',
+            description: 'Trả về danh sách người dùng theo phân trang. Yêu cầu tham số truy vấn page và size.',
             parameters: [
                 {
                     name: 'page',
                     in: 'query',
                     required: true,
                     schema: { type: 'integer', minimum: 1 },
-                    description: 'Page number for pagination'
+                    description: 'Số trang để phân trang'
                 },
                 {
                     name: 'size',
                     in: 'query',
                     required: true,
                     schema: { type: 'integer', minimum: 1 },
-                    description: 'Number of users per page'
+                    description: 'Số người dùng trên mỗi trang'
+                },
+                {
+                    name: 'isActive',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'boolean' },
+                    description: 'Lọc người dùng theo trạng thái hoạt động'
                 }
             ],
             responses: {}
@@ -37,8 +44,8 @@ const UserSwagger = {
 
         put: {
             tags: ['Users'],
-            summary: 'Update user profile',
-            description: 'Update the profile information of the currently authenticated user',
+            summary: 'Cập nhật hồ sơ người dùng',
+            description: 'Cập nhật thông tin hồ sơ của người dùng đang đăng nhập',
             security: [{ bearerAuth: [] }],
             requestBody: {
                 required: true,
@@ -55,8 +62,8 @@ const UserSwagger = {
     '/api/users/create-account': {
         post: {
             tags: ['Users'],
-            summary: 'Create a new user account use by admin',
-            description: 'Create a new user account with the provided username and email. Accessible only by admin users.',
+            summary: 'Tạo tài khoản người dùng mới (do admin thực hiện)',
+            description: 'Tạo tài khoản người dùng mới với tên đăng nhập và email cung cấp. Chỉ admin có quyền thực hiện.',
             security: [{ bearerAuth: [] }],
             requestBody: {
                 required: true,
@@ -72,14 +79,58 @@ const UserSwagger = {
     '/api/users/update-by-admin': {
         put: {
             tags: ['Users'],
-            summary: 'Update user profile by admin',
-            description: 'Update the profile information of a user by an admin',
+            summary: 'Cập nhật hồ sơ người dùng bởi admin',
+            description: 'Admin cập nhật thông tin hồ sơ cho một người dùng',
             security: [{ bearerAuth: [] }],
             requestBody: {
                 required: true,
                 content: {
                     'application/json': {
                         schema: UserSchemas.UpdateProfileByAdminRequest
+                    }
+                }
+            },
+            responses: {}
+        }
+    },
+    '/api/users/{userId}': {
+        delete: {
+            tags: ['Users'],
+            summary: 'Xóa người dùng bởi admin',
+            description: 'Xóa người dùng theo ID. Chỉ admin mới có quyền thực hiện.',
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'userId',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'ID của người dùng cần xóa'
+                }
+            ],
+            responses: {}
+        }
+    },
+    '/api/users/update-status/{userId}': {
+        put: {
+            tags: ['Users'],
+            summary: 'Cập nhật trạng thái hoạt động của người dùng bởi admin',
+            description: 'Admin cập nhật trạng thái hoạt động (kích hoạt/hủy kích hoạt) cho một người dùng',
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'userId',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'ID của người dùng cần cập nhật trạng thái'
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: UserSchemas.UpdateStatusByAdminRequest
                     }
                 }
             },

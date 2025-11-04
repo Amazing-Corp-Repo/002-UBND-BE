@@ -5,7 +5,9 @@ import UPLOAD_TYPE from '../constants/upload.constant.js';
 import ROLE from '../constants/role.constant.js';
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import validate from '../middlewares/validate.middleware.js';
-import { CreateMauDonRequest, UpdateMauDonRequest } from "../validators/mau-don.validator.js";
+import { CreateMauDonRequest, UpdateMauDonRequest, UpdateStatusMauDonRequest } from "../validators/mau-don.validator.js";
+import { audit_logs } from "../middlewares/audit-logs.middleware.js";
+import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
 
 const mauDonRouter = express.Router();
 
@@ -19,6 +21,7 @@ mauDonRouter.post("/",
         maxCount: 1,
         maxSizeMB: 10,
     }),
+    audit_logs(AUDIT_LOGS.CREATE, 'mau_don'),
     MauDonController.createMauDon
 );
 
@@ -32,6 +35,7 @@ mauDonRouter.put("/:id",
         maxCount: 1,
         maxSizeMB: 10,
     }),
+    audit_logs(AUDIT_LOGS.UPDATE, 'mau_don'),
     MauDonController.updateMauDon
 );
 
@@ -42,8 +46,16 @@ mauDonRouter.get("/",
 mauDonRouter.delete("/:id",
     authenticate,
     authorize([ROLE.ADMIN]),
+    audit_logs(AUDIT_LOGS.DELETE, 'mau_don'),
     MauDonController.deleteMauDon
 );
 
+mauDonRouter.put('/update-status/:id',
+    authenticate,
+    authorize([ROLE.ADMIN]),
+    validate(UpdateStatusMauDonRequest),
+    audit_logs(AUDIT_LOGS.DELETE, 'mau_don'),
+    MauDonController.updateStatusMauDon
+);
 
 export default mauDonRouter;

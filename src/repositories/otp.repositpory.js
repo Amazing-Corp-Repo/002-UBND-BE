@@ -8,7 +8,7 @@ const OTPRepository = {
     async findValidOTP(userId, otp, loai_otp) {
         return await prisma.otp.findFirst({
             where: {
-                nguoi_dung_id: userId,
+                id_nguoi_dung: userId,
                 ma_otp: otp,
                 loai_otp,
                 is_used: false,

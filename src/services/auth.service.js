@@ -13,7 +13,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 
@@ -23,14 +23,14 @@ const AuthService = {
 
         if (user.is_enable_two_factor) {
             await OTPService.sendOTP(user.id, user.email, OTP_TYPE.LOGIN_2FA);
-            return { requiresTwoFactorAuth: true };
+            return { requires_two_factor_auth: true };
         }
 
         await RefreshTokenService.revokeAllForUser(user.id, ip);
 
         await UserSessionLogRepository.endSession(user.id);
         await UserSessionLogRepository.createLog({
-            nguoi_dung_id: user.id,
+            id_nguoi_dung: user.id,
             ip: ip,
             device: device
         });
@@ -38,8 +38,8 @@ const AuthService = {
         const accessToken = jwtUtils.signAccessToken(user, ip);
         const refreshToken = await RefreshTokenService.generate(user, ip, device);
         return {
-            accessToken,
-            refreshToken
+            access_token: accessToken,
+            refresh_token: refreshToken
         };
     },
 
@@ -50,7 +50,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 
@@ -58,8 +58,8 @@ const AuthService = {
         const accessToken = jwtUtils.signAccessToken(user, ip);
         const newRefreshToken = await RefreshTokenService.rotate(refreshToken, user, ip, device);
         return {
-            accessToken,
-            refreshToken: newRefreshToken
+            access_token: accessToken,
+            refresh_token: newRefreshToken
         };
 
     },
@@ -73,7 +73,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
         if (!await compare(mat_khau_hien_tai, user.mat_khau)) {
@@ -89,7 +89,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 
@@ -103,7 +103,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 
@@ -117,8 +117,8 @@ const AuthService = {
         const accessToken = jwtUtils.signAccessToken(user, ip);
         const refreshToken = await RefreshTokenService.generate(user, ip, device);
         return {
-            accessToken,
-            refreshToken
+            access_token: accessToken,
+            refresh_token: refreshToken
         };
     },
 
@@ -128,7 +128,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 
@@ -146,8 +146,8 @@ const AuthService = {
         const accessToken = jwtUtils.signAccessToken(user, ip);
         const refreshToken = await RefreshTokenService.generate(user, ip, device);
         return {
-            accessToken,
-            refreshToken
+            access_token: accessToken,
+            refresh_token: refreshToken
         };
     },
 
@@ -157,7 +157,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 
@@ -169,7 +169,7 @@ const AuthService = {
         if (!user) {
             throw new BaseError(404, "Không tìm thấy người dùng");
         }
-        if (!user.trang_thai) {
+        if (!user.is_active) {
             throw new BaseError(403, "Tài khoản người dùng không hoạt động");
         }
 

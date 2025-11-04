@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const CreateLinhVucRequest = Joi.object({
-    ten_linh_vuc: Joi.string()
+    tenLinhVuc: Joi.string()
         .trim()
         .max(255)
         .required()
@@ -9,7 +9,7 @@ export const CreateLinhVucRequest = Joi.object({
             'string.max': 'Tên lĩnh vực không được vượt quá 255 ký tự',
             'any.required': 'Tên lĩnh vực là bắt buộc',
         }),
-    mo_ta: Joi.string()
+    moTa: Joi.string()
         .trim()
         .optional()
         .allow(null, '')
@@ -19,7 +19,7 @@ export const CreateLinhVucRequest = Joi.object({
 });
 
 export const UpdateLinhVucRequest = Joi.object({
-    ten_linh_vuc: Joi.string()
+    tenLinhVuc: Joi.string()
         .trim()
         .max(255)
         .required()
@@ -27,16 +27,19 @@ export const UpdateLinhVucRequest = Joi.object({
             'string.max': 'Tên lĩnh vực không được vượt quá 255 ký tự',
             'any.required': 'Tên lĩnh vực là bắt buộc',
         }),
-    mo_ta: Joi.string()
+    moTa: Joi.string()
         .trim()
         .optional()
         .allow(null, '')
         .messages({
             'string.base': 'Mô tả phải là chuỗi ký tự',
         }),
-    is_remove: Joi.boolean()
-        .optional()
+});
+
+export const UpdateLinhVucStatusRequest = Joi.object({
+    isActive: Joi.boolean()
+        .required()
         .messages({
-            'boolean.base': 'is_remove phải là kiểu boolean',
+            'any.required': 'Trạng thái hoạt động là bắt buộc',
         }),
 });

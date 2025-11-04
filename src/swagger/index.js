@@ -8,6 +8,7 @@ import CoSoDichVuCongSwagger from './co-so-dich-vu-cong.swagger.js';
 import LinhVucSwagger from './linh-vuc.swagger.js';
 import TinTucSwagger from './tin-tuc.swagger.js';
 import DanhMucTinTucSwagger from './danh-muc-tin-tuc.swagger.js';
+import LichTiepDanSwagger from './lich-tiep-dan.swagger.js';
 
 const swaggerDocument = {
 
@@ -34,6 +35,7 @@ const swaggerDocument = {
         ...LinhVucSwagger,
         ...TinTucSwagger,
         ...DanhMucTinTucSwagger,
+        ...LichTiepDanSwagger,
     },
 
     components: {

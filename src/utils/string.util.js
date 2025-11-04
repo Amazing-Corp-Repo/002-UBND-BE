@@ -4,7 +4,7 @@ export const toSnakeCaseNonAccent = (str) => {
     let result = str.toLowerCase().trim();
 
     result = result
-        .normalize("NFD") 
+        .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
     result = result
@@ -26,4 +26,12 @@ export const capitalizeWords = (str) => {
         .filter(Boolean) // loại bỏ khoảng trắng thừa
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+}
+
+export const appendDeleteSuffixc = (str) => {
+    if (typeof str !== 'string') {
+        return str;
+    }
+
+    return `${new Date().getTime()}_delete_${str}`;
 }

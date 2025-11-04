@@ -9,8 +9,8 @@ const ThuTucController = {
     },
 
     async getAll(req, res) {
-        const { page = 1, size = 10, is_removed, id_linh_vuc, search } = req.query;
-        const result = await ThuTucService.getAll(parseInt(page), parseInt(size), is_removed, id_linh_vuc, search);
+        const { page = 1, size = 10, isActive, idLinhVuc, search } = req.query;
+        const result = await ThuTucService.getAll(parseInt(page), parseInt(size), isActive, idLinhVuc, search);
         return successResponse(res, result.data, "Lấy danh sách thủ tục thành công", result.pagination);
     },
 
@@ -21,28 +21,39 @@ const ThuTucController = {
     },
 
     async createThuTuc(req, res) {
-        const { idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien } = req.body;
-        const newThuTuc = await ThuTucService.createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
+        const { idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, truongHopThuTuc } = req.body;
+        const currentUser = req.payload.userId;
+        const newThuTuc = await ThuTucService.createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, truongHopThuTuc, currentUser);
         return successResponse(res, newThuTuc, "Tạo thủ tục thành công");
     },
 
-    async hardDeleteThuTuc(req, res) {
+    async deleteThuTuc(req, res) {
         const { id } = req.params;
-        await ThuTucService.hardDeleteThuTuc(id);
+        const currentUser = req.payload.userId;
+        await ThuTucService.deleteThuTuc(id, currentUser);
         return successResponse(res, null, "Xóa thủ tục hành chính thành công");
     },
 
     async updateThuTuc(req, res) {
         const { id } = req.params;
-        const { idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, isRemoved } = req.body;
-        const updatedThuTuc = await ThuTucService.updateThuTuc(id, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, isRemoved, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien);
+        const { idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, truongHopThuTuc } = req.body;
+        const currentUser = req.payload.userId;
+        const updatedThuTuc = await ThuTucService.updateThuTuc(id, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, truongHopThuTuc, currentUser);
         return successResponse(res, updatedThuTuc, "Cập nhật thủ tục thành công");
     },
 
     async getAllForMobile(req, res) {
-        const { id_linh_vuc } = req.query;
-        const result = await ThuTucService.getAllForMobile(id_linh_vuc);
+        const { idLinhVuc } = req.query;
+        const result = await ThuTucService.getAllForMobile(idLinhVuc);
         return successResponse(res, result, "Lấy danh sách thủ tục cho mobile thành công");
+    },
+
+    async updateThuTucStatus(req, res) {
+        const { id } = req.params;
+        const { isActive } = req.body;
+        const currentUser = req.payload.userId;
+        const updatedThuTuc = await ThuTucService.updateThuTucStatus(id, isActive, currentUser);
+        return successResponse(res, updatedThuTuc, "Cập nhật trạng thái thủ tục thành công");
     }
 };
 

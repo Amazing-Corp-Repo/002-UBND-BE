@@ -10,8 +10,7 @@ import rateLimit from 'express-rate-limit';
 import { errorResponse } from './utils/response.util.js';
 import http from 'http';
 import { initSocket } from './realtime/socket/index.js';
-import prisma from "./config/database.config.js";
-import registerPrismaAudit from './middlewares/prisma-audit.middleware.js';
+import basicAuth from "express-basic-auth";
 
 const app = express();
 const PORT = env.PORT;
@@ -19,6 +18,8 @@ const ALLOWED_CORS_ORIGIN = env.CORS_ORIGIN;
 const PREFIX_API = env.PREFIX_API
 const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
 const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
+const SWAGGER_USERNAME = env.SWAGGER_USERNAME
+const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD
 
 
 app.use(cors({
@@ -61,12 +62,17 @@ app.use(PREFIX_API, apiLimiter, rootRouter);
 CreateAccountSeed();
 app.use(errorHandler);
 
-app.use('/api-docs/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(
+    '/api-docs/',
+    basicAuth({
+        users: { [SWAGGER_USERNAME]: SWAGGER_PASSWORD },
+        challenge: true,
+    }),
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument)
+);
 
 const server = http.createServer(app);
-
-await prisma.$connect();
-await registerPrismaAudit();
 
 initSocket(server);
 
