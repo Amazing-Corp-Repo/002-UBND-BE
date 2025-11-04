@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- CreateTable
 CREATE TABLE "cach_thuc_thuc_hien" (
     "id" UUID NOT NULL DEFAULT public.uuid_generate_v4(),
