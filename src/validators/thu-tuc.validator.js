@@ -63,7 +63,7 @@ export const CreateThuTucRequest = Joi.object({
                         'string.uuid': 'ID mẫu đơn không hợp lệ',
                         'any.required': 'ID mẫu đơn là bắt buộc',
                     }),
-                so_luong_ban_chinh: Joi.number()
+                soLuongBanChinh: Joi.number()
                     .integer()
                     .min(0)
                     .required()
@@ -72,7 +72,7 @@ export const CreateThuTucRequest = Joi.object({
                         'number.min': 'Số lượng bản chính không được âm',
                         'any.required': 'Số lượng bản chính là bắt buộc',
                     }),
-                so_luong_ban_sao: Joi.number()
+                soLuongBanSao: Joi.number()
                     .integer()
                     .min(0)
                     .required()
@@ -81,7 +81,7 @@ export const CreateThuTucRequest = Joi.object({
                         'number.min': 'Số lượng bản sao không được âm',
                         'any.required': 'Số lượng bản sao là bắt buộc',
                     }),
-                ghi_chu: Joi.string()
+                ghiChu: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
@@ -92,7 +92,7 @@ export const CreateThuTucRequest = Joi.object({
         .allow(null)
         .items(
             Joi.object({
-                hinh_thuc_ap_dung: Joi.string()
+                hinhThucApDung: Joi.string()
                     .trim()
                     .max(255)
                     .required()
@@ -100,14 +100,14 @@ export const CreateThuTucRequest = Joi.object({
                         'string.max': 'Hình thức áp dụng không được vượt quá 255 ký tự',
                         'any.required': 'Hình thức áp dụng là bắt buộc',
                     }),
-                mo_ta_chi_tiet: Joi.string()
+                moTaChiTiet: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
                     .messages({
                         'string.max': 'Mô tả chi tiết không được vượt quá 1000 ký tự',
                     }),
-                thoi_gian_giai_quyet: Joi.string()
+                thoiGianGiaiQuyet: Joi.string()
                     .trim()
                     .max(255)
                     .optional()
@@ -115,14 +115,10 @@ export const CreateThuTucRequest = Joi.object({
                     .messages({
                         'string.max': 'Thời gian giải quyết không được vượt quá 255 ký tự',
                     }),
-                le_phi: Joi.number()
-                    .min(0)
+                lePhi: Joi.string()
                     .optional()
-                    .messages({
-                        'number.base': 'Lệ phí phải là một số',
-                        'number.min': 'Lệ phí không được âm',
-                    }),
-                ghi_chu_le_phi: Joi.string()
+                    .allow(null, ''),
+                ghiChuLePhi: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
@@ -136,7 +132,7 @@ export const CreateThuTucRequest = Joi.object({
         .allow(null)
         .items(
             Joi.object({
-                ten_buoc: Joi.string()
+                tenBuoc: Joi.string()
                     .trim()
                     .max(255)
                     .required()
@@ -144,14 +140,14 @@ export const CreateThuTucRequest = Joi.object({
                         'string.max': 'Tên bước không được vượt quá 255 ký tự',
                         'any.required': 'Tên bước là bắt buộc',
                     }),
-                mo_ta_buoc: Joi.string()
+                moTaBuoc: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
                     .messages({
                         'string.max': 'Mô tả bước không được vượt quá 1000 ký tự',
                     }),
-                thu_tu_buoc: Joi.number()
+                thuTuBuoc: Joi.number()
                     .integer()
                     .min(1)
                     .required()
@@ -300,7 +296,7 @@ export const UpdateThuTucRequest = Joi.object({
                         'string.uuid': 'ID mẫu đơn không hợp lệ',
                         'any.required': 'ID mẫu đơn là bắt buộc',
                     }),
-                so_luong_ban_chinh: Joi.number()
+                soLuongBanChinh: Joi.number()
                     .integer()
                     .min(0)
                     .required()
@@ -309,7 +305,7 @@ export const UpdateThuTucRequest = Joi.object({
                         'number.min': 'Số lượng bản chính không được âm',
                         'any.required': 'Số lượng bản chính là bắt buộc',
                     }),
-                so_luong_ban_sao: Joi.number()
+                soLuongBanSao: Joi.number()
                     .integer()
                     .min(0)
                     .required()
@@ -318,7 +314,7 @@ export const UpdateThuTucRequest = Joi.object({
                         'number.min': 'Số lượng bản sao không được âm',
                         'any.required': 'Số lượng bản sao là bắt buộc',
                     }),
-                ghi_chu: Joi.string()
+                ghiChu: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
@@ -336,7 +332,7 @@ export const UpdateThuTucRequest = Joi.object({
                     .messages({
                         'string.uuid': 'ID cách thức thực hiện không hợp lệ',
                     }),
-                hinh_thuc_ap_dung: Joi.string()
+                hinhThucApDung: Joi.string()
                     .trim()
                     .max(255)
                     .required()
@@ -344,14 +340,14 @@ export const UpdateThuTucRequest = Joi.object({
                         'string.max': 'Hình thức áp dụng không được vượt quá 255 ký tự',
                         'any.required': 'Hình thức áp dụng là bắt buộc',
                     }),
-                mo_ta_chi_tiet: Joi.string()
+                moTaChiTiet: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
                     .messages({
                         'string.max': 'Mô tả chi tiết không được vượt quá 1000 ký tự',
                     }),
-                thoi_gian_giai_quyet: Joi.string()
+                thoiGianGiaiQuyet: Joi.string()
                     .trim()
                     .max(255)
                     .optional()
@@ -359,14 +355,10 @@ export const UpdateThuTucRequest = Joi.object({
                     .messages({
                         'string.max': 'Thời gian giải quyết không được vượt quá 255 ký tự',
                     }),
-                le_phi: Joi.number()
-                    .min(0)
+                lePhi: Joi.string()
                     .optional()
-                    .messages({
-                        'number.base': 'Lệ phí phải là một số',
-                        'number.min': 'Lệ phí không được âm',
-                    }),
-                ghi_chu_le_phi: Joi.string()
+                    .allow(null, ''),
+                ghiChuLePhi: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
@@ -387,7 +379,7 @@ export const UpdateThuTucRequest = Joi.object({
                     .messages({
                         'string.uuid': 'ID trình tự thực hiện không hợp lệ',
                     }),
-                ten_buoc: Joi.string()
+                tenBuoc: Joi.string()
                     .trim()
                     .max(255)
                     .required()
@@ -395,14 +387,14 @@ export const UpdateThuTucRequest = Joi.object({
                         'string.max': 'Tên bước không được vượt quá 255 ký tự',
                         'any.required': 'Tên bước là bắt buộc',
                     }),
-                mo_ta_buoc: Joi.string()
+                moTaBuoc: Joi.string()
                     .trim()
                     .optional()
                     .allow(null, '')
                     .messages({
                         'string.max': 'Mô tả bước không được vượt quá 1000 ký tự',
                     }),
-                thu_tu_buoc: Joi.number()
+                thuTuBuoc: Joi.number()
                     .integer()
                     .min(1)
                     .required()

@@ -7,20 +7,30 @@ const DanhMucTinTucRepository = {
         });
     },
 
-    async findByTenDanhMuc(tenDanhMuc, is_removed = false) {
+    async findByTenDanhMuc(tenDanhMuc) {
         return prisma.danh_muc_tin_tuc.findFirst({
             where: {
                 ten_danh_muc: tenDanhMuc,
-                is_removed: is_removed
+                is_delete: false
             }
         });
     },
 
-    async findById(id, isRemoved) {
+    async findByTenDanhMucExcludingId(id, tenDanhMuc) {
+        return prisma.danh_muc_tin_tuc.findFirst({
+            where: {
+                ten_danh_muc: tenDanhMuc,
+                id: { not: id },
+                is_delete: false
+            }
+        });
+    },
+
+    async findById(id) {
         return prisma.danh_muc_tin_tuc.findFirst({
             where: {
                 id: id,
-                is_removed: isRemoved
+                is_delete: false
             }
         });
     },
@@ -32,16 +42,16 @@ const DanhMucTinTucRepository = {
         });
     },
 
-    async delete(id) {
-        return prisma.danh_muc_tin_tuc.delete({
-            where: { id }
-        });
-    },
-
-    async findAll(is_removed) {
+    async findAll(isActive, search) {
         const where = {
-            ...(is_removed !== undefined && is_removed !== ''
-                ? { is_removed: is_removed === 'true' }
+            ...(isActive !== undefined && isActive !== ''
+                ? { is_active: isActive === 'true' }
+                : {}),
+            is_delete: false,
+            ...(search
+                ? {
+                    OR: [{ ten_danh_muc: { contains: search, mode: "insensitive" } }],
+                }
                 : {}),
         };
         return prisma.danh_muc_tin_tuc.findMany({

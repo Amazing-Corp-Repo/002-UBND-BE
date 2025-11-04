@@ -101,7 +101,7 @@ const TinTucSwagger = {
                     description: 'Số mục tin tức trên mỗi trang',
                 },
                 {
-                    name: 'isRemoved',
+                    name: 'isActive',
                     in: 'query',
                     schema: { type: 'boolean' },
                     description: 'Bộ lọc để lấy tin tức đã bị xóa (true) hoặc chưa bị xóa (false).',
@@ -129,6 +129,34 @@ const TinTucSwagger = {
                 required: true,
             },
             responses: {},
+        },
+    },
+    '/api/tin-tuc/update-status/{id}': {
+        put: {
+            tags: ['TinTuc'],
+            summary: 'Cập nhật trạng thái hoạt động của tin tức',
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: {
+                        type: 'string',
+                        format: 'uuid',
+                    },
+                    description: 'ID của tin tức cần cập nhật trạng thái',
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: TinTucSchemas.UpdateTinTucStatusRequest,
+                    },
+                },
+                required: true,
+            },
+            responses: {}
         },
     },
 };

@@ -33,9 +33,9 @@ const handleTrinhTuThucHienUpdate = async (tx, id_thu_tuc, list = [], currentUse
             itemsToUpdate.map(item => tx.trinh_tu_thuc_hien_thu_tuc.update({
                 where: { id: item.id },
                 data: {
-                    ten_buoc: item.ten_buoc,
-                    mo_ta_buoc: item.mo_ta_buoc,
-                    thu_tu_buoc: item.thu_tu_buoc,
+                    ten_buoc: item.tenBuoc,
+                    mo_ta_buoc: item.moTaBuoc,
+                    thu_tu_buoc: item.thuTuBuoc,
                 },
             }))
         );
@@ -45,9 +45,9 @@ const handleTrinhTuThucHienUpdate = async (tx, id_thu_tuc, list = [], currentUse
     if (newItems.length) {
         const createData = newItems.map(i => ({
             id_thu_tuc,
-            ten_buoc: i.ten_buoc,
-            mo_ta_buoc: i.mo_ta_buoc,
-            thu_tu_buoc: i.thu_tu_buoc,
+            ten_buoc: i.tenBuoc,
+            mo_ta_buoc: i.moTaBuoc,
+            thu_tu_buoc: i.thuTuBuoc,
             nguoi_tao: currentUser,
             thoi_gian_tao: new Date().toISOString(),
         }));
@@ -85,11 +85,11 @@ const handleCachThucThucHienUdpate = async (tx, id_thu_tuc, list = [], currentUs
             itemsToUpdate.map(item => tx.cach_thuc_thuc_hien.update({
                 where: { id: item.id },
                 data: {
-                    hinh_thuc_ap_dung: item.hinh_thuc_ap_dung,
-                    mo_ta_chi_tiet: item.mo_ta_chi_tiet,
-                    thoi_gian_giai_quyet: item.thoi_gian_giai_quyet,
-                    le_phi: item.le_phi,
-                    ghi_chu_le_phi: item.ghi_chu_le_phi,
+                    hinh_thuc_ap_dung: item.hinhThucApDung,
+                    mo_ta_chi_tiet: item.moTaChiTiet,
+                    thoi_gian_giai_quyet: item.thoiGianGiaiQuyet,
+                    le_phi: item.lePhi,
+                    ghi_chu_le_phi: item.ghiChuLePhi,
                 },
             }))
         );
@@ -99,11 +99,11 @@ const handleCachThucThucHienUdpate = async (tx, id_thu_tuc, list = [], currentUs
     if (newItems.length) {
         const createData = newItems.map(i => ({
             id_thu_tuc,
-            hinh_thuc_ap_dung: i.hinh_thuc_ap_dung,
-            mo_ta_chi_tiet: i.mo_ta_chi_tiet,
-            thoi_gian_giai_quyet: i.thoi_gian_giai_quyet,
-            le_phi: i.le_phi,
-            ghi_chu_le_phi: i.ghi_chu_le_phi,
+            hinh_thuc_ap_dung: i.hinhThucApDung,
+            mo_ta_chi_tiet: i.moTaChiTiet,
+            thoi_gian_giai_quyet: i.thoiGianGiaiQuyet,
+            le_phi: i.lePhi,
+            ghi_chu_le_phi: i.ghiChuLePhi,
             nguoi_tao: currentUser,
             thoi_gian_tao: new Date().toISOString(),
         }));
@@ -195,9 +195,9 @@ const handleMauDonUpdate = async (tx, id_thu_tuc, danhSachMauDon = [], currentUs
                     },
                 },
                 data: {
-                    so_luong_ban_chinh: item.so_luong_ban_chinh,
-                    so_luong_ban_sao: item.so_luong_ban_sao,
-                    ghi_chu: item.ghi_chu || null,
+                    so_luong_ban_chinh: item.soLuongBanChinh,
+                    so_luong_ban_sao: item.soLuongBanSao,
+                    ghi_chu: item.ghiChu || null,
                 },
             }))
         );
@@ -208,9 +208,9 @@ const handleMauDonUpdate = async (tx, id_thu_tuc, danhSachMauDon = [], currentUs
         const createData = toAdd.map(i => ({
             id_thu_tuc,
             id_mau_don: i.id,
-            so_luong_ban_chinh: i.so_luong_ban_chinh,
-            so_luong_ban_sao: i.so_luong_ban_sao,
-            ghi_chu: i.ghi_chu || null,
+            so_luong_ban_chinh: i.soLuongBanChinh,
+            so_luong_ban_sao: i.soLuongBanSao,
+            ghi_chu: i.ghiChu || null,
             nguoi_tao: currentUser,
             thoi_gian_tao: new Date().toISOString(),
         }));
@@ -696,6 +696,18 @@ const ThuTucRepository = {
                 nguoi_cap_nhat: currentUser,
             },
         });
+    },
+
+    async getThanhPhanByThuTucId(thuTucId) {
+        const truongHops = await prisma.truong_hop_thu_tuc.findMany({
+            where: { id_thu_tuc: thuTucId, is_active: true, is_delete: false },
+            include: {
+                thanh_phan_ho_so: {
+                    where: { is_active: true, is_delete: false },
+                },
+            },
+        });
+        return truongHops;
     }
 };
 

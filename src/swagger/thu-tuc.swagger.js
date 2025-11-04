@@ -167,7 +167,23 @@ const ThuTucSwagger = {
             },
             responses: {}
         }
-    }
+    },
+    '/api/thu-tuc/{id}/thanh-phan': {
+        get: {
+            tags: ['ThuTuc'],
+            summary: 'Lấy thành phần thủ tục theo ID thủ tục',
+            description: 'Lấy tất cả các thành phần hồ sơ liên quan đến một thủ tục hành chính cụ thể',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    description: 'Mã định danh thủ tục',
+                },
+            ],
+            responses: {}
+        },
+    },
 };
 
 export default ThuTucSwagger;

@@ -51,6 +51,8 @@ thuTucRoute.put("/update-status/:id",
     ThuTucController.updateThuTucStatus
 );
 
+thuTucRoute.get('/:id/thanh-phan', ThuTucController.getThanhPhanByThuTucId);
+
 thuTucRoute.get('/:id/mau-don', ThuTucController.getMauDonByThuTucId);
 
 export default thuTucRoute;
