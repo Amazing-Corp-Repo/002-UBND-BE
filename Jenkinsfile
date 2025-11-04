@@ -84,26 +84,29 @@ pipeline {
       }
     }
     stage('Migrate DB (Prisma)') {
-      when {
-        expression { return env.DEPLOY == 'true' }
-      }
       steps {
         sh '''
           set -e
           IMAGE_NAME=ubnd-api
           IMAGE_TAG=$(cat .image_tag)
-          BRANCH=$(echo ${BRANCH_NAME:-${GIT_BRANCH:-}} | sed 's#^origin/##')
-          echo "Checking DB migration need for branch: ${BRANCH}"
-          if [ "${BRANCH}" = "longt2" ]; then
-            echo "Primary branch detected; running migrations."
-            docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma migrate deploy || npx prisma db push'
-          else
-            echo "Non-primary branch; applying schema idempotently (db push)."
-            docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc 'npx prisma db push'
+          BRANCH=$(echo $(git rev-parse --abbrev-ref HEAD) | sed 's#^origin/##')
+
+          echo "Applying Prisma migrations on branch: ${BRANCH}"
+
+          # (Tuỳ chọn nhưng nên có) Tạo schema nếu chưa tồn tại
+          if [ -f prisma/init.sql ]; then
+            echo "Ensuring DB schema exists via prisma/init.sql..."
+            docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc \
+              'npx prisma db execute --file prisma/init.sql --schema prisma/schema.prisma'
           fi
+
+          # Áp dụng migration đã commit (idempotent, safe cho mọi branch)
+          docker run --rm --env-file ./.env ${IMAGE_NAME}:${IMAGE_TAG} sh -lc \
+            'npx prisma migrate deploy'
         '''
       }
     }
+
     stage('Deploy') {
       when {
         expression { return env.DEPLOY == 'true' }
