@@ -7,7 +7,7 @@ const UserSessionLogRepository = {
 
     async endSession(userId) {
         return prisma.user_session_logs.updateMany({
-            where: { nguoi_dung_id: userId, is_active: true },
+            where: { id_nguoi_dung: userId, is_active: true },
             data: { 
                 is_active: false,
                 thoi_gian_dang_xuat: new Date().toISOString()

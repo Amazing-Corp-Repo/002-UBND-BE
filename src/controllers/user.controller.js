@@ -16,9 +16,9 @@ const UserController = {
     },
 
     async getAllUsers(req, res) {
-        const { page, size } = req.query;
+        const { page, size, isActive } = req.query;
         if (!page || !size) throw new BaseError(400, "page và size là bắt buộc");
-        const result = await UserService.getAllUsers(parseInt(page), parseInt(size));
+        const result = await UserService.getAllUsers(parseInt(page), parseInt(size), isActive);
         return successResponse(res, result.data, "Lấy tất cả người dùng thành công", result.pagintation);
     },
 
@@ -30,9 +30,25 @@ const UserController = {
     },
 
     async updateProfileByAdmin(req, res) {
-        const { userId, hoVaTen, soDienThoai, vaiTro, trangThai } = req.body;
-        const result = await UserService.updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, trangThai);
+        const { userId, hoVaTen, soDienThoai, vaiTro } = req.body;
+        const currentUser = req.payload.userId;
+        const result = await UserService.updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, currentUser);
         return successResponse(res, result, 'Cập nhật thông tin người dùng thành công');
-    }
+    },
+
+    async deleteUser(req, res) {
+        const { userId } = req.params;
+        const currentUser = req.payload.userId;
+        const result = await UserService.deleteUser(userId, currentUser);
+        return successResponse(res, result, 'Xóa người dùng thành công');
+    },
+
+    async updateStatusByAdmin(req, res) {
+        const { userId } = req.params;
+        const { isActive } = req.body;
+        const currentUser = req.payload.userId;
+        const result = await UserService.updateStatusByAdmin(userId, isActive, currentUser);
+        return successResponse(res, result, 'Cập nhật trạng thái người dùng thành công');
+    },
 }
 export default UserController;

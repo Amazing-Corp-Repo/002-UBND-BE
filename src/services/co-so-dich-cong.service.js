@@ -2,30 +2,35 @@ import CoSoDichVuCongRepository from "../repositories/co-so-dich-vu-cong.reposit
 import UyBanRepository from "../repositories/uy-ban.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import ThuTucRepository from "../repositories/thu-tuc.repository.js";
-import { capitalizeWords } from "../utils/string.util.js";
+import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const CoSoDichCongService = {
-    async getAll(isRemoved, search = "") {
+    async getAll(isActive, search = "") {
         const result = await CoSoDichVuCongRepository.getAll(
-            isRemoved,
+            isActive,
             search ? capitalizeWords(search) : "",
         );
 
         return result;
     },
 
-    async create(idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap) {
+    async create(tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, currentUser) {
         tenCoSo = capitalizeWords(tenCoSo);
         const existingCoSo = await CoSoDichVuCongRepository.findByName(tenCoSo);
         if (existingCoSo) {
-            throw new BaseError(400, 'Cơ sở dịch vụ công với tên đã tồn tại');
-        }
-        const existingUyBan = await UyBanRepository.findById(idUyBan);
-        if (!existingUyBan) {
-            throw new BaseError(400, 'Ủy ban không tồn tại');
+            throw new BaseError(409, 'Cơ sở dịch vụ công với tên đã tồn tại');
         }
 
-        const result = await CoSoDichVuCongRepository.create(idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap);
+        let data = {
+            ten_co_so: tenCoSo,
+            dia_chi: diaChi,
+            so_dien_thoai: soDienThoai,
+            mo_ta: moTa,
+            link_google_map: linkGoogleMap,
+            nguoi_tao: currentUser
+        };
+
+        const result = await CoSoDichVuCongRepository.create(data);
         return result;
     },
 
@@ -34,45 +39,69 @@ const CoSoDichCongService = {
         return result;
     },
 
-    async update(id, idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, isRemoved) {
+    async update(id, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, currentUser) {
         tenCoSo = capitalizeWords(tenCoSo);
         const existingCoSo = await CoSoDichVuCongRepository.findById(id);
         if (!existingCoSo) {
             throw new BaseError(404, 'Cơ sở dịch vụ công không tồn tại');
         }
-        const existingUyBan = await UyBanRepository.findById(idUyBan);
-        if (!existingUyBan) {
-            throw new BaseError(400, 'Ủy ban không tồn tại');
-        }
+
         const duplicateCoSo = await CoSoDichVuCongRepository.findByNameExcludeId(id, tenCoSo);
         if (duplicateCoSo) {
-            throw new BaseError(400, 'Cơ sở dịch vụ công với tên đã tồn tại');
-        }
-        if (isRemoved === true) {
-            const relatedThuTuc = await ThuTucRepository.findByCoSoDichVuCongId(id);
-            
-            if (relatedThuTuc.length > 0) {
-                throw new BaseError(400, 'Không thể xóa cơ sở dịch vụ công vì có thủ tục hành chính liên quan');
-            }
+            throw new BaseError(409, 'Cơ sở dịch vụ công với tên đã tồn tại');
         }
 
-        const result = await CoSoDichVuCongRepository.update(id, idUyBan, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, isRemoved);
+        let data = {
+            ten_co_so: tenCoSo,
+            dia_chi: diaChi === undefined ? null : diaChi,
+            so_dien_thoai: soDienThoai === undefined ? null : soDienThoai,
+            mo_ta: moTa === undefined ? null : moTa,
+            link_google_map: linkGoogleMap === undefined ? null : linkGoogleMap,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+        };
+
+        const result = await CoSoDichVuCongRepository.update(id, data);
         return result;
     },
 
-    async delete(id) {
+    async updateStatus(id, isActive, currentUser) {
         const existingCoSo = await CoSoDichVuCongRepository.findById(id);
         if (!existingCoSo) {
             throw new BaseError(404, 'Cơ sở dịch vụ công không tồn tại');
         }
         const relatedThuTuc = await ThuTucRepository.findByCoSoDichVuCongId(id);
-        if (relatedThuTuc.length > 0) {
-            throw new BaseError(400, 'Không thể xóa cơ sở dịch vụ công vì có thủ tục hành chính liên quan');
+
+        if (relatedThuTuc.length > 0 && !isActive) {
+            throw new BaseError(400, 'Không thể vô hiệu hóa cơ sở dịch vụ công vì có thủ tục hành chính liên quan');
         }
-        if (existingCoSo.is_removed === false) {
-            throw new BaseError(400, 'Cơ sở dịch vụ công phải được đánh dấu là đã xóa trước khi xóa vĩnh viễn');
+
+        let data = {
+            is_active: isActive,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+        };
+        const result = await CoSoDichVuCongRepository.update(id, data);
+        return result;
+    },
+
+    async delete(id, currentUser) {
+        const existingCoSo = await CoSoDichVuCongRepository.findById(id);
+        if (!existingCoSo) {
+            throw new BaseError(404, 'Cơ sở dịch vụ công không tồn tại');
         }
-        const result = await CoSoDichVuCongRepository.delete(id);
+        
+        if (existingCoSo.is_active) {
+            throw new BaseError(400, 'Chỉ có thể xóa cơ sở dịch vụ công đã bị vô hiệu hóa');
+        }
+        let data = {
+            ten_co_so: appendDeleteSuffixc(existingCoSo.ten_co_so),
+            is_delete: true,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+        };
+
+        const result = await CoSoDichVuCongRepository.update(id, data);
         return result;
     }
 };

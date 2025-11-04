@@ -11,7 +11,8 @@ const UyBanRepository = {
         return await prisma.uy_ban.findFirst({
             where: {
                 id,
-                is_removed: false
+                is_active: true,
+                is_delete: false,
             }
         });
     },

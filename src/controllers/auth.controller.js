@@ -4,7 +4,6 @@ import { successResponse } from "../utils/response.util.js";
 const AuthController = {
     async login(req, res) {
         const { tenDangNhap, matKhau } = req.body;
-        console.log(tenDangNhap + '' + matKhau);
         const ip = req.clientIp;
         const device = req.device;
         const result = await AuthService.login(tenDangNhap, matKhau, ip, device);

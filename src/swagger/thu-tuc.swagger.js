@@ -8,7 +8,7 @@ const ThuTucSwagger = {
             description: 'Trả về thông tin cơ bản của mỗi thủ tục hành chính sử dụng phân trang phía server.',
             parameters: [
                 {
-                    name: 'id_linh_vuc',
+                    name: 'idLinhVuc',
                     in: 'query',
                     description: 'Mã định danh lĩnh vực ở định dạng UUID để lọc theo lĩnh vực.',
                 },
@@ -27,7 +27,7 @@ const ThuTucSwagger = {
                     description: 'Number of users per page'
                 },
                 {
-                    name: 'is_removed',
+                    name: 'isActive',
                     in: 'query',
                     description: 'Bộ lọc để lấy thủ tục đã bị xóa (true) hoặc chưa bị xóa (false).',
                     schema: { type: 'boolean' },
@@ -135,7 +135,7 @@ const ThuTucSwagger = {
             description: 'Lấy tất cả các thủ tục hành chính, có thể lọc theo lĩnh vực, dành cho ứng dụng mobile.',
             parameters: [
                 {
-                    name: 'id_linh_vuc',
+                    name: 'idLinhVuc',
                     in: 'query',
                     description: 'Mã định danh lĩnh vực ở định dạng UUID để lọc theo lĩnh vực.',
                 }
@@ -143,6 +143,31 @@ const ThuTucSwagger = {
             responses: {},
         },
     },
+    '/api/thu-tuc/update-status/{id}': {
+        put: {
+            tags: ['ThuTuc'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Cập nhật trạng thái hoạt động của thủ tục theo ID',
+            description: 'Cập nhật trạng thái hoạt động (kích hoạt/hủy kích hoạt) cho một thủ tục hành chính theo mã định danh',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    description: 'Mã định danh thủ tục',
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: ThuTucSchemas.UpdateThuTucStatusRequest,
+                    }
+                }
+            },
+            responses: {}
+        }
+    }
 };
 
 export default ThuTucSwagger;
