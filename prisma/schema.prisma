@@ -371,3 +371,4 @@ model truong_hop_thu_tuc {
   nguoi_dung_truong_hop_thu_tuc_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("truong_hop_thu_tuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_nguoi_tao")
   thu_tuc_hanh_chinh                                       thu_tuc_hanh_chinh @relation(fields: [id_thu_tuc], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_thu_tuc")
 }
+
