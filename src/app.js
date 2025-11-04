@@ -20,8 +20,9 @@ const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
 const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
 const SWAGGER_USERNAME = env.SWAGGER_USERNAME
 const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD
+const DATABASE_URL = env.DATABASE_URL;
 
-
+console.log('Database URL:', DATABASE_URL);
 app.use(cors({
     origin: (origin, callback) => {
         // Nếu không có origin (ví dụ: từ Postman), cho phép tất cả
