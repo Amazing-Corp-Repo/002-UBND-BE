@@ -43,7 +43,6 @@ const TinTucController = {
         let { idDanhMuc, tieuDe, noiDung, isActive, tacGia } = req.body;
         const file = req.files;
         const currentUser = req.payload.userId;
-        console.log(isActive);
         isActive = isActive === 'true' ? true : false;
         const result = await TinTucService.createTinTuc(idDanhMuc, tieuDe, noiDung, isActive, tacGia, file, currentUser);
         return successResponse(res, result, 'Tạo tin tức thành công');

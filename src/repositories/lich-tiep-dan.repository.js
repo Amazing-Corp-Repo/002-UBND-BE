@@ -1,6 +1,7 @@
 import prisma from "../config/database.config.js";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek.js";
+import { BaseError } from "../utils/base-error.util.js";
 dayjs.extend(isoWeek);
 
 const LichTiepDanRepository = {
@@ -35,7 +36,13 @@ const LichTiepDanRepository = {
 
         // 🔹 Lọc theo tuần/năm (week/year)
         if (weekYear && !monthYear && !date) {
-            const [week, year] = weekYear.split('/'); // Tách 'tuần/năm' như '45/2025'
+            let [week, year] = [];
+            try {
+                [week, year] = weekYear.split('/'); // Tách 'tuần/năm' như '45/2025'
+            } catch (error) {
+                console.error("Invalid weekYear format:", weekYear);
+                throw new BaseError(400, "Định dạng tuần/năm không hợp lệ");
+            }
             const start = dayjs().year(year).isoWeek(week).startOf("week").toDate();
             const end = dayjs().year(year).isoWeek(week).endOf("week").toDate();
             where.ngay_tiep_dan = { gte: start, lte: end };
@@ -43,7 +50,14 @@ const LichTiepDanRepository = {
 
         // 🔹 Lọc theo tháng/năm (month/year)
         else if (monthYear && !weekYear && !date) {
-            const [month, year] = monthYear.split('/'); // Tách 'tháng/năm' như '12/2025'
+            let [month, year] = [];
+            try {
+                [month, year] = monthYear.split('/');
+            }
+            catch (error) {
+                console.error("Invalid monthYear format:", monthYear);
+                throw new BaseError(400, "Định dạng tháng/năm không hợp lệ");
+            }
             const start = dayjs().year(year).month(month - 1).startOf("month").toDate(); // Month từ 0–11
             const end = dayjs().year(year).month(month - 1).endOf("month").toDate();
             where.ngay_tiep_dan = { gte: start, lte: end };
