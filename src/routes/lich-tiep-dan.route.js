@@ -4,6 +4,8 @@ import { createUploader } from "../middlewares/upload.middleware.js";
 import UPLOAD_TYPE from "../constants/upload.constant.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import ROLE from "../constants/role.constant.js";
+import { audit_logs } from "../middlewares/audit-logs.middleware.js";
+import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
 
 const lichTiepDanRouter = express.Router();
 
@@ -15,7 +17,12 @@ lichTiepDanRouter.post('/import',
         fieldName: 'file',
         maxCount: 1,
         maxSizeMB: 10,
+        allowed_types: [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel'
+        ],
     }),
+    audit_logs(AUDIT_LOGS.CREATE, 'lich_tiep_dan'),
     LichTiepDanController.importLichTiepDan
 );
 
@@ -26,7 +33,16 @@ lichTiepDanRouter.get('/',
 lichTiepDanRouter.delete('/:id',
     authenticate,
     authorize([ROLE.ADMIN]),
+    audit_logs(AUDIT_LOGS.DELETE, 'lich_tiep_dan'),
     LichTiepDanController.deleteLichTiepDan
 );
+
+lichTiepDanRouter.put(
+    '/update-status/:id',
+    authenticate,
+    authorize([ROLE.ADMIN]),
+    audit_logs(AUDIT_LOGS.UPDATE, 'lich_tiep_dan'),
+    LichTiepDanController.updateStatusLichTiepDan
+)
 
 export default lichTiepDanRouter;

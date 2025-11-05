@@ -1,3 +1,5 @@
+import { LichTiepDanSchemas } from "../schemas/lich-tiep-dan.schema.js";
+
 const LichTiepDanSwagger = {
     '/api/lich-tiep-dan/import': {
         post: {
@@ -30,35 +32,44 @@ const LichTiepDanSwagger = {
             summary: 'Lấy danh sách lịch tiếp dân với các bộ lọc',
             parameters: [
                 {
-                    name: 'year',
+                    name: 'weekYear',
                     in: 'query',
-                    description: 'Năm tiếp dân',
+                    description: 'Tuần/năm trong định dạng tuần/năm (ví dụ: 45/2025)',
                     required: false,
                     schema: {
-                        type: 'integer',
-                        example: 2023,
+                        type: 'string',
+                        example: '45/2025', // Tuần 45, năm 2025
                     },
                 },
                 {
-                    name: 'month',
+                    name: 'monthYear',
                     in: 'query',
-                    description: 'Tháng tiếp dân (1-12)',
+                    description: 'Tháng/năm trong định dạng tháng/năm (ví dụ: 12/2025)',
                     required: false,
                     schema: {
-                        type: 'integer',
-                        example: 5,
+                        type: 'string',
+                        example: '12/2025', // Tháng 12, năm 2025
                     },
                 },
                 {
                     name: 'date',
                     in: 'query',
-                    description: 'Ngày tiếp dân (YYYY-MM-DD)',
+                    description: 'Ngày (YYYY-MM-DD)',
                     required: false,
                     schema: {
                         type: 'string',
-                        example: '2023-05-15',
+                        example: '2025-10-12', // Ngày 12/10/2025
                     },
                 },
+                {
+                    name: 'isActive',
+                    in: 'query',
+                    description: 'Trạng thái hoạt động của lịch tiếp dân (true/false)',
+                    required: false,
+                    schema: {
+                        type: 'boolean',
+                    },
+                }
             ],
             responses: {}
         },
@@ -80,6 +91,34 @@ const LichTiepDanSwagger = {
                     },
                 },
             ],
+            responses: {}
+        },
+    },
+    '/api/lich-tiep-dan/update-status/{id}': {
+        put: {
+            tags: ['LichTiepDan'],
+            summary: 'Cập nhật trạng thái hoạt động của lịch tiếp dân',
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'ID của lịch tiếp dân cần cập nhật trạng thái',
+                    required: true,
+                    schema: {
+                        type: 'string',
+                        example: '123e4567-e89b-12d3-a456-426614174000',
+                    },
+                },
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: LichTiepDanSchemas.UpdateLStatusLichTiepDanSchemaSwagger,
+                    },
+                },
+            },
             responses: {}
         },
     },

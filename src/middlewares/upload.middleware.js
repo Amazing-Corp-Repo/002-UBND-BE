@@ -17,6 +17,7 @@ export const createUploader = ({
     fieldName,
     maxCount = 5,
     maxSizeMB = 10,
+    allowed_types = [],
 } = {}) => {
     if (!type || !fieldName) {
         throw new BaseError(500, "Thiếu 'type' hoặc 'fieldName' khi tạo uploader");
@@ -65,8 +66,8 @@ export const createUploader = ({
 
     const fileFilter = (req, file, cb) => {
         console.log("🔍 Kiểu file:", file.mimetype);
-        if (!ALLOWED_TYPES.includes(file.mimetype)) {
-            return cb(new BaseError(400, `File "${file.originalname}" không hợp lệ`));
+        if (!allowed_types.includes(file.mimetype)) {
+            return cb(new BaseError(400, `File không hợp lệ`));
         }
         cb(null, true);
     };

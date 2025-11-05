@@ -19,10 +19,11 @@ export const CreateCoSoDichVuCongRequest = Joi.object({
         }),
     soDienThoai: Joi.string()
         .trim()
-        .optional()
+        .pattern(/^[0-9]{10,15}$/)
         .allow(null, '')
+        .optional()
         .messages({
-            'string.pattern.base': 'Số điện thoại phải là chuỗi số từ 10 đến 20 ký tự',
+            'string.pattern.base': 'Số điện thoại không hợp lệ',
         }),
     moTa: Joi.string()
         .trim()

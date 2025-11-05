@@ -1,5 +1,8 @@
 import prisma from "../config/database.config.js";
 import dayjs from "dayjs";
+import isoWeek from "dayjs/plugin/isoWeek.js";
+import { BaseError } from "../utils/base-error.util.js";
+dayjs.extend(isoWeek);
 
 const LichTiepDanRepository = {
     async findByCanBoAndNgay(ten_can_bo, ngay_tiep_dan) {
@@ -7,7 +10,7 @@ const LichTiepDanRepository = {
             where: {
                 ten_can_bo,
                 ngay_tiep_dan,
-                is_removed: false,
+                is_delete: false,
             },
         });
     },
@@ -23,24 +26,47 @@ const LichTiepDanRepository = {
         });
     },
 
-    async findAll({ year, month, date }) {
-        const where = { is_removed: false };
+    async findAll({ weekYear, monthYear, date, isActive }) {
+        const where = {
+            is_delete: false,
+            ...(isActive !== undefined && isActive !== ""
+                ? { is_active: isActive === "true" }
+                : {}),
+        };
 
-        if (year && !month && !date) {
-            // lọc theo năm
-            where.ngay_tiep_dan = {
-                gte: new Date(`${year}-01-01`),
-                lte: new Date(`${year}-12-31`),
-            };
-        } else if (year && month && !date) {
-            // lọc theo tháng
-            const start = dayjs(`${year}-${month}-01`).startOf("month").toDate();
-            const end = dayjs(`${year}-${month}-01`).endOf("month").toDate();
+        // 🔹 Lọc theo tuần/năm (week/year)
+        if (weekYear && !monthYear && !date) {
+            let [week, year] = [];
+            try {
+                [week, year] = weekYear.split('/'); // Tách 'tuần/năm' như '45/2025'
+            } catch (error) {
+                console.error("Invalid weekYear format:", weekYear);
+                throw new BaseError(400, "Định dạng tuần/năm không hợp lệ");
+            }
+            const start = dayjs().year(year).isoWeek(week).startOf("week").toDate();
+            const end = dayjs().year(year).isoWeek(week).endOf("week").toDate();
             where.ngay_tiep_dan = { gte: start, lte: end };
-        } else if (date) {
-            // lọc chính xác theo ngày
-            const start = dayjs(date).startOf("day").toDate();
-            const end = dayjs(date).endOf("day").toDate();
+        }
+
+        // 🔹 Lọc theo tháng/năm (month/year)
+        else if (monthYear && !weekYear && !date) {
+            let [month, year] = [];
+            try {
+                [month, year] = monthYear.split('/');
+            }
+            catch (error) {
+                console.error("Invalid monthYear format:", monthYear);
+                throw new BaseError(400, "Định dạng tháng/năm không hợp lệ");
+            }
+            const start = dayjs().year(year).month(month - 1).startOf("month").toDate(); // Month từ 0–11
+            const end = dayjs().year(year).month(month - 1).endOf("month").toDate();
+            where.ngay_tiep_dan = { gte: start, lte: end };
+        }
+
+        // 🔹 Lọc theo ngày (date)
+        else if (date) {
+            const start = dayjs(date).startOf("day").toDate(); // Cắt theo đầu ngày
+            const end = dayjs(date).endOf("day").toDate(); // Cắt theo cuối ngày
             where.ngay_tiep_dan = { gte: start, lte: end };
         }
 
@@ -54,7 +80,9 @@ const LichTiepDanRepository = {
         return await prisma.lich_tiep_dan.findFirst({
             where: { id },
         });
-    }
+    },
+
+
 };
 
 export default LichTiepDanRepository;
