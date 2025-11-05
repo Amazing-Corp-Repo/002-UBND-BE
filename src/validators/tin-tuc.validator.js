@@ -5,6 +5,7 @@ export const UploadFileDinhKemRequest = Joi.object({
     idTinTuc: Joi.string()
         .trim()
         .optional()
+        .allow(null, '')
 });
 
 export const UpdateTinTucRequest = Joi.object({
@@ -30,25 +31,18 @@ export const UpdateTinTucRequest = Joi.object({
         .messages({
             'any.required': 'Nội dung là bắt buộc'
         }),
-    trangThai: Joi.string()
-        .trim()
-        .valid(...Object.values(TIN_TUC))
-        .required()
-        .messages({
-            'any.required': 'Trạng thái là bắt buộc',
-            'any.only': `Trạng thái không hợp lệ, giá trị hợp lệ: ${Object.values(TIN_TUC).join(', ')}`
-        }),
     tacGia: Joi.string()
         .trim()
         .max(255)
         .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Tác giả không được vượt quá 255 ký tự'
         }),
-    isRemoved: Joi.boolean()
+    isActive: Joi.boolean()
         .required()
         .messages({
-            'any.required': 'Trạng thái isRemoved là bắt buộc'
+            'any.required': 'Trạng thái isActive là bắt buộc'
         })
 });
 
@@ -75,13 +69,10 @@ export const CreateTinTucRequest = Joi.object({
         .messages({
             'any.required': 'Nội dung là bắt buộc'
         }),
-    trangThai: Joi.string()
-        .trim()
-        .valid(...Object.values(TIN_TUC))
+    isActive: Joi.boolean()
         .required()
         .messages({
-            'any.required': 'Trạng thái là bắt buộc',
-            'any.only': `Trạng thái không hợp lệ, giá trị hợp lệ: ${Object.values(TIN_TUC).join(', ')}`
+            'any.required': 'Trạng thái isActive là bắt buộc'
         }),
     tacGia: Joi.string()
         .trim()
@@ -89,5 +80,13 @@ export const CreateTinTucRequest = Joi.object({
         .optional()
         .messages({
             'string.max': 'Tác giả không được vượt quá 255 ký tự'
+        })
+});
+
+export const UpdateStatusTinTucRequest = Joi.object({
+    isActive: Joi.boolean()
+        .required()
+        .messages({
+            'any.required': 'Trạng thái isActive là bắt buộc'
         })
 });

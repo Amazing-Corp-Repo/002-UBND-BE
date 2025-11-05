@@ -4,8 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model cach_thuc_thuc_hien {
@@ -22,6 +21,7 @@ model cach_thuc_thuc_hien {
   nguoi_cap_nhat                                            String?             @db.Uuid
   thoi_gian_tao                                             DateTime?           @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                                        DateTime?           @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  le_phi_string                                             String?
   nguoi_dung_cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung nguoi_dung?         @relation("cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_cap_nhat")
   nguoi_dung_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung      nguoi_dung?         @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_nguoi_tao")
   thu_tuc_hanh_chinh                                        thu_tuc_hanh_chinh? @relation(fields: [id_thu_tuc], references: [id], onUpdate: NoAction, map: "fk_cach_thuc_thuc_hien_thu_tuc")
@@ -371,4 +371,8 @@ model truong_hop_thu_tuc {
   nguoi_dung_truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung nguoi_dung?        @relation("truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_nguoi_cap_nhat")
   nguoi_dung_truong_hop_thu_tuc_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("truong_hop_thu_tuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_nguoi_tao")
   thu_tuc_hanh_chinh                                       thu_tuc_hanh_chinh @relation(fields: [id_thu_tuc], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_thu_tuc")
+}
+
+model hihi {
+  id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
 }

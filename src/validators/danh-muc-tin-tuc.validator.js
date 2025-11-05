@@ -1,3 +1,4 @@
+import e from 'cors';
 import Joi from 'joi';
 
 export const CreateDanhMucTinTucRequest = Joi.object({
@@ -12,6 +13,7 @@ export const CreateDanhMucTinTucRequest = Joi.object({
     moTa: Joi.string()
         .trim()
         .optional()
+        .allow(null, '')
 });
 
 export const UpdateDanhMucTinTucRequest = Joi.object({
@@ -25,10 +27,14 @@ export const UpdateDanhMucTinTucRequest = Joi.object({
         }),
     moTa: Joi.string()
         .trim()
-        .optional(),
-    isRemoved: Joi.boolean()
+        .optional()
+        .allow(null, '')
+});
+
+export const UpdateStatusDanhMucTinTucRequest = Joi.object({
+    isActive: Joi.boolean()
         .required()
         .messages({
-            'any.required': 'Trạng thái isRemoved là bắt buộc'
-        })
+            'any.required': 'Trạng thái hoạt động là bắt buộc',
+        }),
 });

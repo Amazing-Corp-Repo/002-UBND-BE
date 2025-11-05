@@ -1,6 +1,6 @@
 import { BaseError } from "../utils/base-error.util.js";
 import FileService from "./file.service.js";
-import { toSnakeCaseNonAccent } from "../utils/string.util.js";
+import { appendDeleteSuffixc, toSnakeCaseNonAccent } from "../utils/string.util.js";
 import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
 import dayjs from "dayjs";
 
@@ -12,7 +12,7 @@ const excelDateToJSDate = (serial) => {
 }
 
 const LichTiepDanService = {
-    async handleImport(file = []) {
+    async handleImport(file = [], currentUser) {
         if (!file || file.length === 0) {
             throw new BaseError(400, "File không được để trống");
         }
@@ -55,10 +55,13 @@ const LichTiepDanService = {
                         dia_diem: record.dia_diem,
                         thoi_gian: record.thoi_gian,
                         ghi_chu: record.ghi_chu,
+                        nguoi_cap_nhat: currentUser,
+                        is_active: true,
                     });
                 } else {
                     await LichTiepDanRepository.create({
                         ...record,
+                        nguoi_tao: currentUser,
                     });
                 }
             }
@@ -69,48 +72,51 @@ const LichTiepDanService = {
     },
 
     async getLichTiepDan(filters) {
-        const { year, month, date } = filters;
-        const data = await LichTiepDanRepository.findAll({ year, month, date });
+        const { weekYear, monthYear, date, isActive } = filters;
+        const data = await LichTiepDanRepository.findAll({ weekYear, monthYear, date, isActive });
 
-
-        // 🧩 1️⃣ Nếu chỉ nhập năm → group theo tháng và trả chi tiết luôn
-        if (year && !month && !date) {
-            const grouped = {};
-
-            data.forEach((item) => {
-                const m = dayjs(item.ngay_tiep_dan).month() + 1;
-                if (!grouped[m]) grouped[m] = [];
-                grouped[m].push(item);
-            });
-
-            return Object.entries(grouped)
-                .sort(([a], [b]) => Number(a) - Number(b)) // sắp xếp tháng tăng dần
-                .map(([month, items]) => ({
-                    month: Number(month),
-                    items,
-                }));
-        }
-
-        // 🧩 2️⃣ Nếu có month → trả các lịch trong tháng đó
-        if (month && year && !date) {
+        if (weekYear && !monthYear && !date) {
             return data;
         }
 
-        // 🧩 3️⃣ Nếu có date → trả đúng ngày đó
+        if (monthYear && !weekYear && !date) {
+            return data;
+        }
+
         if (date) {
             return data;
         }
 
-        // 🧩 4️⃣ Nếu không truyền gì → trả tất cả
         return data;
     },
 
-    async deleteLichTiepDan(id) {
+    async deleteLichTiepDan(id, currentUser) {
         const existing = await LichTiepDanRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");
         }
-        await LichTiepDanRepository.update(id, { is_removed: true });
+        if (existing.is_active === true) {
+            throw new BaseError(400, "Không thể xoá lịch tiếp dân đang ở trạng thái hoạt động");
+        }
+        await LichTiepDanRepository.update(id, {
+            ten_can_bo: appendDeleteSuffixc(existing.ten_can_bo), 
+            is_delete: true,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString(), 
+        });
+    },
+
+    async updateLichTiepDan(id, isActive, currentUser) {
+        const existing = await LichTiepDanRepository.findById(id);
+        if (!existing) {
+            throw new BaseError(404, "Lịch tiếp dân không tồn tại");
+        }
+        const data = await LichTiepDanRepository.update(id, {
+            is_active: isActive,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+        });
+        return data;
     },
 };
 

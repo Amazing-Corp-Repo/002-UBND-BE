@@ -163,6 +163,15 @@ const ThuTucService = {
     }
     return await ThuTucRepository.updateThuTucStatus(thuTucId, isActive, currentUser);
   },
+
+  async getThanhPhanByThuTucId(thuTucId) {
+    const exists = await ThuTucRepository.exists(thuTucId);
+    if (!exists) {
+      throw new BaseError(404, "Không tìm thấy thủ tục hành chính");
+    }
+    const thanhPhan = await ThuTucRepository.getThanhPhanByThuTucId(thuTucId);
+    return thanhPhan;
+  }
 };
 
 export default ThuTucService;

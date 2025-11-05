@@ -54,7 +54,13 @@ const ThuTucController = {
         const currentUser = req.payload.userId;
         const updatedThuTuc = await ThuTucService.updateThuTucStatus(id, isActive, currentUser);
         return successResponse(res, updatedThuTuc, "Cập nhật trạng thái thủ tục thành công");
-    }
+    },
+
+    async getThanhPhanByThuTucId(req, res) {
+        const { id } = req.params;
+        const result = await ThuTucService.getThanhPhanByThuTucId(id);
+        return successResponse(res, result, "Lấy thành phần thủ tục thành công");
+    },
 };
 
 export default ThuTucController;

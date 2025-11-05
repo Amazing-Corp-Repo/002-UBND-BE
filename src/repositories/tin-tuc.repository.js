@@ -32,14 +32,14 @@ const TinTucRepository = {
         });
     },
 
-    async getAll(page, size, idDanhMuc, isRemoved) {
-        console.log(idDanhMuc)
+    async getAll(page, size, idDanhMuc, isActive) {
         const skip = (page - 1) * size;
         const where = {
-            ...(isRemoved !== undefined && isRemoved !== ''
-                ? { is_removed: isRemoved === 'true' }
+            ...(isActive !== undefined && isActive !== ''
+                ? { is_active: isActive === 'true' }
                 : {}),
             ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
+            is_delete: false,
         }
         const [data, totalItems] = await Promise.all([
             prisma.tin_tuc.findMany({
@@ -58,19 +58,12 @@ const TinTucRepository = {
         return { data, totalItems }
     },
 
-    async delete(id, includeAttachments = false) {
-        return prisma.$transaction(async (tx) => {
-            if (includeAttachments) {
-                await tx.dinh_kem_tin_tuc.deleteMany({
-                    where: { id_tin_tuc: id },
-                });
+    async findByIdDanhMuc(id) {
+        return prisma.tin_tuc.findFirst({
+            where: {
+                id_danh_muc: id,
+                is_delete: false,
             }
-
-            const deletedTinTuc = await tx.tin_tuc.delete({
-                where: { id },
-            });
-
-            return deletedTinTuc;
         });
     },
 };
