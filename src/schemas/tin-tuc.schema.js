@@ -1,6 +1,8 @@
-import { CreateTinTucRequest, UpdateTinTucRequest, UploadFileDinhKemRequest } from "../validators/tin-tuc.validator.js";
+import { CreateTinTucRequest, UpdateStatusTinTucRequest, UpdateTinTucRequest, UploadFileDinhKemRequest } from "../validators/tin-tuc.validator.js";
 import { addFileToJoiSchema } from "../utils/swagger.util.js";
+import JoiToSwagger from 'joi-to-swagger';
 
+const { swagger: UpdateTinTucStatusRequestSchema } = JoiToSwagger(UpdateStatusTinTucRequest);
 const TinTucSchemas = {
     UploadFileDinhKemRequest: addFileToJoiSchema(UploadFileDinhKemRequest, {
         fieldName: "file",
@@ -19,6 +21,7 @@ const TinTucSchemas = {
         description: "Hình ảnh đại diện cho tin tức.",
         allowNull: false
     }),
+    UpdateTinTucStatusRequest: UpdateTinTucStatusRequestSchema,
 };
 
 export default TinTucSchemas;

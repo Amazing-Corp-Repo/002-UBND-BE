@@ -21,7 +21,7 @@ const DanhMucTinTucSwagger = {
             summary: 'Lấy danh sách danh mục tin tức',
             parameters: [
                 {
-                    name: 'isRemoved',
+                    name: 'isActive',
                     in: 'query',
                     required: false,
                     schema: {
@@ -29,6 +29,15 @@ const DanhMucTinTucSwagger = {
                     },
                     description: 'Lọc theo trạng thái đã bị gỡ bỏ hay chưa',
                 },
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                    },
+                    description: 'Từ khóa tìm kiếm trong tên danh mục tin tức',
+                }
             ],
             responses: {}
         },
@@ -93,6 +102,33 @@ const DanhMucTinTucSwagger = {
             responses: {}
         },
     },
+    '/api/danh-muc-tin-tuc/update-status/{id}': {
+        put: {
+            tags: ['DanhMucTinTuc'],
+            summary: 'Cập nhật trạng thái hoạt động của danh mục tin tức',
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: {
+                        type: 'string',
+                    },
+                    description: 'ID của danh mục tin tức cần cập nhật trạng thái',
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: DanhMucTinTucSchema.UpdateStatusDanhMucTinTucRequest,
+                    },
+                },
+                required: true,
+            },
+            responses: {}
+        }
+    }
 };
 
 export default DanhMucTinTucSwagger;

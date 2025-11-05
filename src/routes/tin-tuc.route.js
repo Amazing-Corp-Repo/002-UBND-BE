@@ -5,7 +5,9 @@ import express from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import ROLE from "../constants/role.constant.js";
 import validate from '../middlewares/validate.middleware.js';
-import { CreateTinTucRequest, UpdateTinTucRequest, UploadFileDinhKemRequest } from "../validators/tin-tuc.validator.js";
+import { CreateTinTucRequest, UpdateStatusTinTucRequest, UpdateTinTucRequest, UploadFileDinhKemRequest } from "../validators/tin-tuc.validator.js";
+import { audit_logs } from '../middlewares/audit-logs.middleware.js';
+import AUDIT_LOGS from '../constants/audit-logs-action.constant.js';
 
 const tinTucRouter = express.Router();
 
@@ -18,7 +20,9 @@ tinTucRouter.post("/upload",
         fieldName: "file",
         maxCount: 1,
         maxSizeMB: 10,
+        allowed_types: ["image/png", "image/jpeg"],
     }),
+    audit_logs(AUDIT_LOGS.CREATE, 'dinh_kem_tin_tuc'),
     TinTucController.uploadFile
 );
 
@@ -31,7 +35,9 @@ tinTucRouter.put("/:id",
         fieldName: "file",
         maxCount: 1,
         maxSizeMB: 10,
+        allowed_types: ["image/png", "image/jpeg"],
     }),
+    audit_logs(AUDIT_LOGS.UPDATE, 'tin_tuc'),
     TinTucController.updateTinTuc
 );
 
@@ -47,6 +53,7 @@ tinTucRouter.get("/",
 tinTucRouter.delete("/:id",
     authenticate,
     authorize([ROLE.ADMIN]),
+    audit_logs(AUDIT_LOGS.DELETE, 'tin_tuc'),
     TinTucController.delete
 );
 
@@ -59,8 +66,17 @@ tinTucRouter.post("/",
         fieldName: "file",
         maxCount: 1,
         maxSizeMB: 10,
+        allowed_types: ["image/png", "image/jpeg"],
     }),
     TinTucController.create
+);
+
+tinTucRouter.put('/update-status/:id',
+    authenticate,
+    authorize([ROLE.ADMIN]),
+    validate(UpdateStatusTinTucRequest),
+    audit_logs(AUDIT_LOGS.UPDATE, 'tin_tuc'),
+    TinTucController.updateStatus
 );
 
 export default tinTucRouter;
