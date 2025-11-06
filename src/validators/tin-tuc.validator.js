@@ -78,6 +78,7 @@ export const CreateTinTucRequest = Joi.object({
         .trim()
         .max(255)
         .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Tác giả không được vượt quá 255 ký tự'
         })

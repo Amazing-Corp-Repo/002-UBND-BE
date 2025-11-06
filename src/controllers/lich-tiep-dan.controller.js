@@ -29,6 +29,16 @@ const LichTiepDanController = {
         const data = await LichTiepDanService.updateLichTiepDan(id, isActive, currentUser);
         return successResponse(res, data, "Cập nhật lịch tiếp dân thành công");
     },
+
+    async getTemplateLichTiepDan(req, res) {
+        const relativeUrl = await LichTiepDanService.getTemplateLichTiepDan();
+        return successResponse(res, { relative_url: relativeUrl }, "Lấy template lịch tiếp dân thành công");
+    },
+    async getLichTiepDanById(req, res) {
+        const { id } = req.params;
+        const data = await LichTiepDanService.getLichTiepDanById(id);
+        return successResponse(res, data, "Lấy lịch tiếp dân theo ID thành công");
+    }
 };
 
 export default LichTiepDanController;

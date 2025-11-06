@@ -93,6 +93,23 @@ const LichTiepDanSwagger = {
             ],
             responses: {}
         },
+        get: {
+            tags: ['LichTiepDan'],
+            summary: 'Lấy lịch tiếp dân theo ID',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'ID của lịch tiếp dân cần lấy',
+                    required: true,
+                    schema: {
+                        type: 'string',
+                        example: '123e4567-e89b-12d3-a456-426614174000',
+                    },
+                },
+            ],
+            responses: {}
+        },
     },
     '/api/lich-tiep-dan/update-status/{id}': {
         put: {
@@ -119,6 +136,14 @@ const LichTiepDanSwagger = {
                     },
                 },
             },
+            responses: {}
+        },
+    },
+    '/api/lich-tiep-dan/template': {
+        get: {
+            tags: ['LichTiepDan'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Lấy template lịch tiếp dân',
             responses: {}
         },
     },

@@ -46,4 +46,9 @@ linhVucRoute.delete(
     LinhVucController.delete
 );
 
+linhVucRoute.get(
+    "/:id",
+    LinhVucController.getLinhVucById
+);
+
 export default linhVucRoute;

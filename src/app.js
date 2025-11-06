@@ -11,6 +11,7 @@ import { errorResponse } from "./utils/response.util.js";
 import http from "http";
 import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
+import { generateUniqueCode } from "./utils/string.util.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -89,4 +90,10 @@ app.get("/health", (req, res) => {
 });
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
+});
+
+app.post("/test", (req, res) => {
+  let { ten } = req.body;
+  console.log("Received name:", generateUniqueCode(ten));
+  res.send("Welcome to UBND API Service");
 });

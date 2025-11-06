@@ -43,6 +43,16 @@ lichTiepDanRouter.put(
     authorize([ROLE.ADMIN]),
     audit_logs(AUDIT_LOGS.UPDATE, 'lich_tiep_dan'),
     LichTiepDanController.updateStatusLichTiepDan
-)
+);
+
+lichTiepDanRouter.get('/template',
+    authenticate,
+    authorize([ROLE.ADMIN]),
+    LichTiepDanController.getTemplateLichTiepDan
+);
+
+lichTiepDanRouter.get('/:id',
+    LichTiepDanController.getLichTiepDanById
+);
 
 export default lichTiepDanRouter;

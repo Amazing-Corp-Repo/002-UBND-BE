@@ -94,6 +94,30 @@ const MauDonRepository = {
             where: whereCondition,
         });
     },
+
+    async getAllMauDonWithPaging(page, size, isActive, search) {
+        const where = {
+            ...(isActive !== undefined && isActive !== ''
+                ? { is_active: isActive === 'true' }
+                : {}),
+            ...(search
+                ? {
+                    OR: [{ ten_mau_don: { contains: search, mode: "insensitive" } }],
+                }
+                : {}),
+            is_delete: false,
+        };
+        let [data, totalItems] = await Promise.all([
+            prisma.mau_don.findMany({
+                where,
+                orderBy: { thoi_gian_tao: 'desc' },
+                skip: (page - 1) * size,
+                take: size * 1,
+            }),
+            prisma.mau_don.count({ where }),
+        ]);
+        return [data, totalItems];
+    }
 };
 
 export default MauDonRepository;
