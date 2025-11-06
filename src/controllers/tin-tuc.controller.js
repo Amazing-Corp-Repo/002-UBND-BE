@@ -27,8 +27,8 @@ const TinTucController = {
     },
 
     async getAll(req, res) {
-        const { page = 1, size = 10, idDanhMuc, isActive } = req.query;
-        const result = await TinTucService.getAll(parseInt(page), parseInt(size), idDanhMuc, isActive);
+        const { page = 1, size = 10, idDanhMuc, isActive, search } = req.query;
+        const result = await TinTucService.getAll(parseInt(page), parseInt(size), idDanhMuc, isActive, search);
         return successResponse(res, result.data, 'Lấy danh sách tin tức thành công', result.pagination);
     },
 

@@ -3,6 +3,7 @@ import FileService from "./file.service.js";
 import { appendDeleteSuffixc, toSnakeCaseNonAccent } from "../utils/string.util.js";
 import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
 import dayjs from "dayjs";
+import path from "path";
 
 const excelDateToJSDate = (serial) => {
     const utc_days = Math.floor(serial - 25569);
@@ -116,6 +117,19 @@ const LichTiepDanService = {
             nguoi_cap_nhat: currentUser,
             thoi_gian_cap_nhat: new Date().toISOString(),
         });
+        return data;
+    },
+
+    async getTemplateLichTiepDan() {
+        const basePath = '/static/template-lich-tiep-dan.xlsx';
+        return basePath;
+    },
+
+    async getLichTiepDanById(id) {
+        const data = await LichTiepDanRepository.findById(id);
+        if (!data || data.is_delete) {
+            throw new BaseError(404, "Lịch tiếp dân không tồn tại");
+        }
         return data;
     },
 };

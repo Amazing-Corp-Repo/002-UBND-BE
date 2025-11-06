@@ -81,6 +81,14 @@ const LinhVucService = {
             thoi_gian_cap_nhat: new Date().toISOString(),
         }
         await LinhVucRepository.update(id, data);
+    },
+
+    async getLinhVucById(id) {
+        const linhVuc = await LinhVucRepository.findById(id);
+        if (!linhVuc || linhVuc.is_delete) {
+            throw new BaseError(404, "Lĩnh vực không tồn tại");
+        }
+        return linhVuc;
     }
 };
 
