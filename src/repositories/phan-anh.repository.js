@@ -161,7 +161,6 @@ const PhanAnhRepository = {
     },
 
     async getById(idPhanAnh) {
-        console.log("Fetching Phan Anh by ID:", idPhanAnh);
         return await prisma.phan_anh.findUnique({
             where: {
                 id: idPhanAnh,
