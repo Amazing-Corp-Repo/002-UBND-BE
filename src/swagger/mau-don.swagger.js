@@ -80,6 +80,21 @@ const MauDonSwagger = {
                 }
             ],
             responses: {}
+        },
+        get: {
+            tags: ['MauDon'],
+            summary: 'Get Mau Don By ID',
+            description: 'Lấy mẫu đơn theo ID',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'ID mẫu đơn cần lấy',
+                }
+            ],
+            responses: {}
         }
     },
     '/api/mau-don/update-status/{id}': {
@@ -105,6 +120,44 @@ const MauDonSwagger = {
                     }
                 }
             },
+            responses: {}
+        }
+    },
+    '/api/mau-don/paging': {
+        get: {
+            tags: ['MauDon'],
+            summary: 'Get All Mau Don With Paging',
+            description: 'Lấy tất cả mẫu đơn với phân trang; có thể lọc theo trạng thái hoạt động',
+            parameters: [
+                {
+                    name: 'page',
+                    in: 'query',
+                    required: true,
+                    schema: { type: 'integer', default: 1 },
+                    description: 'Số trang',
+                },
+                {
+                    name: 'size',
+                    in: 'query',
+                    required: true,
+                    schema: { type: 'integer', default: 10 },
+                    description: 'Số mục trên mỗi trang',
+                },
+                {
+                    name: 'isActive',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'boolean' },
+                    description: 'Lọc theo trạng thái hoạt động (true hoặc false)',
+                },
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'string' },
+                    description: 'Từ khóa tìm kiếm trong tên mẫu đơn',
+                }
+            ],
             responses: {}
         }
     }

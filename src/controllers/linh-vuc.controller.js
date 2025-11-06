@@ -41,6 +41,12 @@ const LinhVucController = {
         await LinhVucService.delete(id, currentUser);
         return successResponse(res, null, "Xóa lĩnh vực thành công");
     },
+
+    async getLinhVucById(req, res) {
+        const { id } = req.params;
+        const linhVuc = await LinhVucService.getLinhVucById(id);
+        return successResponse(res, linhVuc, "Lấy lĩnh vực thành công");
+    }
 };
 
 export default LinhVucController;

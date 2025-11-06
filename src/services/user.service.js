@@ -13,7 +13,6 @@ const UserService = {
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
-        console.log(user);
         return toUserResponse(user);
     },
 

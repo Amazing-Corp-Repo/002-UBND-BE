@@ -2,8 +2,8 @@ import prisma from "../config/database.config.js";
 
 export const audit_logs = (action, entityName) => {
     return async (req, res, next) => {
-        const userId = req.payload?.userId;
-        const username = req.payload?.username;
+        const userId = req.payload?.userId || null;
+        const username = req.payload?.username || null;
 
         const originalSend = res.send;
 

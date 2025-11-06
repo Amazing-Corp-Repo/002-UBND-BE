@@ -32,7 +32,7 @@ const TinTucRepository = {
         });
     },
 
-    async getAll(page, size, idDanhMuc, isActive) {
+    async getAll(page, size, idDanhMuc, isActive, search) {
         const skip = (page - 1) * size;
         const where = {
             ...(isActive !== undefined && isActive !== ''
@@ -40,6 +40,10 @@ const TinTucRepository = {
                 : {}),
             ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
             is_delete: false,
+            ...(search !== undefined && search !== ''
+                ? { tieu_de: { contains: search, mode: 'insensitive' } }
+                : {}),
+
         }
         const [data, totalItems] = await Promise.all([
             prisma.tin_tuc.findMany({

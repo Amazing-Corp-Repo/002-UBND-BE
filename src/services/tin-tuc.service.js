@@ -81,8 +81,8 @@ const TinTucService = {
         return result;
     },
 
-    async getAll(page, size, idDanhMuc, isActive) {
-        const { data, totalItems } = await TinTucRepository.getAll(page, size, idDanhMuc, isActive);
+    async getAll(page, size, idDanhMuc, isActive, search) {
+        const { data, totalItems } = await TinTucRepository.getAll(page, size, idDanhMuc, isActive, search);
         const pagination = createPagination(page, size, totalItems);
         return { data, pagination };
     },

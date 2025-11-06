@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export const toSnakeCaseNonAccent = (str) => {
     if (!str) return "";
 
@@ -34,4 +36,15 @@ export const appendDeleteSuffixc = (str) => {
     }
 
     return `${new Date().getTime()}_delete_${str}`;
+}
+
+export const generateUniqueCode = (title) => {
+    const timestamp = Date.now().toString();
+    const rawCode = title + timestamp;
+    const hash = crypto.createHash('sha256').update(rawCode).digest('hex');
+    const uniqueCode = hash.slice(0, 5);
+    const randomPart = Math.floor(Math.random() * 1000); // 3 chữ số ngẫu nhiên
+    const finalCode = uniqueCode + randomPart;
+
+    return finalCode;
 }
