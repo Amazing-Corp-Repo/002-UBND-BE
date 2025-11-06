@@ -53,14 +53,14 @@ const PhanAnhService = {
             ten: PHAN_ANH_STATUS.DA_GUI,
         });
 
-        for (let item of file) {
-            await PhanAnhRepository.addFileToPhanAnh({
-                id_phan_anh: createdPhanAnh.id,
-                dinh_dang_file: item.mimetype,
-                url_file: item.relativeUrl,
-                kich_thuoc_file_mb: item.sizeMB,
-            });
-        };
+        const attachments = file.map(f => ({
+            id_phan_anh: createdPhanAnh.id,
+            dinh_dang_file: f.mimetype,
+            url_file: f.relativeUrl,
+            kich_thuoc_file_mb: f.sizeMB,
+        }));
+
+        await PhanAnhRepository.addFileToPhanAnh(attachments);
 
         return {
             id_phan_anh: createdPhanAnh.id,
