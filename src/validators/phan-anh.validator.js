@@ -58,3 +58,32 @@ export const CreatePhanAnhRequest = Joi.object({
             'string.uuid': 'userId must be a valid UUID',
         }),
 });
+
+export const UpdatePhanAnhStatusRequest = Joi.object({
+    thoiGianPhanHoiDuKien: Joi.date()
+        .required()
+        .messages({
+            'date.base': 'Thời gian phản hồi dự kiến phải là định dạng ngày tháng hợp lệ',
+            'any.required': 'Thời gian phản hồi dự kiến là bắt buộc',
+        }),
+    ngayDuKienHoanThanh: Joi.date()
+        .messages({
+            'date.base': 'Ngày dự kiến hoàn thành phải là định dạng ngày tháng hợp lệ',
+            'any.required': 'Ngày dự kiến hoàn thành là bắt buộc',
+        }),
+    trangThai: Joi.string()
+        .trim()
+        .max(50)
+        .required()
+        .messages({
+            'string.max': 'Trạng thái không được vượt quá 50 ký tự',
+            'any.required': 'Trạng thái là bắt buộc',
+        }),
+    ghiChu: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, '')
+        .messages({
+            'string.base': 'Ghi chú phải là chuỗi ký tự',
+        }),
+});

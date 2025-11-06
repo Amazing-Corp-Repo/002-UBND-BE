@@ -112,7 +112,7 @@ const PhanAnhRepository = {
                 where: whereClause,
             }),
         ])
-        return { data: phanAnhs, totalItems: total};
+        return { data: phanAnhs, totalItems: total };
     },
 
     async getLichSuTrangThaiPhanAnh(idPhanAnh) {
@@ -174,6 +174,32 @@ const PhanAnhRepository = {
                 dinh_kem_phan_anh: true,
                 linh_vuc_phan_anh: true,
             },
+        });
+    },
+
+    async updateStatusWithHistory(idPhanAnh, phanAnhPatch, historyData) {
+        return await prisma.$transaction(async (tx) => {
+            // Cập nhật bảng phản ánh
+            await tx.phan_anh.update({
+                where: { id: idPhanAnh },
+                data: {
+                    thoi_gian_tiep_nhan: phanAnhPatch.thoi_gian_tiep_nhan,
+                    thoi_gian_phan_hoi_du_kien: phanAnhPatch.thoi_gian_phan_hoi_du_kien,
+                    ngay_du_kien_hoan_thanh: phanAnhPatch.ngay_du_kien_hoan_thanh,
+                    nguoi_cap_nhat: phanAnhPatch.nguoi_cap_nhat,
+                    thoi_gian_cap_nhat: new Date(),
+                },
+            });
+
+            // Tạo bản ghi lịch sử trạng thái
+            await tx.lich_su_trang_thai.create({
+                data: {
+                    id_phan_anh: idPhanAnh,
+                    ten: historyData.ten,
+                    ghi_chu: historyData.ghi_chu || null,
+                    nguoi_tao: historyData.nguoi_tao || null,
+                },
+            });
         });
     }
 };

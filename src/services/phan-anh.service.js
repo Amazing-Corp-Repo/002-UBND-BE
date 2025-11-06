@@ -6,6 +6,15 @@ import { createPagination } from "../utils/response.util.js";
 import { capitalizeWords, generateUniqueCode } from "../utils/string.util.js";
 import UserRepository from "../repositories/user.repository.js";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
+import { getIO } from "../realtime/socket/index.js";
+
+
+const ORDER = [
+    PHAN_ANH_STATUS.DA_GUI,
+    PHAN_ANH_STATUS.DA_TIEP_NHAN,
+    PHAN_ANH_STATUS.DANG_XU_LY,
+    PHAN_ANH_STATUS.DA_GIAI_QUYET,
+];
 
 const PhanAnhService = {
     async createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file) {
@@ -117,9 +126,74 @@ const PhanAnhService = {
         if (!phanAnh) {
             throw new BaseError(400, "Phản ánh không tồn tại");
         }
-        console.log(phanAnh);
         return phanAnh;
-    }
+    },
+
+    async updateStatusPhanAnh(idPhanAnh, thoiGianPhanHoiDuKien, ngayDuKienHoanThanh, trangThai, ghiChu, currentUser) {
+        let phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+        if (!phanAnh) {
+            throw new BaseError(400, "Phản ánh không tồn tại");
+        }
+        const lastStatus = phanAnh.lich_su_trang_thai[0].ten;
+        if (lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET || lastStatus === PHAN_ANH_STATUS.DONG) {
+            throw new BaseError(400, "Không thể cập nhật trạng thái cho phản ánh đã được giải quyết hoặc đóng");
+        }
+        if (trangThai !== PHAN_ANH_STATUS.DONG) {
+            const currentIndex = ORDER.indexOf(lastStatus);
+            const nextIndex = ORDER.indexOf(trangThai);
+
+            if (nextIndex === -1 || currentIndex === -1) {
+                throw new BaseError(400, "Trạng thái không hợp lệ");
+            }
+
+            if (nextIndex !== currentIndex + 1) {
+                throw new BaseError(400, `Trạng thái tiếp theo phải là: ${ORDER[currentIndex + 1]}`);
+            }
+        }
+
+        let existingUser = await UserRepository.findById(currentUser);
+        if (!existingUser) {
+            throw new BaseError(400, "Người dùng không tồn tại");
+        }
+
+        const phanAnhPatch = {
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_tiep_nhan: trangThai === PHAN_ANH_STATUS.DA_TIEP_NHAN ? new Date().toISOString() : phanAnh.thoi_gian_tiep_nhan,
+            thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
+            ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
+        };
+
+        const historyData = {
+            ten: trangThai,
+            ghi_chu: ghiChu,
+            nguoi_tao: currentUser,
+        };
+
+        await PhanAnhRepository.updateStatusWithHistory(idPhanAnh, phanAnhPatch, historyData);
+        if (phanAnh.nguoi_tao) {
+            handleSendNotification(phanAnh, trangThai, ghiChu);
+        }
+    },
 };
+
+const handleSendNotification = (phanAnh, trangThai, ghiChu) => {
+    // Gửi thông báo qua socket.io
+    console.log(`Gửi thông báo trạng thái phản ánh [${phanAnh.ma_phan_anh}] mới: ${trangThai} đến người dùng ID: ${phanAnh.nguoi_tao}`);
+
+    const io = getIO();
+
+    const targetRoom = `user_${phanAnh.nguoi_tao}`;
+
+    const payload = {
+        ma_phan_anh: phanAnh.ma_phan_anh,
+        trang_thai: trangThai,
+        tieu_de: 'Phản ánh của bạn đã được cập nhật',
+        ghi_chu: ghiChu,
+    };
+
+    io.to(targetRoom).emit("phan-anh.update-status", payload);
+
+    console.log(`📨 Đã gửi thông báo đến room: ${targetRoom}`);
+}
 
 export default PhanAnhService;
