@@ -67,6 +67,7 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
             'any.required': 'Thời gian phản hồi dự kiến là bắt buộc',
         }),
     ngayDuKienHoanThanh: Joi.date()
+        .required()
         .messages({
             'date.base': 'Ngày dự kiến hoàn thành phải là định dạng ngày tháng hợp lệ',
             'any.required': 'Ngày dự kiến hoàn thành là bắt buộc',

@@ -187,7 +187,7 @@ const PhanAnhRepository = {
                     thoi_gian_phan_hoi_du_kien: phanAnhPatch.thoi_gian_phan_hoi_du_kien,
                     ngay_du_kien_hoan_thanh: phanAnhPatch.ngay_du_kien_hoan_thanh,
                     nguoi_cap_nhat: phanAnhPatch.nguoi_cap_nhat,
-                    thoi_gian_cap_nhat: new Date(),
+                    thoi_gian_cap_nhat: new Date().toISOString(),
                 },
             });
 
@@ -196,8 +196,8 @@ const PhanAnhRepository = {
                 data: {
                     id_phan_anh: idPhanAnh,
                     ten: historyData.ten,
-                    ghi_chu: historyData.ghi_chu || null,
-                    nguoi_tao: historyData.nguoi_tao || null,
+                    ghi_chu: historyData.ghi_chu,
+                    nguoi_tao: historyData.nguoi_tao,
                 },
             });
         });
