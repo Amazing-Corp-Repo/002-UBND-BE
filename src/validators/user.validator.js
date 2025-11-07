@@ -10,14 +10,17 @@ export const CreateAccountRequest = Joi.object({
     email: Joi.string()
         .trim()
         .email()
+        .max(100)
         .required()
         .messages({
             'string.email': 'Email không hợp lệ',
             'any.required': 'Email là bắt buộc',
+            'string.max': 'Email không được vượt quá 100 ký tự',
         }),
     matKhau: Joi.string()
         .trim()
         .min(6)
+        .max(255)
         .required()
         .messages({
             'string.min': 'Mật khẩu phải có ít nhất 6 ký tự',
