@@ -157,6 +157,32 @@ const PhanAnhSwagger = {
             responses: {},
         },
     },
+    '/api/phan-anh/update-status/{idPhanAnh}': {
+        put: {
+            tags: ['PhanAnh'],
+            summary: 'Cập nhật trạng thái phản ánh',
+            security: [{ bearerAuth: [] }],
+            description: 'Cập nhật trạng thái phản ánh theo ID',
+            parameters: [
+                {
+                    name: 'idPhanAnh',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'ID phản ánh cần cập nhật trạng thái',
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: PhanAnhSchemas.UpdatePhanAnhStatusRequest, 
+                    }
+                }
+            },
+            responses: {}
+        }
+    },
 }
 
 export default PhanAnhSwagger;

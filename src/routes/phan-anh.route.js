@@ -7,6 +7,8 @@ import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
 import { auditForPhanAnh } from "../middlewares/client-info.middleware.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import ROLE from '../constants/role.constant.js';
+import validate from '../middlewares/validate.middleware.js';
+import { CreatePhanAnhRequest, UpdatePhanAnhStatusRequest } from "../validators/phan-anh.validator.js";
 
 const phanAnhRouter = express.Router();
 
@@ -20,6 +22,7 @@ phanAnhRouter.post(
         maxSizeMB: 5,
         allowed_types: ['image/jpeg', 'image/png'],
     }),
+    validate(CreatePhanAnhRequest),
     audit_logs(AUDIT_LOGS.CREATE, 'phan_anh'),
     PhanAnhController.createPhanAnh
 );
@@ -62,6 +65,15 @@ phanAnhRouter.get(
     authenticate,
     authorize([ROLE.ADMIN, ROLE.NHAN_VIEN, ROLE.PHO_CHU_TICH, ROLE.CHU_TICH, ROLE.LANH_DAO]),
     PhanAnhController.getPhanAnhById
+);
+
+phanAnhRouter.put(
+    "/update-status/:idPhanAnh",
+    authenticate,
+    authorize([ROLE.ADMIN, ROLE.NHAN_VIEN]),
+    validate(UpdatePhanAnhStatusRequest),
+    audit_logs(AUDIT_LOGS.UPDATE, 'phan_anh, lich_su_trang_thai'),
+    PhanAnhController.updateStatusPhanAnh
 );
 
 export default phanAnhRouter;

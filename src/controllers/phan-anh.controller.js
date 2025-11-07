@@ -47,6 +47,14 @@ const PhanAnhController = {
         const { idPhanAnh } = req.params;
         let result = await PhanAnhService.getPhanAnhById(idPhanAnh);
         return successResponse(res, result, "Lấy phản ánh thành công");
+    },
+
+    async updateStatusPhanAnh(req, res) {
+        const { idPhanAnh } = req.params;
+        const { thoiGianPhanHoiDuKien, ngayDuKienHoanThanh, trangThai, ghiChu } = req.body;
+        const currentUser = req.payload.userId;
+        let result = await PhanAnhService.updateStatusPhanAnh(idPhanAnh, thoiGianPhanHoiDuKien, ngayDuKienHoanThanh, trangThai, ghiChu, currentUser);
+        return successResponse(res, result, "Cập nhật trạng thái phản ánh thành công");
     }
 };
 

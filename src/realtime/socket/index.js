@@ -1,41 +1,45 @@
 import { Server } from "socket.io";
+import jwtUitls from '../../utils/jwt.util.js';
 
 let io;
 
-export function initSocket(server) {
-    // ------------------------------Cấu hình Socket.IO server
-    // io = new Server(server, {
-    //     cors: {
-    //         origin: "*",
-    //         methods: ["GET", "POST"],
-    //         credentials: true
-    //     },
-    //     path: "/projects/ragdb/socket.io"
-    // });
-
-    //  ----------------------------Cấu hình Socket.IO Localhost (không có path)
+export const initSocket = (server) => {
     io = new Server(server, {
+        path: "/realtime-phan-anh",
         cors: {
-            origin: "*",         
+            origin: "*",
             methods: ["GET", "POST"],
-            credentials: true
+            credentials: true,
         },
+        transports: ["websocket"],
+    });
+
+
+    io.use((socket, next) => {
+        try {
+            const token = socket.handshake.auth?.token;
+            if (!token) return next(new Error("Thiếu token xác thực"));
+
+            let decoded = jwtUitls.verifyAccessToken(token);
+            socket.user = decoded;
+            next();
+        } catch (err) {
+            console.error("❌ Socket auth failed:", err.message);
+            next(new Error("Token không hợp lệ"));
+        }
     });
 
     io.on("connection", (socket) => {
-        console.log(`✅ Socket connected: ${socket.id}`);
-
-        // đăng ký events theo domain
+        socket.join(`user_${socket.user.userId}`);
 
         socket.on("disconnect", () => {
-            console.log(`❌ Socket disconnected: ${socket.id}`);
         });
     });
 
     return io;
 }
 
-export function getIO() {
+export const getIO = () => {
     if (!io) throw new Error("Socket.IO chưa được init");
     return io;
 }

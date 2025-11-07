@@ -1,6 +1,8 @@
 import joiToSwagger from "joi-to-swagger";
 import { addFileToJoiSchema } from "../utils/swagger.util.js";
-import { CreatePhanAnhRequest } from "../validators/phan-anh.validator.js";
+import { CreatePhanAnhRequest, UpdatePhanAnhStatusRequest } from "../validators/phan-anh.validator.js";
+
+const { swagger: UpdatePhanAnhStatusRequestSchema } = joiToSwagger(UpdatePhanAnhStatusRequest);
 
 const PhanAnhSchemas = {
     CreatePhanAnhRequest: addFileToJoiSchema(CreatePhanAnhRequest, {
@@ -8,6 +10,7 @@ const PhanAnhSchemas = {
         maxCount: 5,
         description: "Các tệp tin đính kèm cho phản ánh. Tối đa 5 tệp.",
     }),
+    UpdatePhanAnhStatusRequest: UpdatePhanAnhStatusRequestSchema,
 };
 
 export default PhanAnhSchemas;
