@@ -27,6 +27,10 @@ const LichTiepDanService = {
 
 
                 const rawDate = record.ngay_tiep_dan;
+                let tu = new Date(record.tu).toISOString().substring(11, 16);
+                let den = new Date(record.den).toISOString().substring(11, 16);
+                let thoi_gian = `${tu} - ${den}`;
+                console.log(thoi_gian);
 
                 switch (true) {
                     case typeof rawDate === "number":
@@ -54,14 +58,18 @@ const LichTiepDanService = {
                 if (existing) {
                     await LichTiepDanRepository.update(existing.id, {
                         dia_diem: record.dia_diem,
-                        thoi_gian: record.thoi_gian,
+                        thoi_gian: thoi_gian,
                         ghi_chu: record.ghi_chu,
                         nguoi_cap_nhat: currentUser,
                         is_active: true,
                     });
                 } else {
                     await LichTiepDanRepository.create({
-                        ...record,
+                        dia_diem: record.dia_diem,
+                        thoi_gian: thoi_gian,
+                        ghi_chu: record.ghi_chu,
+                        ten_can_bo: record.ten_can_bo,
+                        ngay_tiep_dan: record.ngay_tiep_dan,
                         nguoi_tao: currentUser,
                     });
                 }
@@ -100,10 +108,10 @@ const LichTiepDanService = {
             throw new BaseError(400, "Không thể xoá lịch tiếp dân đang ở trạng thái hoạt động");
         }
         await LichTiepDanRepository.update(id, {
-            ten_can_bo: appendDeleteSuffixc(existing.ten_can_bo), 
+            ten_can_bo: appendDeleteSuffixc(existing.ten_can_bo),
             is_delete: true,
             nguoi_cap_nhat: currentUser,
-            thoi_gian_cap_nhat: new Date().toISOString(), 
+            thoi_gian_cap_nhat: new Date().toISOString(),
         });
     },
 
