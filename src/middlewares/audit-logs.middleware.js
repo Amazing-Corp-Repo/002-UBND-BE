@@ -1,4 +1,5 @@
 import prisma from "../config/database.config.js";
+import FileService  from "../services/file.service.js";
 
 export const audit_logs = (action, entityName) => {
     return async (req, res, next) => {
@@ -18,6 +19,12 @@ export const audit_logs = (action, entityName) => {
         res.on("finish", async () => {
 
             const responseBody = res.locals.responseBody;
+            let { success } = JSON.parse(responseBody) || {};
+            if ( success === false ) {
+                if ( req.files && req.files[0]?.path ) {
+                    await FileService.deleteFileByAbsolutePath(req.files[0]?.path);
+                }
+            }
 
             try {
                 await prisma.audit_logs.create({

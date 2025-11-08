@@ -11,6 +11,7 @@ import { errorResponse } from "./utils/response.util.js";
 import http from "http";
 import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
+import { connectRabbitMQ } from "./config/rabbitmq.config.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -82,11 +83,31 @@ app.use(
 const server = http.createServer(app);
 
 initSocket(server);
+try {
+  const { channel } = await connectRabbitMQ();
+  console.log("RabbitMQ ready — starting Express server...");
+
+  for (const q of Object.values(env.queues)) {
+    await channel.assertQueue(q, { durable: true });
+    console.log(`📦 Queue initialized: ${q}`);
+  }
+} catch (error) {
+  console.error("RabbitMQ not ready:", error.message);
+  process.exit(1);
+}
+
+
+
 
 // Lightweight health endpoint for container/platform checks
 app.get("/health", (req, res) => {
   res.status(200).send("ok");
 });
+
+import("../src/workers/video.woker.js")
+  .then(() => console.log("Worker started cùng server"))
+  .catch(err => console.error("Worker error:", err));
+
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });

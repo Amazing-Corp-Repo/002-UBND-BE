@@ -17,7 +17,7 @@ const ORDER = [
 ];
 
 const PhanAnhService = {
-    async createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file) {
+    async createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file, idVideo) {
         if (!file || file.length === 0) {
             throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
         }
@@ -38,6 +38,7 @@ const PhanAnhService = {
             muc_do: mucDo,
             ten_nguoi_phan_anh: tenNguoiPhanAnh,
             sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
+            id_video: idVideo,
         };
 
         if (userId != null && userId !== '') {
@@ -48,10 +49,7 @@ const PhanAnhService = {
             data.nguoi_tao = userId;
         };
 
-        let maPhanAnh = generateUniqueCode(tieuDe);
-        while (await PhanAnhRepository.findByMaPhanAnh(maPhanAnh)) {
-            maPhanAnh = generateUniqueCode(tieuDe);
-        }
+        let maPhanAnh = generateUniqueCode();
 
         data.ma_phan_anh = maPhanAnh;
 

@@ -3,6 +3,29 @@ import path from "path";
 import ExcelJS from "exceljs";
 
 const FileService = {
+    async deleteFileByAbsolutePath(absolutePath) {
+        try {
+            console.log("🔍 Đường dẫn file cần xóa:", absolutePath);
+
+            if (await fs.pathExists(absolutePath)) {
+                await fs.remove(absolutePath);
+                console.log(`✅ Đã xóa file: ${absolutePath}`);
+
+                // ✅ Kiểm tra thư mục cha
+                const parentDir = path.dirname(absolutePath);
+                const files = await fs.readdir(parentDir);
+
+                if (files.length === 0) {
+                    await fs.remove(parentDir);
+                }
+            } else {
+                console.warn(`⚠️ File không tồn tại: ${absolutePath}`);
+            }
+        } catch (err) {
+            console.error("❌ Lỗi khi xóa theo absolutePath:", err.message);
+        }
+    },
+
     async deleteFile(relativePath) {
         try {
             const fullPath = path.join(process.cwd(), relativePath);

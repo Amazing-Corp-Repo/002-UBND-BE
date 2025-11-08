@@ -11,6 +11,7 @@ import danhMucTinTucRouter from './danh-muc-tin-tuc.route.js';
 import lichTiepDanRouter from './lich-tiep-dan.route.js';
 import linhVucPhanAnh from './linh-vuc-phan-anh.route.js';
 import phanAnhRouter from './phan-anh.route.js';
+import videoUploadRouter from './video-upload.route.js';
 
 const rootRouter = express.Router();
 
@@ -26,6 +27,7 @@ rootRouter.use('/danh-muc-tin-tuc', danhMucTinTucRouter);
 rootRouter.use('/lich-tiep-dan', lichTiepDanRouter);
 rootRouter.use('/linh-vuc-phan-anh', linhVucPhanAnh);
 rootRouter.use('/phan-anh', phanAnhRouter);
+rootRouter.use('/video', videoUploadRouter);
 
 export default rootRouter;
 
