@@ -45,7 +45,7 @@ const VideoUploadService = {
             });
             const { channel } = await connectRabbitMQ();
             await channel.sendToQueue(
-                env.queues.videoProcess,
+                env.queues.videoMerge,
                 Buffer.from(JSON.stringify({ uploadId: existingVideoUpload.id })),
                 { persistent: true }
             );

@@ -25,7 +25,6 @@ const env = {
     DATABASE_URL: process.env.DATABASE_URL,
     RABBITMQ_URL: process.env.RABBITMQ_URL,
     queues : {
-        videoProcess: process.env.RABBITMQ_QUEUE_VIDEO_PROCESS,
         videoMerge: process.env.RABBITMQ_QUEUE_VIDEO_MERGE,
         videoHLS: process.env.RABBITMQ_QUEUE_VIDEO_HLS,
     },
