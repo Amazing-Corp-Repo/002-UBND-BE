@@ -73,7 +73,7 @@ const LichTiepDanSwagger = {
             ],
             responses: {}
         },
-        post : {
+        post: {
             tags: ['LichTiepDan'],
             security: [{ bearerAuth: [] }],
             summary: 'Tạo mới lịch tiếp dân',

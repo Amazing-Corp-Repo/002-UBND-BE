@@ -78,7 +78,7 @@ const PhanAnhRepository = {
         return phanAnh;
     },
 
-    async getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size) {
+    async getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size, sortTime) {
         const whereClause = {};
         if (idLinhVucPhanAnh) {
             whereClause.id_linh_vuc_phan_anh = idLinhVucPhanAnh;
@@ -96,14 +96,17 @@ const PhanAnhRepository = {
         if (maPhanAnh) {
             whereClause.ma_phan_anh = maPhanAnh;
         }
+
+        const orderBy = {
+            thoi_gian_tao: sortTime === "asc" ? "asc" : "desc"
+        };
+
         const [phanAnhs, total] = await Promise.all([
             await prisma.phan_anh.findMany({
                 where: whereClause,
                 skip: (page - 1) * size,
                 take: size,
-                orderBy: {
-                    thoi_gian_tao: 'desc',
-                },
+                orderBy,
                 include: {
                     lich_su_trang_thai: {
                         orderBy: {
@@ -173,14 +176,15 @@ const PhanAnhRepository = {
         });
     },
 
-    async getPhanAnhByUserId(userId) {
+    async getPhanAnhByUserId(userId, sortTime) {
+        const orderBy = {
+            thoi_gian_tao: sortTime === "asc" ? "asc" : "desc"
+        };
         const phanAnhs = await prisma.phan_anh.findMany({
             where: {
                 nguoi_tao: userId,
             },
-            orderBy: {
-                thoi_gian_tao: 'desc',
-            },
+            orderBy,
             include: {
                 lich_su_trang_thai: {
                     orderBy: {

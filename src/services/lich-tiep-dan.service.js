@@ -82,19 +82,6 @@ const LichTiepDanService = {
     async getLichTiepDan(filters) {
         const { weekYear, monthYear, date, isActive } = filters;
         const data = await LichTiepDanRepository.findAll({ weekYear, monthYear, date, isActive });
-
-        if (weekYear && !monthYear && !date) {
-            return data;
-        }
-
-        if (monthYear && !weekYear && !date) {
-            return data;
-        }
-
-        if (date) {
-            return data;
-        }
-
         return data;
     },
 

@@ -96,9 +96,9 @@ const PhanAnhService = {
         return phanAnh;
     },
 
-    async getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size) {
+    async getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size, sortTime) {
         let { data, totalItems } = await PhanAnhRepository.getAll
-            (idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size);
+            (idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size, sortTime);
         let pagination = createPagination(page, size, totalItems);
         return { data, pagination };
     },
@@ -107,8 +107,8 @@ const PhanAnhService = {
         return await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh);
     },
 
-    async getPhanAnhByUserId(userId) {
-        return await PhanAnhRepository.getPhanAnhByUserId(userId);
+    async getPhanAnhByUserId(userId, sortTime) {
+        return await PhanAnhRepository.getPhanAnhByUserId(userId, sortTime);
     },
 
     getMucDoPhanAnh() {
@@ -191,7 +191,7 @@ const handleSendNotification = (phanAnh, trangThai, ghiChu) => {
 
     io.to(targetRoom).emit("phan-anh.update-status", payload);
 
-    console.log(`📨 Đã gửi thông báo đến room: ${targetRoom}`);
+    console.log(`Đã gửi thông báo đến room: ${targetRoom}`);
 }
 
 export default PhanAnhService;
