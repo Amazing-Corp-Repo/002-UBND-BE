@@ -3,7 +3,6 @@ import FileService from "./file.service.js";
 import { appendDeleteSuffixc, toSnakeCaseNonAccent } from "../utils/string.util.js";
 import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
 import dayjs from "dayjs";
-import path from "path";
 
 const excelDateToJSDate = (serial) => {
     const utc_days = Math.floor(serial - 25569);
@@ -140,6 +139,45 @@ const LichTiepDanService = {
         }
         return data;
     },
+
+    async createLichTiepDan(tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu, currentUser) {
+        const existing = await LichTiepDanRepository.findByCanBoAndNgay(tenCanBo, ngayTiepDan);
+        if (existing) {
+            throw new BaseError(400, "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại");
+        }
+        let thoiGian = `${batDau} - ${ketThuc}`;
+        const data = await LichTiepDanRepository.create({
+            ten_can_bo: tenCanBo,
+            dia_diem: diaDiem,
+            ngay_tiep_dan: ngayTiepDan,
+            thoi_gian: thoiGian,
+            ghi_chu: ghiChu,
+            nguoi_tao: currentUser,
+        });
+        return data;
+    },
+
+    async updateLichTiepDan(id, tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu, currentUser) {
+        const existing = await LichTiepDanRepository.findById(id);
+        if (!existing || existing.is_delete) {
+            throw new BaseError(404, "Lịch tiếp dân không tồn tại");
+        }
+        const duplicate = await LichTiepDanRepository.findByCanBoAndNgayExcludeId(tenCanBo, ngayTiepDan, id);
+        if (duplicate) {
+            throw new BaseError(400, "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại");
+        }
+        let thoiGian = `${batDau} - ${ketThuc}`;
+        const data = await LichTiepDanRepository.update(id, {
+            ten_can_bo: tenCanBo,
+            dia_diem: diaDiem,
+            ngay_tiep_dan: ngayTiepDan,
+            thoi_gian: thoiGian,
+            ghi_chu: ghiChu,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+        });
+        return data;
+    }
 };
 
 export default LichTiepDanService;
