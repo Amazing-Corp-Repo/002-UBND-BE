@@ -18,7 +18,7 @@ const PhanAnhSwagger = {
         get: {
             tags: ['PhanAnh'],
             summary: 'Lấy danh sách phản ánh với phân trang và lọc sử dụng trên web',
-            security: [ { bearerAuth: [] } ],
+            security: [{ bearerAuth: [] }],
             parameters: [
                 {
                     name: 'idLinhVucPhanAnh',
@@ -75,6 +75,19 @@ const PhanAnhSwagger = {
                         type: 'string',
                     },
                     description: 'Lọc theo mã phản ánh',
+                },
+                {
+                    name: 'sortTime',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        enum: ['asc', 'desc'],
+                        default: 'desc'
+                    },
+                    description: `Sắp xếp theo thời gian tạo phản ánh:
+                        - "desc": mới nhất trước(mặc định)
+                        - "asc": cũ nhất trước`,
                 }
             ],
             responses: {},
@@ -120,7 +133,22 @@ const PhanAnhSwagger = {
         get: {
             tags: ['PhanAnh'],
             summary: 'Lấy danh sách phản ánh của người dùng hiện tại',
-            security: [ { bearerAuth: [] } ],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'sortTime',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        enum: ['asc', 'desc'],
+                        default: 'desc'
+                    },
+                    description: `Sắp xếp theo thời gian tạo phản ánh:
+                        - "desc": mới nhất trước(mặc định)
+                        - "asc": cũ nhất trước`,
+                }
+            ],
             responses: {},
         },
     },
@@ -142,7 +170,7 @@ const PhanAnhSwagger = {
         get: {
             tags: ['PhanAnh'],
             summary: 'Lấy phản ánh theo ID sử dụng trên web',
-            security: [ { bearerAuth: [] } ],
+            security: [{ bearerAuth: [] }],
             parameters: [
                 {
                     name: 'idPhanAnh',
@@ -176,7 +204,7 @@ const PhanAnhSwagger = {
                 required: true,
                 content: {
                     'application/json': {
-                        schema: PhanAnhSchemas.UpdatePhanAnhStatusRequest, 
+                        schema: PhanAnhSchemas.UpdatePhanAnhStatusRequest,
                     }
                 }
             },

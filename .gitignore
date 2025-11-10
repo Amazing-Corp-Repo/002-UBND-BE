@@ -509,3 +509,9 @@ src/public/uploads/**
 
 # Và vẫn giữ các file đánh dấu thư mục nếu cần
 !src/public/uploads/**/.gitkeep
+
+# Ignore mọi thứ dưới uploads
+src/private/uploads/**
+
+# Nhưng KHÔNG ignore thư mục (dấu / ở cuối rất quan trọng)
+!src/private/uploads/**/

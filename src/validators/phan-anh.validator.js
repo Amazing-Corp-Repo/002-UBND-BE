@@ -57,6 +57,12 @@ export const CreatePhanAnhRequest = Joi.object({
         .messages({
             'string.uuid': 'userId must be a valid UUID',
         }),
+    idVideo: Joi.array()
+        .items(Joi.string().trim())
+        .optional()
+        .messages({
+            'array.base': 'idVideo phải là một mảng',
+        }),
 });
 
 export const UpdatePhanAnhStatusRequest = Joi.object({

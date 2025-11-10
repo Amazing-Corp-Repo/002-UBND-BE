@@ -38,13 +38,18 @@ export const appendDeleteSuffixc = (str) => {
     return `${new Date().getTime()}_delete_${str}`;
 }
 
-export const generateUniqueCode = (title) => {
-    const timestamp = Date.now().toString();
-    const rawCode = title + timestamp;
-    const hash = crypto.createHash('sha256').update(rawCode).digest('hex');
-    const uniqueCode = hash.slice(0, 5);
-    const randomPart = Math.floor(Math.random() * 1000); // 3 chữ số ngẫu nhiên
-    const finalCode = uniqueCode + randomPart;
+export const generateUniqueCode = () => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const alphabetLength = alphabet.length;
+    const size = 8;
 
-    return finalCode;
+    const randomBytes = crypto.randomBytes(size);
+    let result = '';
+
+    for (let i = 0; i < size; i++) {
+        const index = randomBytes[i] % alphabetLength;
+        result += alphabet[index];
+    }
+
+    return result;
 }
