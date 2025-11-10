@@ -203,7 +203,7 @@ const handleSendNotificationByFirebase = async (phanAnh, trangThai, ghiChu, user
     }
     const fcmToken = existingUser.fcm_token;
     const title = 'Cập nhật trạng thái phản ánh';
-    const body = `Phản ánh của bạn đã được cập nhật trạng thái: ${trangThai}`;
+    const body = `Phản ánh của bạn với mã ${phanAnh.ma_phan_anh} đã được cập nhật trạng thái: ${trangThai}`;
     let fcm = adminFirebase.messaging();
     const data = {
         ma_phan_anh: phanAnh.ma_phan_anh,

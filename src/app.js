@@ -82,7 +82,7 @@ app.use(
 
 const server = http.createServer(app);
 
-initSocket(server);
+// initSocket(server);
 try {
   const { channel } = await connectRabbitMQ();
   console.log("RabbitMQ ready — starting Express server...");
