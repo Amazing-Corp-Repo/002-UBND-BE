@@ -23,7 +23,7 @@ const SWAGGER_USERNAME = env.SWAGGER_USERNAME;
 const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD;
 const DATABASE_URL = env.DATABASE_URL;
 
-console.log("Database URL: ", DATABASE_URL);
+console.log("Database URL:", DATABASE_URL);
 app.use(
   cors({
     origin: (origin, callback) => {
