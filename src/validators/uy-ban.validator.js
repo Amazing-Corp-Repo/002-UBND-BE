@@ -78,11 +78,8 @@ export const CreateUyBanRequest = Joi.object({
         'any.required': 'Giờ làm việc là bắt buộc',
     }),
     linkGoogleMap: Joi.string()
-        .uri()
         .optional()
-        .messages({
-            'string.uri': 'Link Google Map không hợp lệ',
-        }),
+        .trim()
 });
 
 export const UpdateUyBanRequest = Joi.object({
@@ -169,9 +166,5 @@ export const UpdateUyBanRequest = Joi.object({
     }),
     linkGoogleMap: Joi.string()
         .trim()
-        .uri()
         .optional()
-        .messages({
-            'string.uri': 'Link Google Map không hợp lệ',
-        }),
 });

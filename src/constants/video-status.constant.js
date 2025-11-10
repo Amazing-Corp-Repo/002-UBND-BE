@@ -1,0 +1,9 @@
+const VIDEO_STATUS = {
+    UPLOADING: 'UPLOADING',
+    READY: 'READY',
+    MERGING: "MERGING",
+    DONE: "DONE",
+    FAILED: "FAILED",
+};
+
+export default VIDEO_STATUS;

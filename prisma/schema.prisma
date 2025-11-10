@@ -92,6 +92,7 @@ model nguoi_dung {
   nguoi_cap_nhat                                                                   String?                      @db.Uuid
   thoi_gian_tao                                                                    DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                                                               DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  fcm_token                                                                        String?                      @db.VarChar(255)
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung               cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung")
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung                    cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung")
   co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung                 co_so_dich_vu_cong[]         @relation("co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung")
@@ -430,9 +431,30 @@ model phan_anh {
   nguoi_tao                                      String?              @db.Uuid
   thoi_gian_tao                                  DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                             DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  id_video                                       String[]             @db.VarChar(255)
   dinh_kem_phan_anh                              dinh_kem_phan_anh[]
   lich_su_trang_thai                             lich_su_trang_thai[]
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")
   nguoi_dung_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_cap_nhat")
   nguoi_dung_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_tao")
+}
+
+model video_upload_chunks {
+  id          String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  upload_id   String    @db.VarChar(255)
+  chunk_index Int
+  path        String?   @db.VarChar(500)
+  size_mb     Decimal?  @db.Decimal(10, 2)
+  created_at  DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+}
+
+model video_uploads {
+  id              String    @id @db.VarChar(255)
+  total_chunks    Int?
+  received_chunks Int?      @default(0)
+  status          String?   @default("UPLOADING") @db.VarChar(20)
+  final_mp4_url   String?   @db.VarChar(500)
+  final_hls_url   String?   @db.VarChar(500)
+  created_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  updated_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 }

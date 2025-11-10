@@ -15,6 +15,7 @@ const phanAnhRouter = express.Router();
 phanAnhRouter.post(
     "/",
     auditForPhanAnh,
+    validate(CreatePhanAnhRequest),
     createUploader({
         type: UPLOAD_TYPE.PHAN_ANH,
         fieldName: "file",
@@ -22,7 +23,6 @@ phanAnhRouter.post(
         maxSizeMB: 5,
         allowed_types: ['image/jpeg', 'image/png'],
     }),
-    validate(CreatePhanAnhRequest),
     audit_logs(AUDIT_LOGS.CREATE, 'phan_anh'),
     PhanAnhController.createPhanAnh
 );

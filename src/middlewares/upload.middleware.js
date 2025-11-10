@@ -4,8 +4,6 @@ import fs from "fs-extra";
 import { BaseError } from "../utils/base-error.util.js";
 import { toSnakeCaseNonAccent } from "../utils/string.util.js";
 
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/csv", "application/vnd.ms-excel", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
-
 const cleanupUploadFolder = async (req) => {
     if (req.uploadFolderPath && (await fs.pathExists(req.uploadFolderPath))) {
         await fs.remove(req.uploadFolderPath);
@@ -18,6 +16,8 @@ export const createUploader = ({
     maxCount = 5,
     maxSizeMB = 10,
     allowed_types = [],
+    basePathSegments = ["src", "public", "uploads"],
+    isPublic = true,
 } = {}) => {
     if (!type || !fieldName) {
         throw new BaseError(500, "Thiếu 'type' hoặc 'fieldName' khi tạo uploader");
@@ -33,9 +33,7 @@ export const createUploader = ({
                     const dateFolder = vnTime.toISOString().split("T")[0];
                     req.uploadFolderPath = path.join(
                         process.cwd(),
-                        "src",
-                        "public",
-                        "uploads",
+                        ...basePathSegments,
                         type,
                         dateFolder
                     );
@@ -65,7 +63,6 @@ export const createUploader = ({
     });
 
     const fileFilter = (req, file, cb) => {
-        console.log("🔍 Kiểu file:", file.mimetype);
         if (!allowed_types.includes(file.mimetype)) {
             return cb(new BaseError(400, `File không hợp lệ`));
         }
@@ -95,13 +92,21 @@ export const createUploader = ({
             }
 
             req.files = req.files.map((f) => {
-                const publicDir = path.join(process.cwd(), "src", "public");
-                const relativePath = path.relative(publicDir, f.path).replace(/\\/g, "/");
                 const sizeMB = +(f.size / (1024 * 1024)).toFixed(2);
+                if (isPublic) {
+                    const publicDir = path.join(process.cwd(), "src", "public");
+                    const relativePath = path.relative(publicDir, f.path).replace(/\\/g, "/");
+                    return {
+                        ...f,
+                        relativeUrl: `/${relativePath}`,
+                        sizeMB,
+                    };
+                }
+                // Private file: không public URL
                 return {
                     ...f,
-                    relativeUrl: `/${relativePath}`,
                     sizeMB,
+                    relativeUrl: null,
                 };
             });
             next();

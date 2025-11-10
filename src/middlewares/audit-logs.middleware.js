@@ -1,4 +1,5 @@
 import prisma from "../config/database.config.js";
+import FileService from "../services/file.service.js";
 
 export const audit_logs = (action, entityName) => {
     return async (req, res, next) => {
@@ -18,6 +19,25 @@ export const audit_logs = (action, entityName) => {
         res.on("finish", async () => {
 
             const responseBody = res.locals.responseBody;
+            try {
+                let { success } = JSON.parse(responseBody) || {};
+                if (success === false) {
+                    try {
+                        for (const f of req.files || []) {
+                            if (f?.path) {
+                                try {
+                                    await FileService.deleteFileByAbsolutePath(f.path);
+                                } catch (e) {
+                                    console.error('Failed to delete uploaded file', f?.path, e);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error while cleaning uploaded files after failed response:', err);
+                    }
+                }
+            } catch (error) {
+            }
 
             try {
                 await prisma.audit_logs.create({

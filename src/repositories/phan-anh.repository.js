@@ -28,7 +28,7 @@ const PhanAnhRepository = {
     },
 
     async getPhanAnhByMaPhanAnh(maPhanAnh) {
-        return await prisma.phan_anh.findFirst({
+        const phanAnh = await prisma.phan_anh.findFirst({
             where: {
                 ma_phan_anh: maPhanAnh,
             },
@@ -56,9 +56,29 @@ const PhanAnhRepository = {
                 },
             },
         });
+
+        if (!phanAnh) return phanAnh;
+
+        // attach video metadata if present (id_video is an array of upload ids)
+        if (Array.isArray(phanAnh.id_video) && phanAnh.id_video.length > 0) {
+            const videos = await prisma.video_uploads.findMany({
+                where: { id: { in: phanAnh.id_video } },
+                select: {
+                    id: true,
+                    status: true,
+                    final_mp4_url: true,
+                    final_hls_url: true,
+                    created_at: true,
+                    updated_at: true,
+                },
+            });
+            return { ...phanAnh, videos };
+        }
+
+        return phanAnh;
     },
 
-    async getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size) {
+    async getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page, size, sortTime) {
         const whereClause = {};
         if (idLinhVucPhanAnh) {
             whereClause.id_linh_vuc_phan_anh = idLinhVucPhanAnh;
@@ -76,14 +96,17 @@ const PhanAnhRepository = {
         if (maPhanAnh) {
             whereClause.ma_phan_anh = maPhanAnh;
         }
+
+        const orderBy = {
+            thoi_gian_tao: sortTime === "asc" ? "asc" : "desc"
+        };
+
         const [phanAnhs, total] = await Promise.all([
             await prisma.phan_anh.findMany({
                 where: whereClause,
                 skip: (page - 1) * size,
                 take: size,
-                orderBy: {
-                    thoi_gian_tao: 'desc',
-                },
+                orderBy,
                 include: {
                     lich_su_trang_thai: {
                         orderBy: {
@@ -111,8 +134,35 @@ const PhanAnhRepository = {
             await prisma.phan_anh.count({
                 where: whereClause,
             }),
-        ])
-        return { data: phanAnhs, totalItems: total };
+        ]);
+
+        // Batch fetch videos for results to avoid N+1 queries
+        const allVideoIds = phanAnhs.flatMap(p => Array.isArray(p.id_video) ? p.id_video : []);
+        let videosMap = new Map();
+        if (allVideoIds.length > 0) {
+            const videos = await prisma.video_uploads.findMany({
+                where: { id: { in: allVideoIds } },
+                select: {
+                    id: true,
+                    status: true,
+                    final_mp4_url: true,
+                    final_hls_url: true,
+                    created_at: true,
+                    updated_at: true,
+                },
+            });
+            videosMap = new Map(videos.map(v => [v.id, v]));
+        }
+
+        const dataWithVideos = phanAnhs.map(p => {
+            if (Array.isArray(p.id_video) && p.id_video.length > 0) {
+                const vids = p.id_video.map(id => videosMap.get(id)).filter(Boolean);
+                return { ...p, videos: vids };
+            }
+            return p;
+        });
+
+        return { data: dataWithVideos, totalItems: total };
     },
 
     async getLichSuTrangThaiPhanAnh(idPhanAnh) {
@@ -126,14 +176,15 @@ const PhanAnhRepository = {
         });
     },
 
-    async getPhanAnhByUserId(userId) {
-        return await prisma.phan_anh.findMany({
+    async getPhanAnhByUserId(userId, sortTime) {
+        const orderBy = {
+            thoi_gian_tao: sortTime === "asc" ? "asc" : "desc"
+        };
+        const phanAnhs = await prisma.phan_anh.findMany({
             where: {
                 nguoi_tao: userId,
             },
-            orderBy: {
-                thoi_gian_tao: 'desc',
-            },
+            orderBy,
             include: {
                 lich_su_trang_thai: {
                     orderBy: {
@@ -158,10 +209,35 @@ const PhanAnhRepository = {
                 },
             },
         });
+
+        const allVideoIds = phanAnhs.flatMap(p => Array.isArray(p.id_video) ? p.id_video : []);
+        let videosMap = new Map();
+        if (allVideoIds.length > 0) {
+            const videos = await prisma.video_uploads.findMany({
+                where: { id: { in: allVideoIds } },
+                select: {
+                    id: true,
+                    status: true,
+                    final_mp4_url: true,
+                    final_hls_url: true,
+                    created_at: true,
+                    updated_at: true,
+                },
+            });
+            videosMap = new Map(videos.map(v => [v.id, v]));
+        }
+
+        return phanAnhs.map(p => {
+            if (Array.isArray(p.id_video) && p.id_video.length > 0) {
+                const vids = p.id_video.map(id => videosMap.get(id)).filter(Boolean);
+                return { ...p, videos: vids };
+            }
+            return p;
+        });
     },
 
     async getById(idPhanAnh) {
-        return await prisma.phan_anh.findUnique({
+        const phanAnh = await prisma.phan_anh.findUnique({
             where: {
                 id: idPhanAnh,
             },
@@ -175,6 +251,25 @@ const PhanAnhRepository = {
                 linh_vuc_phan_anh: true,
             },
         });
+
+        if (!phanAnh) return phanAnh;
+
+        if (Array.isArray(phanAnh.id_video) && phanAnh.id_video.length > 0) {
+            const videos = await prisma.video_uploads.findMany({
+                where: { id: { in: phanAnh.id_video } },
+                select: {
+                    id: true,
+                    status: true,
+                    final_mp4_url: true,
+                    final_hls_url: true,
+                    created_at: true,
+                    updated_at: true,
+                },
+            });
+            return { ...phanAnh, videos };
+        }
+
+        return phanAnh;
     },
 
     async updateStatusWithHistory(idPhanAnh, phanAnhPatch, historyData) {

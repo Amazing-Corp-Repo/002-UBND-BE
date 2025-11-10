@@ -3,9 +3,9 @@ import { successResponse } from "../utils/response.util.js";
 
 const PhanAnhController = {
     async createPhanAnh(req, res) {
-        const {idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId  } = req.body;
+        const { idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, idVideo } = req.body;
         const file = req.files;
-        let result = await PhanAnhService.createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file);
+        let result = await PhanAnhService.createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file, idVideo);
         return successResponse(res, result, "Tạo phản ánh thành công");
     },
 
@@ -16,8 +16,8 @@ const PhanAnhController = {
     },
 
     async getAllPhanAnh(req, res) {
-        const { idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page = 1, size = 10 } = req.query;
-        let { data, pagination } = await PhanAnhService.getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, parseInt(page), parseInt(size));
+        const { idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, page = 1, size = 10, sortTime } = req.query;
+        let { data, pagination } = await PhanAnhService.getAll(idLinhVucPhanAnh, trangThai, mucDo, maPhanAnh, parseInt(page), parseInt(size), sortTime);
         return successResponse(res, data, "Lấy danh sách phản ánh thành công", pagination);
     },
 
@@ -29,7 +29,8 @@ const PhanAnhController = {
 
     async getPhanAnhByUserId(req, res) {
         const currentUser = req.payload.userId;
-        let result = await PhanAnhService.getPhanAnhByUserId(currentUser);
+        let { sortTime } = req.query;
+        let result = await PhanAnhService.getPhanAnhByUserId(currentUser, sortTime);
         return successResponse(res, result, "Lấy danh sách phản ánh của người dùng thành công");
     },
 

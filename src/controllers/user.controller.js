@@ -50,5 +50,12 @@ const UserController = {
         const result = await UserService.updateStatusByAdmin(userId, isActive, currentUser);
         return successResponse(res, result, 'Cập nhật trạng thái người dùng thành công');
     },
+
+    async updateFcmToken(req, res) {
+        const userId = req.payload.userId;
+        const { fcmToken } = req.body;
+        const result = await UserService.updateFcmToken(userId, fcmToken);
+        return successResponse(res, result, 'Cập nhật FCM token thành công');
+    }
 }
 export default UserController;
