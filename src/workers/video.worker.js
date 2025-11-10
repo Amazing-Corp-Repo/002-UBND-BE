@@ -7,7 +7,6 @@ const { channel } = await connectRabbitMQ();
 const MAX_RETRY_MERGE = 3;
 const MAX_RETRY_HLS = 3;
 
-console.log("🚀 Worker MERGE + HLS đang chạy...");
 
 channel.consume(env.queues.videoMerge, async (msg) => {
     if (!msg) return;
@@ -16,12 +15,11 @@ channel.consume(env.queues.videoMerge, async (msg) => {
     const retryCount = job.retryCount || 0;
     const { uploadId } = job;
 
-    console.log(`📥 [MERGE] Nhận job uploadId = ${uploadId}`);
 
     try {
         // Merge chunks → mp4
         const merged = await VideoProcessingService.mergeVideoChunks(uploadId);
-        console.log(`✅ [MERGE] Hoàn tất merge: ${merged.mergedPath}`);
+        console.log(`[MERGE] Hoàn tất merge: ${merged.mergedPath}`);
 
         // Đẩy sang queue HLS
         await channel.sendToQueue(
@@ -35,10 +33,8 @@ channel.consume(env.queues.videoMerge, async (msg) => {
 
         channel.ack(msg);
     } catch (err) {
-        console.error(`❌ [MERGE] Lỗi uploadId ${uploadId}:`, err.message);
-
         if (retryCount < MAX_RETRY_MERGE) {
-            console.warn(`⚠️ [MERGE] Retry ${retryCount + 1}/${MAX_RETRY_MERGE}`);
+            console.warn(`[MERGE] Retry ${retryCount + 1}/${MAX_RETRY_MERGE}`);
             await channel.sendToQueue(
                 env.queues.videoMerge,
                 Buffer.from(JSON.stringify({
@@ -48,7 +44,7 @@ channel.consume(env.queues.videoMerge, async (msg) => {
                 { persistent: true }
             );
         } else {
-            console.error(`💀 [MERGE] FAIL sau ${MAX_RETRY_MERGE} retries`);
+            console.error(`MERGE] FAIL sau ${MAX_RETRY_MERGE} retries`);
         }
 
         channel.ack(msg);
@@ -63,19 +59,19 @@ channel.consume(env.queues.videoHLS, async (msg) => {
     const retryCount = job.retryCount || 0;
     const { uploadId, mp4Path } = job;
 
-    console.log(`📥 [HLS] Nhận job uploadId = ${uploadId}`);
+    console.log(`[HLS] Nhận job uploadId = ${uploadId}`);
 
     try {
         // Convert .mp4 → HLS
         await VideoProcessingService.convertToHLS(uploadId, mp4Path);
-        console.log(`🎉 [HLS] DONE cho ${uploadId}`);
+        console.log(`[HLS] DONE cho ${uploadId}`);
 
         channel.ack(msg);
     } catch (err) {
-        console.error(`❌ [HLS] Lỗi uploadId ${uploadId}:`, err.message);
+        console.error(`[HLS] Lỗi uploadId ${uploadId}:`, err.message);
 
         if (retryCount < MAX_RETRY_HLS) {
-            console.warn(`⚠️ [HLS] Retry ${retryCount + 1}/${MAX_RETRY_HLS}`);
+            console.warn(`[HLS] Retry ${retryCount + 1}/${MAX_RETRY_HLS}`);
             await channel.sendToQueue(
                 env.queues.videoHLS,
                 Buffer.from(JSON.stringify({
@@ -86,7 +82,7 @@ channel.consume(env.queues.videoHLS, async (msg) => {
                 { persistent: true }
             );
         } else {
-            console.error(`💀 [HLS] FAIL sau ${MAX_RETRY_HLS} retries`);
+            console.error(`[HLS] FAIL sau ${MAX_RETRY_HLS} retries`);
         }
 
         channel.ack(msg);
