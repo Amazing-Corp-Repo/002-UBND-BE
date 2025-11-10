@@ -136,7 +136,24 @@ const UserSwagger = {
             },
             responses: {}
         }
-    }
+    },
+    '/api/users/fcm-token': {
+        put: {
+            tags: ['Users'],
+            summary: 'Cập nhật FCM token cho người dùng',
+            description: 'Cập nhật FCM token để nhận thông báo đẩy',
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: UserSchemas.UpdateFcmTokenRequest
+                    }
+                }
+            },
+            responses: {}
+        }
+    },
 };
 
 export default UserSwagger;

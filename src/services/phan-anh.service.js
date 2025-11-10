@@ -7,7 +7,7 @@ import { capitalizeWords, generateUniqueCode } from "../utils/string.util.js";
 import UserRepository from "../repositories/user.repository.js";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
 import { getIO } from "../realtime/socket/index.js";
-
+import adminFirebase from "../realtime/firebase/index.js";
 
 const ORDER = [
     PHAN_ANH_STATUS.DA_GUI,
@@ -169,7 +169,8 @@ const PhanAnhService = {
 
         await PhanAnhRepository.updateStatusWithHistory(idPhanAnh, phanAnhPatch, historyData);
         if (phanAnh.nguoi_tao) {
-            handleSendNotification(phanAnh, trangThai, ghiChu);
+            // handleSendNotification(phanAnh, trangThai, ghiChu);
+            await handleSendNotificationByFirebase(phanAnh, trangThai, ghiChu, phanAnh.nguoi_tao);
         }
     },
 };
@@ -192,6 +193,33 @@ const handleSendNotification = (phanAnh, trangThai, ghiChu) => {
     io.to(targetRoom).emit("phan-anh.update-status", payload);
 
     console.log(`Đã gửi thông báo đến room: ${targetRoom}`);
+}
+
+const handleSendNotificationByFirebase = async (phanAnh, trangThai, ghiChu, userId) => {
+    const existingUser = await UserRepository.findById(userId);
+    if (!existingUser || !existingUser.fcm_token) {
+        console.log(`Người dùng không tồn tại hoặc không có FCM token để gửi thông báo`);
+        return;
+    }
+    const fcmToken = existingUser.fcm_token;
+    const title = 'Cập nhật trạng thái phản ánh';
+    const body = `Phản ánh của bạn đã được cập nhật trạng thái: ${trangThai}`;
+    let fcm = adminFirebase.messaging();
+    const data = {
+        ma_phan_anh: phanAnh.ma_phan_anh,
+        ghi_chu: ghiChu,
+    };
+    try {
+        await fcm.send({
+            token: fcmToken,
+            notification: { title, body },
+            data
+        });
+
+        console.log("FCM sent to user:", fcmToken);
+    } catch (err) {
+        console.error("FCM send error:", err);
+    }
 }
 
 export default PhanAnhService;

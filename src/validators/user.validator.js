@@ -91,3 +91,12 @@ export const UpdateStatusByAdminRequest = Joi.object({
             'any.required': 'Trạng thái hoạt động là bắt buộc',
         }),
 });
+
+export const UpdateFcmTokenRequest = Joi.object({
+    fcmToken: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'FCM token là bắt buộc',
+        }),
+});

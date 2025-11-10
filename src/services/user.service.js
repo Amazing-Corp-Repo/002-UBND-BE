@@ -113,7 +113,19 @@ const UserService = {
             currentUser,
         );
         return toUserResponse(userUpdated);
-    }
+    },
+
+    async updateFcmToken(userId, fcmToken) {
+        const user = await UserRepository.findById(userId);
+        if (!user) {
+            throw new BaseError(404, 'Không tìm thấy người dùng');
+        }
+        let userUpdated = await UserRepository.updateUser(
+            userId,
+            { fcm_token: fcmToken, nguoi_cap_nhat: userId, thoi_gian_cap_nhat: new Date().toISOString() }
+        );
+        return toUserResponse(userUpdated);
+    },
 }
 
 export default UserService;

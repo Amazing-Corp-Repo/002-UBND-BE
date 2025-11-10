@@ -10,6 +10,7 @@ const toUserResponse = (user) => {
         is_active: user.is_active,
         thoi_gian_tao: user.thoi_gian_tao,
         thoi_gian_cap_nhat: user.thoi_gian_cap_nhat,
+        fcm_token: user.fcm_token,
     };
 }
 
