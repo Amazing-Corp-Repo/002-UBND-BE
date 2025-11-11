@@ -73,6 +73,22 @@ const LinhVucPhanAnhRepository = {
             },
         });
     },
+
+    async searchByName(search) {
+        const where = {
+            is_delete: false,
+            ...(search !== undefined && search !== ''
+                ? { ten: { contains: search, mode: 'insensitive' } }
+                : {}),
+            is_active: true,
+        };
+        return await prisma.linh_vuc_phan_anh.findMany({
+            where,
+            orderBy: {
+                thoi_gian_tao: 'desc',
+            },
+        });
+    }
 };
 
 export default LinhVucPhanAnhRepository;

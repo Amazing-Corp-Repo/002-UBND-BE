@@ -41,6 +41,11 @@ linhVucPhanAnh.put(
 );
 
 linhVucPhanAnh.get(
+    '/search', 
+    LinhVucPhanAnhController.searchLinhVucPhanAnhByName
+);
+
+linhVucPhanAnh.get(
     '/:id', 
     LinhVucPhanAnhController.getLinhVucPhanAnhById
 );

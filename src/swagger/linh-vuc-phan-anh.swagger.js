@@ -132,6 +132,22 @@ const LinhVucPhanAnhSwagger = {
             responses: {},
         },
     },
+    '/api/linh-vuc-phan-anh/search': {
+        get: {
+            tags: ['LinhVucPhanAnh'],
+            summary: 'Tìm kiếm lĩnh vực phản ánh theo tên',
+            parameters: [
+                {
+                    name: 'ten',
+                    in: 'query',
+                    required: false,
+                    description: 'Tên hoặc một phần của tên lĩnh vực phản ánh cần tìm kiếm',
+                    schema: { type: 'string' },
+                },
+            ],
+            responses: {},
+        },
+    },
 };
 
 export default LinhVucPhanAnhSwagger;
