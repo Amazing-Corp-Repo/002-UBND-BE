@@ -146,7 +146,7 @@ const TinTucService = {
     },
 
     async updateTinTucStatus(id, isActive, currentUser) {
-        if (!id === null || id === undefined) {
+        if (id === null || id === undefined) {
             throw new BaseError(400, 'ID tin tức không được để trống');
         }
         const existing = await TinTucRepository.findById(id);
