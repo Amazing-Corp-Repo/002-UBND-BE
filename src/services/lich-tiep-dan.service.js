@@ -101,7 +101,7 @@ const LichTiepDanService = {
         });
     },
 
-    async updateLichTiepDan(id, isActive, currentUser) {
+    async updateStatusLichTiepDan(id, isActive, currentUser) {
         const existing = await LichTiepDanRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");
