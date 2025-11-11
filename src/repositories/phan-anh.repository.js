@@ -1,4 +1,5 @@
 import prisma from '../config/database.config.js';
+import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 
 const PhanAnhRepository = {
     async create(data) {
@@ -298,7 +299,7 @@ const PhanAnhRepository = {
         });
     },
 
-    async getTongQuangPhanAnh() {
+    async getTongQuanPhanAnh() {
         const now = new Date();
 
         const startOfTodayUTC = new Date(Date.UTC(
@@ -346,6 +347,13 @@ const PhanAnhRepository = {
         const thongKeTheoTrangThai = {};
         rows.forEach(r => {
             thongKeTheoTrangThai[r.ten] = Number(r.count) || 0;
+        });
+
+        // đảm bảo đủ tất cả trạng thái
+        Object.values(PHAN_ANH_STATUS).forEach(status => {
+            if (!thongKeTheoTrangThai[status]) {
+                thongKeTheoTrangThai[status] = 0;
+            }
         });
 
         const startDateUTC = new Date(Date.UTC(
@@ -414,9 +422,9 @@ const PhanAnhRepository = {
         }));
 
         return {
-            tongHomNay,
-            thongKeTheoTrangThai,
-            xuHuongPhanAnh,
+            tong_hom_nay: tongHomNay,
+            thong_ke_theo_trang_thai: thongKeTheoTrangThai,
+            xu_huong_phan_anh: xuHuongPhanAnh,
         };
     }
 };

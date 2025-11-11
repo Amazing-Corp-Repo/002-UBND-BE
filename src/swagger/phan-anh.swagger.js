@@ -211,7 +211,7 @@ const PhanAnhSwagger = {
             responses: {}
         }
     },
-    '/api/phan-anh/tong-quang': {
+    '/api/phan-anh/tong-quan': {
         get: {
             tags: ['PhanAnh'],
             summary: 'Lấy tổng quát phản ánh',

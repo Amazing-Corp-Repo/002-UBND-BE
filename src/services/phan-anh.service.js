@@ -174,8 +174,8 @@ const PhanAnhService = {
         }
     },
 
-    async getTongQuangPhanAnh() {
-        return await PhanAnhRepository.getTongQuangPhanAnh();
+    async getTongQuanPhanAnh() {
+        return await PhanAnhRepository.getTongQuanPhanAnh();
     },
 };
 
