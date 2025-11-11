@@ -211,6 +211,14 @@ const PhanAnhSwagger = {
             responses: {}
         }
     },
+    '/api/phan-anh/tong-quang': {
+        get: {
+            tags: ['PhanAnh'],
+            summary: 'Lấy tổng quát phản ánh',
+            security: [{ bearerAuth: [] }],
+            responses: {},
+        },
+    },
 }
 
 export default PhanAnhSwagger;
