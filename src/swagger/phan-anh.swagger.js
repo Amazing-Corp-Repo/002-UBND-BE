@@ -219,7 +219,7 @@ const PhanAnhSwagger = {
             responses: {},
         },
     },
-    '/api/phan-anh/muc-do-trang-thai': {
+    '/api/phan-anh/muc-do-trang-thai-linh-vuc': {
         get: {
             tags: ['PhanAnh'],
             summary: 'Lấy mức độ và trạng thái phản ánh',

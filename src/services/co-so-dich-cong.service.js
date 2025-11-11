@@ -35,11 +35,17 @@ const CoSoDichCongService = {
     },
 
     async findById(id) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID cơ sở dịch vụ công không được để trống');
+        }
         const result = await CoSoDichVuCongRepository.findById(id);
         return result;
     },
 
     async update(id, tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, currentUser) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID cơ sở dịch vụ công không được để trống');
+        }
         tenCoSo = capitalizeWords(tenCoSo);
         const existingCoSo = await CoSoDichVuCongRepository.findById(id);
         if (!existingCoSo) {
@@ -66,6 +72,9 @@ const CoSoDichCongService = {
     },
 
     async updateStatus(id, isActive, currentUser) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID cơ sở dịch vụ công không được để trống');
+        }
         const existingCoSo = await CoSoDichVuCongRepository.findById(id);
         if (!existingCoSo) {
             throw new BaseError(404, 'Cơ sở dịch vụ công không tồn tại');
@@ -86,6 +95,9 @@ const CoSoDichCongService = {
     },
 
     async delete(id, currentUser) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID cơ sở dịch vụ công không được để trống');
+        }
         const existingCoSo = await CoSoDichVuCongRepository.findById(id);
         if (!existingCoSo) {
             throw new BaseError(404, 'Cơ sở dịch vụ công không tồn tại');

@@ -83,6 +83,9 @@ const UserService = {
     },
 
     async deleteUser(userId, currentUser) {
+        if (userId === null || userId === undefined) {
+            throw new BaseError(400, 'ID người dùng không được để trống');
+        }
         const user = await UserRepository.findById(userId);
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
@@ -103,6 +106,9 @@ const UserService = {
     },
 
     async updateStatusByAdmin(userId, isActive, currentUser) {
+        if (userId === null || userId === undefined) {
+            throw new BaseError(400, 'ID người dùng không được để trống');
+        }
         const user = await UserRepository.findById(userId);
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');

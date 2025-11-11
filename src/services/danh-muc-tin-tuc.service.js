@@ -22,6 +22,9 @@ const DanhMucTinTucService = {
 
 
     async update(id, tenDanhMuc, moTa, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, 'ID danh mục tin tức không được để trống');
+        }
         tenDanhMuc = capitalizeWords(tenDanhMuc);
         const existingDanhMuc = await DanhMucTinTucRepository.findById(id);
 
@@ -46,6 +49,9 @@ const DanhMucTinTucService = {
     },
 
     async delete(id, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, 'ID danh mục tin tức không được để trống');
+        }
         const existingDanhMuc = await DanhMucTinTucRepository.findById(id);
         if (!existingDanhMuc) {
             throw new BaseError(404, 'Danh mục tin tức không tồn tại');
@@ -68,10 +74,16 @@ const DanhMucTinTucService = {
     },
 
     async findById(id) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, 'ID danh mục tin tức không được để trống');
+        }
         return DanhMucTinTucRepository.findById(id);
     },
 
     async updateStatus(id, isActive, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, 'ID danh mục tin tức không được để trống');
+        }
         const existingDanhMuc = await DanhMucTinTucRepository.findById(id);
         if (!existingDanhMuc) {
             throw new BaseError(404, 'Danh mục tin tức không tồn tại');
