@@ -26,7 +26,7 @@ const LichTiepDanController = {
         const { id } = req.params;
         const { isActive } = req.body;
         const currentUser = req.payload.userId;
-        const data = await LichTiepDanService.updateLichTiepDan(id, isActive, currentUser);
+        const data = await LichTiepDanService.updateStatusLichTiepDan(id, isActive, currentUser);
         return successResponse(res, data, "Cập nhật lịch tiếp dân thành công");
     },
 
