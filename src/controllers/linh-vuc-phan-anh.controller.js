@@ -44,6 +44,12 @@ const LinhVucPhanAnhController = {
         const currentUser = req.payload.userId;
         await LinhVucPhanAnhService.deleteLinhVucPhanAnh(id, currentUser);
         return successResponse(res, null, 'Xóa lĩnh vực phản ánh thành công');
+    },
+
+    async searchLinhVucPhanAnhByName(req, res) {
+        const { ten } = req.query;
+        const result = await LinhVucPhanAnhService.searchLinhVucPhanAnhByName(ten);
+        return successResponse(res, result, 'Tìm kiếm lĩnh vực phản ánh thành công');
     }
 };
 

@@ -35,7 +35,7 @@ export const appendDeleteSuffixc = (str) => {
         return str;
     }
 
-    return `${new Date().getTime()}_delete_${str}`;
+    return `${generateUniqueCode()}_${str}`;
 }
 
 export const generateUniqueCode = () => {

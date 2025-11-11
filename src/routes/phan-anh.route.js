@@ -68,6 +68,11 @@ phanAnhRouter.get(
 )
 
 phanAnhRouter.get(
+    '/muc-do-trang-thai',
+    PhanAnhController.getMucDoAndTrangThai
+);
+
+phanAnhRouter.get(
     "/:idPhanAnh",
     authenticate,
     authorize([ROLE.ADMIN, ROLE.NHAN_VIEN, ROLE.PHO_CHU_TICH, ROLE.CHU_TICH, ROLE.LANH_DAO]),
@@ -82,5 +87,6 @@ phanAnhRouter.put(
     audit_logs(AUDIT_LOGS.UPDATE, 'phan_anh, lich_su_trang_thai'),
     PhanAnhController.updateStatusPhanAnh
 );
+
 
 export default phanAnhRouter;

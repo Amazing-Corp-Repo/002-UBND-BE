@@ -177,6 +177,13 @@ const PhanAnhService = {
     async getTongQuanPhanAnh() {
         return await PhanAnhRepository.getTongQuanPhanAnh();
     },
+
+    getMucDoAndTrangThai() {
+        return {
+            PHAN_ANH_MUC_DO,
+            PHAN_ANH_STATUS,
+        }
+    }
 };
 
 const handleSendNotification = (phanAnh, trangThai, ghiChu) => {
