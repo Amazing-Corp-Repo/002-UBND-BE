@@ -58,8 +58,8 @@ const PhanAnhController = {
         return successResponse(res, result, "Cập nhật trạng thái phản ánh thành công");
     },
 
-    async getTongQuangPhanAnh(req, res) {
-        let result = await PhanAnhService.getTongQuangPhanAnh();
+    async getTongQuanPhanAnh(req, res) {
+        let result = await PhanAnhService.getTongQuanPhanAnh();
         return successResponse(res, result, "Lấy tổng quát phản ánh thành công");
     }
 };
