@@ -26,7 +26,7 @@ const LinhVucService = {
 
     async update(id, tenLinhVuc, moTa, currentUser) {
         if (id === null || id === undefined) {
-            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+            throw new BaseError(400, "ID lĩnh vực không được để trống");
         }
         // Kiểm tra lĩnh vực có tồn tại không
         const existing = await LinhVucRepository.findById(id);
