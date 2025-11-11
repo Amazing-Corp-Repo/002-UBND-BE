@@ -87,13 +87,6 @@ const PhanAnhRepository = {
         if (mucDo) {
             whereClause.muc_do = mucDo;
         }
-        if (trangThai) {
-            whereClause.lich_su_trang_thai = {
-                some: {
-                    ten: trangThai,
-                },
-            };
-        }
         if (maPhanAnh) {
             whereClause.ma_phan_anh = maPhanAnh;
         }
@@ -102,44 +95,59 @@ const PhanAnhRepository = {
             thoi_gian_tao: sortTime === "asc" ? "asc" : "desc"
         };
 
-        const [phanAnhs, total] = await Promise.all([
-            await prisma.phan_anh.findMany({
-                where: whereClause,
-                skip: (page - 1) * size,
-                take: size,
-                orderBy,
-                include: {
-                    lich_su_trang_thai: {
-                        orderBy: {
-                            thoi_gian_tao: 'desc',
-                        },
-                        select: {
-                            ten: true,
-                            thoi_gian_tao: true,
-                        },
-                    },
-                    dinh_kem_phan_anh: {
-                        select: {
-                            dinh_dang_file: true,
-                            url_file: true,
-                            kich_thuoc_file_mb: true,
-                        }
-                    },
-                    linh_vuc_phan_anh: {
-                        select: {
-                            ten: true,
-                        },
-                    },
+        // Lấy tất cả phản ánh theo điều kiện cơ bản
+        const phanAnhsRaw = await prisma.phan_anh.findMany({
+            where: whereClause,
+            orderBy,
+            include: {
+                lich_su_trang_thai: {
+                    orderBy: { thoi_gian_tao: 'desc' }, // newest first
+                    select: {
+                        ten: true,
+                        thoi_gian_tao: true,
+                        ghi_chu: true,
+                        nguoi_tao: true
+                    }
                 },
-            }),
-            await prisma.phan_anh.count({
-                where: whereClause,
-            }),
-        ]);
+                dinh_kem_phan_anh: {
+                    select: {
+                        dinh_dang_file: true,
+                        url_file: true,
+                        kich_thuoc_file_mb: true,
+                    }
+                },
+                linh_vuc_phan_anh: {
+                    select: { ten: true }
+                }
+            }
+        });
 
-        // Batch fetch videos for results to avoid N+1 queries
-        const allVideoIds = phanAnhs.flatMap(p => Array.isArray(p.id_video) ? p.id_video : []);
+        // Gắn thêm trạng_thái_hiện_tại cho từng phản ánh
+        const mapped = phanAnhsRaw.map(item => {
+            const latest = item.lich_su_trang_thai[0] || null;
+            return {
+                ...item,
+                trang_thai_hien_tai: latest ? latest.ten : null
+            };
+        });
+
+        // Filter theo trạng thái hiện tại (nếu có)
+        let filtered = mapped;
+        if (trangThai) {
+            filtered = mapped.filter(x => x.trang_thai_hien_tai === trangThai);
+        }
+
+        // Total sau filter
+        const totalItems = filtered.length;
+
+        // Pagination
+        const start = (page - 1) * size;
+        const sliced = filtered.slice(start, start + size);
+
+        // Batch fetch videos
+        const allVideoIds = sliced.flatMap(p => Array.isArray(p.id_video) ? p.id_video : []);
         let videosMap = new Map();
+
         if (allVideoIds.length > 0) {
             const videos = await prisma.video_uploads.findMany({
                 where: { id: { in: allVideoIds } },
@@ -155,15 +163,17 @@ const PhanAnhRepository = {
             videosMap = new Map(videos.map(v => [v.id, v]));
         }
 
-        const dataWithVideos = phanAnhs.map(p => {
-            if (Array.isArray(p.id_video) && p.id_video.length > 0) {
-                const vids = p.id_video.map(id => videosMap.get(id)).filter(Boolean);
-                return { ...p, videos: vids };
-            }
-            return p;
+        const dataWithVideos = sliced.map(p => {
+            const vids = Array.isArray(p.id_video)
+                ? p.id_video.map(id => videosMap.get(id)).filter(Boolean)
+                : [];
+            return { ...p, videos: vids };
         });
 
-        return { data: dataWithVideos, totalItems: total };
+        return {
+            data: dataWithVideos,
+            totalItems
+        };
     },
 
     async getLichSuTrangThaiPhanAnh(idPhanAnh) {

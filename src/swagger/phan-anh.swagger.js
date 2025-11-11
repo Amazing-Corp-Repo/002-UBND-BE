@@ -219,6 +219,13 @@ const PhanAnhSwagger = {
             responses: {},
         },
     },
+    '/api/phan-anh/muc-do-trang-thai': {
+        get: {
+            tags: ['PhanAnh'],
+            summary: 'Lấy mức độ và trạng thái phản ánh',
+            responses: {},
+        },
+    },
 }
 
 export default PhanAnhSwagger;
