@@ -1,8 +1,6 @@
 import TinTucRepository from "../repositories/tin-tuc.repository.js";
 import DinhKemTinTucRepository from "../repositories/dinh-kem-tin-tuc.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
-import TIN_TUC from "../constants/tin-tuc.constant.js";
-import FileService from "./file.service.js";
 import { createPagination } from "../utils/response.util.js";
 import DanhMucTinTucRepository from "../repositories/danh-muc-tin-tuc.repository.js";
 import { capitalizeWords } from "../utils/string.util.js";
@@ -35,6 +33,9 @@ const TinTucService = {
     },
 
     async updateTinTuc(id, idDanhMuc, tieuDe, noiDung, tacGia, isActive, file = [], currentUser) {
+        if (!id === null || id === undefined) {
+            throw new BaseError(400, 'ID tin tức không được để trống');
+        }
         tieuDe = capitalizeWords(tieuDe);
         tacGia = tacGia ? capitalizeWords(tacGia) : tacGia;
         const exsitsting = await TinTucRepository.findById(id);
@@ -69,7 +70,6 @@ const TinTucService = {
             }
 
             // Gửi thông báo xuất bản tin tức
-            console.log('Gửi thông báo xuất bản tin tức');
             data.is_noti = true;
         }
         const result = await TinTucRepository.update(id, data);
@@ -77,6 +77,9 @@ const TinTucService = {
     },
 
     async getDetails(id) {
+        if (!id === null || id === undefined) {
+            throw new BaseError(400, 'ID tin tức không được để trống');
+        }
         const result = await TinTucRepository.getDetails(id);
         return result;
     },
@@ -88,6 +91,9 @@ const TinTucService = {
     },
 
     async delete(id, currentUser) {
+        if (!id === null || id === undefined) {
+            throw new BaseError(400, 'ID tin tức không được để trống');
+        }
         const existing = await TinTucRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, 'Tin tức không tồn tại');
@@ -140,6 +146,9 @@ const TinTucService = {
     },
 
     async updateTinTucStatus(id, isActive, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, 'ID tin tức không được để trống');
+        }
         const existing = await TinTucRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, 'Tin tức không tồn tại');

@@ -68,8 +68,8 @@ phanAnhRouter.get(
 )
 
 phanAnhRouter.get(
-    '/muc-do-trang-thai',
-    PhanAnhController.getMucDoAndTrangThai
+    '/muc-do-trang-thai-linh-vuc',
+    PhanAnhController.getMucDoAndTrangThaiAndLinhVuc
 );
 
 phanAnhRouter.get(

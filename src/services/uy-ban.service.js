@@ -25,6 +25,9 @@ const UyBanService = {
     },
 
     async update(id, tenDonVi, diaChi, soDienThoai, email, gioLamViec, linkGoogleMap) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, 'ID ủy ban không được để trống');
+        }
         tenDonVi = capitalizeWords(tenDonVi);
         const uyBan = await UyBanRepository.findById(id);
         if (!uyBan) {

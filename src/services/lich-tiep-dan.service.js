@@ -86,6 +86,9 @@ const LichTiepDanService = {
     },
 
     async deleteLichTiepDan(id, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
         const existing = await LichTiepDanRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");
@@ -102,6 +105,9 @@ const LichTiepDanService = {
     },
 
     async updateStatusLichTiepDan(id, isActive, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
         const existing = await LichTiepDanRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");
@@ -120,6 +126,9 @@ const LichTiepDanService = {
     },
 
     async getLichTiepDanById(id) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
         const data = await LichTiepDanRepository.findById(id);
         if (!data || data.is_delete) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");
@@ -145,6 +154,9 @@ const LichTiepDanService = {
     },
 
     async updateLichTiepDan(id, tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
         const existing = await LichTiepDanRepository.findById(id);
         if (!existing || existing.is_delete) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");

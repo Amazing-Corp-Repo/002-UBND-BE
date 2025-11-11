@@ -65,6 +65,9 @@ const MauDonService = {
     },
 
     async deleteMauDon(id, currentUser) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID mẫu đơn không hợp lệ');
+        }
         const existing = await MauDonRepository.getMauDonById(id);
         if (!existing) {
             throw new BaseError(404, 'Mẫu đơn không tồn tại');
@@ -83,6 +86,9 @@ const MauDonService = {
     },
 
     async updateStatusMauDon(id, isActive, currentUser) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID mẫu đơn không hợp lệ');
+        }
         const existing = await MauDonRepository.getMauDonById(id);
         if (!existing) {
             throw new BaseError(404, 'Mẫu đơn không tồn tại');
@@ -101,7 +107,10 @@ const MauDonService = {
     },
 
     async getMauDonById(id) {
-        let data =  await MauDonRepository.getMauDonById(id);
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID mẫu đơn không hợp lệ');
+        }
+        let data = await MauDonRepository.getMauDonById(id);
         if (!data || data.is_delete) {
             throw new BaseError(404, 'Mẫu đơn không tồn tại');
         }
