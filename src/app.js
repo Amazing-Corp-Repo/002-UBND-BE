@@ -111,3 +111,10 @@ import("../src/workers/video.worker.js")
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
+
+import PhanAnhRepository from "./repositories/phan-anh.repository.js";
+
+app.get("/test", async (req, res) => {
+  let data = await PhanAnhRepository.getThongKe();
+  res.json(data);
+});
