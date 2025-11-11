@@ -18,7 +18,6 @@ const ORDER = [
 
 const PhanAnhService = {
     async createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file, idVideo = []) {
-        console.log('Id video received in service:', idVideo);
         if (!file || file.length === 0) {
             throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
         }
