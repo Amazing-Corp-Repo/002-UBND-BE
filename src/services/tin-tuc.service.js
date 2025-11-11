@@ -33,7 +33,7 @@ const TinTucService = {
     },
 
     async updateTinTuc(id, idDanhMuc, tieuDe, noiDung, tacGia, isActive, file = [], currentUser) {
-        if (!id === null || id === undefined) {
+        if (id === null || id === undefined) {
             throw new BaseError(400, 'ID tin tức không được để trống');
         }
         tieuDe = capitalizeWords(tieuDe);
