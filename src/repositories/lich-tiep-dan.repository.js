@@ -83,6 +83,7 @@ const LichTiepDanRepository = {
     },
 
     async findByCanBoAndNgayExcludeId(ten_can_bo, ngay_tiep_dan, excludeId) {
+        console.log(ten_can_bo, ngay_tiep_dan, excludeId);
         return await prisma.lich_tiep_dan.findFirst({
             where: {
                 ten_can_bo,
