@@ -17,7 +17,7 @@ const ORDER = [
 ];
 
 const PhanAnhService = {
-    async createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file, idVideo) {
+    async createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file, idVideo = []) {
         if (!file || file.length === 0) {
             throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
         }
@@ -172,6 +172,10 @@ const PhanAnhService = {
             // handleSendNotification(phanAnh, trangThai, ghiChu);
             await handleSendNotificationByFirebase(phanAnh, trangThai, ghiChu, phanAnh.nguoi_tao);
         }
+    },
+
+    async getTongQuanPhanAnh() {
+        return await PhanAnhRepository.getTongQuanPhanAnh();
     },
 };
 

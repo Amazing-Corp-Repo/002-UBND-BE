@@ -61,6 +61,13 @@ phanAnhRouter.get(
 );
 
 phanAnhRouter.get(
+    '/tong-quan',
+    authenticate,
+    authorize([ROLE.ADMIN, ROLE.NHAN_VIEN, ROLE.PHO_CHU_TICH, ROLE.CHU_TICH, ROLE.LANH_DAO]),
+    PhanAnhController.getTongQuanPhanAnh
+)
+
+phanAnhRouter.get(
     "/:idPhanAnh",
     authenticate,
     authorize([ROLE.ADMIN, ROLE.NHAN_VIEN, ROLE.PHO_CHU_TICH, ROLE.CHU_TICH, ROLE.LANH_DAO]),
