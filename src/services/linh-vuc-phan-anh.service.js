@@ -25,6 +25,9 @@ const LinhVucPhanAnhService = {
     },
 
     async updateLinhVucPhanAnh(id, ten, moTa, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+        }
         const existingLinhVuc = await LinhVucPhanAnhRepository.findById(id);
         if (!existingLinhVuc) {
             throw new BaseError(404, 'Lĩnh vực phản ánh không tồn tại');
@@ -44,6 +47,9 @@ const LinhVucPhanAnhService = {
     },
 
     async updateLinhVucPhanAnhStatus(id, isActive, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+        }
         const existingLinhVuc = await LinhVucPhanAnhRepository.findById(id);
         if (!existingLinhVuc) {
             throw new BaseError(404, 'Lĩnh vực phản ánh không tồn tại');
@@ -64,6 +70,9 @@ const LinhVucPhanAnhService = {
     },
 
     async getLinhVucPhanAnhById(id) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+        }
         const result = await LinhVucPhanAnhRepository.findById(id);
         if (!result) {
             throw new BaseError(404, 'Lĩnh vực phản ánh không tồn tại');
@@ -72,6 +81,9 @@ const LinhVucPhanAnhService = {
     },
 
     async deleteLinhVucPhanAnh(id, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+        }
         const existingLinhVuc = await LinhVucPhanAnhRepository.findById(id);
         if (!existingLinhVuc) {
             throw new BaseError(404, 'Lĩnh vực phản ánh không tồn tại');

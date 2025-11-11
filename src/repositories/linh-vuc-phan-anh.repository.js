@@ -88,6 +88,22 @@ const LinhVucPhanAnhRepository = {
                 thoi_gian_tao: 'desc',
             },
         });
+    },
+
+    async getAllActiveLinhVucPhanAnh() {
+        return await prisma.linh_vuc_phan_anh.findMany({
+            where: {
+                is_delete: false,
+                is_active: true,
+            },
+            orderBy: {
+                thoi_gian_tao: 'desc',
+            },
+            select: {
+                id: true,
+                ten: true,
+            },
+        });
     }
 };
 

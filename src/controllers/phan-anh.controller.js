@@ -63,9 +63,9 @@ const PhanAnhController = {
         return successResponse(res, result, "Lấy tổng quát phản ánh thành công");
     },
 
-    async getMucDoAndTrangThai(req, res) {
-        let result = PhanAnhService.getMucDoAndTrangThai();
-        return successResponse(res, result, "Lấy mức độ và trạng thái phản ánh thành công");
+    async getMucDoAndTrangThaiAndLinhVuc(req, res) {
+        let result = await PhanAnhService.getMucDoAndTrangThaiAndLinhVuc();
+        return successResponse(res, result, "Lấy mức độ và trạng thái, lĩnh vực phản ánh thành công");
     }
 };
 

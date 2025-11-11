@@ -89,6 +89,9 @@ const PhanAnhService = {
     },
 
     async getPhanAnhByMaPhanAnh(maPhanAnh) {
+        if (maPhanAnh === null || maPhanAnh === undefined) {
+            throw new BaseError(400, "Mã phản ánh không được để trống");
+        }
         let phanAnh = await PhanAnhRepository.getPhanAnhByMaPhanAnh(maPhanAnh);
         if (!phanAnh) {
             throw new BaseError(400, "Phản ánh không tồn tại");
@@ -104,10 +107,16 @@ const PhanAnhService = {
     },
 
     async getLichSuTrangThaiPhanAnh(idPhanAnh) {
+        if (idPhanAnh === null || idPhanAnh === undefined) {
+            throw new BaseError(400, "ID phản ánh không được để trống");
+        }
         return await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh);
     },
 
     async getPhanAnhByUserId(userId, sortTime) {
+        if (userId === null || userId === undefined) {
+            throw new BaseError(400, "ID người dùng không được để trống");
+        }
         return await PhanAnhRepository.getPhanAnhByUserId(userId, sortTime);
     },
 
@@ -120,6 +129,9 @@ const PhanAnhService = {
     },
 
     async getPhanAnhById(idPhanAnh) {
+        if (idPhanAnh === null || idPhanAnh === undefined) {
+            throw new BaseError(400, "ID phản ánh không được để trống");
+        }
         let phanAnh = await PhanAnhRepository.getById(idPhanAnh);
         if (!phanAnh) {
             throw new BaseError(400, "Phản ánh không tồn tại");
@@ -128,6 +140,9 @@ const PhanAnhService = {
     },
 
     async updateStatusPhanAnh(idPhanAnh, thoiGianPhanHoiDuKien, ngayDuKienHoanThanh, trangThai, ghiChu, currentUser) {
+        if (idPhanAnh === null || idPhanAnh === undefined) {
+            throw new BaseError(400, "ID phản ánh không được để trống");
+        }
         let phanAnh = await PhanAnhRepository.getById(idPhanAnh);
         if (!phanAnh) {
             throw new BaseError(400, "Phản ánh không tồn tại");
@@ -178,10 +193,12 @@ const PhanAnhService = {
         return await PhanAnhRepository.getTongQuanPhanAnh();
     },
 
-    getMucDoAndTrangThai() {
+    async getMucDoAndTrangThaiAndLinhVuc() {
+        let linhVucPhanAnh = await LinhVucPhanAnhRepository.getAllActiveLinhVucPhanAnh();
         return {
             PHAN_ANH_MUC_DO,
             PHAN_ANH_STATUS,
+            LINH_VUC_PHAN_ANH: linhVucPhanAnh,
         }
     }
 };
