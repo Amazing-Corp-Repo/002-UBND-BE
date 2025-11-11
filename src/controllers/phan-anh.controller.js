@@ -61,6 +61,11 @@ const PhanAnhController = {
     async getTongQuanPhanAnh(req, res) {
         let result = await PhanAnhService.getTongQuanPhanAnh();
         return successResponse(res, result, "Lấy tổng quát phản ánh thành công");
+    },
+
+    async getMucDoAndTrangThai(req, res) {
+        let result = PhanAnhService.getMucDoAndTrangThai();
+        return successResponse(res, result, "Lấy mức độ và trạng thái phản ánh thành công");
     }
 };
 

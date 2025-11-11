@@ -87,6 +87,11 @@ const LinhVucPhanAnhService = {
         };
         const result = await LinhVucPhanAnhRepository.update(id, data);
         return result;
+    },
+
+    async searchLinhVucPhanAnhByName(ten) {
+        const results = await LinhVucPhanAnhRepository.searchByName(ten);
+        return results;
     }
 };
 
