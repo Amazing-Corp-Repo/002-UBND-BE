@@ -39,7 +39,7 @@ const TinTucService = {
         tieuDe = capitalizeWords(tieuDe);
         tacGia = tacGia ? capitalizeWords(tacGia) : tacGia;
         const exsitsting = await TinTucRepository.findById(id);
-        if (!exsitsting) {
+        if (!exsitsting || exsitsting.is_delete) {
             throw new BaseError(404, 'Tin tức không tồn tại');
         }
 
@@ -150,7 +150,7 @@ const TinTucService = {
             throw new BaseError(400, 'ID tin tức không được để trống');
         }
         const existing = await TinTucRepository.findById(id);
-        if (!existing) {
+        if (!existing || existing.is_delete) {
             throw new BaseError(404, 'Tin tức không tồn tại');
         }
         const data = {
