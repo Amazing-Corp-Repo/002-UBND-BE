@@ -29,7 +29,9 @@
     "swagger-jsdoc": "^3.7.0",
     "swagger-parser": "^8.0.4",
     "swagger-ui-express": "^5.0.1",
-    "ua-parser-js": "^2.0.5"
+    "ua-parser-js": "^2.0.5",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "name": "ubnd-api",
   "version": "1.0.0",
