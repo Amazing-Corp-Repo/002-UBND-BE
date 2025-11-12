@@ -38,8 +38,8 @@ const TinTucService = {
         }
         tieuDe = capitalizeWords(tieuDe);
         tacGia = tacGia ? capitalizeWords(tacGia) : tacGia;
-        const exsitsting = await TinTucRepository.findById(id);
-        if (!exsitsting || exsitsting.is_delete) {
+        const existing = await TinTucRepository.findById(id);
+        if (!existing || existing.is_delete) {
             throw new BaseError(404, 'Tin tức không tồn tại');
         }
 
@@ -53,7 +53,7 @@ const TinTucService = {
             tieu_de: tieuDe,
             noi_dung: noiDung,
             is_active: isActive,
-            is_noti: exsitsting.is_noti,
+            is_noti: existing.is_noti,
             nguoi_cap_nhat: currentUser,
             thoi_gian_cap_nhat: new Date().toISOString(),
         };
@@ -61,9 +61,9 @@ const TinTucService = {
         if (file && file.length > 0) {
             data.url_anh_dai_dien = file[0].relativeUrl;
         };
-        if (exsitsting.is_active === false && isActive === true && !exsitsting.is_noti) {
+        if (existing.is_active === false && isActive === true && !existing.is_noti) {
             const hasNewImage = data.url_anh_dai_dien && data.url_anh_dai_dien.trim() !== '';
-            const hasOldImage = exsitsting.url_anh_dai_dien && exsitsting.url_anh_dai_dien.trim() !== '';
+            const hasOldImage = existing.url_anh_dai_dien && existing.url_anh_dai_dien.trim() !== '';
 
             if (!hasNewImage && !hasOldImage) {
                 throw new BaseError(400, 'Ảnh đại diện tin tức là bắt buộc để xuất bản tin tức');
@@ -140,7 +140,6 @@ const TinTucService = {
 
             data.is_noti = true;
         }
-        console.log(data);
         return await TinTucRepository.create(data);
 
     },
