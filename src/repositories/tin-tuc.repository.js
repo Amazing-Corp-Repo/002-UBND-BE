@@ -24,7 +24,10 @@ const TinTucRepository = {
 
     async getDetails(id) {
         return prisma.tin_tuc.findFirst({
-            where: { id },
+            where: { 
+                id,
+                is_delete: false 
+            },
             include: {
                 dinh_kem_tin_tuc: true,
                 danh_muc_tin_tuc: true,
