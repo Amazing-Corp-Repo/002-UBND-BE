@@ -71,4 +71,11 @@ userRoute.put(
     UserController.updateFcmToken
 );
 
+userRoute.get(
+    '/:id',
+    authenticate,
+    authorize([ROLE.ADMIN]),
+    UserController.getUserById
+);
+
 export default userRoute;

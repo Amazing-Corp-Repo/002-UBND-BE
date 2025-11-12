@@ -16,9 +16,9 @@ const UserController = {
     },
 
     async getAllUsers(req, res) {
-        const { page, size, isActive } = req.query;
+        const { page, size, isActive, vaiTro } = req.query;
         if (!page || !size) throw new BaseError(400, "page và size là bắt buộc");
-        const result = await UserService.getAllUsers(parseInt(page), parseInt(size), isActive);
+        const result = await UserService.getAllUsers(parseInt(page), parseInt(size), isActive, vaiTro);
         return successResponse(res, result.data, "Lấy tất cả người dùng thành công", result.pagintation);
     },
 
@@ -56,6 +56,12 @@ const UserController = {
         const { fcmToken } = req.body;
         const result = await UserService.updateFcmToken(userId, fcmToken);
         return successResponse(res, result, 'Cập nhật FCM token thành công');
+    },
+
+    async getUserById(req, res) {
+        const { id } = req.params;
+        const result = await UserService.getUserById(id);
+        return successResponse(res, result, 'Lấy thông tin người dùng thành công');
     }
 }
 export default UserController;

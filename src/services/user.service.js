@@ -6,9 +6,13 @@ import { createPagination } from "../utils/response.util.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
+import ROLE from "../constants/role.constant.js";
 
 const UserService = {
     async getUserById(userId) {
+        if (userId === null || userId === undefined) {
+            throw new BaseError(400, 'ID người dùng không được để trống');
+        }
         const user = await UserRepository.findById(userId);
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
@@ -32,8 +36,8 @@ const UserService = {
         return toUserResponse(userUpdated);
     },
 
-    async getAllUsers(page, size, isActive) {
-        const { users, total } = await UserRepository.getAllUsers(page, size, isActive);
+    async getAllUsers(page, size, isActive, role) {
+        const { users, total } = await UserRepository.getAllUsers(page, size, isActive, role);
         const userResponses = users.map(user => toUserResponse(user));
         const pagintation = createPagination(page, size, total);
         return { data: userResponses, pagintation };
@@ -113,6 +117,9 @@ const UserService = {
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
+        if (user.vai_tro === ROLE.ADMIN) {
+            throw new BaseError(400, 'Không thể thay đổi trạng thái của quản trị viên');
+        }
         let userUpdated = await UserRepository.updateStatusByAdmin(
             userId,
             isActive,
@@ -131,7 +138,7 @@ const UserService = {
             { fcm_token: fcmToken, nguoi_cap_nhat: userId, thoi_gian_cap_nhat: new Date().toISOString() }
         );
         return toUserResponse(userUpdated);
-    },
+    }
 }
 
 export default UserService;
