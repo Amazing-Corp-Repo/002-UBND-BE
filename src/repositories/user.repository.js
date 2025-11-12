@@ -42,7 +42,6 @@ const UserRepository = {
                 ? { vai_tro: role }
                 : {})
         };
-        console.log(where);
         const skip = (page - 1) * size;
         const [users, total] = await Promise.all([
             prisma.nguoi_dung.findMany({
