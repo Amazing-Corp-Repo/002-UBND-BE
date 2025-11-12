@@ -23,7 +23,6 @@ const SWAGGER_USERNAME = env.SWAGGER_USERNAME;
 const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD;
 const DATABASE_URL = env.DATABASE_URL;
 
-console.log("Database URL:", DATABASE_URL);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -89,7 +88,7 @@ try {
 
   for (const q of Object.values(env.queues)) {
     await channel.assertQueue(q, { durable: true });
-    console.log(`📦 Queue initialized: ${q}`);
+    console.log(`Queue initialized: ${q}`);
   }
 } catch (error) {
   console.error("RabbitMQ not ready:", error.message);

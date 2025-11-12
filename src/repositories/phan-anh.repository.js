@@ -225,7 +225,6 @@ const PhanAnhRepository = {
                 select: {
                     id: true,
                     status: true,
-                    final_mp4_url: true,
                     final_hls_url: true,
                     created_at: true,
                     updated_at: true,
@@ -254,8 +253,19 @@ const PhanAnhRepository = {
                         thoi_gian_tao: 'desc',
                     },
                 },
-                dinh_kem_phan_anh: true,
-                linh_vuc_phan_anh: true,
+                dinh_kem_phan_anh: {
+                    select: {
+                        dinh_dang_file: true,
+                        url_file: true,
+                        kich_thuoc_file_mb: true,
+                    }
+                },
+                linh_vuc_phan_anh: {
+                    select: {
+                        ten: true,
+                        mo_ta: true,
+                    },
+                },
             },
         });
 
@@ -267,10 +277,7 @@ const PhanAnhRepository = {
                 select: {
                     id: true,
                     status: true,
-                    final_mp4_url: true,
                     final_hls_url: true,
-                    created_at: true,
-                    updated_at: true,
                 },
             });
             return { ...phanAnh, videos };
