@@ -32,7 +32,7 @@ const UserRepository = {
         });
     },
 
-    async getAllUsers(page, size, isActive, role) {
+    async getAllUsers(page, size, isActive, role, search) {
         const where = {
             ...(isActive !== undefined && isActive !== ""
                 ? { is_active: isActive === "true" }
@@ -40,6 +40,15 @@ const UserRepository = {
             is_delete: false,
             ...(role !== undefined && role !== ""
                 ? { vai_tro: role }
+                : {}),
+            ...(search
+                ? {
+                    OR: [
+                        { ten_dang_nhap: { contains: search, mode: 'insensitive' } },
+                        { ho_va_ten: { contains: search, mode: 'insensitive' } },
+                        { email: { contains: search, mode: 'insensitive' } }
+                    ]
+                }
                 : {})
         };
         const skip = (page - 1) * size;

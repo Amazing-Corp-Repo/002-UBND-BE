@@ -1,5 +1,6 @@
 import LinhVucRepository from "../repositories/linh-vuc.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { createPagination } from "../utils/response.util.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const LinhVucService = {
@@ -8,6 +9,19 @@ const LinhVucService = {
         const linhVucs = await LinhVucRepository.getAll(isActive, searchTerm);
         return linhVucs;
     },
+
+    async getAllWithPagination(isActive, searchTerm, page, size) {
+        searchTerm = searchTerm ? capitalizeWords(searchTerm) : "";
+        const { data, totalItems } = await LinhVucRepository.getAllWithPagination(
+            isActive,
+            searchTerm,
+            page,
+            size
+        );
+        const pagination = createPagination(page, size, totalItems);
+        return { data, pagination };
+    },
+
 
     async create(tenLinhVuc, moTa, currentUser) {
         const normalizedName = capitalizeWords(tenLinhVuc);

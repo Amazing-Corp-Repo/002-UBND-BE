@@ -57,7 +57,34 @@ const DanhMucTinTucRepository = {
         return prisma.danh_muc_tin_tuc.findMany({
             where,
         });
-    }
+    },
+
+    async findAllWithPagination(isActive, search, page, size) {
+        const skip = (page - 1) * size;
+        const where = {
+            ...(isActive !== undefined && isActive !== ''
+                ? { is_active: isActive === 'true' }
+                : {}),
+            is_delete: false,
+            ...(search
+                ? {
+                    OR: [{ ten_danh_muc: { contains: search, mode: "insensitive" } }],
+                }
+                : {}),
+        };
+        const [data, totalItems] = await Promise.all([
+            prisma.danh_muc_tin_tuc.findMany({
+                where,
+                skip,
+                take: size,
+            }),
+            prisma.danh_muc_tin_tuc.count({ where }),
+        ]);
+        return {
+            data,
+            totalItems,
+        }
+    },
 };
 
 export default DanhMucTinTucRepository;

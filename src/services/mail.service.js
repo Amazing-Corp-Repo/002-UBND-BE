@@ -69,6 +69,10 @@ const MailService = {
                 subject = "Mã xác thực hai yếu tố (2FA) đăng nhập";
                 templateFile = "login-2fa-otp.html";
                 break;
+            case MAIL_TYPE.UPDATE_PROFILE:
+                subject = "Thông tin tài khoản của bạn đã được cập nhật";
+                templateFile = "update-profile.html";
+                break;
             default:
                 throw new BaseError(400, "Loại email không hợp lệ");
         }

@@ -44,6 +44,13 @@ const UserSwagger = {
                     required: false,
                     schema: { type: 'string' },
                     description: 'Lọc người dùng theo vai trò'
+                },
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'string' },
+                    description: 'Từ khóa tìm kiếm trong tên đăng nhập, họ và tên hoặc email'
                 } 
             ],
             responses: {}

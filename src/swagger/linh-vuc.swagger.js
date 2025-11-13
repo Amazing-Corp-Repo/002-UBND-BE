@@ -25,6 +25,45 @@ const LinhVucSwagger = {
       ],
       responses: {},
     },
+  },
+  "/api/linh-vuc/pagination": {
+    get: {
+      tags: ["LinhVuc"],
+      summary: "Lấy danh sách lĩnh vực",
+      parameters: [
+        {
+          name: "isActive",
+          in: "query",
+          description: "Bộ lọc lĩnh vực đã bị xóa hay chưa (true/false)",
+          required: false,
+          schema: {
+            type: "boolean",
+          },
+        },
+        {
+          name: "search",
+          in: "query",
+          description: "Từ khóa tìm kiếm trong tên lĩnh vực",
+          required: false,
+          schema: { type: "string" },
+        },
+        {
+          name: "page",
+          in: "query",
+          description: "Số trang hiện tại (bắt đầu từ 1)",
+          required: true,
+          schema: { type: "integer", minimum: 1 },
+        },
+        {
+          name: "size",
+          in: "query",
+          description: "Số mục trên mỗi trang",
+          required: true,
+          schema: { type: "integer", minimum: 1 },
+        },
+      ],
+      responses: {},
+    },
     post: {
       tags: ["LinhVuc"],
       summary: "Tạo lĩnh vực mới",
@@ -103,11 +142,11 @@ const LinhVucSwagger = {
       summary: "Cập nhật trạng thái hoạt động của lĩnh vực",
       security: [{ bearerAuth: [] }],
       parameters: [
-        { 
-          name: "id", 
-          in: "path", 
+        {
+          name: "id",
+          in: "path",
           required: true,
-          schema: { type: "string", format: "uuid" } 
+          schema: { type: "string", format: "uuid" }
         },
       ],
       requestBody: {
