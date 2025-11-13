@@ -12,6 +12,7 @@ import lichTiepDanRouter from './lich-tiep-dan.route.js';
 import linhVucPhanAnh from './linh-vuc-phan-anh.route.js';
 import phanAnhRouter from './phan-anh.route.js';
 import videoUploadRouter from './video-upload.route.js';
+import logRouter from './log.route.js';
 
 const rootRouter = express.Router();
 
@@ -28,6 +29,7 @@ rootRouter.use('/lich-tiep-dan', lichTiepDanRouter);
 rootRouter.use('/linh-vuc-phan-anh', linhVucPhanAnh);
 rootRouter.use('/phan-anh', phanAnhRouter);
 rootRouter.use('/video', videoUploadRouter);
+rootRouter.use('/logs', logRouter);
 
 export default rootRouter;
 

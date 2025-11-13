@@ -1,10 +1,12 @@
 import PhanAnhService from "../services/phan-anh.service.js";
 import { successResponse } from "../utils/response.util.js";
+import { parseStringToArray } from "../utils/string.util.js";
 
 const PhanAnhController = {
     async createPhanAnh(req, res) {
-        const { idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, idVideo } = req.body;
+        let { idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, idVideo } = req.body;
         const file = req.files;
+        idVideo = parseStringToArray(idVideo);
         let result = await PhanAnhService.createPhanAnh(idLinhVucPhanAnh, tieuDe, moTa, viTri, mucDo, tenNguoiPhanAnh, soDienThoaiNguoiPhanAnh, userId, file, idVideo);
         return successResponse(res, result, "Tạo phản ánh thành công");
     },

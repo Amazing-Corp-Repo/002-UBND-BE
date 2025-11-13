@@ -12,6 +12,7 @@ import http from "http";
 import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
+import "./utils/logger.util.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -21,7 +22,6 @@ const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
 const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
 const SWAGGER_USERNAME = env.SWAGGER_USERNAME;
 const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD;
-const DATABASE_URL = env.DATABASE_URL;
 
 app.use(
   cors({
