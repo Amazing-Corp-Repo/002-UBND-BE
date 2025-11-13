@@ -24,7 +24,10 @@ const TinTucRepository = {
 
     async getDetails(id) {
         return prisma.tin_tuc.findFirst({
-            where: { id },
+            where: { 
+                id,
+                is_delete: false 
+            },
             include: {
                 dinh_kem_tin_tuc: true,
                 danh_muc_tin_tuc: true,
@@ -32,7 +35,7 @@ const TinTucRepository = {
         });
     },
 
-    async getAll(page, size, idDanhMuc, isActive) {
+    async getAll(page, size, idDanhMuc, isActive, search) {
         const skip = (page - 1) * size;
         const where = {
             ...(isActive !== undefined && isActive !== ''
@@ -40,6 +43,10 @@ const TinTucRepository = {
                 : {}),
             ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
             is_delete: false,
+            ...(search !== undefined && search !== ''
+                ? { tieu_de: { contains: search, mode: 'insensitive' } }
+                : {}),
+
         }
         const [data, totalItems] = await Promise.all([
             prisma.tin_tuc.findMany({

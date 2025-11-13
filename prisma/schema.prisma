@@ -92,6 +92,7 @@ model nguoi_dung {
   nguoi_cap_nhat                                                                   String?                      @db.Uuid
   thoi_gian_tao                                                                    DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                                                               DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  fcm_token                                                                        String?                      @db.VarChar(255)
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung               cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung")
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung                    cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung")
   co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung                 co_so_dich_vu_cong[]         @relation("co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung")
@@ -99,13 +100,18 @@ model nguoi_dung {
   danh_muc_tin_tuc_danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung                     danh_muc_tin_tuc[]           @relation("danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung")
   danh_muc_tin_tuc_danh_muc_tin_tuc_nguoi_taoTonguoi_dung                          danh_muc_tin_tuc[]           @relation("danh_muc_tin_tuc_nguoi_taoTonguoi_dung")
   dinh_kem_tin_tuc_dinh_kem_tin_tuc_nguoi_taoTonguoi_dung                          dinh_kem_tin_tuc[]           @relation("dinh_kem_tin_tuc_nguoi_taoTonguoi_dung")
+  lich_su_trang_thai                                                               lich_su_trang_thai[]
   lich_tiep_dan_lich_tiep_dan_nguoi_cap_nhatTonguoi_dung                           lich_tiep_dan[]              @relation("lich_tiep_dan_nguoi_cap_nhatTonguoi_dung")
   lich_tiep_dan_lich_tiep_dan_nguoi_taoTonguoi_dung                                lich_tiep_dan[]              @relation("lich_tiep_dan_nguoi_taoTonguoi_dung")
   linh_vuc_linh_vuc_nguoi_cap_nhatTonguoi_dung                                     linh_vuc[]                   @relation("linh_vuc_nguoi_cap_nhatTonguoi_dung")
   linh_vuc_linh_vuc_nguoi_taoTonguoi_dung                                          linh_vuc[]                   @relation("linh_vuc_nguoi_taoTonguoi_dung")
+  linh_vuc_phan_anh_linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung                   linh_vuc_phan_anh[]          @relation("linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung")
+  linh_vuc_phan_anh_linh_vuc_phan_anh_nguoi_taoTonguoi_dung                        linh_vuc_phan_anh[]          @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung")
   mau_don_mau_don_nguoi_cap_nhatTonguoi_dung                                       mau_don[]                    @relation("mau_don_nguoi_cap_nhatTonguoi_dung")
   mau_don_mau_don_nguoi_taoTonguoi_dung                                            mau_don[]                    @relation("mau_don_nguoi_taoTonguoi_dung")
   otp                                                                              otp[]
+  phan_anh_phan_anh_nguoi_cap_nhatTonguoi_dung                                     phan_anh[]                   @relation("phan_anh_nguoi_cap_nhatTonguoi_dung")
+  phan_anh_phan_anh_nguoi_taoTonguoi_dung                                          phan_anh[]                   @relation("phan_anh_nguoi_taoTonguoi_dung")
   refresh_token                                                                    refresh_token[]
   thanh_phan_ho_so_thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung                     thanh_phan_ho_so[]           @relation("thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung")
   thanh_phan_ho_so_thanh_phan_ho_so_nguoi_taoTonguoi_dung                          thanh_phan_ho_so[]           @relation("thanh_phan_ho_so_nguoi_taoTonguoi_dung")
@@ -370,4 +376,85 @@ model truong_hop_thu_tuc {
   nguoi_dung_truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung nguoi_dung?        @relation("truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_nguoi_cap_nhat")
   nguoi_dung_truong_hop_thu_tuc_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("truong_hop_thu_tuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_nguoi_tao")
   thu_tuc_hanh_chinh                                       thu_tuc_hanh_chinh @relation(fields: [id_thu_tuc], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_truong_hop_thu_tuc_thu_tuc")
+}
+
+model dinh_kem_phan_anh {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_phan_anh        String?   @db.Uuid
+  dinh_dang_file     String?   @db.VarChar(50)
+  url_file           String?   @db.VarChar(500)
+  kich_thuoc_file_mb Decimal?  @db.Decimal(10, 2)
+  thoi_gian_tao      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  phan_anh           phan_anh? @relation(fields: [id_phan_anh], references: [id], onUpdate: NoAction, map: "fk_dinh_kem_phan_anh_phan_anh")
+}
+
+model lich_su_trang_thai {
+  id            String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_phan_anh   String      @db.Uuid
+  ten           String?     @db.VarChar(255)
+  ghi_chu       String?
+  thoi_gian_tao DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_tao     String?     @db.Uuid
+  nguoi_dung    nguoi_dung? @relation(fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_lich_su_trang_thai_nguoi_tao")
+  phan_anh      phan_anh    @relation(fields: [id_phan_anh], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_lich_su_trang_thai_phan_anh")
+}
+
+model linh_vuc_phan_anh {
+  id                                                      String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ten                                                     String?     @db.VarChar(255)
+  mo_ta                                                   String?
+  is_active                                               Boolean?    @default(true)
+  is_delete                                               Boolean?    @default(false)
+  nguoi_tao                                               String?     @db.Uuid
+  nguoi_cap_nhat                                          String?     @db.Uuid
+  thoi_gian_tao                                           DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat                                      DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung_linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung? @relation("linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_cap_nhat")
+  nguoi_dung_linh_vuc_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung? @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_tao")
+  phan_anh                                                phan_anh[]
+}
+
+model phan_anh {
+  id                                             String               @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ma_phan_anh                                    String               @unique @db.VarChar(255)
+  id_linh_vuc_phan_anh                           String?              @db.Uuid
+  tieu_de                                        String?
+  mo_ta                                          String?
+  muc_do                                         String?              @db.VarChar(255)
+  vi_tri                                         String?
+  ten_nguoi_phan_anh                             String?              @db.VarChar(255)
+  sdt_nguoi_phan_anh                             String?              @db.VarChar(20)
+  thoi_gian_tiep_nhan                            DateTime?            @db.Timestamp(6)
+  thoi_gian_phan_hoi_du_kien                     DateTime?            @db.Timestamp(6)
+  ngay_du_kien_hoan_thanh                        DateTime?            @db.Date
+  nguoi_cap_nhat                                 String?              @db.Uuid
+  nguoi_tao                                      String?              @db.Uuid
+  thoi_gian_tao                                  DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat                             DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  id_video                                       String[]             @db.VarChar(255)
+  dinh_kem_phan_anh                              dinh_kem_phan_anh[]
+  lich_su_trang_thai                             lich_su_trang_thai[]
+  linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")
+  nguoi_dung_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_cap_nhat")
+  nguoi_dung_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_tao")
+}
+
+model video_upload_chunks {
+  id          String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  upload_id   String    @db.VarChar(255)
+  chunk_index Int
+  path        String?   @db.VarChar(500)
+  size_mb     Decimal?  @db.Decimal(10, 2)
+  created_at  DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+}
+
+model video_uploads {
+  id              String    @id @db.VarChar(255)
+  total_chunks    Int?
+  received_chunks Int?      @default(0)
+  status          String?   @default("UPLOADING") @db.VarChar(20)
+  final_mp4_url   String?   @db.VarChar(500)
+  final_hls_url   String?   @db.VarChar(500)
+  created_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  updated_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 }

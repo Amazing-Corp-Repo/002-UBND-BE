@@ -73,6 +73,21 @@ const LichTiepDanSwagger = {
             ],
             responses: {}
         },
+        post: {
+            tags: ['LichTiepDan'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Tạo mới lịch tiếp dân',
+            description: 'Tạo mới một lịch tiếp dân với các thông tin chi tiết liên quan.',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: LichTiepDanSchemas.CreateLichTiepDanRequestSchemaSwagger,
+                    },
+                },
+            },
+            responses: {}
+        },
     },
     '/api/lich-tiep-dan/{id}': {
         delete: {
@@ -91,6 +106,49 @@ const LichTiepDanSwagger = {
                     },
                 },
             ],
+            responses: {}
+        },
+        get: {
+            tags: ['LichTiepDan'],
+            summary: 'Lấy lịch tiếp dân theo ID',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'ID của lịch tiếp dân cần lấy',
+                    required: true,
+                    schema: {
+                        type: 'string',
+                        example: '123e4567-e89b-12d3-a456-426614174000',
+                    },
+                },
+            ],
+            responses: {}
+        },
+        put: {
+            tags: ['LichTiepDan'],
+            summary: 'Cập nhật lịch tiếp dân theo ID',
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'ID của lịch tiếp dân cần cập nhật',
+                    required: true,
+                    schema: {
+                        type: 'string',
+                        example: '123e4567-e89b-12d3-a456-426614174000',
+                    },
+                },
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: LichTiepDanSchemas.UpdateLichTiepDanRequestSchemaSwagger,
+                    },
+                },
+            },
             responses: {}
         },
     },
@@ -119,6 +177,14 @@ const LichTiepDanSwagger = {
                     },
                 },
             },
+            responses: {}
+        },
+    },
+    '/api/lich-tiep-dan/template': {
+        get: {
+            tags: ['LichTiepDan'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Lấy template lịch tiếp dân',
             responses: {}
         },
     },

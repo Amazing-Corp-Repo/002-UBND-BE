@@ -82,6 +82,19 @@ const LinhVucSwagger = {
       ],
       responses: {},
     },
+    get: {
+      tags: ["LinhVuc"],
+      summary: "Lấy thông tin lĩnh vực theo ID",
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {},
+    },
   },
 
   "/api/linh-vuc/update-status/{id}": {

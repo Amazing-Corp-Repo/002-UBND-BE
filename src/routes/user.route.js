@@ -64,4 +64,18 @@ userRoute.delete(
     UserController.deleteUser
 );
 
+userRoute.put(
+    '/fcm-token', 
+    authenticate, 
+    audit_logs(AUDIT_LOGS.UPDATE, 'nguoi_dung'),
+    UserController.updateFcmToken
+);
+
+userRoute.get(
+    '/:id',
+    authenticate,
+    authorize([ROLE.ADMIN]),
+    UserController.getUserById
+);
+
 export default userRoute;

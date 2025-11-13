@@ -60,4 +60,12 @@ mauDonRouter.put('/update-status/:id',
     MauDonController.updateStatusMauDon
 );
 
+mauDonRouter.get("/paging",
+    MauDonController.getAllMauDonWithPaging
+);
+
+mauDonRouter.get("/:id",
+    MauDonController.getMauDonById
+);
+
 export default mauDonRouter;

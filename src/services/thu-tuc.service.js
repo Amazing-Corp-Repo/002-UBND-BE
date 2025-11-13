@@ -8,6 +8,9 @@ import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const ThuTucService = {
   async getThuTucById(procedureId) {
+    if (procedureId === null || procedureId === undefined) {
+      throw new BaseError(400, "ID thủ tục hành chính không được để trống");
+    }
     const procedure = await ThuTucRepository.findByIdFull(procedureId);
 
     if (!procedure) {
@@ -45,6 +48,9 @@ const ThuTucService = {
   },
 
   async getMauDonByThuTucId(thuTucId) {
+    if (thuTucId === null || thuTucId === undefined) {
+      throw new BaseError(400, "ID thủ tục hành chính không được để trống");
+    }
     // Kiểm tra thủ tục có tồn tại không
     const exists = await ThuTucRepository.exists(thuTucId);
     if (!exists) {
@@ -96,6 +102,9 @@ const ThuTucService = {
   },
 
   async deleteThuTuc(thuTucId, currentUser) {
+    if (thuTucId === null || thuTucId === undefined) {
+      throw new BaseError(400, "ID thủ tục hành chính không được để trống");
+    }
     const exists = await ThuTucRepository.getThuTucById(thuTucId);
     if (!exists) {
       throw new BaseError(404, "Không tìm thấy thủ tục hành chính để xóa");
@@ -110,6 +119,9 @@ const ThuTucService = {
 
   async updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = [], truongHopThuTuc = [], currentUser) {
     tenThuTuc = capitalizeWords(tenThuTuc);
+    if (thuTucId === null || thuTucId === undefined) {
+      throw new BaseError(400, "ID thủ tục hành chính không được để trống");
+    }
     maThuTuc = maThuTuc?.toUpperCase();
     const existingThuTuc = await ThuTucRepository.getThuTucById(thuTucId);
 
@@ -157,6 +169,9 @@ const ThuTucService = {
   },
 
   async updateThuTucStatus(thuTucId, isActive, currentUser) {
+    if (thuTucId === null || thuTucId === undefined) {
+      throw new BaseError(400, "ID thủ tục hành chính không được để trống");
+    }
     const existingThuTuc = await ThuTucRepository.getThuTucById(thuTucId);
     if (!existingThuTuc) {
       throw new BaseError(404, "Không tìm thấy thủ tục hành chính để cập nhật trạng thái");
@@ -165,6 +180,9 @@ const ThuTucService = {
   },
 
   async getThanhPhanByThuTucId(thuTucId) {
+    if (thuTucId === null || thuTucId === undefined) {
+      throw new BaseError(400, "ID thủ tục hành chính không được để trống");
+    }
     const exists = await ThuTucRepository.exists(thuTucId);
     if (!exists) {
       throw new BaseError(404, "Không tìm thấy thủ tục hành chính");

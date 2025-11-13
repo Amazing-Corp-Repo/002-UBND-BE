@@ -117,7 +117,11 @@ export const CreateThuTucRequest = Joi.object({
                     }),
                 lePhi: Joi.string()
                     .optional()
-                    .allow(null, ''),
+                    .allow(null, '')
+                    .max(255)
+                    .messages({
+                        'string.max': 'Lệ phí không được vượt quá 255 ký tự',
+                    }),
                 ghiChuLePhi: Joi.string()
                     .trim()
                     .optional()

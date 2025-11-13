@@ -112,6 +112,12 @@ const TinTucSwagger = {
                     description: 'Lọc tin tức theo ID danh mục tin tức.',
                     schema: { type: 'string', format: 'uuid' },
                 },
+                {
+                    name: 'search',
+                    in: 'query',
+                    description: 'Từ khóa tìm kiếm trong tiêu đề tin tức.',
+                    schema: { type: 'string' },
+                }
             ],
             responses: {},
         },

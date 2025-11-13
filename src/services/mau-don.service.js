@@ -1,5 +1,6 @@
 import MauDonRepository from "../repositories/mau-don.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { createPagination } from "../utils/response.util.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const MauDonService = {
@@ -64,6 +65,9 @@ const MauDonService = {
     },
 
     async deleteMauDon(id, currentUser) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID mẫu đơn không hợp lệ');
+        }
         const existing = await MauDonRepository.getMauDonById(id);
         if (!existing) {
             throw new BaseError(404, 'Mẫu đơn không tồn tại');
@@ -82,6 +86,9 @@ const MauDonService = {
     },
 
     async updateStatusMauDon(id, isActive, currentUser) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID mẫu đơn không hợp lệ');
+        }
         const existing = await MauDonRepository.getMauDonById(id);
         if (!existing) {
             throw new BaseError(404, 'Mẫu đơn không tồn tại');
@@ -97,7 +104,25 @@ const MauDonService = {
             nguoi_cap_nhat: currentUser,
             thoi_gian_cap_nhat: new Date().toISOString(),
         });
-    }
+    },
+
+    async getMauDonById(id) {
+        if (id === undefined || id === null) {
+            throw new BaseError(400, 'ID mẫu đơn không hợp lệ');
+        }
+        let data = await MauDonRepository.getMauDonById(id);
+        if (!data || data.is_delete) {
+            throw new BaseError(404, 'Mẫu đơn không tồn tại');
+        }
+        return data;
+    },
+
+    async getAllMauDonWithPaging(page, size, isActive, search) {
+        search = search ? capitalizeWords(search) : search;
+        let [data, totalItems] = await MauDonRepository.getAllMauDonWithPaging(page, size, isActive, search);
+        let pagination = createPagination(page, size, totalItems);
+        return { data, pagination };
+    },
 };
 
 export default MauDonService;

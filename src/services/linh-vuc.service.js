@@ -25,6 +25,9 @@ const LinhVucService = {
     },
 
     async update(id, tenLinhVuc, moTa, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực không được để trống");
+        }
         // Kiểm tra lĩnh vực có tồn tại không
         const existing = await LinhVucRepository.findById(id);
         if (!existing) {
@@ -46,6 +49,9 @@ const LinhVucService = {
     },
 
     async updateStatus(id, isActive, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+        }
         const existing = await LinhVucRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Không tìm thấy lĩnh vực để cập nhật trạng thái");
@@ -65,6 +71,9 @@ const LinhVucService = {
     },
 
     async delete(id, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+        }
         const existing = await LinhVucRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Không tìm thấy lĩnh vực để xóa");
@@ -81,6 +90,17 @@ const LinhVucService = {
             thoi_gian_cap_nhat: new Date().toISOString(),
         }
         await LinhVucRepository.update(id, data);
+    },
+
+    async getLinhVucById(id) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+        }
+        const linhVuc = await LinhVucRepository.findById(id);
+        if (!linhVuc || linhVuc.is_delete) {
+            throw new BaseError(404, "Lĩnh vực không tồn tại");
+        }
+        return linhVuc;
     }
 };
 

@@ -9,6 +9,9 @@ import LinhVucSwagger from './linh-vuc.swagger.js';
 import TinTucSwagger from './tin-tuc.swagger.js';
 import DanhMucTinTucSwagger from './danh-muc-tin-tuc.swagger.js';
 import LichTiepDanSwagger from './lich-tiep-dan.swagger.js';
+import LinhVucPhanAnhSwagger from './linh-vuc-phan-anh.swagger.js';
+import PhanAnhSwagger from './phan-anh.swagger.js';
+import VideoUploadSwagger from './video-upload.swagger.js';
 
 const swaggerDocument = {
 
@@ -36,6 +39,9 @@ const swaggerDocument = {
         ...TinTucSwagger,
         ...DanhMucTinTucSwagger,
         ...LichTiepDanSwagger,
+        ...LinhVucPhanAnhSwagger,
+        ...PhanAnhSwagger,
+        ...VideoUploadSwagger,
     },
 
     components: {

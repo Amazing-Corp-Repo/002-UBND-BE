@@ -26,6 +26,10 @@ const LichTiepDanService = {
 
 
                 const rawDate = record.ngay_tiep_dan;
+                let tu = new Date(record.tu).toISOString().substring(11, 16);
+                let den = new Date(record.den).toISOString().substring(11, 16);
+                let thoi_gian = `${tu} - ${den}`;
+                console.log(thoi_gian);
 
                 switch (true) {
                     case typeof rawDate === "number":
@@ -53,14 +57,18 @@ const LichTiepDanService = {
                 if (existing) {
                     await LichTiepDanRepository.update(existing.id, {
                         dia_diem: record.dia_diem,
-                        thoi_gian: record.thoi_gian,
+                        thoi_gian: thoi_gian,
                         ghi_chu: record.ghi_chu,
                         nguoi_cap_nhat: currentUser,
                         is_active: true,
                     });
                 } else {
                     await LichTiepDanRepository.create({
-                        ...record,
+                        dia_diem: record.dia_diem,
+                        thoi_gian: thoi_gian,
+                        ghi_chu: record.ghi_chu,
+                        ten_can_bo: record.ten_can_bo,
+                        ngay_tiep_dan: record.ngay_tiep_dan,
                         nguoi_tao: currentUser,
                     });
                 }
@@ -74,23 +82,13 @@ const LichTiepDanService = {
     async getLichTiepDan(filters) {
         const { weekYear, monthYear, date, isActive } = filters;
         const data = await LichTiepDanRepository.findAll({ weekYear, monthYear, date, isActive });
-
-        if (weekYear && !monthYear && !date) {
-            return data;
-        }
-
-        if (monthYear && !weekYear && !date) {
-            return data;
-        }
-
-        if (date) {
-            return data;
-        }
-
         return data;
     },
 
     async deleteLichTiepDan(id, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
         const existing = await LichTiepDanRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");
@@ -99,14 +97,17 @@ const LichTiepDanService = {
             throw new BaseError(400, "Không thể xoá lịch tiếp dân đang ở trạng thái hoạt động");
         }
         await LichTiepDanRepository.update(id, {
-            ten_can_bo: appendDeleteSuffixc(existing.ten_can_bo), 
+            ten_can_bo: appendDeleteSuffixc(existing.ten_can_bo),
             is_delete: true,
             nguoi_cap_nhat: currentUser,
-            thoi_gian_cap_nhat: new Date().toISOString(), 
+            thoi_gian_cap_nhat: new Date().toISOString(),
         });
     },
 
-    async updateLichTiepDan(id, isActive, currentUser) {
+    async updateStatusLichTiepDan(id, isActive, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
         const existing = await LichTiepDanRepository.findById(id);
         if (!existing) {
             throw new BaseError(404, "Lịch tiếp dân không tồn tại");
@@ -118,6 +119,64 @@ const LichTiepDanService = {
         });
         return data;
     },
+
+    async getTemplateLichTiepDan() {
+        const basePath = '/static/template-lich-tiep-dan.xlsx';
+        return basePath;
+    },
+
+    async getLichTiepDanById(id) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
+        const data = await LichTiepDanRepository.findById(id);
+        if (!data || data.is_delete) {
+            throw new BaseError(404, "Lịch tiếp dân không tồn tại");
+        }
+        return data;
+    },
+
+    async createLichTiepDan(tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu, currentUser) {
+        const existing = await LichTiepDanRepository.findByCanBoAndNgay(tenCanBo, ngayTiepDan);
+        if (existing) {
+            throw new BaseError(400, "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại");
+        }
+        let thoiGian = `${batDau} - ${ketThuc}`;
+        const data = await LichTiepDanRepository.create({
+            ten_can_bo: tenCanBo,
+            dia_diem: diaDiem,
+            ngay_tiep_dan: ngayTiepDan,
+            thoi_gian: thoiGian,
+            ghi_chu: ghiChu,
+            nguoi_tao: currentUser,
+        });
+        return data;
+    },
+
+    async updateLichTiepDan(id, tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu, currentUser) {
+        if (id === null || id === undefined) {
+            throw new BaseError(400, "ID lịch tiếp dân không được để trống");
+        }
+        const existing = await LichTiepDanRepository.findById(id);
+        if (!existing || existing.is_delete) {
+            throw new BaseError(404, "Lịch tiếp dân không tồn tại");
+        }
+        const duplicate = await LichTiepDanRepository.findByCanBoAndNgayExcludeId(tenCanBo, ngayTiepDan, id);
+        if (duplicate) {
+            throw new BaseError(400, "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại");
+        }
+        let thoiGian = `${batDau} - ${ketThuc}`;
+        const data = await LichTiepDanRepository.update(id, {
+            ten_can_bo: tenCanBo,
+            dia_diem: diaDiem,
+            ngay_tiep_dan: ngayTiepDan,
+            thoi_gian: thoiGian,
+            ghi_chu: ghiChu,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+        });
+        return data;
+    }
 };
 
 export default LichTiepDanService;

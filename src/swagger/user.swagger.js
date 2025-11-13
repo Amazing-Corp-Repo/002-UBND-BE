@@ -37,7 +37,14 @@ const UserSwagger = {
                     required: false,
                     schema: { type: 'boolean' },
                     description: 'Lọc người dùng theo trạng thái hoạt động'
-                }
+                },
+                {
+                    name: 'vaiTro',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'string' },
+                    description: 'Lọc người dùng theo vai trò'
+                } 
             ],
             responses: {}
         },
@@ -134,6 +141,41 @@ const UserSwagger = {
                     }
                 }
             },
+            responses: {}
+        }
+    },
+    '/api/users/fcm-token': {
+        put: {
+            tags: ['Users'],
+            summary: 'Cập nhật FCM token cho người dùng',
+            description: 'Cập nhật FCM token để nhận thông báo đẩy',
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: UserSchemas.UpdateFcmTokenRequest
+                    }
+                }
+            },
+            responses: {}
+        }
+    },
+    '/api/users/{id}': {
+        get: {
+            tags: ['Users'],
+            summary: 'Lấy thông tin người dùng theo ID',
+            description: 'Lấy thông tin chi tiết của một người dùng dựa trên ID của họ. Chỉ admin mới có quyền thực hiện.',
+            security: [{ bearerAuth: [] }],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'ID của người dùng cần lấy thông tin'
+                }
+            ],
             responses: {}
         }
     }

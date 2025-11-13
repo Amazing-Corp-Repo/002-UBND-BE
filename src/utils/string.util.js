@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export const toSnakeCaseNonAccent = (str) => {
     if (!str) return "";
 
@@ -33,5 +35,41 @@ export const appendDeleteSuffixc = (str) => {
         return str;
     }
 
-    return `${new Date().getTime()}_delete_${str}`;
+    return `${generateUniqueCode()}_${str}`;
+}
+
+export const generateUniqueCode = () => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const alphabetLength = alphabet.length;
+    const size = 8;
+
+    const randomBytes = crypto.randomBytes(size);
+    let result = '';
+
+    for (let i = 0; i < size; i++) {
+        const index = randomBytes[i] % alphabetLength;
+        result += alphabet[index];
+    }
+
+    return result;
+}
+
+export const parseStringToArray = (str) => {
+    if (!str) return [];
+
+    // đảm bảo str là string
+    str = String(str).trim();
+
+    if (!str) return [];
+
+    // nếu có dấu phẩy → split
+    if (str.includes(",")) {
+        return str
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean);
+    }
+
+    // nếu chỉ có 1 phần tử → bao lại thành array
+    return [str];
 }

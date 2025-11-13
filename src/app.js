@@ -11,6 +11,8 @@ import { errorResponse } from "./utils/response.util.js";
 import http from "http";
 import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
+import { connectRabbitMQ } from "./config/rabbitmq.config.js";
+import "./utils/logger.util.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -20,9 +22,7 @@ const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
 const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
 const SWAGGER_USERNAME = env.SWAGGER_USERNAME;
 const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD;
-const DATABASE_URL = env.DATABASE_URL;
 
-console.log("Database URL:", DATABASE_URL);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -81,12 +81,32 @@ app.use(
 
 const server = http.createServer(app);
 
-initSocket(server);
+// initSocket(server);
+try {
+  const { channel } = await connectRabbitMQ();
+  console.log("RabbitMQ ready — starting Express server...");
+
+  for (const q of Object.values(env.queues)) {
+    await channel.assertQueue(q, { durable: true });
+    console.log(`Queue initialized: ${q}`);
+  }
+} catch (error) {
+  console.error("RabbitMQ not ready:", error.message);
+  process.exit(1);
+}
+
+
+
 
 // Lightweight health endpoint for container/platform checks
 app.get("/health", (req, res) => {
   res.status(200).send("ok");
 });
+
+import("../src/workers/video.worker.js")
+  .then(() => console.log("Worker started cùng server"))
+  .catch(err => console.error("Worker error:", err));
+
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });

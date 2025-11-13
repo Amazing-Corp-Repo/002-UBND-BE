@@ -32,11 +32,15 @@ const UserRepository = {
         });
     },
 
-    async getAllUsers(page, size, isActive) {
+    async getAllUsers(page, size, isActive, role) {
         const where = {
             ...(isActive !== undefined && isActive !== ""
                 ? { is_active: isActive === "true" }
                 : {}),
+            is_delete: false,
+            ...(role !== undefined && role !== ""
+                ? { vai_tro: role }
+                : {})
         };
         const skip = (page - 1) * size;
         const [users, total] = await Promise.all([
@@ -49,7 +53,9 @@ const UserRepository = {
                 },
                 orderBy: { ten_dang_nhap: 'asc' }
             }),
-            prisma.nguoi_dung.count()
+            prisma.nguoi_dung.count(
+                { where }
+            )
         ]);
 
         return { users, total };
