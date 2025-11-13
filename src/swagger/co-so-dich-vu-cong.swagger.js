@@ -76,21 +76,6 @@ const CoSoDichVuCongSwagger = {
             ],
             responses: {},
         },
-        post: {
-            tags: ['CoSoDichVuCong'],
-            security: [{ bearerAuth: [] }],
-            summary: 'Tạo mới một Cơ sở dịch vụ công',
-            description: 'Tạo mới một bản ghi cơ sở dịch vụ công trong hệ thống.',
-            requestBody: {
-                required: true,
-                content: {
-                    'application/json': {
-                        schema: CoSoDichVuCongSchemas.CreateCoSoDichVuCongRequest,
-                    },
-                },
-            },
-            responses: {},
-        },
     },
 
     '/api/co-so-dich-vu-cong/{id}': {
