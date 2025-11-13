@@ -1,5 +1,6 @@
 import { BaseError } from "../utils/base-error.util.js";
 import jwtUtils from "../utils/jwt.util.js";
+import env from "../config/environment.config.js";
 
 export const authenticate = async (req, res, next) => {
 
@@ -43,7 +44,6 @@ export const authenticate = async (req, res, next) => {
     next();
 };
 
-
 export const authorize = (roles = []) => {
     return (req, res, next) => {
         if (roles.length && !roles.includes(req.payload.role)) {
@@ -51,4 +51,27 @@ export const authorize = (roles = []) => {
         }
         next();
     }
+};
+
+export const logAuthMiddleware = (req, res, next) => {
+    const { username, password } = req.query;
+
+    if (!username || !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Vui lòng truyền username và password."
+        });
+    }
+
+    if (
+        username !== env.SWAGGER_USERNAME ||
+        password !== env.SWAGGER_PASSWORD
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Sai username hoặc password."
+        });
+    }
+
+    next();
 };

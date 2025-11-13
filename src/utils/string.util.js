@@ -53,3 +53,23 @@ export const generateUniqueCode = () => {
 
     return result;
 }
+
+export const parseStringToArray = (str) => {
+    if (!str) return [];
+
+    // đảm bảo str là string
+    str = String(str).trim();
+
+    if (!str) return [];
+
+    // nếu có dấu phẩy → split
+    if (str.includes(",")) {
+        return str
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean);
+    }
+
+    // nếu chỉ có 1 phần tử → bao lại thành array
+    return [str];
+}
