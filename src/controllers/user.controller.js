@@ -20,7 +20,7 @@ const UserController = {
         const { page, size, isActive, vaiTro, search } = req.query;
         if (!page || !size) throw new BaseError(400, "page và size là bắt buộc");
         const result = await UserService.getAllUsers(parseInt(page), parseInt(size), isActive, vaiTro, search);
-        return successResponse(res, result.data, "Lấy tất cả người dùng thành công", result.pagintation);
+        return successResponse(res, result.data, "Lấy tất cả người dùng thành công", result.pagination);
     },
 
     async createAccount(req, res) {
