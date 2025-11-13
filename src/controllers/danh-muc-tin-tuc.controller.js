@@ -1,4 +1,5 @@
 import DanhMucTinTucService from "../services/danh-muc-tin-tuc.service.js";
+import { BaseError } from "../utils/base-error.util.js";
 import { successResponse } from "../utils/response.util.js";
 
 const DanhMucTinTucController = {
@@ -28,6 +29,15 @@ const DanhMucTinTucController = {
         const { isActive, search } = req.query;
         const result = await DanhMucTinTucService.findAll(isActive, search);
         return successResponse(res, result, 'Lấy danh sách danh mục tin tức thành công');
+    },
+
+    async findAllWithPagination(req, res) {
+        const { isActive, search, page, size } = req.query;
+        if (!page || !size) {
+            throw new BaseError(400, 'Thiếu tham số phân trang: page và size là bắt buộc');
+        }
+        const result = await DanhMucTinTucService.findAllWithPagination(isActive, search, page * 1, size * 1);
+        return successResponse(res, result.data, 'Lấy danh sách danh mục tin tức thành công', result.pagination);
     },
 
     async findById(req, res) {

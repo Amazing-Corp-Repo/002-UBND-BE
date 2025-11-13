@@ -33,6 +33,35 @@ const LinhVucRepository = {
         });
     },
 
+    async getAllWithPagination(isActive, search, page, size) {
+        const skip = (page - 1) * size;
+        const where = {
+            ...(isActive !== undefined && isActive !== ""
+                ? { is_active: isActive === "true" }
+                : {}),
+            ...(search
+                ? {
+                    OR: [{ ten_linh_vuc: { contains: search, mode: "insensitive" } }],
+                }
+                : {}),
+            is_delete: false,
+        };
+        const [data, totalItems] = await Promise.all([
+            prisma.linh_vuc.findMany({
+                where,
+                skip,
+                take: size,
+                orderBy: {
+                    thoi_gian_tao: "desc",
+                }
+            }),
+
+            prisma.linh_vuc.count({ where })
+        ]);
+
+        return { data, totalItems };
+    },
+
     async findByTenLinhVuc(ten_linh_vuc) {
         return await prisma.linh_vuc.findFirst({
             where: {
@@ -76,8 +105,8 @@ const LinhVucRepository = {
             where: {
                 id_linh_vuc,
                 thu_tuc_hanh_chinh: {
-                    is_active: true, 
-                    is_delete: false 
+                    is_active: true,
+                    is_delete: false
                 },
             },
         });

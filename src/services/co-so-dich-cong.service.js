@@ -1,8 +1,8 @@
 import CoSoDichVuCongRepository from "../repositories/co-so-dich-vu-cong.repository.js";
-import UyBanRepository from "../repositories/uy-ban.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import ThuTucRepository from "../repositories/thu-tuc.repository.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
+import { createPagination } from "../utils/response.util.js";
 
 const CoSoDichCongService = {
     async getAll(isActive, search = "") {
@@ -12,6 +12,23 @@ const CoSoDichCongService = {
         );
 
         return result;
+    },
+
+    async getAllWithPagination(isActive, search = "", page, size) {
+
+        const { data, totalItems } = await CoSoDichVuCongRepository.getAllWithPagination(
+            isActive,
+            search ? capitalizeWords(search) : "",
+            page,
+            size
+        );
+
+        const pagination = createPagination(page, size, totalItems);
+
+        return {
+            data,
+            pagination
+        };
     },
 
     async create(tenCoSo, diaChi, soDienThoai, moTa, linkGoogleMap, currentUser) {
@@ -102,7 +119,7 @@ const CoSoDichCongService = {
         if (!existingCoSo) {
             throw new BaseError(404, 'Cơ sở dịch vụ công không tồn tại');
         }
-        
+
         if (existingCoSo.is_active) {
             throw new BaseError(400, 'Chỉ có thể xóa cơ sở dịch vụ công đã bị vô hiệu hóa');
         }

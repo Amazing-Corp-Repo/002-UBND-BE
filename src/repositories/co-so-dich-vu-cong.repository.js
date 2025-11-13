@@ -30,6 +30,37 @@ const CoSoDichVuCongRepository = {
         return items;
     },
 
+    async getAllWithPagination(isActive, search, page, size) {
+        const skip = (page - 1) * size;
+        const where = {
+            ...(isActive !== undefined && isActive !== ""
+                ? { is_active: isActive === "true" }
+                : {}),
+            ...(search
+                ? {
+                    OR: [{ ten_co_so: { contains: search, mode: "insensitive" } }],
+                }
+                : {}),
+            is_delete: false,
+        };
+        const [data, totalItems] = await Promise.all([
+            prisma.co_so_dich_vu_cong.findMany({
+                where,
+                orderBy: {
+                    thoi_gian_tao: "desc",
+                },
+                skip,
+                take: size,
+            }),
+            prisma.co_so_dich_vu_cong.count({ where }),
+        ]);
+        
+        return {
+            data,
+            totalItems,
+        };
+    },
+
     async findByName(tenCoSo) {
         return await prisma.co_so_dich_vu_cong.findFirst({
             where: {

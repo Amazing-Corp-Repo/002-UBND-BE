@@ -42,6 +42,53 @@ const DanhMucTinTucSwagger = {
             responses: {}
         },
     },
+    '/api/danh-muc-tin-tuc/pagination': {
+        get: {
+            tags: ['DanhMucTinTuc'],
+            summary: 'Lấy danh sách danh mục tin tức có phân trang',
+            parameters: [
+                {
+                    name: 'isActive',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'boolean',
+                    },
+                    description: 'Lọc theo trạng thái đã bị gỡ bỏ hay chưa',
+                },
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                    },
+                    description: 'Từ khóa tìm kiếm trong tên danh mục tin tức',
+                },
+                {
+                    name: 'page',
+                    in: 'query',
+                    required: true,
+                    schema: {
+                        type: 'integer',
+                        minimum: 1,
+                    },
+                    description: 'Số trang cần lấy (bắt buộc)',
+                },
+                {
+                    name: 'size',
+                    in: 'query',
+                    required: true,
+                    schema: {
+                        type: 'integer',
+                        minimum: 1,
+                    },
+                    description: 'Số mục tin tức trên mỗi trang (bắt buộc)',
+                }
+            ],
+            responses: {}
+        }
+    },
     '/api/danh-muc-tin-tuc/{id}': {
         put: {
             tags: ['DanhMucTinTuc'],

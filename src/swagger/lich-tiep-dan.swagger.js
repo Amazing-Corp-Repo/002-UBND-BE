@@ -69,7 +69,90 @@ const LichTiepDanSwagger = {
                     schema: {
                         type: 'boolean',
                     },
-                }
+                },
+            ],
+            responses: {}
+        },
+        post: {
+            tags: ['LichTiepDan'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Tạo mới lịch tiếp dân',
+            description: 'Tạo mới một lịch tiếp dân với các thông tin chi tiết liên quan.',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: LichTiepDanSchemas.CreateLichTiepDanRequestSchemaSwagger,
+                    },
+                },
+            },
+            responses: {}
+        },
+    },
+    '/api/lich-tiep-dan/pagination': {
+        get: {
+            tags: ['LichTiepDan'],
+            summary: 'Lấy danh sách lịch tiếp dân với các bộ lọc',
+            parameters: [
+                {
+                    name: 'weekYear',
+                    in: 'query',
+                    description: 'Tuần/năm trong định dạng tuần/năm (ví dụ: 45/2025)',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        example: '45/2025', // Tuần 45, năm 2025
+                    },
+                },
+                {
+                    name: 'monthYear',
+                    in: 'query',
+                    description: 'Tháng/năm trong định dạng tháng/năm (ví dụ: 12/2025)',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        example: '12/2025', // Tháng 12, năm 2025
+                    },
+                },
+                {
+                    name: 'date',
+                    in: 'query',
+                    description: 'Ngày (YYYY-MM-DD)',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        example: '2025-10-12', // Ngày 12/10/2025
+                    },
+                },
+                {
+                    name: 'isActive',
+                    in: 'query',
+                    description: 'Trạng thái hoạt động của lịch tiếp dân (true/false)',
+                    required: false,
+                    schema: {
+                        type: 'boolean',
+                    },
+                },
+                {
+                    name: 'page',
+                    in: 'query',
+                    description: 'Số trang hiện tại',
+                    required: true,
+                    schema: {
+                        type: 'integer',
+                        example: 1,
+                    },
+                },
+                {
+                    name: 'size',
+                    in: 'query',
+                    description: 'Số mục trên mỗi trang',
+                    required: true,
+                    schema: {
+                        type: 'integer',
+                        example: 10,
+                    },
+                },
             ],
             responses: {}
         },

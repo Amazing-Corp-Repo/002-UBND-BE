@@ -11,6 +11,8 @@ const linhVucRoute = express.Router();
 
 linhVucRoute.get("/", LinhVucController.getAll);
 
+linhVucRoute.get("/pagination", LinhVucController.getAllWithPagination);
+
 linhVucRoute.post(
     "/",
     authenticate,

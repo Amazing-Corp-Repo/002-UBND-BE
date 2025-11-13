@@ -1,4 +1,5 @@
 import UserService from "../services/user.service.js";
+import { BaseError } from "../utils/base-error.util.js";
 import { successResponse } from "../utils/response.util.js";
 
 const UserController = {
@@ -16,10 +17,10 @@ const UserController = {
     },
 
     async getAllUsers(req, res) {
-        const { page, size, isActive, vaiTro } = req.query;
+        const { page, size, isActive, vaiTro, search } = req.query;
         if (!page || !size) throw new BaseError(400, "page và size là bắt buộc");
-        const result = await UserService.getAllUsers(parseInt(page), parseInt(size), isActive, vaiTro);
-        return successResponse(res, result.data, "Lấy tất cả người dùng thành công", result.pagintation);
+        const result = await UserService.getAllUsers(parseInt(page), parseInt(size), isActive, vaiTro, search);
+        return successResponse(res, result.data, "Lấy tất cả người dùng thành công", result.pagination);
     },
 
     async createAccount(req, res) {
@@ -30,9 +31,9 @@ const UserController = {
     },
 
     async updateProfileByAdmin(req, res) {
-        const { userId, hoVaTen, soDienThoai, vaiTro } = req.body;
+        const { userId, hoVaTen, soDienThoai, vaiTro, tenDangNhap, email, matKhau } = req.body;
         const currentUser = req.payload.userId;
-        const result = await UserService.updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, currentUser);
+        const result = await UserService.updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, tenDangNhap, email, matKhau, currentUser);
         return successResponse(res, result, 'Cập nhật thông tin người dùng thành công');
     },
 

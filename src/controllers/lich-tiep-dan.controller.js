@@ -15,6 +15,12 @@ const LichTiepDanController = {
         return successResponse(res, data, "Lấy danh sách lịch tiếp dân thành công");
     },
 
+    async getLichTiepDanWithPagination(req, res) {
+        const filters = req.query;
+        const data = await LichTiepDanService.getLichTiepDanWithPagination(filters);
+        return successResponse(res, data.data, "Lấy danh sách lịch tiếp dân thành công", data.pagination);
+    },
+
     async deleteLichTiepDan(req, res) {
         const { id } = req.params;
         const currentUser = req.payload.userId;
