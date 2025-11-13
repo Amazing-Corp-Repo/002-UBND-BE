@@ -64,20 +64,6 @@ const LinhVucSwagger = {
       ],
       responses: {},
     },
-    post: {
-      tags: ["LinhVuc"],
-      summary: "Tạo lĩnh vực mới",
-      security: [{ bearerAuth: [] }],
-      requestBody: {
-        required: true,
-        content: {
-          "application/json": {
-            schema: LinhVucSchemas.CreateLinhVucRequest,
-          },
-        },
-      },
-      responses: {},
-    },
   },
 
   "/api/linh-vuc/{id}": {
