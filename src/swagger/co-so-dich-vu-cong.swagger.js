@@ -40,6 +40,59 @@ const CoSoDichVuCongSwagger = {
         },
     },
 
+    '/api/co-so-dich-vu-cong/pagination': {
+        get: {
+            tags: ['CoSoDichVuCong'],
+            summary: 'Lấy danh sách Cơ sở dịch vụ công',
+            description: 'Trả về danh sách các cơ sở dịch vụ công, tìm kiếm và lọc trạng thái.',
+            parameters: [
+                {
+                    name: 'isActive',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'boolean' },
+                    description: 'Bộ lọc trạng thái. Nếu không có, sẽ không lọc theo trạng thái xóa.'
+                },
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    description: 'Từ khóa tìm kiếm trong tên cơ sở.'
+                },
+                {
+                    name: 'page',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'integer', default: 1 },
+                    description: 'Số trang hiện tại.'
+                },
+                {
+                    name: 'size',
+                    in: 'query',
+                    required: false,
+                    schema: { type: 'integer', default: 10 },
+                    description: 'Số mục trên mỗi trang.'
+                }
+            ],
+            responses: {},
+        },
+        post: {
+            tags: ['CoSoDichVuCong'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Tạo mới một Cơ sở dịch vụ công',
+            description: 'Tạo mới một bản ghi cơ sở dịch vụ công trong hệ thống.',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: CoSoDichVuCongSchemas.CreateCoSoDichVuCongRequest,
+                    },
+                },
+            },
+            responses: {},
+        },
+    },
+
     '/api/co-so-dich-vu-cong/{id}': {
         get: {
             tags: ['CoSoDichVuCong'],

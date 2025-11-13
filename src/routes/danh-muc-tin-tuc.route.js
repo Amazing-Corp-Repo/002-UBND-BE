@@ -43,6 +43,10 @@ danhMucTinTucRouter.get("",
     DanhMucTinTucController.findAll
 );
 
+danhMucTinTucRouter.get("/pagination", 
+    DanhMucTinTucController.findAllWithPagination
+);
+
 danhMucTinTucRouter.get("/:id", 
     DanhMucTinTucController.findById
 );

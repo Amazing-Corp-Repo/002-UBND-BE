@@ -82,6 +82,30 @@ export const UpdateProfileByAdminRequest = Joi.object({
             'any.only': 'Vai trò không hợp lệ',
             'any.required': 'Vai trò là bắt buộc',
         }),
+    tenDangNhap: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'Tên đăng nhập không được để trống',
+        }),
+    email: Joi.string()
+        .trim()
+        .email()
+        .max(100)
+        .required()
+        .messages({
+            'string.email': 'Email không hợp lệ',
+            'any.required': 'Email là bắt buộc',
+            'string.max': 'Email không được vượt quá 100 ký tự',
+        }),
+    matKhau: Joi.string()
+        .trim()
+        .min(6)
+        .max(255)
+        .allow(null, '')
+        .messages({
+            'string.min': 'Mật khẩu phải có ít nhất 6 ký tự',
+        }),
 });
 
 export const UpdateStatusByAdminRequest = Joi.object({

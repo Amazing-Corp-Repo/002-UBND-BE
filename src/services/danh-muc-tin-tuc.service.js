@@ -1,6 +1,7 @@
 import DanhMucTinTucRepository from "../repositories/danh-muc-tin-tuc.repository.js";
 import TinTucRepository from "../repositories/tin-tuc.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { createPagination } from "../utils/response.util.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const DanhMucTinTucService = {
@@ -70,7 +71,14 @@ const DanhMucTinTucService = {
 
     async findAll(isActive, search) {
         search = search ? capitalizeWords(search) : "";
-        return DanhMucTinTucRepository.findAll(isActive, search);
+        return await DanhMucTinTucRepository.findAll(isActive, search);
+    },
+
+    async findAllWithPagination(isActive, search, page, size) {
+        search = search ? capitalizeWords(search) : "";
+        let { data, totalItems } = await DanhMucTinTucRepository.findAllWithPagination(isActive, search, page, size);
+        const pagination = createPagination(page, size, totalItems);
+        return { data, pagination };
     },
 
     async findById(id) {
