@@ -39,8 +39,8 @@ const UserService = {
     async getAllUsers(page, size, isActive, role, search) {
         const { users, total } = await UserRepository.getAllUsers(page, size, isActive, role, search);
         const userResponses = users.map(user => toUserResponse(user));
-        const pagintation = createPagination(page, size, total);
-        return { data: userResponses, pagintation };
+        const pagination = createPagination(page, size, total);
+        return { data: userResponses, pagination };
     },
 
     async createAccount(tenDangNhap, email, matKhau, vaiTro, currentUser) {
