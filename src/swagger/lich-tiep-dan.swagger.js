@@ -156,21 +156,6 @@ const LichTiepDanSwagger = {
             ],
             responses: {}
         },
-        post: {
-            tags: ['LichTiepDan'],
-            security: [{ bearerAuth: [] }],
-            summary: 'Tạo mới lịch tiếp dân',
-            description: 'Tạo mới một lịch tiếp dân với các thông tin chi tiết liên quan.',
-            requestBody: {
-                required: true,
-                content: {
-                    'application/json': {
-                        schema: LichTiepDanSchemas.CreateLichTiepDanRequestSchemaSwagger,
-                    },
-                },
-            },
-            responses: {}
-        },
     },
     '/api/lich-tiep-dan/{id}': {
         delete: {
