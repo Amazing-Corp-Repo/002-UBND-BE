@@ -1,4 +1,5 @@
 import prisma from '../config/database.config.js';
+import PHAN_ANH_STATUS from '../constants/phan-anh-status.constant.js';
 
 const LinhVucPhanAnhRepository = {
     async findByName(ten) {
@@ -67,6 +68,27 @@ const LinhVucPhanAnhRepository = {
     },
 
     async countActiveReflections(idLinhVuc) {
+        const dong = PHAN_ANH_STATUS.DONG;
+        const daGiaiQuyet = PHAN_ANH_STATUS.DA_GIAI_QUYET;
+
+        const result = await prisma.$queryRawUnsafe(`
+        SELECT COUNT(*)::int AS count
+        FROM phan_anh pa
+        LEFT JOIN LATERAL (
+            SELECT lst.ten
+            FROM lich_su_trang_thai lst
+            WHERE lst.id_phan_anh = pa.id
+            ORDER BY lst.thoi_gian_tao DESC
+            LIMIT 1
+        ) AS latest ON TRUE
+        WHERE pa.id_linh_vuc_phan_anh = $1::uuid
+        AND (latest.ten NOT IN ($2, $3));
+    `, idLinhVuc, dong, daGiaiQuyet);
+
+        return result[0]?.count ?? 0;
+    },
+
+    async countActiveReflectionsToDelete(idLinhVuc) {
         return await prisma.phan_anh.count({
             where: {
                 id_linh_vuc_phan_anh: idLinhVuc,
