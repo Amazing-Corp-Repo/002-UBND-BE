@@ -5,12 +5,14 @@ import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const LinhVucPhanAnhService = {
     async createLinhVucPhanAnh(ten, moTa, currentUser) {
+        ten = capitalizeWords(ten);
         const existingLinhVuc = await LinhVucPhanAnhRepository.findByName(ten);
+        console.log(existingLinhVuc);
         if (existingLinhVuc) {
             throw new BaseError(409, 'Lĩnh vực phản ánh đã tồn tại');
         }
         const data = {
-            ten: capitalizeWords(ten),
+            ten,
             mo_ta: moTa,
             nguoi_tao: currentUser,
         };
@@ -25,6 +27,7 @@ const LinhVucPhanAnhService = {
     },
 
     async updateLinhVucPhanAnh(id, ten, moTa, currentUser) {
+        ten = capitalizeWords(ten);
         if (id === null || id === undefined) {
             throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
         }
@@ -32,12 +35,12 @@ const LinhVucPhanAnhService = {
         if (!existingLinhVuc) {
             throw new BaseError(404, 'Lĩnh vực phản ánh không tồn tại');
         }
-        const duplicateLinhVuc = await LinhVucPhanAnhRepository.findByNameExcludingId(id, appendDeleteSuffixc(ten));
+        const duplicateLinhVuc = await LinhVucPhanAnhRepository.findByNameExcludingId(id, ten);
         if (duplicateLinhVuc) {
             throw new BaseError(409, 'Lĩnh vực phản ánh đã tồn tại');
         }
         const data = {
-            ten: capitalizeWords(ten),
+            ten,
             mo_ta: moTa,
             nguoi_cap_nhat: currentUser,
             thoi_gian_cap_nhat: new Date().toISOString(),
@@ -90,6 +93,10 @@ const LinhVucPhanAnhService = {
         }
         if (existingLinhVuc.is_active) {
             throw new BaseError(400, 'Chỉ có lĩnh vực phản ánh không hoạt động mới có thể xóa');
+        }
+        const activeReflections = await LinhVucPhanAnhRepository.countActiveReflectionsToDelete(id);
+        if (activeReflections > 0) {
+            throw new BaseError(400, 'Không thể xóa lĩnh vực phản ánh vì còn phản ánh liên quan');
         }
         const data = {
             ten: appendDeleteSuffixc(existingLinhVuc.ten),
