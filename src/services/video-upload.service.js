@@ -109,6 +109,14 @@ const VideoUploadService = {
         }
         return `Chunk ${currentIndex} uploaded thành công. Upload được ${existingVideoUpload.received_chunks} / ${existingVideoUpload.total_chunks} chunks.`;
     },
+
+    async getVideoUploadById(idVideo) {
+        const videoUpload = await VideoUploadRepository.findVideoUploadById(idVideo);
+        return {
+            ...videoUpload,
+            final_mp4_url: undefined
+        };
+    }
 };
 
 export default VideoUploadService;
