@@ -7,7 +7,6 @@ const LinhVucPhanAnhService = {
     async createLinhVucPhanAnh(ten, moTa, currentUser) {
         ten = capitalizeWords(ten);
         const existingLinhVuc = await LinhVucPhanAnhRepository.findByName(ten);
-        console.log(existingLinhVuc);
         if (existingLinhVuc) {
             throw new BaseError(409, 'Lĩnh vực phản ánh đã tồn tại');
         }
