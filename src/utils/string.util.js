@@ -71,20 +71,9 @@ export const parseStringToArray = (str) => {
     return [str];
 }
 
-export const formatVN = (dateStr) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-
-    return `${day}/${month}/${year}`;
-}
-
 export const nowVN = () => {
-    const utc = new Date().toISOString();              // luôn là UTC
-    const date = new Date(utc);                        // parse UTC
+    const utc = new Date().toISOString();
+    const date = new Date(utc);
 
     // cộng 7 giờ để thành giờ VN
     date.setHours(date.getHours() + 7);
