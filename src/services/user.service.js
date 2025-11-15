@@ -82,6 +82,12 @@ const UserService = {
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
+        if (user.vai_tro === ROLE.ADMIN && vaiTro !== ROLE.ADMIN) {
+            throw new BaseError(400, 'Không thể thay đổi vai trò của quản trị viên');
+        }
+        if (user.vai_tro !== ROLE.ADMIN && vaiTro === ROLE.ADMIN) {
+            throw new BaseError(400, 'Không thể gán vai trò quản trị viên cho người dùng');
+        }
         let data = {
             ten_dang_nhap: tenDangNhap,
             email: email,
