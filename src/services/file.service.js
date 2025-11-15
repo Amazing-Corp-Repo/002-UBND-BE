@@ -77,6 +77,64 @@ const FileService = {
 
         return rows;
     },
+
+    excelStyles: {
+        title(sheet, rowIndex, text, colSpan = 2) {
+            sheet.mergeCells(rowIndex, 1, rowIndex, colSpan);
+            const cell = sheet.getCell(rowIndex, 1);
+            cell.value = text;
+            cell.font = { bold: true, size: 16 };
+            cell.alignment = { horizontal: "center" };
+        },
+
+        sectionTitle(sheet, rowIndex, text, colSpan = 2) {
+            sheet.mergeCells(rowIndex, 1, rowIndex, colSpan);
+            const cell = sheet.getCell(rowIndex, 1);
+            cell.value = text;
+            cell.font = { bold: true, size: 14 };
+        },
+
+        tableHeader(row) {
+            row.eachCell(cell => {
+                cell.font = { bold: true };
+                cell.fill = {
+                    type: "pattern",
+                    pattern: "solid",
+                    fgColor: { argb: "FFEFEFEF" }
+                };
+                cell.border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" }
+                };
+                cell.alignment = { horizontal: "center" };
+            });
+        },
+
+        tableRow(row) {
+            row.eachCell(cell => {
+                cell.border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" }
+                };
+                cell.alignment = { horizontal: "left" };
+            });
+        },
+
+        autoFit(sheet) {
+            sheet.columns.forEach(column => {
+                let maxLength = 10;
+                column.eachCell({ includeEmpty: true }, cell => {
+                    const len = cell.value ? cell.value.toString().length : 0;
+                    if (len > maxLength) maxLength = len;
+                });
+                column.width = maxLength + 5;
+            });
+        }
+    }
 };
 
 export default FileService;

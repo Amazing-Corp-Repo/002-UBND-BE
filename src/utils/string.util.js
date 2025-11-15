@@ -57,12 +57,10 @@ export const generateUniqueCode = () => {
 export const parseStringToArray = (str) => {
     if (!str) return [];
 
-    // đảm bảo str là string
     str = String(str).trim();
 
     if (!str) return [];
 
-    // nếu có dấu phẩy → split
     if (str.includes(",")) {
         return str
             .split(",")
@@ -70,6 +68,38 @@ export const parseStringToArray = (str) => {
             .filter(Boolean);
     }
 
-    // nếu chỉ có 1 phần tử → bao lại thành array
     return [str];
 }
+
+export const nowVN = () => {
+    const utc = new Date().toISOString();
+    const date = new Date(utc);
+
+    // cộng 7 giờ để thành giờ VN
+    date.setHours(date.getHours() + 7);
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${year}-${month}-${day}`;
+}
+
+export const toUTCFromVN_Start = (dateStr) => {
+    if (!dateStr) return null;
+
+    const [year, month, day] = dateStr.split("-").map(Number);
+
+    const d = new Date(Date.UTC(year, month - 1, day, -7, 0, 0));
+
+    return d.toISOString();
+};
+
+export const toUTCFromVN_End = (dateStr) => {
+    if (!dateStr) return null;
+
+    const [year, month, day] = dateStr.split("-").map(Number);
+
+    const d = new Date(Date.UTC(year, month - 1, day, 16, 59, 59));
+
+    return d.toISOString();
+};

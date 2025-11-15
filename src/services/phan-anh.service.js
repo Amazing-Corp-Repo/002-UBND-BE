@@ -243,8 +243,6 @@ const handleSendNotificationByFirebase = async (phanAnh, trangThai, ghiChu, user
             notification: { title, body },
             data
         });
-
-        console.log("FCM sent to user:", fcmToken);
     } catch (err) {
         console.error("FCM send error:", err);
     }

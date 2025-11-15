@@ -44,6 +44,9 @@ const UserService = {
     },
 
     async createAccount(tenDangNhap, email, matKhau, vaiTro, currentUser) {
+        if (vaiTro === ROLE.ADMIN) {
+            throw new BaseError(400, 'Không thể tạo tài khoản với vai trò quản trị viên');
+        }
         const existingUser = await UserRepository.findByUsernameOrEmail(tenDangNhap, email);
         if (existingUser) {
             throw new BaseError(400, 'Tài khoản hoặc email đã tồn tại');
