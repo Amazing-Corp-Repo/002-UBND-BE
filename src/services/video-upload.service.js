@@ -3,9 +3,66 @@ import VideoUploadRepository from "../repositories/video-upload.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { connectRabbitMQ } from "../config/rabbitmq.config.js";
 import env from "../config/environment.config.js";
+import fs from "fs";
+import path from "path";
 
 const VideoUploadService = {
     async handleUploadChunk(file, idVideo, currentIndex, totalChunks) {
+        if (totalChunks === 1) {
+            if (!file || file.length === 0) {
+                throw new BaseError(400, "Không có tệp tin để tải lên");
+            }
+            const now = new Date();
+            const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+            const dateFolder = vnTime.toISOString().split("T")[0];
+
+            const targetDir = path.join(
+                process.cwd(),
+                "src",
+                "public",
+                "uploads",
+                "PHAN_ANH",
+                dateFolder,
+                "video"
+            );
+            await fs.promises.mkdir(targetDir, { recursive: true });
+
+            const srcPath = path.resolve(file[0].path);
+            const mergedPath = path.join(targetDir, `${idVideo}.mp4`);
+
+            try {
+                await fs.promises.rename(srcPath, mergedPath);
+            } catch (err) {
+                await fs.promises.copyFile(srcPath, mergedPath);
+                try {
+                    await fs.promises.unlink(srcPath);
+                } catch (e) {
+                    console.warn(`Không thể xóa file tạm: ${srcPath}`);
+                }
+            }
+            const publicDir = path.join(process.cwd(), "src", "public");
+            const relativePath = path.relative(publicDir, mergedPath).replace(/\\/g, "/");
+            const relativeUrl = `/${relativePath}`;
+
+            await VideoUploadRepository.createVideoUpload({
+                id: idVideo,
+                total_chunks: 1,
+                status: VIDEO_STATUS.MERGING,
+                received_chunks: 1,
+                final_mp4_url: relativeUrl,
+                created_at: new Date().toISOString(),
+            });
+
+            const { channel } = await connectRabbitMQ();
+            await channel.sendToQueue(
+                env.queues.videoHLS,
+                Buffer.from(JSON.stringify({ uploadId: idVideo, mp4Path: mergedPath })),
+                { persistent: true }
+            );
+
+            return `Uploaded single chunk as original mp4 and queued HLS job for uploadId ${idVideo}`;
+        }
+
         if (!file || file.length === 0) {
             throw new BaseError(400, "Không có tệp tin để tải lên");
         }
