@@ -18,7 +18,7 @@ export const VideoUploadRequest = Joi.object({
         }),
     totalChunks: Joi.number()
         .integer()
-        .min(2)
+        .min(1)
         .required()
         .messages({
             'number.base': 'Tổng số phần phải là một số nguyên',
