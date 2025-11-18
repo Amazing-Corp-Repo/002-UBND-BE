@@ -1,4 +1,5 @@
 import LinhVucService from "../services/linh-vuc.service.js";
+import { BaseError } from "../utils/base-error.util.js";
 import { successResponse } from "../utils/response.util.js";
 
 const LinhVucController = {
@@ -10,6 +11,19 @@ const LinhVucController = {
                 : undefined;
         const linhVucs = await LinhVucService.getAll(isActive, searchTerm);
         return successResponse(res, linhVucs, "Lấy danh sách lĩnh vực thành công");
+    },
+
+    async getAllWithPagination(req, res) {
+        const { isActive, search, page, size } = req.query;
+        if (page === undefined || size === undefined) {
+            throw new BaseError(400, "Thiếu tham số phân trang");
+        }
+        const searchTerm =
+            typeof search === "string" && search.trim() !== ""
+                ? search.trim()
+                : undefined;
+        const result = await LinhVucService.getAllWithPagination(isActive, searchTerm, page * 1, size * 1);
+        return successResponse(res, result.data, "Lấy danh sách lĩnh vực thành công", result.pagination);
     },
 
     async create(req, res) {

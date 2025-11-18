@@ -1,8 +1,11 @@
 import prisma from "../config/database.config.js";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
 import isoWeek from "dayjs/plugin/isoWeek.js";
 import { BaseError } from "../utils/base-error.util.js";
+
 dayjs.extend(isoWeek);
+dayjs.extend(utc);
 
 const LichTiepDanRepository = {
     async findByCanBoAndNgay(ten_can_bo, ngay_tiep_dan) {
@@ -43,12 +46,12 @@ const LichTiepDanRepository = {
                 console.error("Invalid weekYear format:", weekYear);
                 throw new BaseError(400, "Định dạng tuần/năm không hợp lệ");
             }
-            const start = dayjs().year(year).isoWeek(week).startOf("week").toDate();
-            const end = dayjs().year(year).isoWeek(week).endOf("week").toDate();
+            const start = dayjs.utc().year(Number(year)).isoWeek(Number(week)).startOf("week").toDate();
+            const end = dayjs.utc().year(Number(year)).isoWeek(Number(week)).endOf("week").toDate();
+
             where.ngay_tiep_dan = { gte: start, lte: end };
         }
 
-        // 🔹 Lọc theo tháng/năm (month/year)
         else if (monthYear && !weekYear && !date) {
             let [month, year] = [];
             try {
@@ -58,15 +61,14 @@ const LichTiepDanRepository = {
                 console.error("Invalid monthYear format:", monthYear);
                 throw new BaseError(400, "Định dạng tháng/năm không hợp lệ");
             }
-            const start = dayjs().year(year).month(month - 1).startOf("month").toDate(); // Month từ 0–11
-            const end = dayjs().year(year).month(month - 1).endOf("month").toDate();
+            const start = dayjs.utc().year(Number(year)).month(Number(month) - 1).startOf("month").toDate();
+            const end = dayjs.utc().year(Number(year)).month(Number(month) - 1).endOf("month").toDate();
             where.ngay_tiep_dan = { gte: start, lte: end };
         }
 
-        // 🔹 Lọc theo ngày (date)
         else if (date) {
-            const start = dayjs(date).startOf("day").toDate(); // Cắt theo đầu ngày
-            const end = dayjs(date).endOf("day").toDate(); // Cắt theo cuối ngày
+            const start = dayjs.utc(date).startOf("day").toDate();
+            const end = dayjs.utc(date).endOf("day").toDate();
             where.ngay_tiep_dan = { gte: start, lte: end };
         }
 
@@ -74,6 +76,67 @@ const LichTiepDanRepository = {
             where,
             orderBy: { ngay_tiep_dan: "asc" },
         });
+    },
+
+    async findAllWithPagination({ weekYear, monthYear, date, isActive, page, size }) {
+
+        const where = {
+            is_delete: false,
+            ...(isActive !== undefined && isActive !== ""
+                ? { is_active: isActive === "true" }
+                : {})
+        };
+
+        if (weekYear && !monthYear && !date) {
+            let [week, year] = String(weekYear).split("/");
+
+            if (!week || !year) {
+                throw new BaseError(400, "Định dạng tuần/năm không hợp lệ");
+            }
+
+            const start = dayjs.utc().year(Number(year)).isoWeek(Number(week)).startOf("week").toDate();
+            const end = dayjs.utc().year(Number(year)).isoWeek(Number(week)).endOf("week").toDate();
+
+            where.ngay_tiep_dan = { gte: start, lte: end };
+        }
+
+        else if (monthYear && !weekYear && !date) {
+            let [month, year] = String(monthYear).split("/");
+
+            if (!month || !year) {
+                throw new BaseError(400, "Định dạng tháng/năm không hợp lệ");
+            }
+
+            const start = dayjs.utc().year(Number(year)).month(Number(month) - 1).startOf("month").toDate();
+            const end = dayjs.utc().year(Number(year)).month(Number(month) - 1).endOf("month").toDate();
+
+            where.ngay_tiep_dan = { gte: start, lte: end };
+        }
+
+        else if (date) {
+            const start = dayjs.utc(date).startOf("day").toDate();
+            const end = dayjs.utc(date).endOf("day").toDate();
+
+            where.ngay_tiep_dan = { gte: start, lte: end };
+        }
+
+        // Pagination
+        page = Number(page) || 1;
+        size = Number(size) || 10;
+        const skip = (page - 1) * size;
+
+        // Query song song
+        const [data, totalItems] = await Promise.all([
+            prisma.lich_tiep_dan.findMany({
+                where,
+                skip,
+                take: size,
+                orderBy: { ngay_tiep_dan: "asc" },
+            }),
+            prisma.lich_tiep_dan.count({ where })
+        ]);
+
+        return { data, totalItems };
     },
 
     async findById(id) {

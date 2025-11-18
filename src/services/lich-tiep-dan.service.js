@@ -3,6 +3,7 @@ import FileService from "./file.service.js";
 import { appendDeleteSuffixc, toSnakeCaseNonAccent } from "../utils/string.util.js";
 import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
 import dayjs from "dayjs";
+import { createPagination } from "../utils/response.util.js";
 
 const excelDateToJSDate = (serial) => {
     const utc_days = Math.floor(serial - 25569);
@@ -83,6 +84,25 @@ const LichTiepDanService = {
         const { weekYear, monthYear, date, isActive } = filters;
         const data = await LichTiepDanRepository.findAll({ weekYear, monthYear, date, isActive });
         return data;
+    },
+
+        async getLichTiepDanWithPagination(filters) {
+        let { weekYear, monthYear, date, isActive, page, size } = filters;
+        page = Number(page) || 1;
+        size = Number(size) || 10;
+
+        const { data, totalItems } = await LichTiepDanRepository.findAllWithPagination({
+            weekYear,
+            monthYear,
+            date,
+            isActive,
+            page,
+            size
+        });
+
+        const pagination = createPagination(page, size, totalItems);
+
+        return { data, pagination };
     },
 
     async deleteLichTiepDan(id, currentUser) {

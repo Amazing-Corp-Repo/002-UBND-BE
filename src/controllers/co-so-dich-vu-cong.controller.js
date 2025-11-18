@@ -1,4 +1,5 @@
 import CoSoDichVuCongService from "../services/co-so-dich-cong.service.js";
+import { BaseError } from "../utils/base-error.util.js";
 import { successResponse } from "../utils/response.util.js";
 
 const CoSoDichVuCongController = {
@@ -14,6 +15,25 @@ const CoSoDichVuCongController = {
             searchTerm
         );
         return successResponse(res, result, "Lấy danh sách cơ sở dịch vụ công");
+    },
+
+    async getAllWithPagination(req, res) {
+        const { isActive, search, page, size } = req.query;
+        if (!page || !size) {
+            throw new BaseError(400, 'Thiếu tham số page hoặc size');
+        }
+        const searchTerm =
+            typeof search === "string" && search.trim() !== ""
+                ? search.trim()
+                : undefined;
+
+        const result = await CoSoDichVuCongService.getAllWithPagination(
+            isActive,
+            searchTerm,
+            parseInt(page),
+            parseInt(size)
+        );
+        return successResponse(res, result.data, "Lấy danh sách cơ sở dịch vụ công", result.pagination);
     },
 
     async create(req, res) {

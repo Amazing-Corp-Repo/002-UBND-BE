@@ -1,0 +1,22 @@
+<h1 style="margin:0 0 8px 0;">Thông tin tài khoản của bạn đã được cập nhật</h1>
+
+<p style="margin:0 0 12px 0;">
+    Tài khoản trên hệ thống <strong>{{appName}}</strong> đã được cập nhật bởi quản trị viên.
+</p>
+
+<p style="margin:0 0 8px 0;">Chi tiết cập nhật:</p>
+<ul style="margin:0 0 12px 0; padding-left: 20px;">
+    <li><strong>Họ và tên:</strong> {{hoVaTen}}</li>
+    <li><strong>Tên đăng nhập:</strong> {{username}}</li>
+    <li><strong>Email:</strong> {{email}}</li>
+    <li><strong>Số điện thoại:</strong> {{soDienThoai}}</li>
+    <li><strong>Vai trò:</strong> {{vaiTro}}</li>
+
+    {{#if password}}
+    <li><strong>Mật khẩu mới:</strong> {{password}}</li>
+    {{/if}}
+</ul>
+
+<p style="margin:0;">
+    Nếu bạn không yêu cầu cập nhật thông tin, vui lòng liên hệ bộ phận hỗ trợ ngay lập tức.
+</p>

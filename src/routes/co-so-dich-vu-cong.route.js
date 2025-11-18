@@ -14,6 +14,11 @@ coSoDichVuCongRoute.get(
     CoSoDichVuCongController.getAll
 );
 
+coSoDichVuCongRoute.get(
+    "/pagination",
+    CoSoDichVuCongController.getAllWithPagination
+);
+
 coSoDichVuCongRoute.post(
     "",
     authenticate,

@@ -36,14 +36,17 @@ const UserService = {
         return toUserResponse(userUpdated);
     },
 
-    async getAllUsers(page, size, isActive, role) {
-        const { users, total } = await UserRepository.getAllUsers(page, size, isActive, role);
+    async getAllUsers(page, size, isActive, role, search) {
+        const { users, total } = await UserRepository.getAllUsers(page, size, isActive, role, search);
         const userResponses = users.map(user => toUserResponse(user));
-        const pagintation = createPagination(page, size, total);
-        return { data: userResponses, pagintation };
+        const pagination = createPagination(page, size, total);
+        return { data: userResponses, pagination };
     },
 
     async createAccount(tenDangNhap, email, matKhau, vaiTro, currentUser) {
+        if (vaiTro === ROLE.ADMIN) {
+            throw new BaseError(400, 'Không thể tạo tài khoản với vai trò quản trị viên');
+        }
         const existingUser = await UserRepository.findByUsernameOrEmail(tenDangNhap, email);
         if (existingUser) {
             throw new BaseError(400, 'Tài khoản hoặc email đã tồn tại');
@@ -74,14 +77,44 @@ const UserService = {
         };
     },
 
-    async updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, currentUser) {
+    async updateProfileByAdmin(userId, hoVaTen, soDienThoai, vaiTro, tenDangNhap, email, matKhau, currentUser) {
         const user = await UserRepository.findById(userId);
         if (!user) {
             throw new BaseError(404, 'Không tìm thấy người dùng');
         }
+        if (user.vai_tro === ROLE.ADMIN && vaiTro !== ROLE.ADMIN) {
+            throw new BaseError(400, 'Không thể thay đổi vai trò của quản trị viên');
+        }
+        if (user.vai_tro !== ROLE.ADMIN && vaiTro === ROLE.ADMIN) {
+            throw new BaseError(400, 'Không thể gán vai trò quản trị viên cho người dùng');
+        }
+        let data = {
+            ten_dang_nhap: tenDangNhap,
+            email: email,
+            ho_va_ten: hoVaTen,
+            so_dien_thoai: soDienThoai,
+            vai_tro: vaiTro,
+            nguoi_cap_nhat: currentUser,
+            thoi_gian_cap_nhat: new Date().toISOString()
+        };
+        if (matKhau) {
+            data.mat_khau = await hash(matKhau);
+        }
         let userUpdated = await UserRepository.updateUser(
             userId,
-            { ho_va_ten: hoVaTen, so_dien_thoai: soDienThoai, vai_tro: vaiTro, nguoi_cap_nhat: currentUser, thoi_gian_cap_nhat: new Date().toISOString() }
+            data
+        );
+        await MailService.sendMail(
+            email,
+            MAIL_TYPE.UPDATE_PROFILE,
+            {
+                username: tenDangNhap,
+                email,
+                hoVaTen,
+                soDienThoai,
+                vaiTro,
+                password: matKhau || null
+            }
         );
         return toUserResponse(userUpdated);
     },

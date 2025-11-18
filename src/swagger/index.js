@@ -12,6 +12,7 @@ import LichTiepDanSwagger from './lich-tiep-dan.swagger.js';
 import LinhVucPhanAnhSwagger from './linh-vuc-phan-anh.swagger.js';
 import PhanAnhSwagger from './phan-anh.swagger.js';
 import VideoUploadSwagger from './video-upload.swagger.js';
+import ReportSwagger from './report.swagger.js';
 
 const swaggerDocument = {
 
@@ -42,6 +43,7 @@ const swaggerDocument = {
         ...LinhVucPhanAnhSwagger,
         ...PhanAnhSwagger,
         ...VideoUploadSwagger,
+        ...ReportSwagger,
     },
 
     components: {

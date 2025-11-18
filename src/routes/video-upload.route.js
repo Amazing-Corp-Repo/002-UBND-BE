@@ -25,4 +25,9 @@ videoUploadRouter.post(
     VideoUploadController.uploadVideo
 );
 
+videoUploadRouter.get(
+    "/:idVideo",
+    VideoUploadController.getVideoUpload
+);
+
 export default videoUploadRouter;

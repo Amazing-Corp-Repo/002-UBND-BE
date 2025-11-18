@@ -3,7 +3,7 @@ import MAIL_TYPE from "../constants/mail.constant.js";
 import OTP_TYPE from "../constants/otp.constants.js";
 import OTPRepository from "../repositories/otp.repositpory.js";
 import { BaseError } from "../utils/base-error.util.js";
-import { generateRandomNumber } from "../utils/random-number.util.js";
+import { generateRandomNumber } from "../utils/number.util.js";
 import MailService from "./mail.service.js";
 
 const OTP_EXPIRE_MINUTES = parseInt(env.OTP_EXPIRE_MINUTES);

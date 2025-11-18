@@ -8,6 +8,12 @@ const VideoUploadController = {
         let result = await VideoUploadService.handleUploadChunk(file, idVideo, currentIndex, totalChunks);
         return successResponse(res, null, result);
     },
+
+    async getVideoUpload(req, res) {
+        const { idVideo } = req.params;
+        const videoUpload = await VideoUploadService.getVideoUploadById(idVideo);
+        return successResponse(res, videoUpload, 'Lấy thông tin video upload thành công');
+    }
 };
 
 export default VideoUploadController;

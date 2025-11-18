@@ -32,6 +32,10 @@ lichTiepDanRouter.get('/',
     LichTiepDanController.getLichTiepDan
 );
 
+lichTiepDanRouter.get('/pagination',
+    LichTiepDanController.getLichTiepDanWithPagination
+);
+
 lichTiepDanRouter.delete('/:id',
     authenticate,
     authorize([ROLE.ADMIN]),
