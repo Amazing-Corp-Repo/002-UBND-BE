@@ -426,7 +426,7 @@ model phan_anh {
   sdt_nguoi_phan_anh                             String?              @db.VarChar(20)
   thoi_gian_tiep_nhan                            DateTime?            @db.Timestamp(6)
   thoi_gian_phan_hoi_du_kien                     DateTime?            @db.Timestamp(6)
-  ngay_du_kien_hoan_thanh                        DateTime?            @db.Date
+  ngay_du_kien_hoan_thanh                        DateTime?            @db.Timestamp(6)
   nguoi_cap_nhat                                 String?              @db.Uuid
   nguoi_tao                                      String?              @db.Uuid
   thoi_gian_tao                                  DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
