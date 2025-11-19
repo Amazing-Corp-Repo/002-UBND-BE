@@ -1,5 +1,5 @@
 import JoiToSwagger from 'joi-to-swagger';
-import { ChangePasswordRequest, LoginRequest, LogoutRequest, RefreshTokenRequest, ResetPasswordRequest, SendOTPRequest, VerifyEnableOrDisable2FARequest, VerifyTwoFactorAuthRequest } from '../validators/auth.validator.js';
+import { ChangePasswordRequest, LoginRequest, LoginWithCaptchaRequest, LogoutRequest, RefreshTokenRequest, ResetPasswordRequest, SendOTPRequest, VerifyEnableOrDisable2FARequest, VerifyTwoFactorAuthRequest } from '../validators/auth.validator.js';
 
 const { swagger: LoginRequestSchema } = JoiToSwagger(LoginRequest);
 const { swagger: RefreshTokenRequestSchema } = JoiToSwagger(RefreshTokenRequest);
@@ -9,6 +9,7 @@ const { swagger: VerifyTwoFactorAuthRequestSchema } = JoiToSwagger(VerifyTwoFact
 const { swagger: SendOTPRequestSchema } = JoiToSwagger(SendOTPRequest);
 const { swagger: ResetPasswordRequestSchema } = JoiToSwagger(ResetPasswordRequest);
 const { swagger: VerifyEnableOrDisable2FARequestSchema } = JoiToSwagger(VerifyEnableOrDisable2FARequest);
+const { swagger: LoginWithCaptchaRequestSchema } = JoiToSwagger(LoginWithCaptchaRequest);
 
 const AuthSchemas = {
     LoginRequest: LoginRequestSchema,
@@ -19,6 +20,7 @@ const AuthSchemas = {
     SendOTPRequest: SendOTPRequestSchema,
     ResetPasswordRequest: ResetPasswordRequestSchema,
     VerifyEnableOrDisable2FARequest: VerifyEnableOrDisable2FARequestSchema,
+    LoginWithCaptchaRequest: LoginWithCaptchaRequestSchema,
 };
 
 export default AuthSchemas;
