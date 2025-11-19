@@ -12,7 +12,7 @@ const OTPService = {
     async sendOTP(userId, email, otpType) {
         const otpCode = generateRandomNumber(6);
         const expires_at = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000).toISOString();
-
+        await OTPRepository.deleteByUserIdAndType(userId, otpType);
         await OTPRepository.create({
             id_nguoi_dung: userId,
             ma_otp: otpCode,
