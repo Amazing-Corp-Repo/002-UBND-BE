@@ -6,16 +6,18 @@ import UPLOAD_TYPE from "../constants/upload.constant.js";
 import { createUploader } from "../middlewares/upload.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import { VideoUploadRequest } from "../validators/video-upload.validator.js";
+import { auditForPhanAnh } from "../middlewares/client-info.middleware.js";
 
 const videoUploadRouter = express.Router();
 
 videoUploadRouter.post(
     "/upload",
+    auditForPhanAnh,
     createUploader({
         type: UPLOAD_TYPE.PHAN_ANH,
         fieldName: "file",
         maxCount: 1,
-        maxSizeMB: 500,
+        maxSizeMB: 300,
         allowed_types: ["video/mp4", "video/mov", "video/avi", "video/mkv"],
         basePathSegments: ["src", "private", "uploads", "videos"],
         isPublic: false,

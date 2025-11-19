@@ -71,6 +71,14 @@ const AuthController = {
         return successResponse(res, result, "Cập nhật trạng thái 2FA thành công");
     },
 
+    async loginWithCaptcha(req, res) {
+        const { tenDangNhap, matKhau, recaptchaToken } = req.body;
+        const ip = req.clientIp;
+        const device = req.device;
+        const result = await AuthService.loginWithCaptcha(tenDangNhap, matKhau, recaptchaToken, ip, device);
+        return successResponse(res, result, "Đăng nhập thành công");
+    }
+
 };
 
 export default AuthController;

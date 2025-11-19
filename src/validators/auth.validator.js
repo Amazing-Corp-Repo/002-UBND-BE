@@ -119,3 +119,26 @@ export const VerifyEnableOrDisable2FARequest = Joi.object({
             'any.required': 'OTP là bắt buộc',
         }),
 });
+
+export const LoginWithCaptchaRequest = Joi.object({
+    tenDangNhap: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'Tên đăng nhập là bắt buộc',
+        }),
+    matKhau: Joi.string()
+        .trim()
+        .min(6)
+        .required()
+        .messages({
+            'string.min': 'Mật khẩu phải có ít nhất 6 ký tự',
+            'any.required': 'Mật khẩu là bắt buộc',
+        }),
+    recaptchaToken: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'reCAPTCHA token là bắt buộc',
+        }),
+});
