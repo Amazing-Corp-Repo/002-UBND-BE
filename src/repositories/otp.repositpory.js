@@ -23,6 +23,15 @@ const OTPRepository = {
             data: { is_used: true },
         });
     },
+
+    async deleteByUserIdAndType(userId, otpType) {
+        await prisma.otp.deleteMany({
+            where: {
+                id_nguoi_dung: userId,
+                loai_otp: otpType,
+            },
+        });
+    },
 };
 
 export default OTPRepository;

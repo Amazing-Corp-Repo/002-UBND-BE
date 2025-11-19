@@ -149,6 +149,22 @@ const AuthSwagger = {
             responses: {}
         }
     },
+    '/api/auths/login-with-captcha': {
+        post: {
+            tags: ['Auths'],
+            summary: 'User login with captcha',
+            description: 'Login with username/password and captcha verification',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: AuthSchemas.LoginWithCaptchaRequest,
+                    }
+                }
+            },
+            responses: {}
+        }
+    }
 };
 
 export default AuthSwagger;

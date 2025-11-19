@@ -1,6 +1,6 @@
 import express from 'express';
 import validate from '../middlewares/validate.middleware.js';
-import { ChangePasswordRequest, LoginRequest, LogoutRequest, RefreshTokenRequest, ResetPasswordRequest, SendOTPRequest, VerifyEnableOrDisable2FARequest, VerifyTwoFactorAuthRequest } from '../validators/auth.validator.js';
+import { ChangePasswordRequest, LoginRequest, LoginWithCaptchaRequest, LogoutRequest, RefreshTokenRequest, ResetPasswordRequest, SendOTPRequest, VerifyEnableOrDisable2FARequest, VerifyTwoFactorAuthRequest } from '../validators/auth.validator.js';
 import AuthController from '../controllers/auth.controller.js';
 import { clientInfo } from '../middlewares/client-info.middleware.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
@@ -39,5 +39,6 @@ authRoute.post(
 authRoute.post('/verify-2fa', validate(VerifyTwoFactorAuthRequest), clientInfo, AuthController.verifyTwoFactorAuth);
 
 authRoute.post('/send-otp', validate(SendOTPRequest), AuthController.sendOTP);
+authRoute.post('/login-with-captcha', validate(LoginWithCaptchaRequest), clientInfo, AuthController.loginWithCaptcha);
 
 export default authRoute;
