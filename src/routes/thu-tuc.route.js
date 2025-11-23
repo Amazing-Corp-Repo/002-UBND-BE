@@ -10,6 +10,7 @@ import AUDIT_LOGS from '../constants/audit-logs-action.constant.js';
 const thuTucRoute = express.Router();
 
 thuTucRoute.get('/all', ThuTucController.getAllForMobile);
+thuTucRoute.get('/search', ThuTucController.searchThuTuc);
 
 thuTucRoute.get(
     '/:id',

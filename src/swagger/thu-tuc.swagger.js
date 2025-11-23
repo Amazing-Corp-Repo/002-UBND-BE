@@ -138,6 +138,20 @@ const ThuTucSwagger = {
                     name: 'idLinhVuc',
                     in: 'query',
                     description: 'Mã định danh lĩnh vực ở định dạng UUID để lọc theo lĩnh vực.',
+                },
+                {
+                    name: 'page',
+                    in: 'query',
+                    required: true,
+                    schema: { type: 'integer', minimum: 1 },
+                    description: 'Page number for pagination'
+                },
+                {
+                    name: 'size',
+                    in: 'query',
+                    required: true,
+                    schema: { type: 'integer', minimum: 1 },
+                    description: 'Number of users per page'
                 }
             ],
             responses: {},
@@ -182,6 +196,22 @@ const ThuTucSwagger = {
                 },
             ],
             responses: {}
+        },
+    },
+    '/api/thu-tuc/search': {
+        get: {
+            tags: ['ThuTuc'],
+            summary: 'Tìm kiếm thủ tục hành chính',
+            description: 'Tìm kiếm thủ tục hành chính theo từ khóa trong mã hoặc tên thủ tục.',
+            parameters: [
+                {
+                    name: 'search',
+                    in: 'query',
+                    description: 'Từ khóa tìm kiếm trong mã thủ tục, tên thủ tục.',
+                    schema: { type: 'string' },
+                },
+            ],
+            responses: {},
         },
     },
 };

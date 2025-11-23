@@ -66,18 +66,18 @@ export const CreatePhanAnhRequest = Joi.object({
 });
 
 export const UpdatePhanAnhStatusRequest = Joi.object({
-    thoiGianPhanHoiDuKien: Joi.date()
-        .required()
-        .messages({
-            'date.base': 'Thời gian phản hồi dự kiến phải là định dạng ngày tháng hợp lệ',
-            'any.required': 'Thời gian phản hồi dự kiến là bắt buộc',
-        }),
-    ngayDuKienHoanThanh: Joi.date()
-        .required()
-        .messages({
-            'date.base': 'Ngày dự kiến hoàn thành phải là định dạng ngày tháng hợp lệ',
-            'any.required': 'Ngày dự kiến hoàn thành là bắt buộc',
-        }),
+    // thoiGianPhanHoiDuKien: Joi.date()
+    //     .required()
+    //     .messages({
+    //         'date.base': 'Thời gian phản hồi dự kiến phải là định dạng ngày tháng hợp lệ',
+    //         'any.required': 'Thời gian phản hồi dự kiến là bắt buộc',
+    //     }),
+    // ngayDuKienHoanThanh: Joi.date()
+    //     .required()
+    //     .messages({
+    //         'date.base': 'Ngày dự kiến hoàn thành phải là định dạng ngày tháng hợp lệ',
+    //         'any.required': 'Ngày dự kiến hoàn thành là bắt buộc',
+    //     }),
     trangThai: Joi.string()
         .trim()
         .max(50)

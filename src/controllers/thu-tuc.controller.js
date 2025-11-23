@@ -43,9 +43,9 @@ const ThuTucController = {
     },
 
     async getAllForMobile(req, res) {
-        const { idLinhVuc } = req.query;
-        const result = await ThuTucService.getAllForMobile(idLinhVuc);
-        return successResponse(res, result, "Lấy danh sách thủ tục cho mobile thành công");
+        const { idLinhVuc, page = 1, size = 10 } = req.query;
+        const result = await ThuTucService.getAllForMobile(idLinhVuc, parseInt(page), parseInt(size));
+        return successResponse(res, result.data, "Lấy danh sách thủ tục cho mobile thành công", result.pagination);
     },
 
     async updateThuTucStatus(req, res) {
@@ -60,6 +60,12 @@ const ThuTucController = {
         const { id } = req.params;
         const result = await ThuTucService.getThanhPhanByThuTucId(id);
         return successResponse(res, result, "Lấy thành phần thủ tục thành công");
+    },
+
+    async searchThuTuc(req, res) {
+        const { search } = req.query;
+        const result = await ThuTucService.searchThuTuc(search);
+        return successResponse(res, result, "Tìm kiếm thủ tục hành chính thành công");
     },
 };
 
