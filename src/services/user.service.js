@@ -6,7 +6,7 @@ import { createPagination } from "../utils/response.util.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
-import ROLE from "../constants/role.constant.js";
+import RoleRepository from "../repositories/role.repository.js";
 
 const UserService = {
   async getUserById(userId) {
@@ -14,6 +14,11 @@ const UserService = {
       throw new BaseError(400, "ID người dùng không được để trống");
     }
     const user = await UserRepository.findById(userId);
+    let vai_tro = "";
+    if (user.user_roles && user.user_roles.length > 0) {
+      vai_tro = user.user_roles.map((ur) => ur.roles.name).join(" ");
+    }
+    user.vai_tro = vai_tro;
     if (!user) {
       throw new BaseError(404, "Không tìm thấy người dùng");
     }
@@ -46,17 +51,22 @@ const UserService = {
       role,
       search
     );
-    const userResponses = users.map((user) => toUserResponse(user));
+    const userResponses = users.map((user) => {
+      let vai_tro = "";
+      if (user.user_roles && user.user_roles.length > 0) {
+        vai_tro = user.user_roles.map((ur) => ur.roles.name).join(" ");
+      }
+      user.vai_tro = vai_tro;
+      return toUserResponse(user);
+    });
     const pagination = createPagination(page, size, total);
     return { data: userResponses, pagination };
   },
 
   async createAccount(tenDangNhap, email, matKhau, vaiTro, currentUser) {
-    if (vaiTro === ROLE.ADMIN) {
-      throw new BaseError(
-        400,
-        "Không thể tạo tài khoản với vai trò quản trị viên"
-      );
+    let existingRole = await RoleRepository.getById(vaiTro);
+    if (!existingRole) {
+      throw new BaseError(400, "Vai trò không hợp lệ");
     }
     const existingUser = await UserRepository.findByUsernameOrEmail(
       tenDangNhap,
@@ -97,41 +107,53 @@ const UserService = {
     matKhau,
     currentUser
   ) {
+    const existingRole = await RoleRepository.getById(vaiTro);
+    if (!existingRole) {
+      throw new BaseError(400, "Vai trò không hợp lệ");
+    }
+
     const user = await UserRepository.findById(userId);
     if (!user) {
       throw new BaseError(404, "Không tìm thấy người dùng");
     }
-    if (user.vai_tro === ROLE.ADMIN && vaiTro !== ROLE.ADMIN) {
-      throw new BaseError(400, "Không thể thay đổi vai trò của quản trị viên");
+    const existingUser = await UserRepository.findByUsernameOrEmail(
+      tenDangNhap,
+      email
+    );
+    if (existingUser && existingUser.id !== userId) {
+      throw new BaseError(400, "Tài khoản hoặc email đã tồn tại");
     }
-    if (user.vai_tro !== ROLE.ADMIN && vaiTro === ROLE.ADMIN) {
-      throw new BaseError(
-        400,
-        "Không thể gán vai trò quản trị viên cho người dùng"
-      );
-    }
-    let data = {
+
+    const data = {
       ten_dang_nhap: tenDangNhap,
       email: email,
       ho_va_ten: hoVaTen,
       so_dien_thoai: soDienThoai,
-      vai_tro: vaiTro,
       nguoi_cap_nhat: currentUser,
-      thoi_gian_cap_nhat: new Date().toISOString(),
+      thoi_gian_cap_nhat: new Date(),
     };
+
     if (matKhau) {
       data.mat_khau = await hash(matKhau);
     }
-    let userUpdated = await UserRepository.updateUser(userId, data);
+
+    const updatedUser = await UserRepository.updateUserByAdmin(
+      userId,
+      data,
+      vaiTro
+    );
+    updatedUser.vai_tro = existingRole.name;
+
     await MailService.sendMail(email, MAIL_TYPE.UPDATE_PROFILE, {
       username: tenDangNhap,
       email,
       hoVaTen,
       soDienThoai,
-      vaiTro,
+      vaiTro: existingRole.name,
       password: matKhau || null,
     });
-    return toUserResponse(userUpdated);
+
+    return toUserResponse(updatedUser);
   },
 
   async deleteUser(userId, currentUser) {
@@ -165,7 +187,11 @@ const UserService = {
     if (!user) {
       throw new BaseError(404, "Không tìm thấy người dùng");
     }
-    if (user.vai_tro === ROLE.ADMIN) {
+    let vai_tro = user.user_roles
+      ? user.user_roles.map((ur) => ur.roles.name).join(" ")
+      : "";
+      console.log("Vai trò của người dùng:", vai_tro);
+    if (vai_tro === "ADMIN") {
       throw new BaseError(
         400,
         "Không thể thay đổi trạng thái của quản trị viên"
@@ -200,11 +226,15 @@ const UserService = {
     if (existingUser) {
       throw new BaseError(400, "Tài khoản hoặc email đã tồn tại");
     }
+    let roleAdmin = await RoleRepository.findRoleByName("ADMIN");
+    if (!roleAdmin) {
+      throw new BaseError(500, "Vai trò ADMIN không tồn tại trong hệ thống");
+    }
     const hashedPassword = await hash(matKhau);
     const newUser = await UserRepository.createUser({
       ten_dang_nhap: tenDangNhap,
       email,
-      vai_tro: ROLE.ADMIN,
+      vai_tro: roleAdmin.id,
       mat_khau: hashedPassword,
     });
     return toUserResponse(newUser);

@@ -28,11 +28,11 @@ export const CreateAccountRequest = Joi.object({
         }),
     vaiTro: Joi.string()
         .trim()
-        .valid('ADMIN', 'NHAN_VIEN', 'LANH_DAO', 'PHO_CHU_TICH', 'CHU_TICH', 'KHU_PHO')
         .required()
+        .uuid()
         .messages({
-            'any.only': 'Vai trò không hợp lệ',
             'any.required': 'Vai trò là bắt buộc',
+            'string.uuid': 'Vai trò không hợp lệ',
         }),
 });
 
@@ -76,11 +76,11 @@ export const UpdateProfileByAdminRequest = Joi.object({
         }),
     vaiTro: Joi.string()
         .trim()
-        .valid('ADMIN', 'NHAN_VIEN', 'LANH_DAO', 'PHO_CHU_TICH', 'CHU_TICH', 'KHU_PHO')
+        .uuid()
         .required()
         .messages({
-            'any.only': 'Vai trò không hợp lệ',
             'any.required': 'Vai trò là bắt buộc',
+            'string.uuid': 'Vai trò không hợp lệ',
         }),
     tenDangNhap: Joi.string()
         .trim()

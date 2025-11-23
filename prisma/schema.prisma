@@ -84,7 +84,6 @@ model nguoi_dung {
   ho_va_ten                                                                        String?                      @db.VarChar(150)
   email                                                                            String?                      @unique @db.VarChar(150)
   so_dien_thoai                                                                    String?                      @db.VarChar(20)
-  vai_tro                                                                          String?                      @db.VarChar(20)
   is_enable_two_factor                                                             Boolean?                     @default(false)
   is_active                                                                        Boolean?                     @default(true)
   is_delete                                                                        Boolean?                     @default(false)
@@ -113,6 +112,8 @@ model nguoi_dung {
   phan_anh_phan_anh_nguoi_cap_nhatTonguoi_dung                                     phan_anh[]                   @relation("phan_anh_nguoi_cap_nhatTonguoi_dung")
   phan_anh_phan_anh_nguoi_taoTonguoi_dung                                          phan_anh[]                   @relation("phan_anh_nguoi_taoTonguoi_dung")
   refresh_token                                                                    refresh_token[]
+  roles_roles_nguoi_cap_nhatTonguoi_dung                                           roles[]                      @relation("roles_nguoi_cap_nhatTonguoi_dung")
+  roles_roles_nguoi_taoTonguoi_dung                                                roles[]                      @relation("roles_nguoi_taoTonguoi_dung")
   thanh_phan_ho_so_thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung                     thanh_phan_ho_so[]           @relation("thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung")
   thanh_phan_ho_so_thanh_phan_ho_so_nguoi_taoTonguoi_dung                          thanh_phan_ho_so[]           @relation("thanh_phan_ho_so_nguoi_taoTonguoi_dung")
   thu_tuc_hanh_chinh_thu_tuc_hanh_chinh_nguoi_cap_nhatTonguoi_dung                 thu_tuc_hanh_chinh[]         @relation("thu_tuc_hanh_chinh_nguoi_cap_nhatTonguoi_dung")
@@ -125,6 +126,7 @@ model nguoi_dung {
   trinh_tu_thuc_hien_thu_tuc_trinh_tu_thuc_hien_thu_tuc_nguoi_taoTonguoi_dung      trinh_tu_thuc_hien_thu_tuc[] @relation("trinh_tu_thuc_hien_thu_tuc_nguoi_taoTonguoi_dung")
   truong_hop_thu_tuc_truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung                 truong_hop_thu_tuc[]         @relation("truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung")
   truong_hop_thu_tuc_truong_hop_thu_tuc_nguoi_taoTonguoi_dung                      truong_hop_thu_tuc[]         @relation("truong_hop_thu_tuc_nguoi_taoTonguoi_dung")
+  user_roles                                                                       user_roles[]
   user_session_logs                                                                user_session_logs[]
   uy_ban_uy_ban_nguoi_cap_nhatTonguoi_dung                                         uy_ban[]                     @relation("uy_ban_nguoi_cap_nhatTonguoi_dung")
   uy_ban_uy_ban_nguoi_taoTonguoi_dung                                              uy_ban[]                     @relation("uy_ban_nguoi_taoTonguoi_dung")
@@ -457,4 +459,46 @@ model video_uploads {
   final_hls_url   String?   @db.VarChar(500)
   created_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   updated_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+}
+
+model permissions {
+  id               String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  code             String             @unique @db.VarChar(150)
+  description      String?            @db.VarChar(255)
+  thoi_gian_tao    DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  role_permissions role_permissions[]
+}
+
+model role_permissions {
+  role_id       String      @db.Uuid
+  permission_id String      @db.Uuid
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_role_permissions_permission")
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_role_permissions_role")
+
+  @@id([role_id, permission_id])
+}
+
+model roles {
+  id                                          String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name                                        String             @unique @db.VarChar(150)
+  description                                 String?
+  is_active                                   Boolean?           @default(true)
+  is_delete                                   Boolean?           @default(false)
+  nguoi_tao                                   String?            @db.Uuid
+  nguoi_cap_nhat                              String?            @db.Uuid
+  thoi_gian_tao                               DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat                          DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  role_permissions                            role_permissions[]
+  nguoi_dung_roles_nguoi_cap_nhatTonguoi_dung nguoi_dung?        @relation("roles_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_roles_nguoi_cap_nhat")
+  nguoi_dung_roles_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("roles_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_roles_nguoi_tao")
+  user_roles                                  user_roles[]
+}
+
+model user_roles {
+  user_id    String     @db.Uuid
+  role_id    String     @db.Uuid
+  roles      roles      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_roles_role")
+  nguoi_dung nguoi_dung @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_roles_user")
+
+  @@id([user_id, role_id])
 }
