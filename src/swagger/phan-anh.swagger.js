@@ -5,6 +5,7 @@ const PhanAnhSwagger = {
         post: {
             tags: ['PhanAnh'],
             summary: 'Tạo phản ánh mới',
+            security: [{ bearerAuth: [] }],
             requestBody: {
                 content: {
                     'multipart/form-data': {

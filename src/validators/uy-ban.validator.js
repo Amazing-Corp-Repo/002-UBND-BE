@@ -160,7 +160,7 @@ export const UpdateUyBanRequest = Joi.object({
             .trim()
             .max(500)
             .optional()
-            .allow('', null)
+            .allow(null, '')
             .messages({
                 'string.max': 'Ghi chú không được vượt quá 500 ký tự',
             }),
@@ -170,5 +170,5 @@ export const UpdateUyBanRequest = Joi.object({
     linkGoogleMap: Joi.string()
         .trim()
         .optional()
-        .allow('', null)
+        .allow(null, '')
 });

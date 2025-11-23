@@ -13,9 +13,8 @@ import { PERMISSION } from "../constants/permission.constant.js";
 
 const thuTucRoute = express.Router();
 
-thuTucRoute.get("/all", ThuTucController.getAllForMobile);
-
-thuTucRoute.get("/:id", ThuTucController.getThuTucById);
+thuTucRoute.get('/all', ThuTucController.getAllForMobile);
+thuTucRoute.get('/search', ThuTucController.searchThuTuc);
 
 thuTucRoute.get("", ThuTucController.getAll);
 
