@@ -26,10 +26,10 @@ const ThuTucService = {
       size,
       isActive,
       idLinhVuc,
-      search = search ? capitalizeWords(search) : "",
+      (search = search ? capitalizeWords(search) : "")
     );
 
-    const data = thuTucs.map(item => ({
+    const data = thuTucs.map((item) => ({
       id: item.id,
       ma_thu_tuc: item.ma_thu_tuc,
       ten_thu_tuc: item.ten_thu_tuc,
@@ -37,7 +37,9 @@ const ThuTucService = {
       so_quyet_dinh: item.so_quyet_dinh,
       co_so_dich_vu_cong: item.co_so_dich_vu_cong?.ten_co_so || null,
       so_dien_thoai_co_so: item.co_so_dich_vu_cong?.so_dien_thoai || null,
-      linh_vuc: item.thu_tuc_hanh_chinh_linh_vuc.map(lv => lv.linh_vuc.ten_linh_vuc),
+      linh_vuc: item.thu_tuc_hanh_chinh_linh_vuc.map(
+        (lv) => lv.linh_vuc.ten_linh_vuc
+      ),
       is_active: item.is_active,
       thoi_gian_tao: item.thoi_gian_tao,
     }));
@@ -63,13 +65,37 @@ const ThuTucService = {
     return mauDonList;
   },
 
-  async createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = [], truongHopThuTuc = [], currentUser) {
+  async createThuTuc(
+    idCoSoDichVuCong,
+    tenThuTuc,
+    maThuTuc,
+    doiTuongThucHien,
+    yeuCauDieuKienChung,
+    soQuyetDinh,
+    danhSachLinhVucIds = [],
+    danhSachMauDon = [],
+    cachThuThucHien = [],
+    trinhTuThucHien = [],
+    truongHopThuTuc = [],
+    currentUser
+  ) {
     tenThuTuc = capitalizeWords(tenThuTuc);
     maThuTuc = maThuTuc?.toUpperCase();
-    const existingCoso = await CoSoDichVuCongRepository.findById(idCoSoDichVuCong);
-    const existingThuTuc = await ThuTucRepository.findByMaAndTenThuTuc(maThuTuc, tenThuTuc);
-    const existingLinhVucs = await LinhVucRepository.findManyByIds(danhSachLinhVucIds, true);
-    const existingDanhSachMauDons = await MauDonRepository.findManyByIds(danhSachMauDon, true);
+    const existingCoso = await CoSoDichVuCongRepository.findById(
+      idCoSoDichVuCong
+    );
+    const existingThuTuc = await ThuTucRepository.findByMaAndTenThuTuc(
+      maThuTuc,
+      tenThuTuc
+    );
+    const existingLinhVucs = await LinhVucRepository.findManyByIds(
+      danhSachLinhVucIds,
+      true
+    );
+    const existingDanhSachMauDons = await MauDonRepository.findManyByIds(
+      danhSachMauDon,
+      true
+    );
 
     if (existingThuTuc) {
       throw new BaseError(409, "Thủ tục hành chính với mã hoặc tên đã tồn tại");
@@ -88,16 +114,33 @@ const ThuTucService = {
     }
 
     // Normalize nested names
-    const normalizedTruongHop = (truongHopThuTuc || []).map(th => ({
+    const normalizedTruongHop = (truongHopThuTuc || []).map((th) => ({
       ...th,
-      tenTruongHop: th.tenTruongHop ? capitalizeWords(th.tenTruongHop) : th.tenTruongHop,
-      thanhPhanHoSo: (th.thanhPhanHoSo || []).map(tp => ({
+      tenTruongHop: th.tenTruongHop
+        ? capitalizeWords(th.tenTruongHop)
+        : th.tenTruongHop,
+      thanhPhanHoSo: (th.thanhPhanHoSo || []).map((tp) => ({
         ...tp,
-        tenThanhPhan: tp.tenThanhPhan ? capitalizeWords(tp.tenThanhPhan) : tp.tenThanhPhan,
+        tenThanhPhan: tp.tenThanhPhan
+          ? capitalizeWords(tp.tenThanhPhan)
+          : tp.tenThanhPhan,
       })),
     }));
 
-    const newThuTuc = await ThuTucRepository.createThuTuc(idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, normalizedTruongHop, currentUser);
+    const newThuTuc = await ThuTucRepository.createThuTuc(
+      idCoSoDichVuCong,
+      tenThuTuc,
+      maThuTuc,
+      doiTuongThucHien,
+      yeuCauDieuKienChung,
+      soQuyetDinh,
+      danhSachLinhVucIds,
+      danhSachMauDon,
+      cachThuThucHien,
+      trinhTuThucHien,
+      normalizedTruongHop,
+      currentUser
+    );
     return newThuTuc;
   },
 
@@ -110,14 +153,36 @@ const ThuTucService = {
       throw new BaseError(404, "Không tìm thấy thủ tục hành chính để xóa");
     }
     if (exists.is_active === true) {
-      throw new BaseError(400, "Chỉ có thể xóa thủ tục hành chính không còn hoạt động");
+      throw new BaseError(
+        400,
+        "Chỉ có thể xóa thủ tục hành chính không còn hoạt động"
+      );
     }
     let tenThuTuc = appendDeleteSuffixc(exists.ten_thu_tuc);
     let maThuc = appendDeleteSuffixc(exists.ma_thu_tuc);
-    await ThuTucRepository.deleteThuTuc(thuTucId, currentUser, tenThuTuc, maThuc);
+    await ThuTucRepository.deleteThuTuc(
+      thuTucId,
+      currentUser,
+      tenThuTuc,
+      maThuc
+    );
   },
 
-  async updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds = [], danhSachMauDon = [], cachThuThucHien = [], trinhTuThucHien = [], truongHopThuTuc = [], currentUser) {
+  async updateThuTuc(
+    thuTucId,
+    idCoSoDichVuCong,
+    tenThuTuc,
+    maThuTuc,
+    doiTuongThucHien,
+    yeuCauDieuKienChung,
+    soQuyetDinh,
+    danhSachLinhVucIds = [],
+    danhSachMauDon = [],
+    cachThuThucHien = [],
+    trinhTuThucHien = [],
+    truongHopThuTuc = [],
+    currentUser
+  ) {
     tenThuTuc = capitalizeWords(tenThuTuc);
     if (thuTucId === null || thuTucId === undefined) {
       throw new BaseError(400, "ID thủ tục hành chính không được để trống");
@@ -129,14 +194,29 @@ const ThuTucService = {
       throw new BaseError(404, "Không tìm thấy thủ tục hành chính để cập nhật");
     }
 
-    const dupliacte = await ThuTucRepository.findByMaOrTenExcludeId(maThuTuc, tenThuTuc, thuTucId);
+    const dupliacte = await ThuTucRepository.findByMaOrTenExcludeId(
+      maThuTuc,
+      tenThuTuc,
+      thuTucId
+    );
     if (dupliacte) {
-      throw new BaseError(409, "Trùng mã thủ thục hoặc tên thủ tục với thủ tục hành chính khác");
+      throw new BaseError(
+        409,
+        "Trùng mã thủ thục hoặc tên thủ tục với thủ tục hành chính khác"
+      );
     }
 
-    const existingCoso = await CoSoDichVuCongRepository.findById(idCoSoDichVuCong);
-    const existingLinhVucs = await LinhVucRepository.findManyByIds(danhSachLinhVucIds, true);
-    const existingDanhSachMauDons = await MauDonRepository.findManyByIds(danhSachMauDon, true);
+    const existingCoso = await CoSoDichVuCongRepository.findById(
+      idCoSoDichVuCong
+    );
+    const existingLinhVucs = await LinhVucRepository.findManyByIds(
+      danhSachLinhVucIds,
+      true
+    );
+    const existingDanhSachMauDons = await MauDonRepository.findManyByIds(
+      danhSachMauDon,
+      true
+    );
 
     if (!existingCoso || existingCoso.is_active === false) {
       throw new BaseError(400, "Cơ sở dịch vụ công không tồn tại");
@@ -151,21 +231,45 @@ const ThuTucService = {
     }
 
     // Normalize nested names
-    const normalizedTruongHop = (truongHopThuTuc || []).map(th => ({
+    const normalizedTruongHop = (truongHopThuTuc || []).map((th) => ({
       ...th,
-      tenTruongHop: th.tenTruongHop ? capitalizeWords(th.tenTruongHop) : th.tenTruongHop,
-      thanhPhanHoSo: (th.thanhPhanHoSo || []).map(tp => ({
+      tenTruongHop: th.tenTruongHop
+        ? capitalizeWords(th.tenTruongHop)
+        : th.tenTruongHop,
+      thanhPhanHoSo: (th.thanhPhanHoSo || []).map((tp) => ({
         ...tp,
-        tenThanhPhan: tp.tenThanhPhan ? capitalizeWords(tp.tenThanhPhan) : tp.tenThanhPhan,
+        tenThanhPhan: tp.tenThanhPhan
+          ? capitalizeWords(tp.tenThanhPhan)
+          : tp.tenThanhPhan,
       })),
     }));
 
-    return await ThuTucRepository.updateThuTuc(thuTucId, idCoSoDichVuCong, tenThuTuc, maThuTuc, doiTuongThucHien, yeuCauDieuKienChung, soQuyetDinh, danhSachLinhVucIds, danhSachMauDon, cachThuThucHien, trinhTuThucHien, normalizedTruongHop, currentUser);
+    return await ThuTucRepository.updateThuTuc(
+      thuTucId,
+      idCoSoDichVuCong,
+      tenThuTuc,
+      maThuTuc,
+      doiTuongThucHien,
+      yeuCauDieuKienChung,
+      soQuyetDinh,
+      danhSachLinhVucIds,
+      danhSachMauDon,
+      cachThuThucHien,
+      trinhTuThucHien,
+      normalizedTruongHop,
+      currentUser
+    );
   },
 
-  async getAllForMobile(idLinhVuc) {
-    const thuTucs = await ThuTucRepository.getAllForMobile(idLinhVuc);
-    return thuTucs;
+  async getAllForMobile(idLinhVuc, page, size) {
+    const { thuTucs, total } = await ThuTucRepository.getAllForMobile(
+      idLinhVuc,
+      page,
+      size
+    );
+    const pagination = createPagination(page, size, total);
+    
+    return { data: thuTucs, pagination };
   },
 
   async updateThuTucStatus(thuTucId, isActive, currentUser) {
@@ -174,9 +278,16 @@ const ThuTucService = {
     }
     const existingThuTuc = await ThuTucRepository.getThuTucById(thuTucId);
     if (!existingThuTuc) {
-      throw new BaseError(404, "Không tìm thấy thủ tục hành chính để cập nhật trạng thái");
+      throw new BaseError(
+        404,
+        "Không tìm thấy thủ tục hành chính để cập nhật trạng thái"
+      );
     }
-    return await ThuTucRepository.updateThuTucStatus(thuTucId, isActive, currentUser);
+    return await ThuTucRepository.updateThuTucStatus(
+      thuTucId,
+      isActive,
+      currentUser
+    );
   },
 
   async getThanhPhanByThuTucId(thuTucId) {
@@ -189,6 +300,11 @@ const ThuTucService = {
     }
     const thanhPhan = await ThuTucRepository.getThanhPhanByThuTucId(thuTucId);
     return thanhPhan;
+  },
+
+  async searchThuTuc(search) {
+    const result = await ThuTucRepository.searchThuTucByName(search);
+    return result;
   }
 };
 

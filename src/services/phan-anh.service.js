@@ -172,8 +172,8 @@ const PhanAnhService = {
         const phanAnhPatch = {
             nguoi_cap_nhat: currentUser,
             thoi_gian_tiep_nhan: trangThai === PHAN_ANH_STATUS.DA_TIEP_NHAN ? new Date().toISOString() : phanAnh.thoi_gian_tiep_nhan,
-            thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
-            ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
+            // thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
+            // ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
         };
 
         const historyData = {
