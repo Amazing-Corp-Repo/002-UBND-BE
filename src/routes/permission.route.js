@@ -19,4 +19,10 @@ permissionRouter.post(
   PermissionController.syncPermissions
 );
 
+permissionRouter.get(
+  "/cate",
+  authenticate,
+  PermissionController.getPermissionCategories
+);
+
 export default permissionRouter;

@@ -154,3 +154,21 @@ export const PERMISSION_DESC = {
 
   PERM_GET_ALL: "Xem tất cả quyền",
 };
+
+export const PERMISSION_CATEGORIES = {
+  CSV: "Cơ sở dịch vụ công",
+  DMTT: "Danh mục tin tức",
+  LTD: "Lịch tiếp dân",
+  LVPA: "Lĩnh vực phản ánh",
+  LVTTHC: "Lĩnh vực thủ tục hành chính",
+  MD: "Mẫu đơn",
+  PA: "Phản ánh",
+  RPT: "Báo cáo",
+  TT: "Thủ tục hành chính",
+  TTIN: "Tin tức",
+  UB: "Ủy ban",
+  VID_PA: "Video phản ánh",
+  ND: "Người dùng",
+  ROLE: "Vai trò",
+  PERM: "Quyền",
+};
