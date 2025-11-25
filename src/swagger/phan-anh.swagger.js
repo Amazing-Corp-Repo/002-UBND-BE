@@ -227,6 +227,24 @@ const PhanAnhSwagger = {
             responses: {},
         },
     },
+    '/api/phan-anh/search-by-tieu-de': {
+        get: {
+            tags: ['PhanAnh'],
+            summary: 'Tìm kiếm phản ánh theo tiêu đề',
+            parameters: [
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                    },
+                    description: 'Chuỗi tìm kiếm trong tiêu đề phản ánh',
+                },
+            ],
+            responses: {},
+        },
+    },
 }
 
 export default PhanAnhSwagger;
