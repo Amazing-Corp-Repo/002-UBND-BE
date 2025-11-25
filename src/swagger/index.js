@@ -15,6 +15,7 @@ import VideoUploadSwagger from './video-upload.swagger.js';
 import ReportSwagger from './report.swagger.js';
 import RoleSwagger from './role.swagger.js';
 import PermissionSwagger from './permission.swagger.js';
+import NotificationSwagger from './notification.swagger.js';
 
 const swaggerDocument = {
 
@@ -48,6 +49,7 @@ const swaggerDocument = {
         ...ReportSwagger,
         ...RoleSwagger,
         ...PermissionSwagger,
+        ...NotificationSwagger,
     },
 
     components: {

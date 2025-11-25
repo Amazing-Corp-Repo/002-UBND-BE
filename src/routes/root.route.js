@@ -14,6 +14,7 @@ import phanAnhRouter from './phan-anh.route.js';
 import videoUploadRouter from './video-upload.route.js';
 import logRouter from './log.route.js';
 import reportRouter from './report.route.js';
+import notificationRouter from './notification.route.js';
 import permissionRouter from './permission.route.js';
 import roleRouter from './role.route.js';
 
@@ -36,6 +37,8 @@ rootRouter.use('/logs', logRouter);
 rootRouter.use('/report', reportRouter);
 rootRouter.use('/permission', permissionRouter);
 rootRouter.use('/role', roleRouter);
+rootRouter.use('/report', reportRouter)
+rootRouter.use('/notifications', notificationRouter)
 
 export default rootRouter;
 
