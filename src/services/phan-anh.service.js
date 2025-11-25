@@ -200,6 +200,10 @@ const PhanAnhService = {
             PHAN_ANH_STATUS,
             LINH_VUC_PHAN_ANH: linhVucPhanAnh,
         }
+    },
+
+    async searhByTieuDe(search) {
+        return await PhanAnhRepository.searhByTieuDe(search);
     }
 };
 

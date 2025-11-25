@@ -69,6 +69,16 @@ phanAnhRouter.get(
 );
 
 phanAnhRouter.get(
+    '/search-by-tieu-de',
+    PhanAnhController.searhByTieuDe
+);
+
+phanAnhRouter.get(
+    '/search-by-tieu-de',
+    PhanAnhController.searhByTieuDe
+);
+
+phanAnhRouter.get(
   "/:idPhanAnh",
   authenticate,
   authorize([PERMISSION.PA_GET_DETAIL]),
