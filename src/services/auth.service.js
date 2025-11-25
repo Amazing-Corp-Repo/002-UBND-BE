@@ -35,7 +35,6 @@ const AuthService = {
       ip: ip,
       device: device,
     });
-
     const accessToken = jwtUtils.signAccessToken(user, ip);
     const refreshToken = await RefreshTokenService.generate(user, ip, device);
     return {
