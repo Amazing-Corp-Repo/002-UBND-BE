@@ -109,6 +109,7 @@ model nguoi_dung {
   linh_vuc_phan_anh_linh_vuc_phan_anh_nguoi_taoTonguoi_dung                        linh_vuc_phan_anh[]          @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung")
   mau_don_mau_don_nguoi_cap_nhatTonguoi_dung                                       mau_don[]                    @relation("mau_don_nguoi_cap_nhatTonguoi_dung")
   mau_don_mau_don_nguoi_taoTonguoi_dung                                            mau_don[]                    @relation("mau_don_nguoi_taoTonguoi_dung")
+  notifications                                                                    notifications[]
   otp                                                                              otp[]
   phan_anh_phan_anh_nguoi_cap_nhatTonguoi_dung                                     phan_anh[]                   @relation("phan_anh_nguoi_cap_nhatTonguoi_dung")
   phan_anh_phan_anh_nguoi_taoTonguoi_dung                                          phan_anh[]                   @relation("phan_anh_nguoi_taoTonguoi_dung")
@@ -457,4 +458,17 @@ model video_uploads {
   final_hls_url   String?   @db.VarChar(500)
   created_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   updated_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+}
+
+model notifications {
+  id          String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  user_id     String?     @db.Uuid
+  title       String?
+  body        String?
+  target_type String?     @db.VarChar(50)
+  target_id   String?     @db.Uuid
+  is_read     Boolean?    @default(false)
+  read_at     DateTime?   @db.Timestamp(6)
+  created_at  DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung  nguoi_dung? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_user")
 }
