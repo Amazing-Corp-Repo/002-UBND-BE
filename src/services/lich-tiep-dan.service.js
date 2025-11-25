@@ -21,11 +21,18 @@ const excelDateToJSDate = (serial) => {
 
 const sortedLichTiepDan = (data) => {
   return data.sort((a, b) => {
+    const dateA = new Date(a.ngay_tiep_dan);
+    const dateB = new Date(b.ngay_tiep_dan);
+
+    if (dateA.getTime() !== dateB.getTime()) {
+      return dateA - dateB;
+    }
+
     const startA = a.thoi_gian.split(" - ")[0].trim();
     const startB = b.thoi_gian.split(" - ")[0].trim();
 
-    const toMinutes = (t) => {
-      const [h, m] = t.split(":").map(Number);
+    const toMinutes = (timeStr) => {
+      const [h, m] = timeStr.split(":").map(Number);
       return h * 60 + m;
     };
 
