@@ -5,26 +5,6 @@ import {
 } from "../constants/permission.constant.js";
 
 const PermissionRepository = {
-  async getAllPermissions(search) {
-    let where = {
-      ...(search
-        ? {
-            OR: [
-              { description: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    };
-    return await prisma.permissions.findMany({
-      orderBy: { code: "asc" },
-      select: {
-        id: true,
-        code: true,
-        description: true,
-      },
-      where,
-    });
-  },
 
   async syncPermissions() {
     const permissionList = Object.values(PERMISSION);
@@ -35,7 +15,7 @@ const PermissionRepository = {
     }));
 
     const exist = await prisma.permissions.findMany({
-      select: { id: true, code: true, description: true },
+      select: { code: true, description: true },
     });
 
     const existMap = new Map(exist.map((p) => [p.code, p]));
@@ -56,12 +36,11 @@ const PermissionRepository = {
 
     const toDelete = exist
       .filter((p) => !keepCodes.has(p.code))
-      .map((p) => p.id);
-
+      .map((p) => p.code);
 
     if (toDelete.length > 0) {
       await prisma.permissions.deleteMany({
-        where: { id: { in: toDelete } },
+        where: { code: { in: toDelete } },
       });
     }
 
@@ -88,9 +67,9 @@ const PermissionRepository = {
     };
   },
 
-  async findManyByIds(ids) {
+  async findManyByCode(codes) {
     return await prisma.permissions.findMany({
-      where: { id: { in: ids } },
+      where: { code: { in: codes } },
     });
   },
 

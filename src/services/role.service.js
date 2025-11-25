@@ -5,8 +5,8 @@ import { createPagination } from "../utils/response.util.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 
 const RoleService = {
-  async createRole(name, description, permissionIds, currentUser) {
-    if (!permissionIds || permissionIds.length === 0) {
+  async createRole(name, description, permissionCodes, currentUser) {
+    if (!permissionCodes || permissionCodes.length === 0) {
       throw new BaseError(400, "Phải có ít nhất một quyền cho vai trò");
     }
     name = capitalizeWords(name);
@@ -15,17 +15,17 @@ const RoleService = {
       throw new BaseError(400, "Role đã tồn tại");
     }
 
-    const existingPermissions = await PermissionRepository.findManyByIds(
-      permissionIds
+    const existingPermissions = await PermissionRepository.findManyByCode(
+      permissionCodes
     );
-    if (existingPermissions.length !== permissionIds.length) {
+    if (existingPermissions.length !== permissionCodes.length) {
       throw new BaseError(400, "Một số quyền không tồn tại");
     }
 
     const roleData = {
       name,
       description,
-      permissionIds,
+      permissionCodes,
       nguoi_tao: currentUser,
     };
 
@@ -73,8 +73,8 @@ const RoleService = {
     return await RoleRepository.update(roleId, data);
   },
 
-  async update(roleId, name, description, permissionIds, currentUser) {
-    if (!permissionIds || permissionIds.length === 0) {
+  async update(roleId, name, description, permissionCodes, currentUser) {
+    if (!permissionCodes || permissionCodes.length === 0) {
       throw new BaseError(400, "Phải có ít nhất một quyền cho vai trò");
     }
     name = capitalizeWords(name);
@@ -89,10 +89,10 @@ const RoleService = {
     if (roleWithSameName && roleWithSameName.id !== roleId) {
       throw new BaseError(400, "Tên vai trò đã được sử dụng");
     }
-    const existingPermissions = await PermissionRepository.findManyByIds(
-      permissionIds
+    const existingPermissions = await PermissionRepository.findManyByCode(
+      permissionCodes
     );
-    if (existingPermissions.length !== permissionIds.length) {
+    if (existingPermissions.length !== permissionCodes.length) {
       throw new BaseError(400, "Một số quyền không tồn tại");
     }
     let data = {
@@ -104,7 +104,7 @@ const RoleService = {
     return await RoleRepository.updateAll(
       roleId,
       data,
-      permissionIds,
+      permissionCodes,
       currentUser
     );
   },

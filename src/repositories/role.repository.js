@@ -1,7 +1,7 @@
 import prisma from "../config/database.config.js";
 
 const RoleRepository = {
-  async createRole({ name, description, permissionIds, nguoi_tao }) {
+  async createRole({ name, description, permissionCodes = [], nguoi_tao }) {
     return await prisma.$transaction(async (tx) => {
       const role = await tx.roles.create({
         data: {
@@ -11,19 +11,19 @@ const RoleRepository = {
         },
       });
 
-      if (permissionIds && permissionIds.length > 0) {
+      if (permissionCodes.length > 0) {
         await tx.role_permissions.createMany({
-          data: permissionIds.map((permissionId) => ({
+          data: permissionCodes.map((code) => ({
             role_id: role.id,
-            permission_id: permissionId,
+            permission_code: code,
           })),
+          skipDuplicates: true,
         });
       }
 
       return role;
     });
   },
-
   async findRoleByName(name) {
     return await prisma.roles.findUnique({
       where: {
@@ -50,11 +50,11 @@ const RoleRepository = {
     });
   },
 
-  async addPermissionsToRole(roleId, permissionIds) {
+  async addPermissionsToRole(roleId, permissionCodes = []) {
     return prisma.role_permissions.createMany({
-      data: permissionIds.map((id) => ({
+      data: permissionCodes.map((code) => ({
         role_id: roleId,
-        permission_id: id,
+        permission_code: code,
       })),
       skipDuplicates: true,
     });
@@ -62,18 +62,19 @@ const RoleRepository = {
 
   async syncAdminRolePermissions(adminRoleId) {
     const allPermissions = await prisma.permissions.findMany({
-      select: { id: true },
+      select: { code: true },
     });
+
+    const allCodes = allPermissions.map((p) => p.code);
 
     const existing = await prisma.role_permissions.findMany({
       where: { role_id: adminRoleId },
-      select: { permission_id: true },
+      select: { permission_code: true },
     });
 
-    const existingIds = new Set(existing.map((e) => e.permission_id));
-    const missing = allPermissions
-      .filter((p) => !existingIds.has(p.id))
-      .map((p) => p.id);
+    const existingCodes = new Set(existing.map((e) => e.permission_code));
+
+    const missing = allCodes.filter((code) => !existingCodes.has(code));
 
     if (missing.length > 0) {
       await this.addPermissionsToRole(adminRoleId, missing);
@@ -142,12 +143,14 @@ const RoleRepository = {
       where: { id: roleId },
       include: {
         role_permissions: {
-          include: { permissions: {
-            select: {
-              id: true,
-              description: true,
+          include: {
+            permissions: {
+              select: {
+                code: true,
+                description: true,
+              },
             },
-          } },
+          },
         },
       },
     });
@@ -182,26 +185,29 @@ const RoleRepository = {
     });
   },
 
-  async updateAll(roleId, data, permissionIds) {
+  async updateAll(roleId, data, permissionCodes = []) {
     return await prisma.$transaction(async (tx) => {
       const role = await tx.roles.update({
         where: { id: roleId },
         data,
       });
+
       await tx.role_permissions.deleteMany({
         where: { role_id: roleId },
       });
-      if (permissionIds && permissionIds.length > 0) {
+
+      if (permissionCodes.length > 0) {
         await tx.role_permissions.createMany({
-          data: permissionIds.map((permissionId) => ({
+          data: permissionCodes.map((code) => ({
             role_id: roleId,
-            permission_id: permissionId,
+            permission_code: code,
           })),
+          skipDuplicates: true,
         });
       }
       return role;
     });
-  }
+  },
 };
 
 export default RoleRepository;

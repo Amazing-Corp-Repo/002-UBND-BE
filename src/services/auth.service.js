@@ -222,7 +222,7 @@ const AuthService = {
 };
 
 const buildUserPermission = async (userId) => {
-  return PermissionRepository.getPermissionsByUserId(userId);
+  return await PermissionRepository.getPermissionsByUserId(userId);
 };
 
 

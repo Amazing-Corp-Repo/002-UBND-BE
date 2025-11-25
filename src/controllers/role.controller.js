@@ -4,12 +4,12 @@ import { successResponse } from "../utils/response.util.js";
 
 const RoleController = {
   async createRole(req, res) {
-    const { name, description, permissionIds } = req.body;
+    const { name, description, permissionCodes } = req.body;
     const currentUser = req.payload.userId;
     const role = await RoleService.createRole(
       name,
       description,
-      permissionIds,
+      permissionCodes,
       currentUser
     );
     return successResponse(res, role, "Tạo vai trò thành công");
@@ -56,13 +56,13 @@ const RoleController = {
 
   async update(req, res) {
     let { roleId } = req.params;
-    let { name, description, permissionIds } = req.body;
+    let { name, description, permissionCodes } = req.body;
     const currentUser = req.payload.userId;
     const role = await RoleService.update(
       roleId,
       name,
       description,
-      permissionIds,
+      permissionCodes,
       currentUser
     );
     return successResponse(res, role, "Cập nhật vai trò thành công");
