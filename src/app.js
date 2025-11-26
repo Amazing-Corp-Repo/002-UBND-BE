@@ -114,12 +114,3 @@ import("../src/cron/cleanup-cron.js")
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
-
-import VideoUploadRepository from "./repositories/video-upload.repository.js";
-
-const testCleanup = async () => {
-  const videosToCleanup = await VideoUploadRepository.getVideoToCleanup();
-  console.log("Videos to cleanup:", videosToCleanup);
-};
-
-testCleanup();

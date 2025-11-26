@@ -50,7 +50,15 @@ const VideoUploadRepository = {
         },
         created_at: { lt: cutoffDate },
       },
-      select: { id: true },
+      select: { 
+        id: true,
+        video_upload_chunks: {
+          select: {
+            id: true,
+            path: true,
+          }
+        } 
+      },
     });
   },
 };

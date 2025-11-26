@@ -441,23 +441,25 @@ model phan_anh {
 }
 
 model video_upload_chunks {
-  id          String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  upload_id   String    @db.VarChar(255)
-  chunk_index Int
-  path        String?   @db.VarChar(500)
-  size_mb     Decimal?  @db.Decimal(10, 2)
-  created_at  DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  id            String        @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  upload_id     String        @db.VarChar(255)
+  chunk_index   Int
+  path          String?       @db.VarChar(500)
+  size_mb       Decimal?      @db.Decimal(10, 2)
+  created_at    DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  video_uploads video_uploads @relation(fields: [upload_id], references: [id], onDelete: Cascade, map: "fk_video_upload_chunks_upload_id")
 }
 
 model video_uploads {
-  id              String    @id @db.VarChar(255)
-  total_chunks    Int?
-  received_chunks Int?      @default(0)
-  status          String?   @default("UPLOADING") @db.VarChar(20)
-  final_mp4_url   String?   @db.VarChar(500)
-  final_hls_url   String?   @db.VarChar(500)
-  created_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  updated_at      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  id                  String                @id @db.VarChar(255)
+  total_chunks        Int?
+  received_chunks     Int?                  @default(0)
+  status              String?               @default("UPLOADING") @db.VarChar(20)
+  final_mp4_url       String?               @db.VarChar(500)
+  final_hls_url       String?               @db.VarChar(500)
+  created_at          DateTime?             @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  updated_at          DateTime?             @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  video_upload_chunks video_upload_chunks[]
 }
 
 model notifications {
