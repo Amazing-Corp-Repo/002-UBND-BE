@@ -13,6 +13,8 @@ import LinhVucPhanAnhSwagger from './linh-vuc-phan-anh.swagger.js';
 import PhanAnhSwagger from './phan-anh.swagger.js';
 import VideoUploadSwagger from './video-upload.swagger.js';
 import ReportSwagger from './report.swagger.js';
+import RoleSwagger from './role.swagger.js';
+import PermissionSwagger from './permission.swagger.js';
 import NotificationSwagger from './notification.swagger.js';
 
 const swaggerDocument = {
@@ -45,6 +47,8 @@ const swaggerDocument = {
         ...PhanAnhSwagger,
         ...VideoUploadSwagger,
         ...ReportSwagger,
+        ...RoleSwagger,
+        ...PermissionSwagger,
         ...NotificationSwagger,
     },
 

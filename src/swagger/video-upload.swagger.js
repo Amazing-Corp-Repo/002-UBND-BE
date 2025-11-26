@@ -5,6 +5,7 @@ const VideoUploadSwagger = {
         post: {
             tags: ['VideoUpload'],
             description: 'API for uploading videos related to citizen feedback',
+            security: [ { bearerAuth: [] } ],
             requestBody: {
                 required: true,
                 content: {
