@@ -26,24 +26,3 @@ export function clientInfo(req, res, next) {
 
     next();
 }
-
-export const auditForPhanAnh = async (req, res, next) => {
-    const xfwd = await req.headers["x-forwarded-for"];
-    let ip =
-        (xfwd && xfwd.split(",")[0].trim()) ||
-        req.ip ||
-        req.connection?.remoteAddress ||
-        req.socket?.remoteAddress ||
-        "unknown";
-    let localAddress = req.socket.localAddress
-
-    const normalize = (ip) => (ip === "::1" || ip === "::ffff:127.0.0.1" ? "127.0.0.1" : ip);
-
-    ip = normalize(ip);
-    localAddress = normalize(localAddress);
-    req.remoteAddress = ip;
-    req.localAddress = localAddress;
-    req.requestAt = new Date().toISOString();
-
-    next();
-}

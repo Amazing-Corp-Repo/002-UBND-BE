@@ -28,11 +28,11 @@ export const CreateAccountRequest = Joi.object({
         }),
     vaiTro: Joi.string()
         .trim()
-        .valid('ADMIN', 'NHAN_VIEN', 'LANH_DAO', 'PHO_CHU_TICH', 'CHU_TICH', 'KHU_PHO')
         .required()
+        .uuid()
         .messages({
-            'any.only': 'Vai trò không hợp lệ',
             'any.required': 'Vai trò là bắt buộc',
+            'string.uuid': 'Vai trò không hợp lệ',
         }),
 });
 
@@ -76,11 +76,11 @@ export const UpdateProfileByAdminRequest = Joi.object({
         }),
     vaiTro: Joi.string()
         .trim()
-        .valid('ADMIN', 'NHAN_VIEN', 'LANH_DAO', 'PHO_CHU_TICH', 'CHU_TICH', 'KHU_PHO')
+        .uuid()
         .required()
         .messages({
-            'any.only': 'Vai trò không hợp lệ',
             'any.required': 'Vai trò là bắt buộc',
+            'string.uuid': 'Vai trò không hợp lệ',
         }),
     tenDangNhap: Joi.string()
         .trim()
@@ -122,5 +122,33 @@ export const UpdateFcmTokenRequest = Joi.object({
         .required()
         .messages({
             'any.required': 'FCM token là bắt buộc',
+        }),
+});
+
+export const CreateAdminAccountRequest = Joi.object({
+    tenDangNhap: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'Tên đăng nhập không được để trống',
+        }),
+    email: Joi.string()
+        .trim()
+        .email()
+        .max(100)
+        .required()
+        .messages({
+            'string.email': 'Email không hợp lệ',
+            'any.required': 'Email là bắt buộc',
+            'string.max': 'Email không được vượt quá 100 ký tự',
+        }),
+    matKhau: Joi.string()
+        .trim()
+        .min(6)
+        .max(255)
+        .required()
+        .messages({
+            'string.min': 'Mật khẩu phải có ít nhất 6 ký tự',
+            'any.required': 'Mật khẩu là bắt buộc',
         }),
 });
