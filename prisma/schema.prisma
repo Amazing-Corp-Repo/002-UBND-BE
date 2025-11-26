@@ -236,7 +236,7 @@ model notifications {
   title       String?
   body        String?
   target_type String?     @db.VarChar(50)
-  target_id   String?     @db.Uuid
+  target_id   String?     @db.VarChar(255)
   is_read     Boolean?    @default(false)
   read_at     DateTime?   @db.Timestamp(6)
   created_at  DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)

@@ -59,6 +59,26 @@ const NotificationSwagger = {
       responses: {},
     },
   },
+
+  "/api/notifications/{id}/mark-read": {
+    post: {
+      tags: ["Notifications"],
+      summary: "Đánh dấu thông báo đã đọc theo ID",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          description: "ID của thông báo cần đánh dấu đã đọc",
+          required: true,
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      responses: {},
+    },
+  },
 };
 
 export default NotificationSwagger;

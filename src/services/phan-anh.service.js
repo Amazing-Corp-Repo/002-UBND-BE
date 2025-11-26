@@ -239,7 +239,7 @@ const PhanAnhService = {
       await NotificationRepository.createNotification({
         user_id: phanAnh.nguoi_tao,
         body: `Phản ánh của bạn với mã ${phanAnh.ma_phan_anh} đã được cập nhật trạng thái: ${trangThai}`,
-        target_id: phanAnh.id,
+        target_id: phanAnh.ma_phan_anh,
         target_type: "PHAN_ANH",
         title: "Cập nhật trạng thái phản ánh",
       });
