@@ -3,6 +3,7 @@ import UserRepository from "../repositories/user.repository.js";
 import { hash } from "../utils/bcrypt.util.js";
 import PermissionRepository from "../repositories/permission.repository.js";
 import RoleRepository from "../repositories/role.repository.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 
 export const CreateAccountSeed = async () => {
   const username = env.ADMIN_USERNAME;
@@ -13,16 +14,16 @@ export const CreateAccountSeed = async () => {
 
   let adminRole = await RoleRepository.findRoleByName("ADMIN");
   if (!adminRole) {
-    const permission = await PermissionRepository.getAllPermissions();
+    const allPermissionCodes = Object.values(PERMISSION);
     adminRole = await RoleRepository.createRole({
       name: "ADMIN",
       description: "Quyền quản trị hệ thống",
-      permissionIds: permission.map((perm) => perm.id),
+      permissionCodes: allPermissionCodes,
+      nguoi_tao: null,
     });
   } else {
     await RoleRepository.syncAdminRolePermissions(adminRole.id);
   }
-
 
   let user = await UserRepository.findUserByUsername(username);
 
@@ -34,10 +35,8 @@ export const CreateAccountSeed = async () => {
     });
   }
 
-  const existAdminUserRole = await RoleRepository.findUserRolesByUserIdAndRoleId(
-    user.id,
-    adminRole.id
-  );
+  const existAdminUserRole =
+    await RoleRepository.findUserRolesByUserIdAndRoleId(user.id, adminRole.id);
 
   if (!existAdminUserRole) {
     await RoleRepository.assignRoleToUser(user.id, adminRole.id);

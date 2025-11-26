@@ -5,6 +5,17 @@ const RoleSwagger = {
     get: {
       tags: ["Role"],
       summary: "Lấy tất cả role",
+      parameters: [
+        {
+          name: "search",
+          in: "query",
+          description: "Từ khóa tìm kiếm trong tên vai trò",
+          required: false,
+          schema: {
+            type: "string",
+          },
+        },
+      ],
       description:
         "API trả về danh sách tất cả các role hiện có trong hệ thống.",
       responses: {},
