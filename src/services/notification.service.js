@@ -22,6 +22,14 @@ const NotificationService = {
     }
     return await NotificationRepository.deleteNotificationById(notificationId);
   },
+
+  async markNotificationAsRead(notificationId, userId) {
+    const notification = await NotificationRepository.getNotificationById(notificationId);
+    if (!notification || notification.user_id !== userId) {
+      throw new BaseError(403, "Bạn không có quyền đánh dấu thông báo này là đã đọc");
+    }
+    return await NotificationRepository.markNotificationAsRead(notificationId);
+  },
 };
 
 export default NotificationService;

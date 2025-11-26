@@ -46,6 +46,16 @@ const NotificationRepository = {
     return await prisma.notifications.delete({
       where: { id: notificationId },
     });
+  },
+
+  async markNotificationAsRead(notificationId) {
+    return await prisma.notifications.update({
+      where: { id: notificationId },
+      data: {
+        is_read: true,
+        read_at: new Date().toISOString(),
+      },
+    });
   }
 };
 
