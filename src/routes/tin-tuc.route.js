@@ -10,9 +10,9 @@ import {
   UpdateTinTucRequest,
   UploadFileDinhKemRequest,
 } from "../validators/tin-tuc.validator.js";
-import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
-import { PERMISSION } from "../constants/permission.constant.js";
+import { audit_logs } from '../middlewares/audit-logs.middleware.js';
+import { AUDIT_LOGS } from '../constants/audit-logs-action.constant.js';
+import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 
 const tinTucRouter = express.Router();
 
@@ -44,7 +44,7 @@ tinTucRouter.put(
     maxSizeMB: 10,
     allowed_types: ["image/png", "image/jpeg"],
   }),
-  audit_logs(AUDIT_LOGS.UPDATE, "tin_tuc"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TTIN_UPDATE),
   TinTucController.updateTinTuc
 );
 
@@ -56,7 +56,7 @@ tinTucRouter.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.TTIN_DELETE]),
-  audit_logs(AUDIT_LOGS.DELETE, "tin_tuc"),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.TTIN_DELETE),
   TinTucController.delete
 );
 
@@ -80,7 +80,7 @@ tinTucRouter.put(
   authenticate,
   authorize([PERMISSION.TTIN_UPDATE_STATUS]),
   validate(UpdateStatusTinTucRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "tin_tuc"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TTIN_UPDATE_STATUS),
   TinTucController.updateStatus
 );
 

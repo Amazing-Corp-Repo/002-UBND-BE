@@ -1,10 +1,10 @@
 import prisma from "../config/database.config.js";
 
 const ReportRepository = {
-    async getBaoCaoTongHop({ from, to }) {
-        // Có truyền khoảng thời gian
-        if (from && to) {
-            const [result] = await prisma.$queryRaw`
+  async getBaoCaoTongHop({ from, to }) {
+    // Có truyền khoảng thời gian
+    if (from && to) {
+      const [result] = await prisma.$queryRaw`
             WITH filtered AS (
                 SELECT *
                 FROM view_bao_cao_tong_hop
@@ -38,11 +38,11 @@ const ReportRepository = {
             FROM summary, top5;
         `;
 
-            return result;
-        }
+      return result;
+    }
 
-        // Không truyền from/to -> lấy toàn bộ
-        const [result] = await prisma.$queryRaw`
+    // Không truyền from/to -> lấy toàn bộ
+    const [result] = await prisma.$queryRaw`
         WITH base AS (
             SELECT * FROM view_bao_cao_tong_hop
         ),
@@ -73,20 +73,20 @@ const ReportRepository = {
         SELECT summary.*, top5.top_5_linh_vuc
         FROM summary, top5;
     `;
-        return result;
-    },
+    return result;
+  },
 
-    async getBaoCaoLinhVuc({ from, to }) {
-        return await prisma.$queryRaw`
+  async getBaoCaoLinhVuc({ from, to }) {
+    return await prisma.$queryRaw`
         SELECT *
         FROM view_bao_cao_linh_vuc_raw
         WHERE (${from}::timestamp IS NULL OR thoi_gian_tao >= ${from}::timestamp)
         AND (${to}::timestamp IS NULL OR thoi_gian_tao <= ${to}::timestamp)
     `;
-    },
+  },
 
-    async getBaoCaoTrangThai({ from, to }) {
-        return prisma.$queryRaw`
+  async getBaoCaoTrangThai({ from, to }) {
+    return prisma.$queryRaw`
         WITH latest_status AS (
             SELECT DISTINCT ON (id_phan_anh)
                 id_phan_anh,
@@ -106,7 +106,7 @@ const ReportRepository = {
             (${from}::timestamp IS NULL OR pa.thoi_gian_tao >= ${from})
         AND (${to}::timestamp IS NULL OR pa.thoi_gian_tao <= ${to});
     `;
-    },
+  }
 };
 
 export default ReportRepository;

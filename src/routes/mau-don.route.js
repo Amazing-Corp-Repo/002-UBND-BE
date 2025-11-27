@@ -10,8 +10,8 @@ import {
   UpdateStatusMauDonRequest,
 } from "../validators/mau-don.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
-import { PERMISSION } from "../constants/permission.constant.js";
+import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
+import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 
 const mauDonRouter = express.Router();
 
@@ -31,7 +31,7 @@ mauDonRouter.post(
       "application/msword",
     ],
   }),
-  audit_logs(AUDIT_LOGS.CREATE, "mau_don"),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.MD_CREATE),
   MauDonController.createMauDon
 );
 
@@ -51,7 +51,7 @@ mauDonRouter.put(
       "application/msword",
     ],
   }),
-  audit_logs(AUDIT_LOGS.UPDATE, "mau_don"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.MD_UPDATE),
   MauDonController.updateMauDon
 );
 
@@ -61,7 +61,7 @@ mauDonRouter.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.MD_DELETE]),
-  audit_logs(AUDIT_LOGS.DELETE, "mau_don"),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.MD_DELETE),
   MauDonController.deleteMauDon
 );
 
@@ -70,7 +70,7 @@ mauDonRouter.put(
   authenticate,
   authorize([PERMISSION.MD_UPDATE_STATUS]),
   validate(UpdateStatusMauDonRequest),
-  audit_logs(AUDIT_LOGS.DELETE, "mau_don"),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.MD_UPDATE_STATUS),
   MauDonController.updateStatusMauDon
 );
 
