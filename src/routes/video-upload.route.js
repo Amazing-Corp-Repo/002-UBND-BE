@@ -1,7 +1,7 @@
 import express from "express";
 import VideoUploadController from "../controllers/video-upload.controller.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
+import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import UPLOAD_TYPE from "../constants/upload.constant.js";
 import { createUploader } from "../middlewares/upload.middleware.js";
 import validate from "../middlewares/validate.middleware.js";

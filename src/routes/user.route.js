@@ -14,8 +14,8 @@ import {
   UpdateStatusByAdminRequest,
 } from "../validators/user.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
-import { PERMISSION } from "../constants/permission.constant.js";
+import { AUDIT_LOGS, AUDIT_LOG_ACTIONS } from "../constants/audit-logs-action.constant.js";
+import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 
 const userRoute = express.Router();
 
@@ -28,7 +28,7 @@ userRoute.post(
   authenticate,
   authorize([PERMISSION.ND_CREATE]),
   validate(CreateAccountRequest),
-  audit_logs(AUDIT_LOGS.CREATE, "nguoi_dung"),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.ND_CREATE),
   UserController.createAccount
 );
 
@@ -36,7 +36,7 @@ userRoute.put(
   "",
   authenticate,
   validate(UpdateProfileRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "nguoi_dung"),
+  audit_logs(AUDIT_LOGS.UPDATE, AUDIT_LOG_ACTIONS.UPDATE_PROFILE),
   UserController.updateProfile
 );
 
@@ -45,7 +45,7 @@ userRoute.put(
   authenticate,
   authorize([PERMISSION.ND_UPDATE]),
   validate(UpdateProfileByAdminRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "nguoi_dung"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.ND_UPDATE),
   UserController.updateProfileByAdmin
 );
 userRoute.put(
@@ -53,7 +53,7 @@ userRoute.put(
   authenticate,
   authorize([PERMISSION.ND_UPDATE_STATUS]),
   validate(UpdateStatusByAdminRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "nguoi_dung"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.ND_UPDATE_STATUS),
   UserController.updateStatusByAdmin
 );
 
@@ -61,14 +61,14 @@ userRoute.delete(
   "/:userId",
   authenticate,
   authorize([PERMISSION.ND_DELETE]),
-  audit_logs(AUDIT_LOGS.DELETE, "nguoi_dung"),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.ND_DELETE),
   UserController.deleteUser
 );
 
 userRoute.put(
   "/fcm-token",
   authenticate,
-  audit_logs(AUDIT_LOGS.UPDATE, "nguoi_dung"),
+  audit_logs(AUDIT_LOGS.UPDATE, AUDIT_LOG_ACTIONS.UPDATE_PROFILE),
   UserController.updateFcmToken
 );
 

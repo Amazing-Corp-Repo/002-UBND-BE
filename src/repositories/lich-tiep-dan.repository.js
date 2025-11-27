@@ -192,8 +192,6 @@ const LichTiepDanRepository = {
       },
     });
   },
-  
-}
-
+};
 
 export default LichTiepDanRepository;

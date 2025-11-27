@@ -394,85 +394,104 @@ const PhanAnhRepository = {
       }
     });
 
-    const startDateUTC = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() - 6, // 6 ngày trước + hôm nay = 7 ngày
-        0,
-        0,
-        0,
-        0
-      )
-    );
+    // const startDateUTC = new Date(
+    //   Date.UTC(
+    //     now.getUTCFullYear(),
+    //     now.getUTCMonth(),
+    //     now.getUTCDate() - 6, // 6 ngày trước + hôm nay = 7 ngày
+    //     0,
+    //     0,
+    //     0,
+    //     0
+    //   )
+    // );
 
-    const endDateUTC = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        23,
-        59,
-        59,
-        999
-      )
-    );
+    // const endDateUTC = new Date(
+    //   Date.UTC(
+    //     now.getUTCFullYear(),
+    //     now.getUTCMonth(),
+    //     now.getUTCDate(),
+    //     23,
+    //     59,
+    //     59,
+    //     999
+    //   )
+    // );
 
-    const xuHuong = await prisma.$queryRaw`
-        WITH pa_day AS (
-            SELECT
-                DATE(thoi_gian_tao) AS day,
-                COUNT(*) AS tong
-            FROM phan_anh
-            WHERE thoi_gian_tao >= ${startDateUTC}
-              AND thoi_gian_tao <= ${endDateUTC}
-            GROUP BY DATE(thoi_gian_tao)
-        ),
-        latest_status AS (
-            SELECT
-                ls.id_phan_anh,
-                ls.ten,
-                ls.thoi_gian_tao,
-                ROW_NUMBER() OVER (
-                    PARTITION BY ls.id_phan_anh
-                    ORDER BY ls.thoi_gian_tao DESC
-                ) AS rn
-            FROM lich_su_trang_thai ls
-            WHERE ls.thoi_gian_tao >= ${startDateUTC}
-              AND ls.thoi_gian_tao <= ${endDateUTC}
-        ),
-        da_giai_quyet_day AS (
-            SELECT
-                DATE(thoi_gian_tao) AS day,
-                COUNT(*) AS da_giai_quyet
-            FROM latest_status
-            WHERE rn = 1 AND ten = 'Đã giải quyết'
-            GROUP BY DATE(thoi_gian_tao)
-        )
-        SELECT 
-            d.day,
-            COALESCE(p.tong, 0) AS tong_phan_anh,
-            COALESCE(g.da_giai_quyet, 0) AS da_giai_quyet
-        FROM generate_series(
-            ${startDateUTC}::date,
-            ${endDateUTC}::date,
-            INTERVAL '1 day'
-        ) AS d(day)
-        LEFT JOIN pa_day p ON p.day = d.day
-        LEFT JOIN da_giai_quyet_day g ON g.day = d.day
-        ORDER BY d.day;
-    `;
+    // const xuHuong = await prisma.$queryRaw`
+    //     WITH pa_day AS (
+    //         SELECT
+    //             DATE(thoi_gian_tao) AS day,
+    //             COUNT(*) AS tong
+    //         FROM phan_anh
+    //         WHERE thoi_gian_tao >= ${startDateUTC}
+    //           AND thoi_gian_tao <= ${endDateUTC}
+    //         GROUP BY DATE(thoi_gian_tao)
+    //     ),
+    //     latest_status AS (
+    //         SELECT
+    //             ls.id_phan_anh,
+    //             ls.ten,
+    //             ls.thoi_gian_tao,
+    //             ROW_NUMBER() OVER (
+    //                 PARTITION BY ls.id_phan_anh
+    //                 ORDER BY ls.thoi_gian_tao DESC
+    //             ) AS rn
+    //         FROM lich_su_trang_thai ls
+    //         WHERE ls.thoi_gian_tao >= ${startDateUTC}
+    //           AND ls.thoi_gian_tao <= ${endDateUTC}
+    //     ),
+    //     da_giai_quyet_day AS (
+    //         SELECT
+    //             DATE(thoi_gian_tao) AS day,
+    //             COUNT(*) AS da_giai_quyet
+    //         FROM latest_status
+    //         WHERE rn = 1 AND ten = 'Đã giải quyết'
+    //         GROUP BY DATE(thoi_gian_tao)
+    //     )
+    //     SELECT
+    //         d.day,
+    //         COALESCE(p.tong, 0) AS tong_phan_anh,
+    //         COALESCE(g.da_giai_quyet, 0) AS da_giai_quyet
+    //     FROM generate_series(
+    //         ${startDateUTC}::date,
+    //         ${endDateUTC}::date,
+    //         INTERVAL '1 day'
+    //     ) AS d(day)
+    //     LEFT JOIN pa_day p ON p.day = d.day
+    //     LEFT JOIN da_giai_quyet_day g ON g.day = d.day
+    //     ORDER BY d.day;
+    // `;
 
-    const xuHuongPhanAnh = xuHuong.map((r) => ({
-      date: r.day,
-      tong_phan_anh: Number(r.tong_phan_anh),
-      da_giai_quyet: Number(r.da_giai_quyet),
-    }));
+    // const xuHuongPhanAnh = xuHuong.map((r) => ({
+    //   date: r.day,
+    //   tong_phan_anh: Number(r.tong_phan_anh),
+    //   da_giai_quyet: Number(r.da_giai_quyet),
+    // }));
+
+    let nhat_ky_hoat_dong = await prisma.audit_logs.findMany({
+      select: {
+        table_name: true,
+        nguoi_dung: {
+          select: {
+            id: true,
+            ho_va_ten: true,
+            email: true,
+          },
+        },
+        response_status_code: true,
+      },
+      orderBy: {
+        timestamp: "desc",
+      },
+      take: 5,
+    });
 
     return {
       tong_hom_nay: tongHomNay,
       thong_ke_theo_trang_thai: thongKeTheoTrangThai,
-      xu_huong_phan_anh: xuHuongPhanAnh,
+      // xu_huong_phan_anh: xuHuongPhanAnh,
+      nhat_ky_hoat_dong,
     };
   },
 
