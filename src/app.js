@@ -98,9 +98,6 @@ try {
   process.exit(1);
 }
 
-
-
-
 // Lightweight health endpoint for container/platform checks
 app.get("/health", (req, res) => {
   res.status(200).send("ok");
@@ -108,7 +105,14 @@ app.get("/health", (req, res) => {
 
 import("../src/workers/video.worker.js")
   .then(() => console.log("Worker started cùng server"))
-  .catch(err => console.error("Worker error:", err));
+  .catch((err) => console.error("Worker error:", err));
+
+import("./cron/cleanup-chunks.cron.js")
+  .then((m) => {
+    m.registerCleanupCron();
+    console.log("Cron job started cùng server");
+  })
+  .catch((err) => console.error("Cron error:", err));
 
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
