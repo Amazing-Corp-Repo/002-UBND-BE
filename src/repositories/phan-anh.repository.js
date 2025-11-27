@@ -480,6 +480,7 @@ const PhanAnhRepository = {
           },
         },
         response_status_code: true,
+        timestamp: true,
       },
       orderBy: {
         timestamp: "desc",
