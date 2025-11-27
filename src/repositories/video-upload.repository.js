@@ -61,6 +61,12 @@ const VideoUploadRepository = {
       },
     });
   },
+
+  async deleteChunk(id) {
+    return await prisma.video_upload_chunks.delete({
+      where: { id },
+    });
+  },
 };
 
 export default VideoUploadRepository;
