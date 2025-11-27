@@ -27,6 +27,8 @@ thuTucRoute.post(
   ThuTucController.createThuTuc
 );
 
+thuTucRoute.get("/:id", ThuTucController.getThuTucById);
+
 thuTucRoute.delete(
   "/:id",
   authenticate,
