@@ -8,8 +8,8 @@ import {
   UpdateLinhVucStatusRequest,
 } from "../validators/linh-vuc.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
-import { PERMISSION } from "../constants/permission.constant.js";
+import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
+import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 
 const linhVucRoute = express.Router();
 
@@ -22,7 +22,7 @@ linhVucRoute.post(
   authenticate,
   authorize([PERMISSION.LVTTHC_CREATE]),
   validate(CreateLinhVucRequest),
-  audit_logs(AUDIT_LOGS.CREATE, "linh_vuc"),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.LVTTHC_CREATE),
   LinhVucController.create
 );
 
@@ -31,7 +31,7 @@ linhVucRoute.put(
   authenticate,
   authorize([PERMISSION.LVTTHC_UPDATE]),
   validate(UpdateLinhVucRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "linh_vuc"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.LVTTHC_UPDATE),
   LinhVucController.update
 );
 
@@ -40,7 +40,7 @@ linhVucRoute.put(
   authenticate,
   authorize([PERMISSION.LVTTHC_UPDATE_STATUS]),
   validate(UpdateLinhVucStatusRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "linh_vuc"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.LVTTHC_UPDATE_STATUS),
   LinhVucController.updateStatus
 );
 
@@ -48,7 +48,7 @@ linhVucRoute.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.LVTTHC_DELETE]),
-  audit_logs(AUDIT_LOGS.DELETE, "linh_vuc"),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.LVTTHC_DELETE),
   LinhVucController.delete
 );
 

@@ -1,16 +1,16 @@
 import PhanAnhController from "../controllers/phan-anh.controller.js";
 import express from "express";
 import { createUploader } from "../middlewares/upload.middleware.js";
-import UPLOAD_TYPE from "../constants/upload.constant.js";
+import UPLOAD_TYPE from '../constants/upload.constant.js';
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
+import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
   CreatePhanAnhRequest,
   UpdatePhanAnhStatusRequest,
 } from "../validators/phan-anh.validator.js";
-import { PERMISSION } from "../constants/permission.constant.js";
+import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 
 const phanAnhRouter = express.Router();
 
@@ -26,7 +26,7 @@ phanAnhRouter.post(
     maxSizeMB: 5,
     allowed_types: ["image/jpeg", "image/png"],
   }),
-  audit_logs(AUDIT_LOGS.CREATE, "phan_anh"),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.PA_CREATE),
   PhanAnhController.createPhanAnh
 );
 
@@ -69,13 +69,13 @@ phanAnhRouter.get(
 );
 
 phanAnhRouter.get(
-    '/search-by-tieu-de',
-    PhanAnhController.searhByTieuDe
+  '/search-by-tieu-de',
+  PhanAnhController.searhByTieuDe
 );
 
 phanAnhRouter.get(
-    '/search-by-tieu-de',
-    PhanAnhController.searhByTieuDe
+  '/search-by-tieu-de',
+  PhanAnhController.searhByTieuDe
 );
 
 phanAnhRouter.get(
@@ -90,7 +90,7 @@ phanAnhRouter.put(
   authenticate,
   authorize([PERMISSION.PA_UPDATE_STATUS]),
   validate(UpdatePhanAnhStatusRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "phan_anh, lich_su_trang_thai"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh
 );
 

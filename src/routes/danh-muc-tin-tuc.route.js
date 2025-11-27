@@ -7,8 +7,8 @@ import {
 } from "../validators/danh-muc-tin-tuc.validator.js";
 import validate from "../middlewares/validate.middleware.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
-import { PERMISSION } from "../constants/permission.constant.js";
+import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
+import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 
 const danhMucTinTucRouter = express.Router();
 
@@ -17,7 +17,7 @@ danhMucTinTucRouter.post(
   authenticate,
   authorize([PERMISSION.DMTT_CREATE]),
   validate(CreateDanhMucTinTucRequest),
-  audit_logs(AUDIT_LOGS.CREATE, "danh_muc_tin_tuc"),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.DMTT_CREATE),
   DanhMucTinTucController.create
 );
 
@@ -26,7 +26,7 @@ danhMucTinTucRouter.put(
   authenticate,
   authorize([PERMISSION.DMTT_UPDATE]),
   validate(UpdateDanhMucTinTucRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "danh_muc_tin_tuc"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.DMTT_UPDATE),
   DanhMucTinTucController.update
 );
 
@@ -34,7 +34,7 @@ danhMucTinTucRouter.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.DMTT_DELETE]),
-  audit_logs(AUDIT_LOGS.DELETE, "danh_muc_tin_tuc"),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.DMTT_DELETE),
   DanhMucTinTucController.delete
 );
 
@@ -42,7 +42,7 @@ danhMucTinTucRouter.put(
   "/update-status/:id",
   authenticate,
   authorize([PERMISSION.DMTT_UPDATE_STATUS]),
-  audit_logs(AUDIT_LOGS.UPDATE, "danh_muc_tin_tuc"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.DMTT_UPDATE_STATUS),
   DanhMucTinTucController.updateStatus
 );
 

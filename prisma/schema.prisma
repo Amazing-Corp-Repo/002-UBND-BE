@@ -8,20 +8,21 @@ datasource db {
 }
 
 model audit_logs {
-  id                   String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  local_address        String?   @db.Inet
-  remote_address       String?   @db.Inet
-  table_name           String?   @db.VarChar(255)
-  action               String?   @db.VarChar(255)
-  performed_by         String?   @db.Uuid
-  username             String?   @db.VarChar(100)
-  request_received_at  DateTime? @db.Timestamp(6)
-  response_sent_at     DateTime? @db.Timestamp(6)
+  id                   String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  local_address        String?     @db.Inet
+  remote_address       String?     @db.Inet
+  table_name           String?     @db.VarChar(255)
+  action               String?     @db.VarChar(255)
+  performed_by         String?     @db.Uuid
+  username             String?     @db.VarChar(100)
+  request_received_at  DateTime?   @db.Timestamp(6)
+  response_sent_at     DateTime?   @db.Timestamp(6)
   duration_ms          Int?
   response_status_code Int?
   request_body         Json?
   response_body        Json?
-  timestamp            DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  timestamp            DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung           nguoi_dung? @relation(fields: [performed_by], references: [id], onUpdate: NoAction, map: "fk_audit_logs_performed_by")
 }
 
 model cach_thuc_thuc_hien {
@@ -189,6 +190,7 @@ model nguoi_dung {
   thoi_gian_tao                                                                    DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                                                               DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   fcm_token                                                                        String?                      @db.VarChar(255)
+  audit_logs                                                                       audit_logs[]
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung               cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung")
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung                    cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung")
   co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung                 co_so_dich_vu_cong[]         @relation("co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung")

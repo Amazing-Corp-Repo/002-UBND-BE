@@ -254,7 +254,18 @@ const PhanAnhService = {
   },
 
   async getTongQuanPhanAnh() {
-    return await PhanAnhRepository.getTongQuanPhanAnh();
+    let { nhat_ky_hoat_dong, tong_hom_nay, thong_ke_theo_trang_thai } =
+      await PhanAnhRepository.getTongQuanPhanAnh();
+
+    nhat_ky_hoat_dong = nhat_ky_hoat_dong.map((log) => {
+      log.is_success = log.response_status_code === 200;
+      log.hanh_dong = log.table_name;
+      log.table_name = undefined;
+      log.response_status_code = undefined;
+      return log;
+    });
+
+    return { tong_hom_nay, thong_ke_theo_trang_thai, nhat_ky_hoat_dong };
   },
 
   async getMucDoAndTrangThaiAndLinhVuc() {
