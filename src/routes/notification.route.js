@@ -16,6 +16,12 @@ notificationRouter.post(
   NotificationController.markAllNotificationsAsRead
 );
 
+notificationRouter.post(
+  "/:id/mark-read",
+  authenticate,
+  NotificationController.markNotificationAsRead
+);
+
 notificationRouter.delete(
   "/:id",
   authenticate,

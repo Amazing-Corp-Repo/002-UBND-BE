@@ -32,6 +32,13 @@ const NotificationController = {
     await NotificationService.deleteNotificationById(notificationId, userId);
     return successResponse(res, null, "Xóa thông báo thành công");
   },
+  
+  async markNotificationAsRead(req, res) {
+    const userId = req.payload.userId;
+    const notificationId = req.params.id;
+    await NotificationService.markNotificationAsRead(notificationId, userId);
+    return successResponse(res, null, "Đánh dấu thông báo đã đọc thành công");
+  },
 };
 
 export default NotificationController;
