@@ -56,6 +56,9 @@ const apiLimiter = rateLimit({
   max: RATE_LIMIT_MAX, // tối đa 100 request trong 1 phút
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    return req.path.includes('/video/upload');
+  },
   handler: (req, res, next) => {
     return errorResponse(
       res,

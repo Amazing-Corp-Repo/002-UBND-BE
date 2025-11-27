@@ -8,8 +8,8 @@ import {
   UpdateStatusCoSoDichVuCongRequest,
 } from "../validators/co-so-dich-vu-cong.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import AUDIT_LOGS from "../constants/audit-logs-action.constant.js";
-import { PERMISSION } from "../constants/permission.constant.js";
+import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
+import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 
 const coSoDichVuCongRoute = express.Router();
 
@@ -25,7 +25,7 @@ coSoDichVuCongRoute.post(
   authenticate,
   authorize([PERMISSION.CSV_CREATE]),
   validate(CreateCoSoDichVuCongRequest),
-  audit_logs(AUDIT_LOGS.CREATE, "co_so_dich_vu_cong"),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.CSV_CREATE),
   CoSoDichVuCongController.create
 );
 
@@ -34,7 +34,7 @@ coSoDichVuCongRoute.put(
   authenticate,
   authorize([PERMISSION.CSV_UPDATE_STATUS]),
   validate(UpdateStatusCoSoDichVuCongRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "co_so_dich_vu_cong"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.CSV_UPDATE_STATUS),
   CoSoDichVuCongController.updateStatus
 );
 
@@ -45,7 +45,7 @@ coSoDichVuCongRoute.put(
   authenticate,
   authorize([PERMISSION.CSV_UPDATE]),
   validate(UpdateCoSoDichVuCongRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "co_so_dich_vu_cong"),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.CSV_UPDATE),
   CoSoDichVuCongController.update
 );
 
@@ -53,7 +53,7 @@ coSoDichVuCongRoute.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.CSV_DELETE]),
-  audit_logs(AUDIT_LOGS.DELETE, "co_so_dich_vu_cong"),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.CSV_DELETE),
   CoSoDichVuCongController.delete
 );
 
