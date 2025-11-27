@@ -107,7 +107,7 @@ import("../src/workers/video.worker.js")
   .then(() => console.log("Worker started cùng server"))
   .catch((err) => console.error("Worker error:", err));
 
-import("../src/cron/cleanup-cron.js")
+import("./cron/cleanup-chunks.cron.js")
   .then((m) => {
     m.registerCleanupCron();
     console.log("Cron job started cùng server");

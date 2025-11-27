@@ -1,8 +1,10 @@
 import cron from "node-cron";
+import VideoUploadRepository from "../repositories/video-upload.repository.js";
 
 export const registerCleanupCron = () => {
   cron.schedule(
-    "0 17 * * *",
+    // "0 17 * * *",
+    "* * * * *",
     async () => {
       console.log("Cleanup cron chạy mỗi phút!");
       const videosToCleanup = await VideoUploadRepository.getVideoToCleanup();
