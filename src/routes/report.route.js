@@ -47,4 +47,11 @@ reportRouter.get(
   ReportController.exportgetBaoCaoTrangThaiExcel
 );
 
+reportRouter.get(
+  "/phan-anh",
+  authenticate,
+  authorize([PERMISSION.RPT_GET]),
+  ReportController.getReportPhanAnh
+);
+
 export default reportRouter;

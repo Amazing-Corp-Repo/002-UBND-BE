@@ -106,7 +106,106 @@ const ReportRepository = {
             (${from}::timestamp IS NULL OR pa.thoi_gian_tao >= ${from})
         AND (${to}::timestamp IS NULL OR pa.thoi_gian_tao <= ${to});
     `;
-  }
+  },
+
+  async getReportPhanAnh(from, to, idLinhVuc) {
+    let whereClause = {
+      ...(idLinhVuc && { id_linh_vuc_phan_anh: idLinhVuc }),
+    };
+    if (from && to) {
+      const startDateVN = `${from}T00:00:00`;
+      const endDateVN = `${to}T23:59:59.999`;
+
+      const startDateUTC = new Date(
+        new Date(startDateVN).getTime() - 7 * 60 * 60 * 1000
+      );
+      const endDateUTC = new Date(
+        new Date(endDateVN).getTime() - 7 * 60 * 60 * 1000
+      );
+
+      whereClause.thoi_gian_tao = {
+        gte: startDateUTC,
+        lte: endDateUTC,
+      };
+    }
+
+    let phanAnh = await prisma.phan_anh.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        linh_vuc_phan_anh: {
+          select: {
+            id: true,
+            ten: true,
+          },
+        },
+        thoi_gian_tao: true,
+        lich_su_trang_thai: {
+          orderBy: {
+            thoi_gian_tao: "desc",
+          },
+          take: 1,
+          select: {
+            ten: true,
+          },
+        },
+      },
+    });
+
+    let phanAnhMoiCapNhat = await prisma.phan_anh.findMany({
+      select: {
+        ma_phan_anh: true,
+        tieu_de: true,
+        linh_vuc_phan_anh: {
+          select: {
+            ten: true,
+          },
+        },
+        lich_su_trang_thai: {
+          orderBy: {
+            thoi_gian_tao: "desc",
+          },
+          take: 1,
+          select: {
+            ten: true,
+            thoi_gian_tao: true,
+          },
+        },
+        thoi_gian_cap_nhat: true,
+      },
+      orderBy: {
+        thoi_gian_cap_nhat: "desc",
+      },
+      take: 5,
+    });
+
+    let linh_vuc = await prisma.linh_vuc_phan_anh.findMany({
+      where: {
+        is_active: true,
+        is_delete: false,
+      },
+      select: {
+        id: true,
+        ten: true,
+        phan_anh: {
+          select: {
+            id: true,
+            lich_su_trang_thai: {
+              orderBy: {
+                thoi_gian_tao: "desc",
+              },
+              select: {
+                ten: true,
+                thoi_gian_tao: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return { phanAnh, phanAnhMoiCapNhat, linh_vuc };
+  },
 };
 
 export default ReportRepository;
