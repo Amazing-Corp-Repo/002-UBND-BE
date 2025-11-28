@@ -190,7 +190,6 @@ const UserService = {
     let vai_tro = user.user_roles
       ? user.user_roles.map((ur) => ur.roles.name).join(" ")
       : "";
-      console.log("Vai trò của người dùng:", vai_tro);
     if (vai_tro === "ADMIN") {
       throw new BaseError(
         400,
