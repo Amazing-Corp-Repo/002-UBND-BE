@@ -89,7 +89,6 @@ const UserRepository = {
         ? { is_active: isActive === "true" }
         : {}),
       is_delete: false,
-      ...(role !== undefined && role !== "" ? { vai_tro: role } : {}),
       ...(search
         ? {
             OR: [
@@ -108,6 +107,15 @@ const UserRepository = {
         where: {
           ...where,
           is_delete: false,
+          ...(role
+            ? {
+                user_roles: {
+                  some: {
+                    role_id: role,
+                  },
+                },
+              }
+            : {}),
         },
         orderBy: { ten_dang_nhap: "asc" },
         include: {

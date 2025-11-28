@@ -174,7 +174,12 @@ const RoleRepository = {
 
   async countUserWithRole(roleId) {
     return prisma.user_roles.count({
-      where: { role_id: roleId },
+      where: { 
+        role_id: roleId,
+        nguoi_dung: {
+          is_delete: false,
+        }
+      },
     });
   },
 
