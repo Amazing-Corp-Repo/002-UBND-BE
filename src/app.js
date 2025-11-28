@@ -12,7 +12,8 @@ import http from "http";
 import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
-import "./utils/logger.util.js";
+import ReportService from "./services/report.service.js";
+// import "./utils/logger.util.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -57,7 +58,7 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    return req.path.includes('/video/upload');
+    return req.path.includes("/video/upload");
   },
   handler: (req, res, next) => {
     return errorResponse(
@@ -69,7 +70,7 @@ const apiLimiter = rateLimit({
 });
 
 app.use(PREFIX_API, apiLimiter, rootRouter);
-CreateAccountSeed();
+// CreateAccountSeed();
 app.use(errorHandler);
 
 app.use(
@@ -117,3 +118,4 @@ import("./cron/cleanup-chunks.cron.js")
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
+
