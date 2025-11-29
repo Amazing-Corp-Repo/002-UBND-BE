@@ -444,14 +444,29 @@ const ReportService = {
     let linh_vuc = {};
     for (let thuTuc of linhVuc) {
       for (const item of thuTuc.thu_tuc_hanh_chinh_linh_vuc) {
-        if (!linh_vuc[item.linh_vuc.ten_linh_vuc]) {
-          linh_vuc[item.linh_vuc.ten_linh_vuc] = 0;
+        const ten = item.linh_vuc.ten_linh_vuc;
+
+        if (!linh_vuc[ten]) {
+          linh_vuc[ten] = { count: 0 };
         }
-        linh_vuc[item.linh_vuc.ten_linh_vuc]++;
+
+        linh_vuc[ten].count++;
       }
     }
 
-    return { linh_vuc, totalThuTuc, totalThuTucCoMauDon, totalThuTucKhongCoMauDon: totalThuTuc - totalThuTucCoMauDon };
+    for (const key in linh_vuc) {
+      linh_vuc[key].percent = (
+        (linh_vuc[key].count / totalThuTuc) *
+        100
+      ).toFixed(2);
+    }
+
+    return {
+      thu_tuc_linh_vuc: linh_vuc,
+      tong_thu_tuc: totalThuTuc,
+      thu_tuc_co_mau_don: totalThuTucCoMauDon,
+      thu_tuc_khong_mau_don: totalThuTuc - totalThuTucCoMauDon,
+    };
   },
 };
 
