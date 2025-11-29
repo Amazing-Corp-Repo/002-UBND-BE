@@ -389,7 +389,7 @@ const ReportService = {
         );
 
         if (isResolved) {
-          linh_vuc_1[key.ten].da_xu_ly++; 
+          linh_vuc_1[key.ten].da_xu_ly++;
 
           const start = p.lich_su_trang_thai.find(
             (status) => status.ten === PHAN_ANH_STATUS.DA_TIEP_NHAN
@@ -435,6 +435,23 @@ const ReportService = {
       phan_anh_moi_cap_nhat,
       chi_tiet_theo_linh_vuc: linh_vuc_1,
     };
+  },
+
+  async getReportThuTuc(from, to) {
+    let { linhVuc, totalThuTuc, totalThuTucCoMauDon } =
+      await ReportRepository.getReportThuTuc(from, to);
+
+    let linh_vuc = {};
+    for (let thuTuc of linhVuc) {
+      for (const item of thuTuc.thu_tuc_hanh_chinh_linh_vuc) {
+        if (!linh_vuc[item.linh_vuc.ten_linh_vuc]) {
+          linh_vuc[item.linh_vuc.ten_linh_vuc] = 0;
+        }
+        linh_vuc[item.linh_vuc.ten_linh_vuc]++;
+      }
+    }
+
+    return { linh_vuc, totalThuTuc, totalThuTucCoMauDon, totalThuTucKhongCoMauDon: totalThuTuc - totalThuTucCoMauDon };
   },
 };
 

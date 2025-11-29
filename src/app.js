@@ -12,7 +12,6 @@ import http from "http";
 import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
-import ReportService from "./services/report.service.js";
 import "./utils/logger.util.js";
 
 const app = express();
@@ -118,4 +117,3 @@ import("./cron/cleanup-chunks.cron.js")
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
-
