@@ -69,7 +69,7 @@ const apiLimiter = rateLimit({
 });
 
 app.use(PREFIX_API, apiLimiter, rootRouter);
-// CreateAccountSeed();
+CreateAccountSeed();
 app.use(errorHandler);
 
 app.use(
