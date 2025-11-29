@@ -206,6 +206,56 @@ const ReportRepository = {
 
     return { phanAnh, phanAnhMoiCapNhat, linh_vuc };
   },
+
+  async getReportThuTuc(from, to) {
+    let whereClause = {};
+    if (from && to) {
+      const startDateVN = `${from}T00:00:00`;
+      const endDateVN = `${to}T23:59:59.999`;
+
+      const startDateUTC = new Date(
+        new Date(startDateVN).getTime() - 7 * 60 * 60 * 1000
+      );
+      const endDateUTC = new Date(
+        new Date(endDateVN).getTime() - 7 * 60 * 60 * 1000
+      );
+
+      whereClause.thoi_gian_tao = {
+        gte: startDateUTC,
+        lte: endDateUTC,
+      };
+    }
+
+    let linhVuc = await prisma.thu_tuc_hanh_chinh.findMany({
+      where: whereClause,
+      select: {
+        thu_tuc_hanh_chinh_linh_vuc: {
+          select: {
+            linh_vuc: {
+              select: {
+                id: true,
+                ten_linh_vuc: true,
+              },
+            },
+          },
+        },
+        id: true,
+      },
+    });
+
+    const [totalThuTuc, totalThuTucCoMauDon] = await Promise.all([
+      prisma.thu_tuc_hanh_chinh.count(),
+      prisma.thu_tuc_hanh_chinh.count({
+        where: {
+          thu_tuc_hanh_chinh_mau_don: {
+            some: {},
+          },
+        },
+      }),
+    ]);
+
+    return { linhVuc, totalThuTuc, totalThuTucCoMauDon };
+  },
 };
 
 export default ReportRepository;

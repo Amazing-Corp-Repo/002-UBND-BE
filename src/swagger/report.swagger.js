@@ -228,7 +228,39 @@ const ReportSwagger = {
             ],
             responses: {}
         }
-    }
+    },
+
+    '/api/report/thu-tuc': {
+        get: {
+            tags: ['Report'],
+            security: [{ bearerAuth: [] }],
+            summary: 'Lấy báo cáo thủ tục hành chính',
+            description: 'API trả về số lượng thủ tục hành chính theo lĩnh vực, bao gồm tổng số thủ tục, số thủ tục có mẫu đơn và không có mẫu đơn. Nếu truyền from/to thì lọc theo khoảng thời gian (giờ VN).',
+            parameters: [
+                {
+                    name: 'from',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        format: 'date',
+                    },
+                    description: 'Ngày bắt đầu (YYYY-MM-DD). Nếu không truyền: lấy tất cả.'
+                },
+                {
+                    name: 'to',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        format: 'date',
+                    },
+                    description: 'Ngày kết thúc (YYYY-MM-DD). Nếu không truyền: lấy tất cả.'
+                }
+            ],
+            responses: {}
+        }
+    },
 };
 
 export default ReportSwagger;

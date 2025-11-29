@@ -54,4 +54,11 @@ reportRouter.get(
   ReportController.getReportPhanAnh
 );
 
+reportRouter.get(
+  "/thu-tuc",
+  authenticate,
+  authorize([PERMISSION.RPT_GET]),
+  ReportController.getReportThuTuc
+);
+
 export default reportRouter;

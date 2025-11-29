@@ -51,7 +51,13 @@ const ReportController = {
         const { from, to, id_linh_vuc } = req.query;
         let data = await ReportService.getReportPhanAnh(from, to, id_linh_vuc,);
         return successResponse(res, data, "Lấy báo cáo phản ánh thành công");
-    }
+    },
+
+    async getReportThuTuc(req, res) {
+        const { from, to } = req.query;
+        let data = await ReportService.getReportThuTuc(from, to);
+        return successResponse(res, data, "Lấy báo cáo thủ tục thành công");
+    },
 };
 
 export default ReportController;
