@@ -422,6 +422,7 @@ model tin_tuc {
   danh_muc_tin_tuc                              danh_muc_tin_tuc?  @relation(fields: [id_danh_muc], references: [id], onUpdate: NoAction, map: "fk_tin_tuc_danh_muc")
   nguoi_dung_tin_tuc_nguoi_cap_nhatTonguoi_dung nguoi_dung?        @relation("tin_tuc_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_tin_tuc_nguoi_cap_nhat")
   nguoi_dung_tin_tuc_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("tin_tuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_tin_tuc_nguoi_tao")
+  tin_tuc_view                                  tin_tuc_view[]
 }
 
 model trinh_tu_thuc_hien_thu_tuc {
@@ -518,4 +519,17 @@ model video_uploads {
   created_at          DateTime?             @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   updated_at          DateTime?             @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   video_upload_chunks video_upload_chunks[]
+}
+
+model tin_tuc_view {
+  id            String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_tin_tuc    String    @db.Uuid
+  ip_address    String?   @db.VarChar(100)
+  device_info   String?
+  view_count    Int?      @default(1)
+  last_view_at  DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_tao DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  tin_tuc       tin_tuc   @relation(fields: [id_tin_tuc], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tin_tuc_view__tin_tuc")
+
+  @@unique([id_tin_tuc, ip_address, device_info])
 }
