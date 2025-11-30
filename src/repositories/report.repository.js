@@ -1,7 +1,6 @@
 import prisma from "../config/database.config.js";
 
 const ReportRepository = {
-
   async getReportPhanAnh(from, to, idLinhVuc) {
     let whereClause = {
       ...(idLinhVuc && { id_linh_vuc_phan_anh: idLinhVuc }),
@@ -93,7 +92,9 @@ const ReportRepository = {
       },
     });
 
-    let totalPhanAnh = await prisma.phan_anh.count({ where: whereClauseNotIncludeLinhVuc });
+    let totalPhanAnh = await prisma.phan_anh.count({
+      where: whereClauseNotIncludeLinhVuc,
+    });
 
     return { phanAnh, phanAnhMoiCapNhat, linh_vuc, totalPhanAnh };
   },
@@ -141,7 +142,6 @@ const ReportRepository = {
   async getReportTinTuc(from, to) {
     let whereClause = {};
     if (from && to) {
-
       whereClause.thoi_gian_tao = {
         gte: from,
         lte: to,
@@ -154,6 +154,7 @@ const ReportRepository = {
         is_noti: true,
         id: true,
         thoi_gian_tao: true,
+        _count: { select: { tin_tuc_view: true } },
       },
       orderBy: { thoi_gian_tao: "asc" },
     });

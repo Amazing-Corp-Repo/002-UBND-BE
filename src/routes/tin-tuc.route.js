@@ -13,6 +13,7 @@ import {
 import { audit_logs } from '../middlewares/audit-logs.middleware.js';
 import { AUDIT_LOGS } from '../constants/audit-logs-action.constant.js';
 import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
+import { clientInfo } from "../middlewares/client-info.middleware.js";
 
 const tinTucRouter = express.Router();
 
@@ -46,6 +47,12 @@ tinTucRouter.put(
   }),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TTIN_UPDATE),
   TinTucController.updateTinTuc
+);
+
+tinTucRouter.get(
+  "/view/:id",
+  clientInfo,
+  TinTucController.getTinTucToView
 );
 
 tinTucRouter.get("/:id", TinTucController.getDetails);
