@@ -8,331 +8,24 @@ import {
 } from "../utils/string.util.js";
 import FileService from "./file.service.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
+import { BaseError } from "../utils/base-error.util.js";
 
 const ReportService = {
-  async getBaoCaoTongHop(from, to) {
-    from = from ? toUTCFromVN_Start(from) : null;
-    to = to ? toUTCFromVN_End(to) : null;
-    const report = await ReportRepository.getBaoCaoTongHop({ from, to });
-
-    if (!report) return null;
-    report.thoi_gian_xu_ly_tb = Number(
-      Number(report.thoi_gian_xu_ly_tb || 0).toFixed(2)
-    );
-    return convertBigInt(report);
-  },
-
-  async exportBaoCaoTongHopExcel(from, to) {
-    const data = await this.getBaoCaoTongHop(from, to);
-
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Báo cáo tổng hợp");
-
-    let rowIndex = 1;
-
-    FileService.excelStyles.title(sheet, rowIndex++, "BÁO CÁO TỔNG HỢP");
-
-    rowIndex++; // spacing
-
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Thông tin báo cáo"
-    );
-
-    const info = [
-      ["Ngày xuất báo cáo", nowVN()],
-      ["Từ ngày", from || "Tất cả"],
-      ["Đến ngày", to || "Tất cả"],
-    ];
-
-    info.forEach((row) => FileService.excelStyles.tableRow(sheet.addRow(row)));
-
-    rowIndex = sheet.lastRow.number + 2;
-
-    // ===== SECTION: TỔNG QUAN =====
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Tổng quan phản ánh"
-    );
-
-    const overview = [
-      ["Tổng số phản ánh", data.tong_phan_anh],
-      ["Chưa xử lý", data.chua_xu_ly],
-      ["Đã xử lý", data.da_xu_ly],
-      ["Thời gian xử lý TB (ngày)", data.thoi_gian_xu_ly_tb],
-    ];
-
-    overview.forEach((r) => FileService.excelStyles.tableRow(sheet.addRow(r)));
-
-    rowIndex = sheet.lastRow.number + 2;
-
-    // ===== SECTION: TOP 5 LĨNH VỰC =====
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Top 5 lĩnh vực được quan tâm"
-    );
-
-    const header = [
-      "Lĩnh vực",
-      ...data.top_5_linh_vuc.map((x) => x.ten_linh_vuc),
-    ];
-    const values = [
-      "Số lượng phản ánh",
-      ...data.top_5_linh_vuc.map((x) => x.so_luong),
-    ];
-
-    let hRow = sheet.addRow(header);
-    FileService.excelStyles.tableHeader(hRow);
-
-    let vRow = sheet.addRow(values);
-    FileService.excelStyles.tableRow(vRow);
-
-    FileService.excelStyles.autoFit(sheet);
-
-    return workbook.xlsx.writeBuffer();
-  },
-
-  async getBaoCaoLinhVuc(fromRaw, toRaw) {
+  async getReportPhanAnh(fromRaw, toRaw, idLinhVuc) {
     const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
     const to = toRaw ? toUTCFromVN_End(toRaw) : null;
 
-    const rows = await ReportRepository.getBaoCaoLinhVuc({ from, to });
-
-    if (!rows.length) return [];
-
-    const map = {};
-
-    for (const r of rows) {
-      const key = r.ten_linh_vuc || "Khác";
-
-      if (!map[key]) {
-        map[key] = {
-          ten_linh_vuc: key,
-          tong_phan_anh: 0,
-          da_xu_ly: 0,
-          chua_xu_ly: 0,
-          thoi_gian_xu_ly_tb_ngay_arr: [],
-        };
-      }
-
-      map[key].tong_phan_anh++;
-
-      if (r.is_da_xu_ly) {
-        map[key].da_xu_ly++;
-        if (r.ngay_xu_ly !== null)
-          map[key].thoi_gian_xu_ly_tb_ngay_arr.push(Number(r.ngay_xu_ly));
-      } else {
-        map[key].chua_xu_ly++;
-      }
-    }
-
-    const result = Object.values(map);
-
-    const total = result.reduce((sum, e) => sum + e.tong_phan_anh, 0);
-
-    for (const e of result) {
-      const avg = e.thoi_gian_xu_ly_tb_ngay_arr.length
-        ? e.thoi_gian_xu_ly_tb_ngay_arr.reduce((a, b) => a + b) /
-          e.thoi_gian_xu_ly_tb_ngay_arr.length
-        : 0;
-
-      e.thoi_gian_xu_ly_tb_ngay = Number(avg.toFixed(2));
-      e.ty_le = total
-        ? Number(((e.tong_phan_anh / total) * 100).toFixed(2))
-        : 0;
-
-      delete e.thoi_gian_xu_ly_tb_ngay_arr;
-    }
-
-    return result;
-  },
-
-  async exportBaoCaoLinhVucExcel(from, to) {
-    const data = await this.getBaoCaoLinhVuc(from, to);
-
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Báo cáo theo lĩnh vực");
-
-    let rowIndex = 1;
-
-    FileService.excelStyles.title(sheet, rowIndex++, "BÁO CÁO THEO LĨNH VỰC");
-
-    rowIndex++;
-
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Thông tin báo cáo"
-    );
-
-    const info = [
-      ["Ngày xuất báo cáo", nowVN()],
-      ["Từ ngày", from || "Tất cả"],
-      ["Đến ngày", to || "Tất cả"],
-    ];
-
-    info.forEach((row) => FileService.excelStyles.tableRow(sheet.addRow(row)));
-
-    rowIndex = sheet.lastRow.number + 2;
-
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Phản ánh theo lĩnh vực"
-    );
-
-    const header1 = ["Lĩnh vực", ...data.map((x) => x.ten_linh_vuc)];
-    FileService.excelStyles.tableHeader(sheet.addRow(header1));
-
-    const table1 = [
-      ["Tổng số phản ánh", ...data.map((x) => x.tong_phan_anh)],
-      ["Đã xử lý", ...data.map((x) => x.da_xu_ly)],
-      ["Chưa xử lý", ...data.map((x) => x.chua_xu_ly)],
-      [
-        "Thời gian xử lý TB (ngày)",
-        ...data.map((x) => x.thoi_gian_xu_ly_tb_ngay),
-      ],
-    ];
-
-    table1.forEach((r) => FileService.excelStyles.tableRow(sheet.addRow(r)));
-
-    rowIndex = sheet.lastRow.number + 2;
-
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Tỷ lệ phản ánh theo lĩnh vực"
-    );
-
-    const sumTotal = data.reduce((total, x) => total + x.tong_phan_anh, 0);
-
-    const header2 = [
-      "Lĩnh vực",
-      ...data.map((x) => x.ten_linh_vuc),
-      "Tổng cộng",
-    ];
-    FileService.excelStyles.tableHeader(sheet.addRow(header2));
-
-    FileService.excelStyles.tableRow(
-      sheet.addRow([
-        "Số lượng phản ánh",
-        ...data.map((x) => x.tong_phan_anh),
-        sumTotal,
-      ])
-    );
-
-    FileService.excelStyles.tableRow(
-      sheet.addRow(["Tỷ lệ (%)", ...data.map((x) => x.ty_le + "%"), "100%"])
-    );
-
-    FileService.excelStyles.autoFit(sheet);
-
-    return workbook.xlsx.writeBuffer();
-  },
-
-  async getBaoCaoTrangThai(fromRaw, toRaw) {
-    const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
-    const to = toRaw ? toUTCFromVN_End(toRaw) : null;
-
-    const rows = await ReportRepository.getBaoCaoTrangThai({ from, to });
-    if (!rows.length) return [];
-
-    const map = {};
-
-    for (const r of rows) {
-      const key = r.trang_thai || "Không xác định";
-
-      if (!map[key]) {
-        map[key] = {
-          trang_thai: key,
-          so_luong: 0,
-        };
-      }
-
-      map[key].so_luong++;
-    }
-
-    const result = Object.values(map);
-
-    const total = result.reduce((s, e) => s + e.so_luong, 0);
-
-    for (const e of result) {
-      e.ty_le = total ? Number(((e.so_luong / total) * 100).toFixed(2)) : 0;
-    }
-
-    result.push({
-      trang_thai: "Tổng cộng",
-      so_luong: total,
-      ty_le: 100,
-    });
-
-    return result;
-  },
-
-  async exportBaoCaoTrangThaiExcel(fromRaw, toRaw) {
-    const data = await this.getBaoCaoTrangThai(fromRaw, toRaw);
-
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Báo cáo trạng thái");
-
-    let rowIndex = 1;
-
-    FileService.excelStyles.title(sheet, rowIndex++, "BÁO CÁO THEO TRẠNG THÁI");
-
-    rowIndex++;
-
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Thông tin báo cáo"
-    );
-
-    const info = [
-      ["Ngày xuất báo cáo", nowVN()],
-      ["Từ ngày", fromRaw || "Tất cả"],
-      ["Đến ngày", toRaw || "Tất cả"],
-    ];
-    info.forEach((row) => FileService.excelStyles.tableRow(sheet.addRow(row)));
-
-    rowIndex = sheet.lastRow.number + 2;
-
-    FileService.excelStyles.sectionTitle(
-      sheet,
-      rowIndex++,
-      "Số lượng phản ánh theo trạng thái"
-    );
-
-    const header = ["Trạng thái", "Số lượng", "Tỷ lệ (%)"];
-    FileService.excelStyles.tableHeader(sheet.addRow(header));
-
-    data.forEach((item) => {
-      FileService.excelStyles.tableRow(
-        sheet.addRow([item.trang_thai, item.so_luong, item.ty_le])
-      );
-    });
-
-    FileService.excelStyles.autoFit(sheet);
-
-    return workbook.xlsx.writeBuffer();
-  },
-
-  async getReportPhanAnh(from, to, idLinhVuc) {
-    let { phanAnh, phanAnhMoiCapNhat, linh_vuc } =
+    let { phanAnh, phanAnhMoiCapNhat, linh_vuc, totalPhanAnh } =
       await ReportRepository.getReportPhanAnh(from, to, idLinhVuc);
 
     const xu_huong = {};
     const trang_thai = {};
-    const totalCount = phanAnh.length;
+    const totalCount = totalPhanAnh;
     const linh_vuc_phan_anh = {};
 
     for (let pa of phanAnh) {
-      const utcDate = new Date(pa.thoi_gian_tao);
-      const vnDate = utcDate.toLocaleDateString("vi-VN", {
-        timeZone: "Asia/Ho_Chi_Minh",
-      });
+      const vnDate = formatDate(pa.thoi_gian_tao);
 
       const isProcessed =
         pa.lich_su_trang_thai[0]?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
@@ -419,6 +112,7 @@ const ReportService = {
       ).toFixed(2);
 
       delete linh_vuc_1[key.ten].totalProcessingTime;
+      console.log(linh_vuc_1[key.ten].tong_phan_anh, totalCount);
       linh_vuc_1[key.ten].ty_le = Number(
         (linh_vuc_1[key.ten].tong_phan_anh / totalCount) * 100
       ).toFixed(2);
@@ -437,7 +131,10 @@ const ReportService = {
     };
   },
 
-  async getReportThuTuc(from, to) {
+  async getReportThuTuc(fromRaw, toRaw) {
+    const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
+    const to = toRaw ? toUTCFromVN_End(toRaw) : null;
+
     let { linhVuc, totalThuTuc, totalThuTucCoMauDon } =
       await ReportRepository.getReportThuTuc(from, to);
 
@@ -468,6 +165,353 @@ const ReportService = {
       thu_tuc_khong_mau_don: totalThuTuc - totalThuTucCoMauDon,
     };
   },
+
+  async getReportTinTuc(fromRaw, toRaw) {
+    const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
+    const to = toRaw ? toUTCFromVN_End(toRaw) : null;
+
+    let { tinTucLists } = await ReportRepository.getReportTinTuc(from, to);
+    const result = {};
+    for (const item of tinTucLists) {
+      const day = formatDate(item.thoi_gian_tao);
+
+      if (!result[day]) {
+        result[day] = {
+          tong: 0,
+          da_xuat_ban: 0,
+          ban_nhap: 0,
+          luot_xem: 0,
+        };
+      }
+
+      result[day].tong++;
+
+      if (item.is_noti === true) {
+        result[day].da_xuat_ban++;
+      } else {
+        result[day].ban_nhap++;
+      }
+    }
+    return result;
+  },
+
+  async exportReportPhanAnh(fromRaw, toRaw, idLinhVuc) {
+    const data = await this.getReportPhanAnh(fromRaw, toRaw, idLinhVuc);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Báo cáo");
+
+    let rowIndex = 2;
+
+    // HEADER “Thông tin báo cáo”
+
+    sheet.mergeCells(rowIndex, 1, rowIndex + 3, 1);
+    const box = sheet.getCell(rowIndex, 1);
+    box.value = "Thông tin báo cáo";
+    box.font = { bold: true, size: 13 };
+    box.alignment = { horizontal: "center", vertical: "middle" };
+
+    sheet.getCell(rowIndex, 2).value = "Ngày xuất báo cáo";
+    sheet.getCell(rowIndex, 2).font = { bold: true };
+    sheet.getCell(rowIndex, 3).value = nowVN().split(" ")[0];
+
+    sheet.getCell(rowIndex + 1, 2).value = "Khoảng thời gian lọc";
+    sheet.getCell(rowIndex + 1, 2).font = { bold: true };
+
+    sheet.getCell(rowIndex + 2, 2).value = "Từ ngày";
+    sheet.getCell(rowIndex + 2, 2).font = { italic: true };
+    sheet.getCell(rowIndex + 2, 3).value = fromRaw || "Lấy tất cả";
+
+    sheet.getCell(rowIndex + 3, 2).value = "Đến ngày";
+    sheet.getCell(rowIndex + 3, 2).font = { italic: true };
+    sheet.getCell(rowIndex + 3, 3).value = toRaw || "Lấy tất cả";
+
+    if (idLinhVuc) {
+      let tenLinhVuc = await LinhVucPhanAnhRepository.getTenLinhVucById(
+        idLinhVuc
+      );
+      if (!tenLinhVuc) {
+        throw new BaseError(400, "Lĩnh vực phản ánh không tồn tại");
+      }
+      sheet.getCell(rowIndex + 4, 2).value = "Lĩnh vực lọc";
+      sheet.getCell(rowIndex + 4, 3).value = tenLinhVuc;
+    }
+
+    for (let r = rowIndex; r <= rowIndex + 4; r++) {
+      for (let c = 1; c <= 3; c++) {
+        sheet.getCell(r, c).border = {
+          top: { style: "thin" },
+          bottom: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+        };
+      }
+    }
+
+    rowIndex += 6;
+
+    // PHÂN BỔ THEO TRẠNG THÁI
+
+    FileService.excelStyles.sectionTitle(
+      sheet,
+      rowIndex,
+      "Phân bố theo trạng thái"
+    );
+    rowIndex++;
+
+    const headerRow = sheet.addRow(["Trạng thái", "Số lượng"]);
+    FileService.excelStyles.tableHeader(headerRow);
+
+    Object.entries(data.phan_bo_theo_trang_thai).forEach(([name, count]) => {
+      const row = sheet.addRow([name, count]);
+      FileService.excelStyles.tableRow(row);
+    });
+
+    rowIndex = sheet.lastRow.number + 2;
+
+    // ============================
+    // XU HƯỚNG PHẢN ÁNH
+    // ============================
+
+    FileService.excelStyles.sectionTitle(sheet, rowIndex, "Xu hướng phản ánh");
+    rowIndex++;
+
+    const trendHeader = sheet.addRow([
+      "Ngày",
+      "Tổng phản ánh",
+      "Đã xử lý",
+      "Chưa xử lý",
+    ]);
+    FileService.excelStyles.tableHeader(trendHeader);
+
+    // Sort ngày ASC để biểu đồ rõ ràng
+    const dates = Object.keys(data.xu_huong).sort();
+
+    dates.forEach((day) => {
+      const item = data.xu_huong[day];
+
+      const row = sheet.addRow([
+        day,
+        item.tong,
+        item.da_xu_ly,
+        item.tong - item.da_xu_ly, // chưa xử lý
+      ]);
+
+      FileService.excelStyles.tableRow(row);
+    });
+
+    rowIndex = sheet.lastRow.number + 2;
+
+    // CHI TIẾT THEO LĨNH VỰC
+
+    FileService.excelStyles.sectionTitle(
+      sheet,
+      rowIndex,
+      "Chi tiết theo lĩnh vực"
+    );
+    rowIndex++;
+
+    const lvHeader = sheet.addRow([
+      "Lĩnh vực",
+      "Tổng",
+      "Đã xử lý",
+      "Chưa xử lý",
+      "Tỉ lệ (%)",
+      "Thời gian TB (giờ)",
+    ]);
+    FileService.excelStyles.tableHeader(lvHeader);
+
+    for (let [lv, obj] of Object.entries(data.chi_tiet_theo_linh_vuc)) {
+      const row = sheet.addRow([
+        lv,
+        obj.tong_phan_anh,
+        obj.da_xu_ly,
+        obj.chua_xu_ly,
+        obj.ty_le,
+        obj.thoi_gian_xu_ly_tb,
+      ]);
+      FileService.excelStyles.tableRow(row);
+    }
+
+    sheet.columns = [
+      { width: 40 },
+      { width: 15 },
+      { width: 15 },
+      { width: 15 },
+      { width: 12 },
+      { width: 22 },
+    ];
+
+    return await workbook.xlsx.writeBuffer();
+  },
+
+  async exportReportThuTuc(fromRaw, toRaw) {
+    const data = await this.getReportThuTuc(fromRaw, toRaw);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Báo cáo thủ tục");
+
+    let rowIndex = 2;
+
+    // ============================
+    // HEADER “Thông tin báo cáo”
+    // ============================
+    sheet.mergeCells(rowIndex, 1, rowIndex + 3, 1);
+    const box = sheet.getCell(rowIndex, 1);
+    box.value = "Thông tin báo cáo";
+    box.font = { bold: true, size: 13 };
+    box.alignment = { horizontal: "center", vertical: "middle" };
+
+    sheet.getCell(rowIndex, 2).value = "Ngày xuất báo cáo";
+    sheet.getCell(rowIndex, 2).font = { bold: true };
+    sheet.getCell(rowIndex, 3).value = nowVN().split(" ")[0];
+
+    sheet.getCell(rowIndex + 1, 2).value = "Khoảng thời gian lọc";
+    sheet.getCell(rowIndex + 1, 2).font = { bold: true };
+
+    sheet.getCell(rowIndex + 2, 2).value = "Từ ngày";
+    sheet.getCell(rowIndex + 2, 3).value = fromRaw || "Lấy tất cả";
+
+    sheet.getCell(rowIndex + 3, 2).value = "Đến ngày";
+    sheet.getCell(rowIndex + 3, 3).value = toRaw || "Lấy tất cả";
+
+    // ============================
+    // EXTRA INFO CHO THỦ TỤC
+    // ============================
+    sheet.getCell(rowIndex + 4, 2).value = "Tổng thủ tục";
+    sheet.getCell(rowIndex + 4, 3).value = data.tong_thu_tuc;
+
+    sheet.getCell(rowIndex + 5, 2).value = "Thủ tục có mẫu đơn";
+    sheet.getCell(rowIndex + 5, 3).value = data.thu_tuc_co_mau_don;
+
+    sheet.getCell(rowIndex + 6, 2).value = "Thủ tục không mẫu đơn";
+    sheet.getCell(rowIndex + 6, 3).value = data.thu_tuc_khong_mau_don;
+
+    // border box
+    for (let r = rowIndex; r <= rowIndex + 6; r++) {
+      for (let c = 1; c <= 3; c++) {
+        sheet.getCell(r, c).border = {
+          top: { style: "thin" },
+          bottom: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+        };
+      }
+    }
+
+    rowIndex += 9;
+
+    // ============================
+    // BẢNG 1: THỦ TỤC THEO LĨNH VỰC
+    // ============================
+    FileService.excelStyles.sectionTitle(
+      sheet,
+      rowIndex,
+      "Thủ tục theo lĩnh vực"
+    );
+    rowIndex++;
+
+    const headerRow = sheet.addRow(["Lĩnh vực", "Số thủ tục", "Tỉ lệ (%)"]);
+    FileService.excelStyles.tableHeader(headerRow);
+
+    for (let [lv, obj] of Object.entries(data.thu_tuc_linh_vuc)) {
+      const row = sheet.addRow([lv, obj.count, obj.percent]);
+      FileService.excelStyles.tableRow(row);
+    }
+
+    sheet.columns = [{ width: 40 }, { width: 20 }, { width: 15 }];
+
+    return await workbook.xlsx.writeBuffer();
+  },
+
+  async exportReportTinTuc(fromRaw, toRaw) {
+    const data = await this.getReportTinTuc(fromRaw, toRaw);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Báo cáo tin tức");
+
+    let rowIndex = 2;
+
+    // ============================
+    // HEADER “Thông tin báo cáo”
+    // ============================
+    sheet.mergeCells(rowIndex, 1, rowIndex + 3, 1);
+    const box = sheet.getCell(rowIndex, 1);
+    box.value = "Thông tin báo cáo";
+    box.font = { bold: true, size: 13 };
+    box.alignment = { horizontal: "center", vertical: "middle" };
+
+    sheet.getCell(rowIndex, 2).value = "Ngày xuất báo cáo";
+    sheet.getCell(rowIndex, 2).font = { bold: true };
+    sheet.getCell(rowIndex, 3).value = nowVN().split(" ")[0];
+
+    sheet.getCell(rowIndex + 1, 2).value = "Khoảng thời gian lọc";
+    sheet.getCell(rowIndex + 1, 2).font = { bold: true };
+
+    sheet.getCell(rowIndex + 2, 2).value = "Từ ngày";
+    sheet.getCell(rowIndex + 2, 3).value = fromRaw || "Lấy tất cả";
+
+    sheet.getCell(rowIndex + 3, 2).value = "Đến ngày";
+    sheet.getCell(rowIndex + 3, 3).value = toRaw || "Lấy tất cả";
+
+    // border
+    for (let r = rowIndex; r <= rowIndex + 3; r++) {
+      for (let c = 1; c <= 3; c++) {
+        sheet.getCell(r, c).border = {
+          top: { style: "thin" },
+          bottom: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+        };
+      }
+    }
+
+    rowIndex += 6;
+
+    // ============================
+    // BẢNG THỐNG KÊ TIN TỨC
+    // ============================
+    FileService.excelStyles.sectionTitle(sheet, rowIndex, "Thống kê tin tức");
+    rowIndex++;
+
+    const headerRow = sheet.addRow([
+      "Ngày",
+      "Tổng tin",
+      "Đã xuất bản",
+      "Bản nháp",
+      "Lượt xem",
+    ]);
+    FileService.excelStyles.tableHeader(headerRow);
+
+    const sortedDates = Object.keys(data).sort();
+
+    sortedDates.forEach((day) => {
+      const item = data[day];
+      const row = sheet.addRow([
+        day,
+        item.tong,
+        item.da_xuat_ban,
+        item.ban_nhap,
+        item.luot_xem,
+      ]);
+      FileService.excelStyles.tableRow(row);
+    });
+
+    sheet.columns = [
+      { width: 15 }, // ngày
+      { width: 12 }, // tổng
+      { width: 15 }, // xuất bản
+      { width: 12 }, // bản nháp
+      { width: 12 }, // lượt xem
+    ];
+
+    return await workbook.xlsx.writeBuffer();
+  },
+};
+
+const formatDate = (date) => {
+  let toVN = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+  return toVN.toISOString().split("T")[0];
 };
 
 export default ReportService;
