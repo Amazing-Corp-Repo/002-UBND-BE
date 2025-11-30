@@ -4,6 +4,7 @@ const VIDEO_STATUS = {
     MERGING: "MERGING",
     DONE: "DONE",
     FAILED: "FAILED",
+    CLEANED_UP: "CLEANED_UP",
 };
 
 export default VIDEO_STATUS;

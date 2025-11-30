@@ -7,6 +7,7 @@ import OTP_TYPE from "../constants/otp.constants.js";
 import OTPService from "./otp.service.js";
 import UserSessionLogRepository from "../repositories/user-session-log.repository.js";
 import CaptchaRepository from "../repositories/http/captcha.repository.js";
+import PermissionRepository from "../repositories/permission.repository.js";
 
 const AuthService = {
   async login(tenDangNhap, matKhau, ip, device) {
@@ -35,7 +36,7 @@ const AuthService = {
       ip: ip,
       device: device,
     });
-
+    user.permissions = await buildUserPermission(user.id);
     const accessToken = jwtUtils.signAccessToken(user, ip);
     const refreshToken = await RefreshTokenService.generate(user, ip, device);
     return {
@@ -56,6 +57,7 @@ const AuthService = {
     }
 
     // Phát hành token mới
+    user.permissions = await buildUserPermission(user.id);
     const accessToken = jwtUtils.signAccessToken(user, ip);
     const newRefreshToken = await RefreshTokenService.rotate(
       refreshToken,
@@ -126,7 +128,7 @@ const AuthService = {
     }
 
     await RefreshTokenService.revokeAllForUser(user.id, ip);
-
+    user.permissions = await buildUserPermission(user.id);
     const accessToken = jwtUtils.signAccessToken(user, ip);
     const refreshToken = await RefreshTokenService.generate(user, ip, device);
     return {
@@ -158,7 +160,7 @@ const AuthService = {
     await UserRepository.updateUser(user.id, { mat_khau: hashedPassword });
 
     await RefreshTokenService.revokeAllForUser(user.id, ip);
-
+    user.permissions = await buildUserPermission(user.id);
     const accessToken = jwtUtils.signAccessToken(user, ip);
     const refreshToken = await RefreshTokenService.generate(user, ip, device);
     return {
@@ -218,5 +220,10 @@ const AuthService = {
     return this.login(tenDangNhap, matKhau, ip, device);
   },
 };
+
+const buildUserPermission = async (userId) => {
+  return await PermissionRepository.getPermissionsByUserId(userId);
+};
+
 
 export default AuthService;

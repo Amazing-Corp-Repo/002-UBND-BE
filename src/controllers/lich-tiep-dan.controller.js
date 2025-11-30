@@ -6,7 +6,7 @@ const LichTiepDanController = {
         const file = req.files;
         const currentUser = req.payload.userId;
         const data = await LichTiepDanService.handleImport(file, currentUser);
-        return successResponse(res, data, "Import lịch tiếp dân thành công");
+        return successResponse(res, null, data.message);
     },
 
     async getLichTiepDan(req, res) {

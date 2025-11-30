@@ -45,7 +45,19 @@ const ReportController = {
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         res.setHeader("Content-Disposition", "attachment; filename=bao-cao-trang-thai.xlsx");
         return res.send(excelBuffer);
-    }
+    },
+
+    async getReportPhanAnh(req, res) {
+        const { from, to, id_linh_vuc } = req.query;
+        let data = await ReportService.getReportPhanAnh(from, to, id_linh_vuc,);
+        return successResponse(res, data, "Lấy báo cáo phản ánh thành công");
+    },
+
+    async getReportThuTuc(req, res) {
+        const { from, to } = req.query;
+        let data = await ReportService.getReportThuTuc(from, to);
+        return successResponse(res, data, "Lấy báo cáo thủ tục thành công");
+    },
 };
 
 export default ReportController;

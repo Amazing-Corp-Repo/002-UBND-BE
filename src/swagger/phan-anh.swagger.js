@@ -5,6 +5,7 @@ const PhanAnhSwagger = {
         post: {
             tags: ['PhanAnh'],
             summary: 'Tạo phản ánh mới',
+            security: [{ bearerAuth: [] }],
             requestBody: {
                 content: {
                     'multipart/form-data': {
@@ -223,6 +224,24 @@ const PhanAnhSwagger = {
         get: {
             tags: ['PhanAnh'],
             summary: 'Lấy mức độ và trạng thái phản ánh',
+            responses: {},
+        },
+    },
+    '/api/phan-anh/search-by-tieu-de': {
+        get: {
+            tags: ['PhanAnh'],
+            summary: 'Tìm kiếm phản ánh theo tiêu đề',
+            parameters: [
+                {
+                    name: 'search',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                    },
+                    description: 'Chuỗi tìm kiếm trong tiêu đề phản ánh',
+                },
+            ],
             responses: {},
         },
     },
