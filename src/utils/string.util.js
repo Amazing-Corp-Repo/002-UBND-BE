@@ -72,17 +72,11 @@ export const parseStringToArray = (str) => {
 }
 
 export const nowVN = () => {
-    const utc = new Date().toISOString();
-    const date = new Date(utc);
-
-    // cộng 7 giờ để thành giờ VN
-    date.setHours(date.getHours() + 7);
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${year}-${month}-${day}`;
-}
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh"
+    });
+    return formatter.format(new Date());
+};
 
 export const toUTCFromVN_Start = (dateStr) => {
     if (!dateStr) return null;
