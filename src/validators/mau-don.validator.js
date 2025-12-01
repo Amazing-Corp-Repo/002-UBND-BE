@@ -3,10 +3,10 @@ import Joi from "joi";
 export const CreateMauDonRequest = Joi.object({
     tenMauDon: Joi.string()
         .trim()
-        .max(255)
+        .max(200)
         .required()
         .messages({
-            'string.max': 'Tên mẫu đơn không được vượt quá 255 ký tự',
+            'string.max': 'Tên mẫu đơn không được vượt quá 200 ký tự',
             'any.required': 'Tên mẫu đơn là bắt buộc',
         }),
     moTa: Joi.string()
@@ -18,21 +18,21 @@ export const CreateMauDonRequest = Joi.object({
         }),
     maMauDon: Joi.string()
         .trim()
-        .max(50)
+        .max(45)
         .optional()
         .allow(null, '')
         .messages({
-            'string.max': 'Mã mẫu đơn không được vượt quá 50 ký tự',
+            'string.max': 'Mã mẫu đơn không được vượt quá 45 ký tự',
         }),
 });
 
 export const UpdateMauDonRequest = Joi.object({
     tenMauDon: Joi.string()
         .trim()
-        .max(255)
+        .max(200)
         .required()
         .messages({
-            'string.max': 'Tên mẫu đơn không được vượt quá 255 ký tự',
+            'string.max': 'Tên mẫu đơn không được vượt quá 200 ký tự',
             'any.required': 'Tên mẫu đơn là bắt buộc',
         }),
     moTa: Joi.string()
@@ -44,11 +44,11 @@ export const UpdateMauDonRequest = Joi.object({
         }),
     maMauDon: Joi.string()
         .trim()
-        .max(50)
+        .max(45)
         .optional()
         .allow(null, '')
         .messages({
-            'string.max': 'Mã mẫu đơn không được vượt quá 50 ký tự',
+            'string.max': 'Mã mẫu đơn không được vượt quá 45 ký tự',
         }),
 });
 
