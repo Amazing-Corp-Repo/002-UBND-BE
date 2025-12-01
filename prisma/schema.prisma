@@ -60,6 +60,11 @@ model co_so_dich_vu_cong {
   nguoi_dung_co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_cap_nhat")
   nguoi_dung_co_so_dich_vu_cong_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("co_so_dich_vu_cong_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_dich_vu_cong_nguoi_tao")
   thu_tuc_hanh_chinh                                       thu_tuc_hanh_chinh[]
+
+  @@index([is_active], map: "idx_co_so_dich_vu_cong_is_active")
+  @@index([is_delete], map: "idx_co_so_dich_vu_cong_is_delete")
+  @@index([ten_co_so], map: "idx_co_so_dich_vu_cong_ten_co_so")
+  @@index([thoi_gian_tao], map: "idx_co_so_dich_vu_cong_thoi_gian_tao")
 }
 
 model danh_muc_tin_tuc {
@@ -75,6 +80,11 @@ model danh_muc_tin_tuc {
   nguoi_dung_danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung nguoi_dung? @relation("danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_danh_muc_tin_tuc_nguoi_cap_nhat")
   nguoi_dung_danh_muc_tin_tuc_nguoi_taoTonguoi_dung      nguoi_dung? @relation("danh_muc_tin_tuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_danh_muc_tin_tuc_nguoi_tao")
   tin_tuc                                                tin_tuc[]
+
+  @@index([id], map: "idx_danh_muc_tin_tuc_id")
+  @@index([is_active], map: "idx_danh_muc_tin_tuc_is_active")
+  @@index([is_delete], map: "idx_danh_muc_tin_tuc_is_delete")
+  @@index([ten_danh_muc], map: "idx_danh_muc_tin_tuc_ten_danh_muc")
 }
 
 model dinh_kem_phan_anh {
@@ -97,6 +107,8 @@ model dinh_kem_tin_tuc {
   thoi_gian_tao      DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   nguoi_dung         nguoi_dung? @relation(fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_dinh_kem_tin_tuc_nguoi_tao")
   tin_tuc            tin_tuc?    @relation(fields: [id_tin_tuc], references: [id], onUpdate: NoAction, map: "fk_dinh_kem_tin_tuc_tin_tuc")
+
+  @@index([id_tin_tuc], map: "idx_dinh_kem_tin_tuc_id_tin_tuc")
 }
 
 model lich_su_trang_thai {
@@ -125,6 +137,11 @@ model lich_tiep_dan {
   thoi_gian_cap_nhat                                  DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   nguoi_dung_lich_tiep_dan_nguoi_cap_nhatTonguoi_dung nguoi_dung? @relation("lich_tiep_dan_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_lich_tiep_dan_nguoi_cap_nhat")
   nguoi_dung_lich_tiep_dan_nguoi_taoTonguoi_dung      nguoi_dung? @relation("lich_tiep_dan_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_lich_tiep_dan_nguoi_tao")
+
+  @@index([is_active], map: "idx_lich_tiep_dan_is_active")
+  @@index([is_delete], map: "idx_lich_tiep_dan_is_delete")
+  @@index([ngay_tiep_dan], map: "idx_lich_tiep_dan_ngay_tiep_dan")
+  @@index([ten_can_bo], map: "idx_lich_tiep_dan_ten_can_bo")
 }
 
 model linh_vuc {
@@ -140,6 +157,12 @@ model linh_vuc {
   nguoi_dung_linh_vuc_nguoi_cap_nhatTonguoi_dung nguoi_dung?                   @relation("linh_vuc_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_nguoi_cap_nhat")
   nguoi_dung_linh_vuc_nguoi_taoTonguoi_dung      nguoi_dung?                   @relation("linh_vuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_nguoi_tao")
   thu_tuc_hanh_chinh_linh_vuc                    thu_tuc_hanh_chinh_linh_vuc[]
+
+  @@index([id], map: "idx_linh_vuc_id")
+  @@index([is_active], map: "idx_linh_vuc_is_active")
+  @@index([is_delete], map: "idx_linh_vuc_is_delete")
+  @@index([ten_linh_vuc], map: "idx_linh_vuc_ten_linh_vuc")
+  @@index([thoi_gian_tao], map: "idx_linh_vuc_thoi_gian_tao")
 }
 
 model linh_vuc_phan_anh {
@@ -155,6 +178,12 @@ model linh_vuc_phan_anh {
   nguoi_dung_linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung? @relation("linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_cap_nhat")
   nguoi_dung_linh_vuc_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung? @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_tao")
   phan_anh                                                phan_anh[]
+
+  @@index([id], map: "idx_linh_vuc_phan_anh_id")
+  @@index([is_active], map: "idx_linh_vuc_phan_anh_is_active")
+  @@index([is_delete], map: "idx_linh_vuc_phan_anh_is_delete")
+  @@index([ten], map: "idx_linh_vuc_phan_anh_ten")
+  @@index([thoi_gian_tao], map: "idx_linh_vuc_phan_anh_thoi_gian_tao")
 }
 
 model mau_don {
@@ -173,6 +202,13 @@ model mau_don {
   nguoi_dung_mau_don_nguoi_cap_nhatTonguoi_dung nguoi_dung?                  @relation("mau_don_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_cap_nhat")
   nguoi_dung_mau_don_nguoi_taoTonguoi_dung      nguoi_dung?                  @relation("mau_don_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_mau_don_nguoi_tao")
   thu_tuc_hanh_chinh_mau_don                    thu_tuc_hanh_chinh_mau_don[]
+
+  @@index([id], map: "idx_mau_don_id")
+  @@index([is_active], map: "idx_mau_don_is_active")
+  @@index([is_delete], map: "idx_mau_don_is_delete")
+  @@index([ma_mau_don], map: "idx_mau_don_ma_mau_don")
+  @@index([ten_mau_don], map: "idx_mau_don_ten_mau_don")
+  @@index([thoi_gian_tao], map: "idx_mau_don_thoi_gian_tao")
 }
 
 model nguoi_dung {
@@ -230,6 +266,11 @@ model nguoi_dung {
   user_session_logs                                                                user_session_logs[]
   uy_ban_uy_ban_nguoi_cap_nhatTonguoi_dung                                         uy_ban[]                     @relation("uy_ban_nguoi_cap_nhatTonguoi_dung")
   uy_ban_uy_ban_nguoi_taoTonguoi_dung                                              uy_ban[]                     @relation("uy_ban_nguoi_taoTonguoi_dung")
+
+  @@index([email], map: "idx_nguoi_dung_email")
+  @@index([is_active], map: "idx_nguoi_dung_is_active")
+  @@index([is_delete], map: "idx_nguoi_dung_is_delete")
+  @@index([ten_dang_nhap], map: "idx_nguoi_dung_ten_dang_nhap")
 }
 
 model notifications {
@@ -243,6 +284,11 @@ model notifications {
   read_at     DateTime?   @db.Timestamp(6)
   created_at  DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   nguoi_dung  nguoi_dung? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_user")
+
+  @@index([created_at], map: "idx_notifications_created_at")
+  @@index([id], map: "idx_notifications_id")
+  @@index([is_read], map: "idx_notifications_is_read")
+  @@index([user_id], map: "idx_notifications_user_id")
 }
 
 model otp {
@@ -254,6 +300,12 @@ model otp {
   is_used       Boolean?   @default(false)
   sent_to_email String?    @db.VarChar(150)
   nguoi_dung    nguoi_dung @relation(fields: [id_nguoi_dung], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_otp_nguoi_dung")
+
+  @@index([expires_at], map: "idx_otp_expires_at")
+  @@index([id_nguoi_dung], map: "idx_otp_id_nguoi_dung")
+  @@index([is_used], map: "idx_otp_is_used")
+  @@index([loai_otp], map: "idx_otp_loai_otp")
+  @@index([ma_otp], map: "idx_otp_ma_otp")
 }
 
 model permissions {
@@ -261,6 +313,9 @@ model permissions {
   description      String?            @db.VarChar(255)
   thoi_gian_tao    DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   role_permissions role_permissions[]
+
+  @@index([code], map: "idx_permissions_code")
+  @@index([description], map: "idx_permissions_description")
 }
 
 model phan_anh {
@@ -286,6 +341,12 @@ model phan_anh {
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")
   nguoi_dung_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_cap_nhat")
   nguoi_dung_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_tao")
+
+  @@index([id_linh_vuc_phan_anh], map: "idx_phan_anh_id_linh_vuc_phan_anh")
+  @@index([id_video], map: "idx_phan_anh_id_video")
+  @@index([ma_phan_anh], map: "idx_phan_anh_ma_phan_anh")
+  @@index([nguoi_tao], map: "idx_phan_anh_nguoi_tao")
+  @@index([thoi_gian_tao], map: "idx_phan_anh_thoi_gian_tao")
 }
 
 model refresh_token {
@@ -301,6 +362,11 @@ model refresh_token {
   created_at             DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   updated_at             DateTime?  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   nguoi_dung             nguoi_dung @relation(fields: [id_nguoi_dung], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_refresh_token_nguoi_dung")
+
+  @@index([id_nguoi_dung], map: "idx_refresh_token_id_nguoi_dung")
+  @@index([is_revoked], map: "idx_refresh_token_is_revoked")
+  @@index([revoked_by_ip], map: "idx_refresh_token_revoked_by_ip")
+  @@index([token_hash], map: "idx_refresh_token_token_hash")
 }
 
 model role_permissions {
@@ -326,6 +392,9 @@ model roles {
   nguoi_dung_roles_nguoi_cap_nhatTonguoi_dung nguoi_dung?        @relation("roles_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_roles_nguoi_cap_nhat")
   nguoi_dung_roles_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("roles_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_roles_nguoi_tao")
   user_roles                                  user_roles[]
+
+  @@index([is_active, is_delete], map: "idx_roles_is_active_is_delete")
+  @@index([name], map: "idx_roles_name")
 }
 
 model thanh_phan_ho_so {
@@ -369,6 +438,9 @@ model thu_tuc_hanh_chinh {
   thu_tuc_hanh_chinh_mau_don                               thu_tuc_hanh_chinh_mau_don[]
   trinh_tu_thuc_hien_thu_tuc                               trinh_tu_thuc_hien_thu_tuc[]
   truong_hop_thu_tuc                                       truong_hop_thu_tuc[]
+
+  @@index([is_active, is_delete], map: "idx_thu_tuc_is_active_is_delete")
+  @@index([ten_thu_tuc, ma_thu_tuc], map: "idx_thu_tuc_name_code")
 }
 
 model thu_tuc_hanh_chinh_linh_vuc {
@@ -423,6 +495,10 @@ model tin_tuc {
   nguoi_dung_tin_tuc_nguoi_cap_nhatTonguoi_dung nguoi_dung?        @relation("tin_tuc_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_tin_tuc_nguoi_cap_nhat")
   nguoi_dung_tin_tuc_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("tin_tuc_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_tin_tuc_nguoi_tao")
   tin_tuc_view                                  tin_tuc_view[]
+
+  @@index([id_danh_muc], map: "idx_tin_tuc_id_danh_muc")
+  @@index([is_active, is_delete], map: "idx_tin_tuc_is_active_is_delete")
+  @@index([tieu_de], map: "idx_tin_tuc_tieu_de")
 }
 
 model trinh_tu_thuc_hien_thu_tuc {
@@ -478,6 +554,10 @@ model user_session_logs {
   thoi_gian_dang_xuat DateTime?  @db.Timestamp(6)
   is_active           Boolean?   @default(true)
   nguoi_dung          nguoi_dung @relation(fields: [id_nguoi_dung], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_user_session_logs_nguoi_dung")
+
+  @@index([id_nguoi_dung], map: "idx_user_session_logs_id_nguoi_dung")
+  @@index([is_active], map: "idx_user_session_logs_is_active")
+  @@index([thoi_gian_dang_xuat], map: "idx_user_session_logs_thoi_gian_dang_xuat")
 }
 
 model uy_ban {
@@ -519,6 +599,9 @@ model video_uploads {
   created_at          DateTime?             @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   updated_at          DateTime?             @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   video_upload_chunks video_upload_chunks[]
+
+  @@index([created_at], map: "idx_video_uploads_created_at")
+  @@index([status], map: "idx_video_uploads_status")
 }
 
 model tin_tuc_view {
