@@ -126,7 +126,12 @@ const ReportRepository = {
     });
 
     const [totalThuTuc, totalThuTucCoMauDon] = await Promise.all([
-      prisma.thu_tuc_hanh_chinh.count(),
+      prisma.thu_tuc_hanh_chinh.count({
+        where: {
+          is_delete: false,
+          is_active: true,
+        }
+      }),
       prisma.thu_tuc_hanh_chinh.count({
         where: {
           thu_tuc_hanh_chinh_mau_don: {
@@ -149,7 +154,11 @@ const ReportRepository = {
     }
 
     let data = await prisma.tin_tuc.findMany({
-      where: whereClause,
+      where: {
+        ...whereClause,
+        is_delete: false,
+        is_active: true,
+      },
       select: {
         is_noti: true,
         id: true,
