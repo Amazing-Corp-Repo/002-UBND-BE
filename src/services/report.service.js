@@ -138,6 +138,8 @@ const ReportService = {
       }
     }
 
+    let top_5_linh_vuc_theo_phan_anh = sortLinhVucByTongPhanAnh(linh_vuc_1);
+
     return {
       bieu_do_tron_chi_tiet: linh_vuc_phan_anh,
       tong_phan_anh: totalCount,
@@ -145,6 +147,7 @@ const ReportService = {
       xu_huong,
       phan_anh_moi_cap_nhat,
       chi_tiet_theo_linh_vuc: linh_vuc_1,
+      top_5_linh_vuc_theo_phan_anh: top_5_linh_vuc_theo_phan_anh,
     };
   },
 
@@ -530,6 +533,17 @@ const ReportService = {
 const formatDate = (date) => {
   let toVN = new Date(date.getTime() + 7 * 60 * 60 * 1000);
   return toVN.toISOString().split("T")[0];
+};
+
+const sortLinhVucByTongPhanAnh = (linhVuc) => {
+  const items = Object.entries(linhVuc).map(([key, value]) => ({
+    ten_linh_vuc: key,
+    ...value,
+  }));
+
+  items.sort((a, b) => b.tong_phan_anh - a.tong_phan_anh);
+
+  return items.slice(0, 5);
 };
 
 export default ReportService;
