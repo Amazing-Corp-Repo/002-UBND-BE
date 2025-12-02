@@ -112,7 +112,6 @@ const ReportService = {
       ).toFixed(2);
 
       delete linh_vuc_1[key.ten].totalProcessingTime;
-      console.log(linh_vuc_1[key.ten].tong_phan_anh, totalCount);
       linh_vuc_1[key.ten].ty_le = Number(
         (linh_vuc_1[key.ten].tong_phan_anh / totalCount) * 100
       ).toFixed(2);
@@ -121,10 +120,28 @@ const ReportService = {
         linh_vuc_1[key.ten].tong_phan_anh - linh_vuc_1[key.ten].da_xu_ly;
     }
 
+    const ORDER = [
+      PHAN_ANH_STATUS.DA_GUI,
+      PHAN_ANH_STATUS.DA_TIEP_NHAN,
+      PHAN_ANH_STATUS.DANG_XU_LY,
+      PHAN_ANH_STATUS.DA_GIAI_QUYET,
+      PHAN_ANH_STATUS.DONG,
+    ];
+
+    const trang_thai_sorted = {};
+
+    for (let status of ORDER) {
+      if (trang_thai[status] !== undefined) {
+        trang_thai_sorted[status] = trang_thai[status];
+      } else {
+        trang_thai_sorted[status] = 0; // Nếu chưa có thì set = 0 cho đủ key
+      }
+    }
+
     return {
       bieu_do_tron_chi_tiet: linh_vuc_phan_anh,
       tong_phan_anh: totalCount,
-      phan_bo_theo_trang_thai: trang_thai,
+      phan_bo_theo_trang_thai: trang_thai_sorted,
       xu_huong,
       phan_anh_moi_cap_nhat,
       chi_tiet_theo_linh_vuc: linh_vuc_1,
