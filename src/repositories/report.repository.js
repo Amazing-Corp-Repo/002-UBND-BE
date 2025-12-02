@@ -137,6 +137,8 @@ const ReportRepository = {
           thu_tuc_hanh_chinh_mau_don: {
             some: {},
           },
+          is_delete: false,
+          is_active: true,
         },
       }),
     ]);
