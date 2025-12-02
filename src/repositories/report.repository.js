@@ -109,7 +109,11 @@ const ReportRepository = {
     }
 
     let linhVuc = await prisma.thu_tuc_hanh_chinh.findMany({
-      where: whereClause,
+      where: {
+        ...whereClause,
+        is_active: true,
+        is_delete: false,
+      },
       select: {
         thu_tuc_hanh_chinh_linh_vuc: {
           select: {
@@ -130,7 +134,7 @@ const ReportRepository = {
         where: {
           is_delete: false,
           is_active: true,
-        }
+        },
       }),
       prisma.thu_tuc_hanh_chinh.count({
         where: {
