@@ -165,6 +165,31 @@ const TinTucSwagger = {
             responses: {}
         },
     },
+    '/api/tin-tuc/view/{id}': {
+        get: {
+            tags: ['TinTuc'],
+            summary: 'Lấy tin tức để xem',
+            description: 'Lấy thông tin tin tức và cập nhật số lượt xem dựa trên địa chỉ IP và thông tin thiết bị.',
+            parameters: [
+                {
+                    name: 'deviceType',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                    },
+                    description: 'Loại thiết bị',
+                },
+                {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    description: 'Mã định danh tin tức',
+                }
+            ],
+            responses: {}
+        },
+    },
 };
 
 export default TinTucSwagger;

@@ -126,6 +126,19 @@ const LinhVucPhanAnhRepository = {
                 ten: true,
             },
         });
+    },
+
+    async getTenLinhVucById(id) {
+        const linhVuc =  await prisma.linh_vuc_phan_anh.findFirst({
+            where: {
+                id: id,
+                is_delete: false,
+            },
+            select: {
+                ten: true,
+            },
+        });
+        return linhVuc ? linhVuc.ten : null;
     }
 };
 
