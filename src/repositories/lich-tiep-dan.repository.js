@@ -93,6 +93,62 @@ const LichTiepDanRepository = {
     });
   },
 
+  async countAll({ weekYear, monthYear, date, isActive }) {
+    const where = {
+      is_delete: false,
+      ...(isActive !== undefined && isActive !== ""
+        ? { is_active: isActive === "true" }
+        : {}),
+    };
+
+    if (weekYear && !monthYear && !date) {
+      let [week, year] = String(weekYear).split("/");
+      if (!week || !year) {
+        throw new BaseError(400, "Định dạng tuần/năm không hợp lệ");
+      }
+
+      const start = dayjs
+        .utc()
+        .year(Number(year))
+        .isoWeek(Number(week))
+        .startOf("week")
+        .toDate();
+      const end = dayjs
+        .utc()
+        .year(Number(year))
+        .isoWeek(Number(week))
+        .endOf("week")
+        .toDate();
+
+      where.ngay_tiep_dan = { gte: start, lte: end };
+    } else if (monthYear && !weekYear && !date) {
+      let [month, year] = String(monthYear).split("/");
+      if (!month || !year) {
+        throw new BaseError(400, "Định dạng tháng/năm không hợp lệ");
+      }
+
+      const start = dayjs
+        .utc()
+        .year(Number(year))
+        .month(Number(month) - 1)
+        .startOf("month")
+        .toDate();
+      const end = dayjs
+        .utc()
+        .year(Number(year))
+        .month(Number(month) - 1)
+        .endOf("month")
+        .toDate();
+      where.ngay_tiep_dan = { gte: start, lte: end };
+    } else if (date) {
+      const start = dayjs.utc(date).startOf("day").toDate();
+      const end = dayjs.utc(date).endOf("day").toDate();
+      where.ngay_tiep_dan = { gte: start, lte: end };
+    }
+
+    return prisma.lich_tiep_dan.count({ where });
+  },
+
   async findAllWithPagination({
     weekYear,
     monthYear,
