@@ -141,6 +141,18 @@ const LichTiepDanService = {
     return { data, pagination };
   },
 
+  async countLichTiepDan(filters) {
+    const { weekYear, monthYear, date } = filters;
+
+    const [total, active, inactive] = await Promise.all([
+      LichTiepDanRepository.countAll({ weekYear, monthYear, date }),
+      LichTiepDanRepository.countAll({ weekYear, monthYear, date, isActive: "true" }),
+      LichTiepDanRepository.countAll({ weekYear, monthYear, date, isActive: "false" }),
+    ]);
+
+    return { total, active, inactive };
+  },
+
   async deleteLichTiepDan(id, currentUser) {
     if (id === null || id === undefined) {
       throw new BaseError(400, "ID lịch tiếp dân không được để trống");
