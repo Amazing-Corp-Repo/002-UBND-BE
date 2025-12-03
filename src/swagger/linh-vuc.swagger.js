@@ -66,6 +66,14 @@ const LinhVucSwagger = {
     },
   },
 
+  "/api/linh-vuc/count-thu-tuc": {
+    get: {
+      tags: ["LinhVuc"],
+      summary: "Thống kê tổng số thủ tục theo từng lĩnh vực",
+      responses: {},
+    },
+  },
+
   "/api/linh-vuc/{id}": {
     put: {
       tags: ["LinhVuc"],
