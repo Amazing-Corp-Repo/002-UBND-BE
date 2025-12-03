@@ -207,7 +207,7 @@ const ReportService = {
       result[day].tong++;
       result[day].luot_xem += item._count.tin_tuc_view;
 
-      if (item.is_noti === true) {
+      if (item.is_active === true) {
         result[day].da_xuat_ban++;
       } else {
         result[day].ban_nhap++;
