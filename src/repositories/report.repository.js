@@ -163,13 +163,12 @@ const ReportRepository = {
       where: {
         ...whereClause,
         is_delete: false,
-        is_active: true,
       },
       select: {
-        is_noti: true,
         id: true,
         thoi_gian_tao: true,
         _count: { select: { tin_tuc_view: true } },
+        is_active: true,
       },
       orderBy: { thoi_gian_tao: "asc" },
     });
