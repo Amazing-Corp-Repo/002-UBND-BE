@@ -40,6 +40,8 @@ lichTiepDanRouter.get(
   LichTiepDanController.getLichTiepDanWithPagination
 );
 
+lichTiepDanRouter.get("/count", LichTiepDanController.countLichTiepDan);
+
 lichTiepDanRouter.delete(
   "/:id",
   authenticate,
