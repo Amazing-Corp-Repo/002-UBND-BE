@@ -60,6 +60,11 @@ const LinhVucController = {
         const { id } = req.params;
         const linhVuc = await LinhVucService.getLinhVucById(id);
         return successResponse(res, linhVuc, "Lấy lĩnh vực thành công");
+    },
+
+    async countThuTucByLinhVuc(req, res) {
+        const data = await LinhVucService.countThuTucByLinhVuc();
+        return successResponse(res, data, "Thong ke so thu tuc theo linh vuc thanh cong");
     }
 };
 

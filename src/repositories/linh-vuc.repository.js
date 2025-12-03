@@ -111,6 +111,47 @@ const LinhVucRepository = {
             },
         });
     },
+
+    async countThuTucByLinhVuc() {
+        const [linhVucList, thuTucCounts] = await Promise.all([
+            prisma.linh_vuc.findMany({
+                where: {
+                    is_delete: false,
+                },
+                select: {
+                    id: true,
+                    ten_linh_vuc: true,
+                },
+            }),
+            prisma.thu_tuc_hanh_chinh_linh_vuc.groupBy({
+                by: ["id_linh_vuc"],
+                where: {
+                    linh_vuc: {
+                        is_delete: false,
+                    },
+                    thu_tuc_hanh_chinh: {
+                        is_active: true,
+                        is_delete: false,
+                    },
+                },
+                _count: {
+                    id_thu_tuc_hanh_chinh: true,
+                },
+            }),
+        ]);
+
+        return linhVucList.map((linhVuc) => {
+            const countRecord = thuTucCounts.find(
+                (item) => item.id_linh_vuc === linhVuc.id
+            );
+
+            return {
+                id: linhVuc.id,
+                ten_linh_vuc: linhVuc.ten_linh_vuc,
+                tong_thu_tuc: countRecord?._count.id_thu_tuc_hanh_chinh ?? 0,
+            };
+        });
+    },
 };
 
 export default LinhVucRepository;
