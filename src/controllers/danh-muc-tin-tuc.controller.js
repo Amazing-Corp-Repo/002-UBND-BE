@@ -52,6 +52,11 @@ const DanhMucTinTucController = {
         const currentUser = req.payload.userId;
         const result = await DanhMucTinTucService.updateStatus(id, isActive, currentUser);
         return successResponse(res, result, 'Cập nhật trạng thái danh mục tin tức thành công');
+    },
+
+    async countTinTucByDanhMuc(req, res) {
+        const result = await DanhMucTinTucService.countTinTucByDanhMuc();
+        return successResponse(res, result, 'Đếm số lượng tin tức theo danh mục thành công');
     }
 };
 
