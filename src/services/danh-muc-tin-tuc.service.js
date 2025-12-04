@@ -106,6 +106,10 @@ const DanhMucTinTucService = {
             thoi_gian_cap_nhat: new Date().toISOString(),
         };
         return DanhMucTinTucRepository.update(id, data);
+    },
+
+    async countTinTucByDanhMuc() {
+        return await DanhMucTinTucRepository.countTinTucByDanhMuc();
     }
 };
 
