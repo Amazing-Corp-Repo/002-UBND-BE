@@ -173,6 +173,16 @@ const UserRepository = {
       },
     });
   },
+
+  async countUserByIds(userIds) {
+    return await prisma.nguoi_dung.count({
+      where: {
+        id: { in: userIds },
+        is_delete: false,
+        is_active: true,
+      },
+    });
+  }
 };
 
 export default UserRepository;

@@ -166,17 +166,18 @@ model linh_vuc {
 }
 
 model linh_vuc_phan_anh {
-  id                                                      String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  ten                                                     String?     @db.VarChar(255)
+  id                                                      String                            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ten                                                     String?                           @db.VarChar(255)
   mo_ta                                                   String?
-  is_active                                               Boolean?    @default(true)
-  is_delete                                               Boolean?    @default(false)
-  nguoi_tao                                               String?     @db.Uuid
-  nguoi_cap_nhat                                          String?     @db.Uuid
-  thoi_gian_tao                                           DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_cap_nhat                                      DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  nguoi_dung_linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung? @relation("linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_cap_nhat")
-  nguoi_dung_linh_vuc_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung? @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_tao")
+  is_active                                               Boolean?                          @default(true)
+  is_delete                                               Boolean?                          @default(false)
+  nguoi_tao                                               String?                           @db.Uuid
+  nguoi_cap_nhat                                          String?                           @db.Uuid
+  thoi_gian_tao                                           DateTime?                         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat                                      DateTime?                         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  nguoi_dung_linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?                       @relation("linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_cap_nhat")
+  nguoi_dung_linh_vuc_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung?                       @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_nguoi_tao")
+  linh_vuc_phan_anh_nguoi_quan_ly                         linh_vuc_phan_anh_nguoi_quan_ly[]
   phan_anh                                                phan_anh[]
 
   @@index([id], map: "idx_linh_vuc_phan_anh_id")
@@ -212,60 +213,62 @@ model mau_don {
 }
 
 model nguoi_dung {
-  id                                                                               String                       @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  ten_dang_nhap                                                                    String                       @unique @db.VarChar(100)
-  mat_khau                                                                         String                       @db.VarChar(255)
-  ho_va_ten                                                                        String?                      @db.VarChar(150)
-  email                                                                            String?                      @unique @db.VarChar(150)
-  so_dien_thoai                                                                    String?                      @db.VarChar(20)
-  is_enable_two_factor                                                             Boolean?                     @default(false)
-  is_active                                                                        Boolean?                     @default(true)
-  is_delete                                                                        Boolean?                     @default(false)
-  nguoi_tao                                                                        String?                      @db.Uuid
-  nguoi_cap_nhat                                                                   String?                      @db.Uuid
-  thoi_gian_tao                                                                    DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_cap_nhat                                                               DateTime?                    @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  fcm_token                                                                        String?                      @db.VarChar(255)
-  audit_logs                                                                       audit_logs[]
-  cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung               cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung")
-  cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung                    cach_thuc_thuc_hien[]        @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung")
-  co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung                 co_so_dich_vu_cong[]         @relation("co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung")
-  co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_taoTonguoi_dung                      co_so_dich_vu_cong[]         @relation("co_so_dich_vu_cong_nguoi_taoTonguoi_dung")
-  danh_muc_tin_tuc_danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung                     danh_muc_tin_tuc[]           @relation("danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung")
-  danh_muc_tin_tuc_danh_muc_tin_tuc_nguoi_taoTonguoi_dung                          danh_muc_tin_tuc[]           @relation("danh_muc_tin_tuc_nguoi_taoTonguoi_dung")
-  dinh_kem_tin_tuc                                                                 dinh_kem_tin_tuc[]
-  lich_su_trang_thai                                                               lich_su_trang_thai[]
-  lich_tiep_dan_lich_tiep_dan_nguoi_cap_nhatTonguoi_dung                           lich_tiep_dan[]              @relation("lich_tiep_dan_nguoi_cap_nhatTonguoi_dung")
-  lich_tiep_dan_lich_tiep_dan_nguoi_taoTonguoi_dung                                lich_tiep_dan[]              @relation("lich_tiep_dan_nguoi_taoTonguoi_dung")
-  linh_vuc_linh_vuc_nguoi_cap_nhatTonguoi_dung                                     linh_vuc[]                   @relation("linh_vuc_nguoi_cap_nhatTonguoi_dung")
-  linh_vuc_linh_vuc_nguoi_taoTonguoi_dung                                          linh_vuc[]                   @relation("linh_vuc_nguoi_taoTonguoi_dung")
-  linh_vuc_phan_anh_linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung                   linh_vuc_phan_anh[]          @relation("linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung")
-  linh_vuc_phan_anh_linh_vuc_phan_anh_nguoi_taoTonguoi_dung                        linh_vuc_phan_anh[]          @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung")
-  mau_don_mau_don_nguoi_cap_nhatTonguoi_dung                                       mau_don[]                    @relation("mau_don_nguoi_cap_nhatTonguoi_dung")
-  mau_don_mau_don_nguoi_taoTonguoi_dung                                            mau_don[]                    @relation("mau_don_nguoi_taoTonguoi_dung")
-  notifications                                                                    notifications[]
-  otp                                                                              otp[]
-  phan_anh_phan_anh_nguoi_cap_nhatTonguoi_dung                                     phan_anh[]                   @relation("phan_anh_nguoi_cap_nhatTonguoi_dung")
-  phan_anh_phan_anh_nguoi_taoTonguoi_dung                                          phan_anh[]                   @relation("phan_anh_nguoi_taoTonguoi_dung")
-  refresh_token                                                                    refresh_token[]
-  roles_roles_nguoi_cap_nhatTonguoi_dung                                           roles[]                      @relation("roles_nguoi_cap_nhatTonguoi_dung")
-  roles_roles_nguoi_taoTonguoi_dung                                                roles[]                      @relation("roles_nguoi_taoTonguoi_dung")
-  thanh_phan_ho_so_thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung                     thanh_phan_ho_so[]           @relation("thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung")
-  thanh_phan_ho_so_thanh_phan_ho_so_nguoi_taoTonguoi_dung                          thanh_phan_ho_so[]           @relation("thanh_phan_ho_so_nguoi_taoTonguoi_dung")
-  thu_tuc_hanh_chinh_thu_tuc_hanh_chinh_nguoi_cap_nhatTonguoi_dung                 thu_tuc_hanh_chinh[]         @relation("thu_tuc_hanh_chinh_nguoi_cap_nhatTonguoi_dung")
-  thu_tuc_hanh_chinh_thu_tuc_hanh_chinh_nguoi_taoTonguoi_dung                      thu_tuc_hanh_chinh[]         @relation("thu_tuc_hanh_chinh_nguoi_taoTonguoi_dung")
-  thu_tuc_hanh_chinh_mau_don_thu_tuc_hanh_chinh_mau_don_nguoi_cap_nhatTonguoi_dung thu_tuc_hanh_chinh_mau_don[] @relation("thu_tuc_hanh_chinh_mau_don_nguoi_cap_nhatTonguoi_dung")
-  thu_tuc_hanh_chinh_mau_don_thu_tuc_hanh_chinh_mau_don_nguoi_taoTonguoi_dung      thu_tuc_hanh_chinh_mau_don[] @relation("thu_tuc_hanh_chinh_mau_don_nguoi_taoTonguoi_dung")
-  tin_tuc_tin_tuc_nguoi_cap_nhatTonguoi_dung                                       tin_tuc[]                    @relation("tin_tuc_nguoi_cap_nhatTonguoi_dung")
-  tin_tuc_tin_tuc_nguoi_taoTonguoi_dung                                            tin_tuc[]                    @relation("tin_tuc_nguoi_taoTonguoi_dung")
-  trinh_tu_thuc_hien_thu_tuc_trinh_tu_thuc_hien_thu_tuc_nguoi_cap_nhatTonguoi_dung trinh_tu_thuc_hien_thu_tuc[] @relation("trinh_tu_thuc_hien_thu_tuc_nguoi_cap_nhatTonguoi_dung")
-  trinh_tu_thuc_hien_thu_tuc_trinh_tu_thuc_hien_thu_tuc_nguoi_taoTonguoi_dung      trinh_tu_thuc_hien_thu_tuc[] @relation("trinh_tu_thuc_hien_thu_tuc_nguoi_taoTonguoi_dung")
-  truong_hop_thu_tuc_truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung                 truong_hop_thu_tuc[]         @relation("truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung")
-  truong_hop_thu_tuc_truong_hop_thu_tuc_nguoi_taoTonguoi_dung                      truong_hop_thu_tuc[]         @relation("truong_hop_thu_tuc_nguoi_taoTonguoi_dung")
-  user_roles                                                                       user_roles[]
-  user_session_logs                                                                user_session_logs[]
-  uy_ban_uy_ban_nguoi_cap_nhatTonguoi_dung                                         uy_ban[]                     @relation("uy_ban_nguoi_cap_nhatTonguoi_dung")
-  uy_ban_uy_ban_nguoi_taoTonguoi_dung                                              uy_ban[]                     @relation("uy_ban_nguoi_taoTonguoi_dung")
+  id                                                                                        String                            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ten_dang_nhap                                                                             String                            @unique @db.VarChar(100)
+  mat_khau                                                                                  String                            @db.VarChar(255)
+  ho_va_ten                                                                                 String?                           @db.VarChar(150)
+  email                                                                                     String?                           @unique @db.VarChar(150)
+  so_dien_thoai                                                                             String?                           @db.VarChar(20)
+  is_enable_two_factor                                                                      Boolean?                          @default(false)
+  is_active                                                                                 Boolean?                          @default(true)
+  is_delete                                                                                 Boolean?                          @default(false)
+  nguoi_tao                                                                                 String?                           @db.Uuid
+  nguoi_cap_nhat                                                                            String?                           @db.Uuid
+  thoi_gian_tao                                                                             DateTime?                         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat                                                                        DateTime?                         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  fcm_token                                                                                 String?                           @db.VarChar(255)
+  audit_logs                                                                                audit_logs[]
+  cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung                        cach_thuc_thuc_hien[]             @relation("cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung")
+  cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung                             cach_thuc_thuc_hien[]             @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung")
+  co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung                          co_so_dich_vu_cong[]              @relation("co_so_dich_vu_cong_nguoi_cap_nhatTonguoi_dung")
+  co_so_dich_vu_cong_co_so_dich_vu_cong_nguoi_taoTonguoi_dung                               co_so_dich_vu_cong[]              @relation("co_so_dich_vu_cong_nguoi_taoTonguoi_dung")
+  danh_muc_tin_tuc_danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung                              danh_muc_tin_tuc[]                @relation("danh_muc_tin_tuc_nguoi_cap_nhatTonguoi_dung")
+  danh_muc_tin_tuc_danh_muc_tin_tuc_nguoi_taoTonguoi_dung                                   danh_muc_tin_tuc[]                @relation("danh_muc_tin_tuc_nguoi_taoTonguoi_dung")
+  dinh_kem_tin_tuc                                                                          dinh_kem_tin_tuc[]
+  lich_su_trang_thai                                                                        lich_su_trang_thai[]
+  lich_tiep_dan_lich_tiep_dan_nguoi_cap_nhatTonguoi_dung                                    lich_tiep_dan[]                   @relation("lich_tiep_dan_nguoi_cap_nhatTonguoi_dung")
+  lich_tiep_dan_lich_tiep_dan_nguoi_taoTonguoi_dung                                         lich_tiep_dan[]                   @relation("lich_tiep_dan_nguoi_taoTonguoi_dung")
+  linh_vuc_linh_vuc_nguoi_cap_nhatTonguoi_dung                                              linh_vuc[]                        @relation("linh_vuc_nguoi_cap_nhatTonguoi_dung")
+  linh_vuc_linh_vuc_nguoi_taoTonguoi_dung                                                   linh_vuc[]                        @relation("linh_vuc_nguoi_taoTonguoi_dung")
+  linh_vuc_phan_anh_linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung                            linh_vuc_phan_anh[]               @relation("linh_vuc_phan_anh_nguoi_cap_nhatTonguoi_dung")
+  linh_vuc_phan_anh_linh_vuc_phan_anh_nguoi_taoTonguoi_dung                                 linh_vuc_phan_anh[]               @relation("linh_vuc_phan_anh_nguoi_taoTonguoi_dung")
+  linh_vuc_phan_anh_nguoi_quan_ly_linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung linh_vuc_phan_anh_nguoi_quan_ly[] @relation("linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung")
+  linh_vuc_phan_anh_nguoi_quan_ly_linh_vuc_phan_anh_nguoi_quan_ly_nguoi_taoTonguoi_dung     linh_vuc_phan_anh_nguoi_quan_ly[] @relation("linh_vuc_phan_anh_nguoi_quan_ly_nguoi_taoTonguoi_dung")
+  mau_don_mau_don_nguoi_cap_nhatTonguoi_dung                                                mau_don[]                         @relation("mau_don_nguoi_cap_nhatTonguoi_dung")
+  mau_don_mau_don_nguoi_taoTonguoi_dung                                                     mau_don[]                         @relation("mau_don_nguoi_taoTonguoi_dung")
+  notifications                                                                             notifications[]
+  otp                                                                                       otp[]
+  phan_anh_phan_anh_nguoi_cap_nhatTonguoi_dung                                              phan_anh[]                        @relation("phan_anh_nguoi_cap_nhatTonguoi_dung")
+  phan_anh_phan_anh_nguoi_taoTonguoi_dung                                                   phan_anh[]                        @relation("phan_anh_nguoi_taoTonguoi_dung")
+  refresh_token                                                                             refresh_token[]
+  roles_roles_nguoi_cap_nhatTonguoi_dung                                                    roles[]                           @relation("roles_nguoi_cap_nhatTonguoi_dung")
+  roles_roles_nguoi_taoTonguoi_dung                                                         roles[]                           @relation("roles_nguoi_taoTonguoi_dung")
+  thanh_phan_ho_so_thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung                              thanh_phan_ho_so[]                @relation("thanh_phan_ho_so_nguoi_cap_nhatTonguoi_dung")
+  thanh_phan_ho_so_thanh_phan_ho_so_nguoi_taoTonguoi_dung                                   thanh_phan_ho_so[]                @relation("thanh_phan_ho_so_nguoi_taoTonguoi_dung")
+  thu_tuc_hanh_chinh_thu_tuc_hanh_chinh_nguoi_cap_nhatTonguoi_dung                          thu_tuc_hanh_chinh[]              @relation("thu_tuc_hanh_chinh_nguoi_cap_nhatTonguoi_dung")
+  thu_tuc_hanh_chinh_thu_tuc_hanh_chinh_nguoi_taoTonguoi_dung                               thu_tuc_hanh_chinh[]              @relation("thu_tuc_hanh_chinh_nguoi_taoTonguoi_dung")
+  thu_tuc_hanh_chinh_mau_don_thu_tuc_hanh_chinh_mau_don_nguoi_cap_nhatTonguoi_dung          thu_tuc_hanh_chinh_mau_don[]      @relation("thu_tuc_hanh_chinh_mau_don_nguoi_cap_nhatTonguoi_dung")
+  thu_tuc_hanh_chinh_mau_don_thu_tuc_hanh_chinh_mau_don_nguoi_taoTonguoi_dung               thu_tuc_hanh_chinh_mau_don[]      @relation("thu_tuc_hanh_chinh_mau_don_nguoi_taoTonguoi_dung")
+  tin_tuc_tin_tuc_nguoi_cap_nhatTonguoi_dung                                                tin_tuc[]                         @relation("tin_tuc_nguoi_cap_nhatTonguoi_dung")
+  tin_tuc_tin_tuc_nguoi_taoTonguoi_dung                                                     tin_tuc[]                         @relation("tin_tuc_nguoi_taoTonguoi_dung")
+  trinh_tu_thuc_hien_thu_tuc_trinh_tu_thuc_hien_thu_tuc_nguoi_cap_nhatTonguoi_dung          trinh_tu_thuc_hien_thu_tuc[]      @relation("trinh_tu_thuc_hien_thu_tuc_nguoi_cap_nhatTonguoi_dung")
+  trinh_tu_thuc_hien_thu_tuc_trinh_tu_thuc_hien_thu_tuc_nguoi_taoTonguoi_dung               trinh_tu_thuc_hien_thu_tuc[]      @relation("trinh_tu_thuc_hien_thu_tuc_nguoi_taoTonguoi_dung")
+  truong_hop_thu_tuc_truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung                          truong_hop_thu_tuc[]              @relation("truong_hop_thu_tuc_nguoi_cap_nhatTonguoi_dung")
+  truong_hop_thu_tuc_truong_hop_thu_tuc_nguoi_taoTonguoi_dung                               truong_hop_thu_tuc[]              @relation("truong_hop_thu_tuc_nguoi_taoTonguoi_dung")
+  user_roles                                                                                user_roles[]
+  user_session_logs                                                                         user_session_logs[]
+  uy_ban_uy_ban_nguoi_cap_nhatTonguoi_dung                                                  uy_ban[]                          @relation("uy_ban_nguoi_cap_nhatTonguoi_dung")
+  uy_ban_uy_ban_nguoi_taoTonguoi_dung                                                       uy_ban[]                          @relation("uy_ban_nguoi_taoTonguoi_dung")
 
   @@index([email], map: "idx_nguoi_dung_email")
   @@index([is_active], map: "idx_nguoi_dung_is_active")
@@ -615,4 +618,16 @@ model tin_tuc_view {
   tin_tuc       tin_tuc   @relation(fields: [id_tin_tuc], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tin_tuc_view__tin_tuc")
 
   @@unique([id_tin_tuc, ip_address, device_info])
+}
+
+model linh_vuc_phan_anh_nguoi_quan_ly {
+  id_linh_vuc_phan_anh                                                 String            @db.Uuid
+  id_nguoi_dung                                                        String            @db.Uuid
+  nguoi_tao                                                            String            @db.Uuid
+  thoi_gian_tao                                                        DateTime?         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  linh_vuc_phan_anh                                                    linh_vuc_phan_anh @relation(fields: [id_linh_vuc_phan_anh], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lvpq_linh_vuc_phan_anh")
+  nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung nguoi_dung        @relation("linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung", fields: [id_nguoi_dung], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_lvpq_nguoi_dung")
+  nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_nguoi_taoTonguoi_dung     nguoi_dung        @relation("linh_vuc_phan_anh_nguoi_quan_ly_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_lvpq_nguoi_tao")
+
+  @@id([id_linh_vuc_phan_anh, id_nguoi_dung])
 }
