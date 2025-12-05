@@ -64,9 +64,6 @@ export const PERMISSION = {
   UB_CREATE: "UB_CREATE",
   UB_UPDATE: "UB_UPDATE",
 
-  // Upload video phản ánh
-  VID_PA_UPLOAD: "VID_PA_UPLOAD",
-
   // Người dùng
   ND_CREATE: "ND_CREATE",
   ND_UPDATE: "ND_UPDATE",
@@ -82,6 +79,9 @@ export const PERMISSION = {
 
   // Permission
   PERM_GET_ALL: "PERM_GET_ALL",
+
+  // Audit Log
+  ADL_GET: "ADL_GET",
 };
 
 export const PERMISSION_DESC = {
@@ -139,7 +139,6 @@ export const PERMISSION_DESC = {
   UB_CREATE: "Tạo ủy ban",
   UB_UPDATE: "Cập nhật ủy ban",
 
-  VID_PA_UPLOAD: "Upload video phản ánh",
 
   ND_CREATE: "Tạo người dùng",
   ND_UPDATE: "Cập nhật người dùng",
@@ -153,6 +152,8 @@ export const PERMISSION_DESC = {
   ROLE_UPDATE_STATUS: "Cập nhật trạng thái vai trò",
 
   PERM_GET_ALL: "Xem tất cả quyền",
+
+  ADL_GET: "Xem nhật ký hệ thống",
 };
 
 export const PERMISSION_CATEGORIES = {
@@ -167,8 +168,8 @@ export const PERMISSION_CATEGORIES = {
   TT: "Thủ tục hành chính",
   TTIN: "Tin tức",
   UB: "Ủy ban",
-  VID_PA: "Video phản ánh",
   ND: "Người dùng",
   ROLE: "Vai trò",
   PERM: "Quyền",
+  ADL: "Nhật ký hệ thống",
 };
