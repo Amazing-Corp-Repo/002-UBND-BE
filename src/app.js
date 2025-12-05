@@ -12,7 +12,7 @@ import http from "http";
 import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
-// import "./utils/logger.util.js";
+import "./utils/logger.util.js";
 
 const app = express();
 const PORT = env.PORT;
