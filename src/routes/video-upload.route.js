@@ -33,7 +33,7 @@ videoUploadRouter.post(
   "/upload",
   uploadChunkLimiter,
   authenticate,
-  authorize([PERMISSION.VID_PA_UPLOAD]),
+  authorize([PERMISSION.PA_CREATE]),
   createUploader({
     type: UPLOAD_TYPE.PHAN_ANH,
     fieldName: "file",

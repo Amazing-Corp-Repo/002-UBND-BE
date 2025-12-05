@@ -16,6 +16,7 @@ import ReportSwagger from './report.swagger.js';
 import RoleSwagger from './role.swagger.js';
 import PermissionSwagger from './permission.swagger.js';
 import NotificationSwagger from './notification.swagger.js';
+import AuditLogSwagger from './audit-log.swagger.js';
 
 const swaggerDocument = {
 
@@ -50,6 +51,7 @@ const swaggerDocument = {
         ...RoleSwagger,
         ...PermissionSwagger,
         ...NotificationSwagger,
+        ...AuditLogSwagger,
     },
 
     components: {

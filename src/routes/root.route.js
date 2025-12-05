@@ -17,6 +17,7 @@ import reportRouter from './report.route.js';
 import notificationRouter from './notification.route.js';
 import permissionRouter from './permission.route.js';
 import roleRouter from './role.route.js';
+import auditLogRouter from './audit-log.route.js';
 
 const rootRouter = express.Router();
 
@@ -37,8 +38,9 @@ rootRouter.use('/logs', logRouter);
 rootRouter.use('/report', reportRouter);
 rootRouter.use('/permission', permissionRouter);
 rootRouter.use('/role', roleRouter);
-rootRouter.use('/report', reportRouter)
-rootRouter.use('/notifications', notificationRouter)
+rootRouter.use('/report', reportRouter);
+rootRouter.use('/notifications', notificationRouter);
+rootRouter.use('/audit-logs', auditLogRouter);
 
 export default rootRouter;
 
