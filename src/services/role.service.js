@@ -48,12 +48,33 @@ const RoleService = {
   },
 
   async getRoleDetails(roleId) {
-    return await RoleRepository.getRoleDetails(roleId);
+    let data = await RoleRepository.getRoleDetails(roleId);
+
+    // Map type + description + grouping
+    const permissions = data.permissions.map((rp) => {
+      const parts = rp.code.split("_");
+      const type = parts.slice(1).join("_");
+
+      return {
+        code: rp.code,
+        description: rp.description,
+        type,
+      };
+    });
+
+    return {
+      ...data,
+      permissions: permissions,
+    };
   },
 
   async updateStatus(roleId, isActive, currentUser) {
     let existingRole = await RoleRepository.getById(roleId);
-    if (!existingRole || existingRole.is_delete === true || existingRole.name === "ADMIN") {
+    if (
+      !existingRole ||
+      existingRole.is_delete === true ||
+      existingRole.name === "ADMIN"
+    ) {
       throw new BaseError(404, "Role không tồn tại hoặc không thể thay đổi");
     }
     let linkedCount = await RoleRepository.countUserWithRole(roleId);

@@ -45,7 +45,7 @@ export const PERMISSION = {
   PA_GET_ALL: "PA_GET_ALL",
 
   // Report
-  RPT_GET: "RPT_GET",
+  RPT_GET_DETAIL: "RPT_GET_DETAIL",
   RPT_GET_EXCEL: "RPT_GET_EXCEL",
 
   // Thủ tục hành chính
@@ -69,7 +69,7 @@ export const PERMISSION = {
   ND_UPDATE: "ND_UPDATE",
   ND_DELETE: "ND_DELETE",
   ND_UPDATE_STATUS: "ND_UPDATE_STATUS",
-  ND_GET: "ND_GET",
+  ND_GET_DETAIL: "ND_GET_DETAIL",
 
   // Role
   ROLE_CREATE: "ROLE_CREATE",
@@ -81,7 +81,7 @@ export const PERMISSION = {
   PERM_GET_ALL: "PERM_GET_ALL",
 
   // Audit Log
-  ADL_GET: "ADL_GET",
+  ADL_GET_ALL: "ADL_GET_ALL",
 };
 
 export const PERMISSION_DESC = {
@@ -123,7 +123,7 @@ export const PERMISSION_DESC = {
   PA_GET_DETAIL: "Xem chi tiết phản ánh",
   PA_GET_ALL: "Xem tất cả phản ánh",
 
-  RPT_GET: "Lấy báo cáo",
+  RPT_GET_DETAIL: "Xem báo cáo",
   RPT_GET_EXCEL: "Xuất báo cáo Excel",
 
   TT_CREATE: "Tạo thủ tục",
@@ -139,12 +139,11 @@ export const PERMISSION_DESC = {
   UB_CREATE: "Tạo ủy ban",
   UB_UPDATE: "Cập nhật ủy ban",
 
-
   ND_CREATE: "Tạo người dùng",
   ND_UPDATE: "Cập nhật người dùng",
   ND_DELETE: "Xóa người dùng",
   ND_UPDATE_STATUS: "Cập nhật trạng thái người dùng",
-  ND_GET: "Xem người dùng",
+  ND_GET_DETAIL: "Xem người dùng",
 
   ROLE_CREATE: "Tạo vai trò",
   ROLE_UPDATE: "Cập nhật vai trò",
@@ -153,7 +152,7 @@ export const PERMISSION_DESC = {
 
   PERM_GET_ALL: "Xem tất cả quyền",
 
-  ADL_GET: "Xem nhật ký hệ thống",
+  ADL_GET_ALL: "Xem nhật ký hệ thống",
 };
 
 export const PERMISSION_CATEGORIES = {
@@ -172,4 +171,15 @@ export const PERMISSION_CATEGORIES = {
   ROLE: "Vai trò",
   PERM: "Quyền",
   ADL: "Nhật ký hệ thống",
+};
+
+export const PERMISSION_TYPE = {
+  CREATE: "Tạo mới",
+  UPDATE: "Thay đổi thông tin",
+  DELETE: "Xóa",
+  UPDATE_STATUS: "Cập nhật trạng thái",
+  GET_TEMPLATE: "Lấy mẫu",
+  GET_DETAIL: "Xem chi tiết",
+  GET_ALL: "Xem tất cả",
+  GET_EXCEL: "Xuất Excel",
 };
