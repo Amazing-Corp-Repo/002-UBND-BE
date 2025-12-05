@@ -183,13 +183,6 @@ const LichTiepDanSwagger = {
                     required: false,
                     schema: { type: 'string', example: '2025-10-12' },
                 },
-                {
-                    name: 'isActive',
-                    in: 'query',
-                    description: 'Trạng thái hoạt động (true/false)',
-                    required: false,
-                    schema: { type: 'boolean' },
-                },
             ],
             responses: {}
         },

@@ -324,7 +324,7 @@ const handleSendNotificationByFirebase = async (
   let fcm = adminFirebase.messaging();
   const data = {
     ma_phan_anh: phanAnh.ma_phan_anh,
-    ghi_chu: ghiChu,
+    ghi_chu: ghiChu ?? "",
   };
   try {
     await fcm.send({
