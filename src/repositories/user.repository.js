@@ -211,6 +211,32 @@ const UserRepository = {
 
     return adminUser?.email ?? null;
   },
+
+  async searchUsers(search) {
+    const whereBase = {
+      is_delete: false,
+      is_active: true,
+      ...(search
+        ? {
+            OR: [
+              { ten_dang_nhap: { contains: search, mode: "insensitive" } },
+              { ho_va_ten: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
+    const users = await prisma.nguoi_dung.findMany({
+      where: whereBase,
+      select: {
+        id: true,
+        ho_va_ten: true,
+        ten_dang_nhap: true,
+      },
+    });
+    return users;
+  },
 };
 
 export default UserRepository;

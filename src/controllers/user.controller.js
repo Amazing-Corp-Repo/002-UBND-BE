@@ -129,5 +129,11 @@ const UserController = {
     );
     return successResponse(res, result, 'Tạo tài khoản quản trị viên thành công');
   },
+
+  async searchUsers(req, res) {
+    const { search } = req.query;
+    const result = await UserService.searchUsers(search);
+    return successResponse(res, result, "Tìm kiếm người dùng thành công");
+  },
 };
 export default UserController;

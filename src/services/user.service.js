@@ -247,6 +247,11 @@ const UserService = {
     });
     return toUserResponse(newUser);
   },
+
+  async searchUsers(search) {
+    const users = await UserRepository.searchUsers(search);
+    return users;
+  }
 };
 
 export default UserService;

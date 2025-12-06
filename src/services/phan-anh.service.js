@@ -321,7 +321,7 @@ const PhanAnhService = {
           phanAnh.id_linh_vuc_phan_anh
         );
 
-      let firstAdminEmail = UserRepository.geteFirstAdminEmail();
+      let firstAdminEmail = await UserRepository.geteFirstAdminEmail();
 
       await handleSendMailNotification(
         phanAnh,
