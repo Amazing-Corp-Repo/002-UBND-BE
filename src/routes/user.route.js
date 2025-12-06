@@ -75,7 +75,7 @@ userRoute.put(
 userRoute.get(
   "/:id",
   authenticate,
-  authorize([PERMISSION.ND_GET]),
+  authorize([PERMISSION.ND_GET_DETAIL]),
   UserController.getUserById
 );
 

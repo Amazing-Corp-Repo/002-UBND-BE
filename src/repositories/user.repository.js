@@ -84,11 +84,11 @@ const UserRepository = {
   },
 
   async getAllUsers(page, size, isActive, role, search) {
-    const where = {
+    const whereBase = {
+      is_delete: false,
       ...(isActive !== undefined && isActive !== ""
         ? { is_active: isActive === "true" }
         : {}),
-      is_delete: false,
       ...(search
         ? {
             OR: [
@@ -99,24 +99,29 @@ const UserRepository = {
           }
         : {}),
     };
+
+    const roleFilter = role
+      ? {
+          user_roles: {
+            some: {
+              role_id: role,
+            },
+          },
+        }
+      : {};
+
+    const finalWhere = {
+      ...whereBase,
+      ...roleFilter,
+    };
+
     const skip = (page - 1) * size;
+
     const [users, total] = await Promise.all([
       prisma.nguoi_dung.findMany({
         skip,
         take: size,
-        where: {
-          ...where,
-          is_delete: false,
-          ...(role
-            ? {
-                user_roles: {
-                  some: {
-                    role_id: role,
-                  },
-                },
-              }
-            : {}),
-        },
+        where: finalWhere,
         orderBy: { ten_dang_nhap: "asc" },
         include: {
           user_roles: {
@@ -130,7 +135,7 @@ const UserRepository = {
           },
         },
       }),
-      prisma.nguoi_dung.count({ where }),
+      prisma.nguoi_dung.count({ where: finalWhere }),
     ]);
 
     return { users, total };
@@ -182,7 +187,30 @@ const UserRepository = {
         is_active: true,
       },
     });
-  }
+  },
+
+  async geteFirstAdminEmail() {
+    const adminUser = await prisma.nguoi_dung.findFirst({
+      where: {
+        is_delete: false,
+        user_roles: {
+          some: {
+            roles: {
+              name: "ADMIN",
+            },
+          },
+        },
+      },
+      orderBy: {
+        thoi_gian_tao: "asc",
+      },
+      select: {
+        email: true,
+      },
+    });
+
+    return adminUser?.email ?? null;
+  },
 };
 
 export default UserRepository;

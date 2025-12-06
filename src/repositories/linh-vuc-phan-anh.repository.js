@@ -282,6 +282,45 @@ const LinhVucPhanAnhRepository = {
     });
     return linhVuc ? linhVuc.ten : null;
   },
+
+  async getLinhVucIdByUserId(userId) {
+    const linhVucManagers = await prisma.linh_vuc_phan_anh_nguoi_quan_ly.findMany({
+      where: {
+        id_nguoi_dung: userId,
+        linh_vuc_phan_anh: {
+          is_active: true,
+          is_delete: false,
+        },
+      },
+      select: {
+        id_linh_vuc_phan_anh: true,
+      },
+    });
+    return linhVucManagers.map((manager) => manager.id_linh_vuc_phan_anh);
+  },
+
+  async getManagerEmailsByLinhVucId(linhVucId) {
+    const managers = await prisma.linh_vuc_phan_anh_nguoi_quan_ly.findMany({
+      where: {
+        id_linh_vuc_phan_anh: linhVucId,
+      },
+      select: {
+        nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+    return managers
+      .map(
+        (manager) =>
+          manager
+            .nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung
+            .email
+      )
+      .filter((email) => email); // Lọc bỏ các email undefined hoặc null
+  },
 };
 
 export default LinhVucPhanAnhRepository;
