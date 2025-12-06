@@ -3,7 +3,7 @@ import env from "../config/environment.config.js";
 
 const jwtUtils = {
     signAccessToken(user, ip) {
-        const payload = { userId: user.id, username: user.ten_dang_nhap, permissions: user.permissions, ip };
+        const payload = { userId: user.id, username: user.ten_dang_nhap, permissions: user.permissions, cate: user.cate, roles: user.roles, ip };
         return jwt.sign(payload, env.ACCESS_TOKEN_SECRET, { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN });
     },
 

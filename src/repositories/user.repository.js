@@ -84,11 +84,11 @@ const UserRepository = {
   },
 
   async getAllUsers(page, size, isActive, role, search) {
-    const where = {
+    const whereBase = {
+      is_delete: false,
       ...(isActive !== undefined && isActive !== ""
         ? { is_active: isActive === "true" }
         : {}),
-      is_delete: false,
       ...(search
         ? {
             OR: [
@@ -99,24 +99,29 @@ const UserRepository = {
           }
         : {}),
     };
+
+    const roleFilter = role
+      ? {
+          user_roles: {
+            some: {
+              role_id: role,
+            },
+          },
+        }
+      : {};
+
+    const finalWhere = {
+      ...whereBase,
+      ...roleFilter,
+    };
+
     const skip = (page - 1) * size;
+
     const [users, total] = await Promise.all([
       prisma.nguoi_dung.findMany({
         skip,
         take: size,
-        where: {
-          ...where,
-          is_delete: false,
-          ...(role
-            ? {
-                user_roles: {
-                  some: {
-                    role_id: role,
-                  },
-                },
-              }
-            : {}),
-        },
+        where: finalWhere,
         orderBy: { ten_dang_nhap: "asc" },
         include: {
           user_roles: {
@@ -130,7 +135,7 @@ const UserRepository = {
           },
         },
       }),
-      prisma.nguoi_dung.count({ where }),
+      prisma.nguoi_dung.count({ where: finalWhere }),
     ]);
 
     return { users, total };
@@ -172,6 +177,65 @@ const UserRepository = {
         thoi_gian_cap_nhat: new Date().toISOString(),
       },
     });
+  },
+
+  async countUserByIds(userIds) {
+    return await prisma.nguoi_dung.count({
+      where: {
+        id: { in: userIds },
+        is_delete: false,
+        is_active: true,
+      },
+    });
+  },
+
+  async geteFirstAdminEmail() {
+    const adminUser = await prisma.nguoi_dung.findFirst({
+      where: {
+        is_delete: false,
+        user_roles: {
+          some: {
+            roles: {
+              name: "ADMIN",
+            },
+          },
+        },
+      },
+      orderBy: {
+        thoi_gian_tao: "asc",
+      },
+      select: {
+        email: true,
+      },
+    });
+
+    return adminUser?.email ?? null;
+  },
+
+  async searchUsers(search) {
+    const whereBase = {
+      is_delete: false,
+      is_active: true,
+      ...(search
+        ? {
+            OR: [
+              { ten_dang_nhap: { contains: search, mode: "insensitive" } },
+              { ho_va_ten: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
+    const users = await prisma.nguoi_dung.findMany({
+      where: whereBase,
+      select: {
+        id: true,
+        ho_va_ten: true,
+        ten_dang_nhap: true,
+      },
+    });
+    return users;
   },
 };
 

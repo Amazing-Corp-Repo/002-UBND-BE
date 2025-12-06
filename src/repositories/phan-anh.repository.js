@@ -436,6 +436,99 @@ const PhanAnhRepository = {
       },
     });
   },
+
+  async getAllByCate(
+    cateList,
+    idLinhVucPhanAnh,
+    trangThai,
+    mucDo,
+    maPhanAnh,
+    page,
+    size,
+    sortTime
+  ) {
+    const skip = (page - 1) * size;
+    const orderDirection = sortTime === "asc" ? "asc" : "desc";
+
+    const params = [];
+    let whereSql = `WHERE 1=1`;
+
+    if (idLinhVucPhanAnh) {
+      params.push(idLinhVucPhanAnh);
+      whereSql += ` AND pa.id_linh_vuc_phan_anh = $${params.length}::uuid`;
+    }
+    else if (cateList && cateList.length > 0) {
+      params.push(cateList);
+      whereSql += ` AND pa.id_linh_vuc_phan_anh = ANY($${params.length}::uuid[])`;
+    }
+
+    if (mucDo) {
+      params.push(mucDo);
+      whereSql += ` AND pa.muc_do = $${params.length}`;
+    }
+
+    if (maPhanAnh) {
+      params.push(maPhanAnh);
+      whereSql += ` AND pa.ma_phan_anh = $${params.length}`;
+    }
+
+    if (trangThai) {
+      params.push(trangThai);
+      whereSql += ` AND lst.ten = $${params.length}`;
+    }
+
+    params.push(size);
+    params.push(skip);
+
+    const rows = await prisma.$queryRawUnsafe(
+      `
+      SELECT pa.id
+      FROM phan_anh pa
+      JOIN (
+          SELECT DISTINCT ON (id_phan_anh)
+              id_phan_anh, ten, thoi_gian_tao
+          FROM lich_su_trang_thai
+          ORDER BY id_phan_anh, thoi_gian_tao DESC
+      ) lst ON lst.id_phan_anh = pa.id
+      ${whereSql}
+      ORDER BY pa.thoi_gian_tao ${orderDirection}
+      LIMIT $${params.length - 1} OFFSET $${params.length};
+    `,
+      ...params
+    );
+
+    const ids = rows.map((r) => r.id);
+    if (ids.length === 0) return { data: [], totalItems: 0 };
+
+    const total = await prisma.$queryRawUnsafe(
+      `
+      SELECT COUNT(*)::int AS count
+      FROM phan_anh pa
+      JOIN (
+          SELECT DISTINCT ON (id_phan_anh)
+              id_phan_anh, ten, thoi_gian_tao
+          FROM lich_su_trang_thai
+          ORDER BY id_phan_anh, thoi_gian_tao DESC
+      ) lst ON lst.id_phan_anh = pa.id
+      ${whereSql};
+    `,
+      ...params.slice(0, params.length - 2)
+    );
+
+    const phanAnhs = await prisma.phan_anh.findMany({
+      where: { id: { in: ids } },
+      orderBy: { thoi_gian_tao: orderDirection },
+      include: {
+        lich_su_trang_thai: {
+          orderBy: { thoi_gian_tao: "desc" },
+          select: { ten: true, thoi_gian_tao: true },
+        },
+        linh_vuc_phan_anh: { select: { ten: true } },
+      },
+    });
+
+    return { data: phanAnhs, totalItems: total[0].count };
+  },
 };
 
 export default PhanAnhRepository;

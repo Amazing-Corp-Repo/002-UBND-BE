@@ -8,21 +8,21 @@ const reportRouter = express.Router();
 reportRouter.get(
   "/phan-anh",
   authenticate,
-  authorize([PERMISSION.RPT_GET]),
+  authorize([PERMISSION.RPT_GET_DETAIL]),
   ReportController.getReportPhanAnh
 );
 
 reportRouter.get(
   "/thu-tuc",
   authenticate,
-  authorize([PERMISSION.RPT_GET]),
+  authorize([PERMISSION.RPT_GET_DETAIL]),
   ReportController.getReportThuTuc
 );
 
 reportRouter.get(
   "/tin-tuc",
   authenticate,
-  authorize([PERMISSION.RPT_GET]),
+  authorize([PERMISSION.RPT_GET_DETAIL]),
   ReportController.getReportTinTuc
 );
 
@@ -43,7 +43,7 @@ reportRouter.get(
 reportRouter.get(
   "/tin-tuc/export",
   authenticate,
-  authorize([PERMISSION.RPT_GET]),
+  authorize([PERMISSION.RPT_GET_EXCEL]),
   ReportController.exportReportTinTuc
 );
 
