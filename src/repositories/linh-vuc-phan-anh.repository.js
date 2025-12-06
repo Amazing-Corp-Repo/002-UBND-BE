@@ -142,58 +142,6 @@ const LinhVucPhanAnhRepository = {
     });
   },
 
-  async updateWithManagers(id, data, newManagerIds, currentUser) {
-    return await prisma.$transaction(async (tx) => {
-      // 1. Update lĩnh vực
-      const updated = await tx.linh_vuc_phan_anh.update({
-        where: { id },
-        data,
-      });
-
-      // 2. Lấy danh sách người quản lý hiện tại
-      const existingManagers =
-        await tx.linh_vuc_phan_anh_nguoi_quan_ly.findMany({
-          where: { id_linh_vuc_phan_anh: id },
-          select: { id_nguoi_dung: true },
-        });
-
-      const existingIds = existingManagers.map((m) => m.id_nguoi_dung);
-
-      // 3. Tính toán diff
-      const toAdd = newManagerIds.filter((uid) => !existingIds.includes(uid));
-      const toRemove = existingIds.filter(
-        (uid) => !newManagerIds.includes(uid)
-      );
-
-      // 4. Xóa những ID không còn trong danh sách FE gửi
-      if (toRemove.length > 0) {
-        await tx.linh_vuc_phan_anh_nguoi_quan_ly.deleteMany({
-          where: {
-            id_linh_vuc_phan_anh: id,
-            id_nguoi_dung: { in: toRemove },
-          },
-        });
-      }
-
-      // 5. Thêm mới ID
-      if (toAdd.length > 0) {
-        const insertData = toAdd.map((uid) => ({
-          id_linh_vuc_phan_anh: id,
-          id_nguoi_dung: uid,
-          nguoi_tao: currentUser,
-          thoi_gian_tao: new Date().toISOString(),
-        }));
-
-        await tx.linh_vuc_phan_anh_nguoi_quan_ly.createMany({
-          data: insertData,
-        });
-      }
-
-      // 6. Trả về lĩnh vực đã update
-      return updated;
-    });
-  },
-
   async findByNameExcludingId(id, ten) {
     return await prisma.linh_vuc_phan_anh.findFirst({
       where: {
