@@ -1,0 +1,32 @@
+<h1 style="margin:0 0 12px 0;">Cập nhật trạng thái phản ánh</h1>
+
+<p style="margin:0 0 12px 0;">
+    Phản ánh với mã <strong>{{maPhanAnh}}</strong> đã được cập nhật trạng thái:
+</p>
+
+<p style="font-size:18px; margin:0 0 12px 0;">
+    <strong>{{trangThaiMoi}}</strong>
+</p>
+
+{{#if ghiChu}}
+<p style="margin:0 0 12px 0;">
+    <strong>Ghi chú từ đơn vị xử lý:</strong><br />
+    {{ghiChu}}
+</p>
+{{/if}}
+
+<p style="margin:0 0 12px 0;">
+    <strong>Tiêu đề:</strong> {{tieuDe}}<br />
+    <strong>Mô tả:</strong> {{moTa}}
+</p>
+
+<p style="margin:0 0 12px 0;">
+    <strong>Ngày cập nhật:</strong> {{updatedAt}}
+</p>
+
+{{#if url}}
+<p style="margin:0 0 12px 0;">
+    <strong>Xem chi tiết phản ánh:</strong><br />
+    <a href="{{url}}" target="_blank">{{url}}</a>
+</p>
+{{/if}}

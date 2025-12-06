@@ -38,8 +38,6 @@ export const PERMISSION = {
 
   // Phản ánh
   PA_CREATE: "PA_CREATE",
-  PA_UPDATE: "PA_UPDATE",
-  PA_DELETE: "PA_DELETE",
   PA_UPDATE_STATUS: "PA_UPDATE_STATUS",
   PA_GET_DETAIL: "PA_GET_DETAIL",
   PA_GET_ALL: "PA_GET_ALL",
@@ -82,6 +80,7 @@ export const PERMISSION = {
 
   // Audit Log
   ADL_GET_ALL: "ADL_GET_ALL",
+  ADL_GET_DETAIL: "ADL_GET_DETAIL",
 };
 
 export const PERMISSION_DESC = {
@@ -117,8 +116,6 @@ export const PERMISSION_DESC = {
   MD_UPDATE_STATUS: "Cập nhật trạng thái mẫu đơn",
 
   PA_CREATE: "Tạo phản ánh",
-  PA_UPDATE: "Cập nhật phản ánh",
-  PA_DELETE: "Xóa phản ánh",
   PA_UPDATE_STATUS: "Cập nhật trạng thái phản ánh",
   PA_GET_DETAIL: "Xem chi tiết phản ánh",
   PA_GET_ALL: "Xem tất cả phản ánh",
@@ -153,6 +150,7 @@ export const PERMISSION_DESC = {
   PERM_GET_ALL: "Xem tất cả quyền",
 
   ADL_GET_ALL: "Xem nhật ký hệ thống",
+  ADL_GET_DETAIL: "Xem chi tiết nhật ký hệ thống",
 };
 
 export const PERMISSION_CATEGORIES = {

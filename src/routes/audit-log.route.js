@@ -8,14 +8,14 @@ const auditLogRouter = express.Router();
 auditLogRouter.get(
     '/', 
     authenticate,
-    authorize([PERMISSION.ADL_GET]),
+    authorize([PERMISSION.ADL_GET_ALL]),
     AuditLogController.getAuditLogs
 );
 
 auditLogRouter.get(
     '/:id', 
     authenticate,
-    authorize([PERMISSION.ADL_GET]),
+    authorize([PERMISSION.ADL_GET_DETAIL]),
     AuditLogController.getAuditLogById
 );
 
