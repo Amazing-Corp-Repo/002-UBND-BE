@@ -31,6 +31,14 @@ authRoute.post(
   clientInfo,
   AuthController.logout
 );
+
+authRoute.post(
+  "/logout-for-mobile",
+  validate(LogoutRequest),
+  clientInfo,
+  AuthController.logoutForMobile
+);
+
 authRoute.put(
   "/refresh-token",
   validate(RefreshTokenRequest),
