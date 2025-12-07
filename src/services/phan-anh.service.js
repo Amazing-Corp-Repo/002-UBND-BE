@@ -16,6 +16,7 @@ import NotificationRepository from "../repositories/notification.repository.js";
 import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
+import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 
 const ORDER = [
   PHAN_ANH_STATUS.DA_GUI,
@@ -251,7 +252,7 @@ const PhanAnhService = {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
     let phanAnh = await PhanAnhRepository.getById(idPhanAnh);
-    
+
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
@@ -332,7 +333,7 @@ const PhanAnhService = {
         firstAdminEmail
       );
 
-      await handleSendNotificationByFirebase(
+      await handleSendNotificationByExpo(
         phanAnh,
         trangThai,
         ghiChu,
@@ -369,6 +370,39 @@ const PhanAnhService = {
   async searhByTieuDe(search) {
     return await PhanAnhRepository.searhByTieuDe(search);
   },
+};
+
+const handleSendNotificationByExpo = async (
+  phanAnh,
+  trangThai,
+  ghiChu,
+  userId
+) => {
+  const existingUser = await UserRepository.findById(userId);
+
+  if (!existingUser || !existingUser.fcm_token) {
+    console.log(
+      "Người dùng không tồn tại hoặc không có Expo push token để gửi thông báo"
+    );
+    return;
+  }
+
+  const expoPushToken = existingUser.fcm_token;
+
+  const message = {
+    title: "Cập nhật trạng thái phản ánh",
+    body: `Phản ánh của bạn với mã ${phanAnh.ma_phan_anh} đã được cập nhật trạng thái: ${trangThai}`,
+    data: {
+      ma_phan_anh: phanAnh.ma_phan_anh,
+      ghi_chu: ghiChu ?? "",
+    },
+  };
+
+  try {
+    await ExpoNotiRepository.sendNotification(expoPushToken, message);
+  } catch (err) {
+    console.error("Expo push error:", err);
+  }
 };
 
 const handleSendNotification = (phanAnh, trangThai, ghiChu) => {
