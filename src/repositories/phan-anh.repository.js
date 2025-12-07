@@ -267,6 +267,13 @@ const PhanAnhRepository = {
           orderBy: {
             thoi_gian_tao: "desc",
           },
+          include: {
+            nguoi_dung: {
+              select: {
+                ten_dang_nhap: true,
+              },
+            },
+          },
         },
         dinh_kem_phan_anh: {
           select: {
@@ -456,8 +463,7 @@ const PhanAnhRepository = {
     if (idLinhVucPhanAnh) {
       params.push(idLinhVucPhanAnh);
       whereSql += ` AND pa.id_linh_vuc_phan_anh = $${params.length}::uuid`;
-    }
-    else if (cateList && cateList.length > 0) {
+    } else if (cateList && cateList.length > 0) {
       params.push(cateList);
       whereSql += ` AND pa.id_linh_vuc_phan_anh = ANY($${params.length}::uuid[])`;
     }
