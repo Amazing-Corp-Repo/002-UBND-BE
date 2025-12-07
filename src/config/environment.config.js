@@ -44,6 +44,7 @@ const env = {
     REATE_LIMIT_FOR_UPLOAD_VIDEO_MAX: process.env.REATE_LIMIT_FOR_UPLOAD_VIDEO_MAX,
     URL_PHAN_ANH_MANAGER: process.env.URL_PHAN_ANH_MANAGER,
     URL_PHAN_ANH_USER: process.env.URL_PHAN_ANH_USER,
+    EXPO_NOTI_SERVICE_URL: process.env.EXPO_NOTI_SERVICE_URL,
 }
 
 export default env;
