@@ -81,6 +81,14 @@ const AuthService = {
     await RefreshTokenService.revoke(refreshToken, ip);
   },
 
+  async logoutForMobile(refreshToken, ip) {
+    let decoded = await RefreshTokenService.verify(refreshToken, ip);
+    let user = await UserRepository.findById(decoded.userId);
+    if (user && user.fcm_token) {
+      await UserRepository.updateUser(user.id, { fcm_token: null });
+    }
+  },
+
   async changePassword(userId, mat_khau_hien_tai, mat_khau_moi) {
     const user = await UserRepository.findById(userId);
     if (!user) {
