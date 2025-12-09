@@ -89,6 +89,13 @@ const DanhMucTinTucSwagger = {
             responses: {}
         }
     },
+    '/api/danh-muc-tin-tuc/count-tin-tuc': {
+        get: {
+            tags: ['DanhMucTinTuc'],
+            summary: 'Đếm số lượng tin tức theo danh mục',
+            responses: {}
+        },
+    },
     '/api/danh-muc-tin-tuc/{id}': {
         put: {
             tags: ['DanhMucTinTuc'],

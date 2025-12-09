@@ -25,6 +25,20 @@ const LinhVucSwagger = {
       ],
       responses: {},
     },
+    post: {
+      tags: ["LinhVuc"],
+      summary: "Tạo mới lĩnh vực",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: LinhVucSchemas.CreateLinhVucRequest,
+          },
+        },
+      },
+      responses: {},
+    }
   },
   "/api/linh-vuc/pagination": {
     get: {
@@ -62,6 +76,14 @@ const LinhVucSwagger = {
           schema: { type: "integer", minimum: 1 },
         },
       ],
+      responses: {},
+    },
+  },
+
+  "/api/linh-vuc/count-thu-tuc": {
+    get: {
+      tags: ["LinhVuc"],
+      summary: "Thống kê tổng số thủ tục theo từng lĩnh vực",
       responses: {},
     },
   },

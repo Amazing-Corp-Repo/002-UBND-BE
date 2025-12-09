@@ -157,6 +157,36 @@ const LichTiepDanSwagger = {
             responses: {}
         },
     },
+    '/api/lich-tiep-dan/count': {
+        get: {
+            tags: ['LichTiepDan'],
+            summary: 'Đếm tổng số lịch tiếp dân (có thể áp dụng bộ lọc)',
+            parameters: [
+                {
+                    name: 'weekYear',
+                    in: 'query',
+                    description: 'Tuần/năm (ví dụ: 45/2025)',
+                    required: false,
+                    schema: { type: 'string', example: '45/2025' },
+                },
+                {
+                    name: 'monthYear',
+                    in: 'query',
+                    description: 'Tháng/năm (ví dụ: 12/2025)',
+                    required: false,
+                    schema: { type: 'string', example: '12/2025' },
+                },
+                {
+                    name: 'date',
+                    in: 'query',
+                    description: 'Ngày (YYYY-MM-DD)',
+                    required: false,
+                    schema: { type: 'string', example: '2025-10-12' },
+                },
+            ],
+            responses: {}
+        },
+    },
     '/api/lich-tiep-dan/{id}': {
         delete: {
             tags: ['LichTiepDan'],

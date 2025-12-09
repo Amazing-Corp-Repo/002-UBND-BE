@@ -14,8 +14,14 @@ import {
   UpdateStatusByAdminRequest,
 } from "../validators/user.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
-import { AUDIT_LOGS, AUDIT_LOG_ACTIONS } from "../constants/audit-logs-action.constant.js";
-import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
+import {
+  AUDIT_LOGS,
+  AUDIT_LOG_ACTIONS,
+} from "../constants/audit-logs-action.constant.js";
+import {
+  PERMISSION,
+  PERMISSION_DESC,
+} from "../constants/permission.constant.js";
 
 const userRoute = express.Router();
 
@@ -72,10 +78,12 @@ userRoute.put(
   UserController.updateFcmToken
 );
 
+userRoute.get("/search", authenticate, UserController.searchUsers);
+
 userRoute.get(
   "/:id",
   authenticate,
-  authorize([PERMISSION.ND_GET]),
+  authorize([PERMISSION.ND_GET_DETAIL]),
   UserController.getUserById
 );
 

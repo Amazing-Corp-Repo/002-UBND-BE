@@ -53,6 +53,11 @@ danhMucTinTucRouter.get(
   DanhMucTinTucController.findAllWithPagination
 );
 
+danhMucTinTucRouter.get(
+  "/count-tin-tuc",
+  DanhMucTinTucController.countTinTucByDanhMuc
+);
+
 danhMucTinTucRouter.get("/:id", DanhMucTinTucController.findById);
 
 export default danhMucTinTucRouter;

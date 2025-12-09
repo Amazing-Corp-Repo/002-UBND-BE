@@ -52,6 +52,8 @@ linhVucRoute.delete(
   LinhVucController.delete
 );
 
+linhVucRoute.get("/count-thu-tuc", LinhVucController.countThuTucByLinhVuc);
+
 linhVucRoute.get("/:id", LinhVucController.getLinhVucById);
 
 export default linhVucRoute;

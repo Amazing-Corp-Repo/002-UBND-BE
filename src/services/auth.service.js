@@ -8,6 +8,8 @@ import OTPService from "./otp.service.js";
 import UserSessionLogRepository from "../repositories/user-session-log.repository.js";
 import CaptchaRepository from "../repositories/http/captcha.repository.js";
 import PermissionRepository from "../repositories/permission.repository.js";
+import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
+import RoleRepository from "../repositories/role.repository.js";
 
 const AuthService = {
   async login(tenDangNhap, matKhau, ip, device) {
@@ -37,6 +39,8 @@ const AuthService = {
       device: device,
     });
     user.permissions = await buildUserPermission(user.id);
+    user.cate = await buildCateReflections(user.id);
+    user.roles = await buildRoleName(user.id);
     const accessToken = jwtUtils.signAccessToken(user, ip);
     const refreshToken = await RefreshTokenService.generate(user, ip, device);
     return {
@@ -58,6 +62,8 @@ const AuthService = {
 
     // Phát hành token mới
     user.permissions = await buildUserPermission(user.id);
+    user.cate = await buildCateReflections(user.id);
+    user.roles = await buildRoleName(user.id);
     const accessToken = jwtUtils.signAccessToken(user, ip);
     const newRefreshToken = await RefreshTokenService.rotate(
       refreshToken,
@@ -73,6 +79,14 @@ const AuthService = {
 
   async logout(refreshToken, ip) {
     await RefreshTokenService.revoke(refreshToken, ip);
+  },
+
+  async logoutForMobile(refreshToken, ip) {
+    let decoded = await RefreshTokenService.verify(refreshToken, ip);
+    let user = await UserRepository.findById(decoded.userId);
+    if (user && user.fcm_token) {
+      await UserRepository.updateUser(user.id, { fcm_token: null });
+    }
   },
 
   async changePassword(userId, mat_khau_hien_tai, mat_khau_moi) {
@@ -225,5 +239,16 @@ const buildUserPermission = async (userId) => {
   return await PermissionRepository.getPermissionsByUserId(userId);
 };
 
+const buildCateReflections = async (userId) => {
+  let cate = await LinhVucPhanAnhRepository.getLinhVucIdByUserId(userId);
+  let result = cate.join(", ");
+  return result;
+};
+
+const buildRoleName = async (userId) => {
+  const userRoles = await RoleRepository.getRoleByUserId(userId);
+  let result = userRoles.map((ur) => ur.roles.name);
+  return result.join(", ");
+};
 
 export default AuthService;

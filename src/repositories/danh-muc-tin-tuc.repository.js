@@ -85,6 +85,41 @@ const DanhMucTinTucRepository = {
             totalItems,
         }
     },
+
+    async countTinTucByDanhMuc() {
+        const [danhMucs, tinTucCounts] = await Promise.all([
+            prisma.danh_muc_tin_tuc.findMany({
+                where: {
+                    is_delete: false,
+                },
+                select: {
+                    id: true,
+                    ten_danh_muc: true,
+                },
+            }),
+            prisma.tin_tuc.groupBy({
+                by: ["id_danh_muc"],
+                where: {
+                    is_delete: false,
+                },
+                _count: {
+                    id: true,
+                },
+            }),
+        ]);
+
+        return danhMucs.map((dm) => {
+            const countRecord = tinTucCounts.find(
+                (item) => item.id_danh_muc === dm.id
+            );
+
+            return {
+                id: dm.id,
+                ten_danh_muc: dm.ten_danh_muc,
+                tong_tin_tuc: countRecord?._count.id ?? 0,
+            };
+        });
+    },
 };
 
 export default DanhMucTinTucRepository;

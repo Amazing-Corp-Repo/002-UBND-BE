@@ -1,99 +1,106 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export const toSnakeCaseNonAccent = (str) => {
-    if (!str) return "";
+  if (!str) return "";
 
-    let result = str.toLowerCase().trim();
+  let result = str.toLowerCase().trim();
 
-    result = result
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+  result = result.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    result = result
-        .replace(/đ/g, "d")
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/^_+|_+$/g, "");
+  result = result
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 
-    result = result.replace(/_+/g, "_");
+  result = result.replace(/_+/g, "_");
 
-    return result;
-}
+  return result;
+};
 
 export const capitalizeWords = (str) => {
-    if (!str) return '';
-    return str
-        .trim()
-        .toLowerCase()
-        .split(' ')
-        .filter(Boolean) // loại bỏ khoảng trắng thừa
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
+  if (!str) return "";
+  return str
+    .trim()
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean) // loại bỏ khoảng trắng thừa
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 export const appendDeleteSuffixc = (str) => {
-    if (typeof str !== 'string') {
-        return str;
-    }
+  if (typeof str !== "string") {
+    return str;
+  }
 
-    return `${generateUniqueCode()}_${str}`;
-}
+  return `${generateUniqueCode()}_${str}`;
+};
 
 export const generateUniqueCode = () => {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const alphabetLength = alphabet.length;
-    const size = 8;
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const alphabetLength = alphabet.length;
+  const size = 8;
 
-    const randomBytes = crypto.randomBytes(size);
-    let result = '';
+  const randomBytes = crypto.randomBytes(size);
+  let result = "";
 
-    for (let i = 0; i < size; i++) {
-        const index = randomBytes[i] % alphabetLength;
-        result += alphabet[index];
-    }
+  for (let i = 0; i < size; i++) {
+    const index = randomBytes[i] % alphabetLength;
+    result += alphabet[index];
+  }
 
-    return result;
-}
+  return result;
+};
 
 export const parseStringToArray = (str) => {
-    if (!str) return [];
+  if (!str) return [];
 
-    str = String(str).trim();
+  str = String(str).trim();
 
-    if (!str) return [];
+  if (!str) return [];
 
-    if (str.includes(",")) {
-        return str
-            .split(",")
-            .map(s => s.trim())
-            .filter(Boolean);
-    }
+  if (str.includes(",")) {
+    return str
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
 
-    return [str];
-}
+  return [str];
+};
 
 export const nowVN = () => {
-    const formatter = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Ho_Chi_Minh"
-    });
-    return formatter.format(new Date());
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+  return formatter.format(new Date());
 };
 
 export const toUTCFromVN_Start = (dateStr) => {
-    if (!dateStr) return null;
+  if (!dateStr) return null;
 
-    const [year, month, day] = dateStr.split("-").map(Number);
+  const [year, month, day] = dateStr.split("-").map(Number);
 
-    const d = new Date(Date.UTC(year, month - 1, day, -7, 0, 0));
+  const d = new Date(Date.UTC(year, month - 1, day, -7, 0, 0));
 
-    return d.toISOString();
+  return d.toISOString();
 };
 
 export const toUTCFromVN_End = (dateStr) => {
-    if (!dateStr) return null;
+  if (!dateStr) return null;
 
-    const [year, month, day] = dateStr.split("-").map(Number);
+  const [year, month, day] = dateStr.split("-").map(Number);
 
-    const d = new Date(Date.UTC(year, month - 1, day, 16, 59, 59));
+  const d = new Date(Date.UTC(year, month - 1, day, 16, 59, 59));
 
-    return d.toISOString();
+  return d.toISOString();
+};
+
+export const parseCommaString = (str) => {
+  if (!str) return [];
+  if (typeof str !== "string") return [];
+  return str
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 };

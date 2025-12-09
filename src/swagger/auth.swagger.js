@@ -50,6 +50,22 @@ const AuthSwagger = {
             responses: {}
         }
     },
+    '/api/auths/logout-for-mobile': {
+        post: {
+            tags: ['Auths'],
+            summary: 'User logout for mobile',
+            description: 'Logout user for mobile by invalidating the refresh token',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: AuthSchemas.LogoutRequest,
+                    }
+                }
+            },
+            responses: {}
+        }
+    },
     '/api/auths/change-password': {
         put: {
             tags: ['Auths'],

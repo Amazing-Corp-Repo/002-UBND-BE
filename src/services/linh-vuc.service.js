@@ -115,6 +115,10 @@ const LinhVucService = {
             throw new BaseError(404, "Lĩnh vực không tồn tại");
         }
         return linhVuc;
+    },
+
+    async countThuTucByLinhVuc() {
+        return await LinhVucRepository.countThuTucByLinhVuc();
     }
 };
 

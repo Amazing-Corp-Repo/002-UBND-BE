@@ -38,14 +38,12 @@ export const PERMISSION = {
 
   // Phản ánh
   PA_CREATE: "PA_CREATE",
-  PA_UPDATE: "PA_UPDATE",
-  PA_DELETE: "PA_DELETE",
   PA_UPDATE_STATUS: "PA_UPDATE_STATUS",
   PA_GET_DETAIL: "PA_GET_DETAIL",
   PA_GET_ALL: "PA_GET_ALL",
 
   // Report
-  RPT_GET: "RPT_GET",
+  RPT_GET_DETAIL: "RPT_GET_DETAIL",
   RPT_GET_EXCEL: "RPT_GET_EXCEL",
 
   // Thủ tục hành chính
@@ -64,15 +62,12 @@ export const PERMISSION = {
   UB_CREATE: "UB_CREATE",
   UB_UPDATE: "UB_UPDATE",
 
-  // Upload video phản ánh
-  VID_PA_UPLOAD: "VID_PA_UPLOAD",
-
   // Người dùng
   ND_CREATE: "ND_CREATE",
   ND_UPDATE: "ND_UPDATE",
   ND_DELETE: "ND_DELETE",
   ND_UPDATE_STATUS: "ND_UPDATE_STATUS",
-  ND_GET: "ND_GET",
+  ND_GET_DETAIL: "ND_GET_DETAIL",
 
   // Role
   ROLE_CREATE: "ROLE_CREATE",
@@ -82,6 +77,10 @@ export const PERMISSION = {
 
   // Permission
   PERM_GET_ALL: "PERM_GET_ALL",
+
+  // Audit Log
+  ADL_GET_ALL: "ADL_GET_ALL",
+  ADL_GET_DETAIL: "ADL_GET_DETAIL",
 };
 
 export const PERMISSION_DESC = {
@@ -117,13 +116,11 @@ export const PERMISSION_DESC = {
   MD_UPDATE_STATUS: "Cập nhật trạng thái mẫu đơn",
 
   PA_CREATE: "Tạo phản ánh",
-  PA_UPDATE: "Cập nhật phản ánh",
-  PA_DELETE: "Xóa phản ánh",
   PA_UPDATE_STATUS: "Cập nhật trạng thái phản ánh",
   PA_GET_DETAIL: "Xem chi tiết phản ánh",
   PA_GET_ALL: "Xem tất cả phản ánh",
 
-  RPT_GET: "Lấy báo cáo",
+  RPT_GET_DETAIL: "Xem báo cáo",
   RPT_GET_EXCEL: "Xuất báo cáo Excel",
 
   TT_CREATE: "Tạo thủ tục",
@@ -139,13 +136,11 @@ export const PERMISSION_DESC = {
   UB_CREATE: "Tạo ủy ban",
   UB_UPDATE: "Cập nhật ủy ban",
 
-  VID_PA_UPLOAD: "Upload video phản ánh",
-
   ND_CREATE: "Tạo người dùng",
   ND_UPDATE: "Cập nhật người dùng",
   ND_DELETE: "Xóa người dùng",
   ND_UPDATE_STATUS: "Cập nhật trạng thái người dùng",
-  ND_GET: "Xem người dùng",
+  ND_GET_DETAIL: "Xem người dùng",
 
   ROLE_CREATE: "Tạo vai trò",
   ROLE_UPDATE: "Cập nhật vai trò",
@@ -153,6 +148,9 @@ export const PERMISSION_DESC = {
   ROLE_UPDATE_STATUS: "Cập nhật trạng thái vai trò",
 
   PERM_GET_ALL: "Xem tất cả quyền",
+
+  ADL_GET_ALL: "Xem nhật ký hệ thống",
+  ADL_GET_DETAIL: "Xem chi tiết nhật ký hệ thống",
 };
 
 export const PERMISSION_CATEGORIES = {
@@ -167,8 +165,19 @@ export const PERMISSION_CATEGORIES = {
   TT: "Thủ tục hành chính",
   TTIN: "Tin tức",
   UB: "Ủy ban",
-  VID_PA: "Video phản ánh",
   ND: "Người dùng",
   ROLE: "Vai trò",
   PERM: "Quyền",
+  ADL: "Nhật ký hệ thống",
+};
+
+export const PERMISSION_TYPE = {
+  CREATE: "Tạo mới",
+  UPDATE: "Thay đổi thông tin",
+  DELETE: "Xóa",
+  UPDATE_STATUS: "Cập nhật trạng thái",
+  GET_TEMPLATE: "Lấy mẫu",
+  GET_DETAIL: "Xem chi tiết",
+  GET_ALL: "Xem tất cả",
+  GET_EXCEL: "Xuất Excel",
 };
