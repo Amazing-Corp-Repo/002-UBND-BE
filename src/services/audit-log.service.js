@@ -1,5 +1,6 @@
 import AuditLogRepository from "../repositories/audit-log.repository.js";
 import { createPagination } from "../utils/response.util.js";
+import { toUTCFromVN_End, toUTCFromVN_Start } from "../utils/string.util.js";
 
 const AuditLogService = {
   async fetchAllAuditLogs(page, size, fromRaw, toRaw, search) {
