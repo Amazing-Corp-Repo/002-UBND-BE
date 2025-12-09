@@ -3,20 +3,20 @@ import prisma from "../config/database.config.js";
 const AuditLogRepository = {
   async getAllAuditLogs(page, size, from, to, search) {
     const skip = (page - 1) * size;
-    let where = {
-      ...(from ? { timestamp: { gte: from } } : {}),
-      ...(to ? { timestamp: { lte: to } } : {}),
-      ...(search
-        ? {
-            OR: [
-              {
-                nguoi_dung: {
-                  ho_va_ten: { contains: search, mode: "insensitive" },
-                },
-              },
-            ],
-          }
-        : {}),
+    const where = {
+      timestamp: {
+        ...(from && { gte: from }),
+        ...(to && { lte: to }),
+      },
+      ...(search && {
+        OR: [
+          {
+            nguoi_dung: {
+              ho_va_ten: { contains: search, mode: "insensitive" },
+            },
+          },
+        ],
+      }),
     };
     let [total, logs] = await Promise.all([
       prisma.audit_logs.count({ where }),
