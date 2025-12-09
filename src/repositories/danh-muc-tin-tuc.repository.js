@@ -102,6 +102,7 @@ const DanhMucTinTucRepository = {
                 by: ["id_danh_muc"],
                 where: {
                     is_delete: false,
+                    is_active: true,
                 },
                 _count: {
                     id: true,
