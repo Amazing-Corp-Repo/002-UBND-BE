@@ -142,6 +142,13 @@ const LinhVucPhanAnhRepository = {
     });
   },
 
+  async update(id, data) {
+    return await prisma.linh_vuc_phan_anh.update({
+      where: { id },
+      data,
+    });
+  },
+
   async findByNameExcludingId(id, ten) {
     return await prisma.linh_vuc_phan_anh.findFirst({
       where: {
