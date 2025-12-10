@@ -469,47 +469,64 @@ const handleSendMailNotification = async (
 ) => {
   const existingUser = await UserRepository.findById(userId);
 
-  const urlUser = `${URL_PHAN_ANH_USER}/${phanAnh.ma_phan_anh}`;
-  const urlManager = `${URL_PHAN_ANH_MANAGER}/${phanAnh.id}`;
+  const safeUrl = (base, id) => {
+    if (!base) return null;
+    return `${base}/${id}`;
+  };
 
-  if (existingUser && existingUser.email) {
+  const urlUser = safeUrl(URL_PHAN_ANH_USER, phanAnh.ma_phan_anh);
+  const urlManager = safeUrl(URL_PHAN_ANH_MANAGER, phanAnh.id);
+
+  const timestampVN = new Date().toLocaleString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour12: false,
+  });
+
+  if (existingUser?.email) {
+    const userData = {
+      maPhanAnh: phanAnh.ma_phan_anh,
+      trangThaiMoi: trangThai,
+      ghiChu,
+      tieuDe: phanAnh.tieu_de,
+      moTa: phanAnh.mo_ta,
+      updatedAt: timestampVN,
+    };
+
+    if (urlUser) {
+      userData.url = urlUser;
+    }
+
     await MailService.sendMailCC({
       to: existingUser.email,
       cc: [...(firstAdminEmail ? [firstAdminEmail] : []), ...managerMailList],
       type: MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
-      data: {
-        maPhanAnh: phanAnh.ma_phan_anh,
-        trangThaiMoi: trangThai,
-        ghiChu,
-        tieuDe: phanAnh.tieu_de,
-        moTa: phanAnh.mo_ta,
-        updatedAt: new Date().toLocaleString("vi-VN"),
-        url: urlUser,
-      },
+      data: userData,
     });
   } else {
     console.log("User không có email → không gửi thông báo cho user");
   }
 
   const managerTarget = resolveMailTarget(firstAdminEmail, managerMailList);
+  if (!managerTarget) return;
 
-  if (!managerTarget) {
-    return;
+  const managerData = {
+    maPhanAnh: phanAnh.ma_phan_anh,
+    trangThaiMoi: trangThai,
+    ghiChu,
+    tieuDe: phanAnh.tieu_de,
+    moTa: phanAnh.mo_ta,
+    updatedAt: timestampVN,
+  };
+
+  if (urlManager) {
+    managerData.url = urlManager;
   }
 
   await MailService.sendMailCC({
     to: managerTarget.to,
     cc: managerTarget.cc,
     type: MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
-    data: {
-      maPhanAnh: phanAnh.ma_phan_anh,
-      trangThaiMoi: trangThai,
-      ghiChu,
-      tieuDe: phanAnh.tieu_de,
-      moTa: phanAnh.mo_ta,
-      updatedAt: new Date().toLocaleString("vi-VN"),
-      url: urlManager,
-    },
+    data: managerData,
   });
 };
 
