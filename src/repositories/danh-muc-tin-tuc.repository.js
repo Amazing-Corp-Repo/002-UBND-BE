@@ -91,6 +91,7 @@ const DanhMucTinTucRepository = {
             prisma.danh_muc_tin_tuc.findMany({
                 where: {
                     is_delete: false,
+                    is_active: true,
                 },
                 select: {
                     id: true,
@@ -101,6 +102,7 @@ const DanhMucTinTucRepository = {
                 by: ["id_danh_muc"],
                 where: {
                     is_delete: false,
+                    is_active: true,
                 },
                 _count: {
                     id: true,

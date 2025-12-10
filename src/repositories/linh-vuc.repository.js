@@ -117,6 +117,7 @@ const LinhVucRepository = {
             prisma.linh_vuc.findMany({
                 where: {
                     is_delete: false,
+                    is_active: true,
                 },
                 select: {
                     id: true,
