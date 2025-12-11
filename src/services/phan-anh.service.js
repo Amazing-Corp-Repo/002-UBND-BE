@@ -101,8 +101,6 @@ const PhanAnhService = {
 
     let firstAdminEmail = await UserRepository.geteFirstAdminEmail();
 
-    const url = `${URL_PHAN_ANH_MANAGER}/${createdPhanAnh.id}`;
-
     let res = {
       id_phan_anh: createdPhanAnh.id,
       ma_phan_anh: createdPhanAnh.ma_phan_anh,
@@ -127,18 +125,30 @@ const PhanAnhService = {
       return res;
     }
 
+    const safeUrl = (base, id) => {
+      if (!base) return null;
+      return `${base}/${id}`;
+    };
+
+    const url = safeUrl(URL_PHAN_ANH_MANAGER, createdPhanAnh.id);
+
+    let mailData = {
+      maPhanAnh: createdPhanAnh.ma_phan_anh,
+      tieuDe: createdPhanAnh.tieu_de,
+      moTa: createdPhanAnh.mo_ta,
+      mucDo: createdPhanAnh.muc_do,
+      viTri: createdPhanAnh.vi_tri,
+    };
+
+    if (url) {
+      mailData.url = url;
+    }
+
     await MailService.sendMailCC({
       to: managerTarget.to,
       cc: managerTarget.cc,
       type: MAIL_TYPE.CREATE_PHAN_ANH,
-      data: {
-        maPhanAnh: createdPhanAnh.ma_phan_anh,
-        tieuDe: createdPhanAnh.tieu_de,
-        moTa: createdPhanAnh.mo_ta,
-        mucDo: createdPhanAnh.muc_do,
-        viTri: createdPhanAnh.vi_tri,
-        url,
-      },
+      data: mailData,
     });
 
     return res;
@@ -308,6 +318,7 @@ const PhanAnhService = {
       phanAnhPatch,
       historyData
     );
+
     if (phanAnh.nguoi_tao) {
       await NotificationRepository.createNotification({
         user_id: phanAnh.nguoi_tao,
