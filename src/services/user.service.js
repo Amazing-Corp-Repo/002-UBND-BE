@@ -71,11 +71,14 @@ const UserService = {
     // if (existingRole.name === "ADMIN") {
     //   throw new BaseError(400, "Không thể tạo tài khoản với vai trò ADMIN");
     // }
-    const existingUser = await UserRepository.findByUsernameOrEmail(
+    const existingUsers = await UserRepository.findByUsernameOrEmailList(
       tenDangNhap,
       email
     );
-    if (existingUser) {
+
+    const conflicted = existingUsers.find((u) => u.id !== userId);
+
+    if (conflicted) {
       throw new BaseError(400, "Tài khoản hoặc email đã tồn tại");
     }
 
@@ -125,11 +128,14 @@ const UserService = {
     // if (user.user_roles.includes((ur) => ur.roles.name === "ADMIN")) {
     //   throw new BaseError(400, "Không thể chỉnh sửa người dùng với vai trò ADMIN");
     // }
-    const existingUser = await UserRepository.findByUsernameOrEmail(
+    const existingUsers = await UserRepository.findByUsernameOrEmailList(
       tenDangNhap,
       email
     );
-    if (existingUser && existingUser.id !== userId) {
+
+    const conflicted = existingUsers.find((u) => u.id !== userId);
+
+    if (conflicted) {
       throw new BaseError(400, "Tài khoản hoặc email đã tồn tại");
     }
 
@@ -227,11 +233,14 @@ const UserService = {
   },
 
   async createAdminAccount(tenDangNhap, email, matKhau) {
-    const existingUser = await UserRepository.findByUsernameOrEmail(
+    const existingUsers = await UserRepository.findByUsernameOrEmailList(
       tenDangNhap,
       email
     );
-    if (existingUser) {
+
+    const conflicted = existingUsers.find((u) => u.id !== userId);
+
+    if (conflicted) {
       throw new BaseError(400, "Tài khoản hoặc email đã tồn tại");
     }
     let roleAdmin = await RoleRepository.findRoleByName("ADMIN");
@@ -251,7 +260,7 @@ const UserService = {
   async searchUsers(search) {
     const users = await UserRepository.searchUsers(search);
     return users;
-  }
+  },
 };
 
 export default UserService;
