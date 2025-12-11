@@ -150,6 +150,15 @@ const UserRepository = {
     });
   },
 
+  async findByUsernameOrEmailList(ten_dang_nhap, email) {
+    return await prisma.nguoi_dung.findMany({
+      where: {
+        OR: [{ ten_dang_nhap }, { email }],
+        is_delete: false,
+      },
+    });
+  },
+
   async findByUsername(ten_dang_nhap) {
     return await prisma.nguoi_dung.findFirst({
       where: {
