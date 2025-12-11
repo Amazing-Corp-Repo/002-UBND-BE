@@ -76,9 +76,7 @@ const UserService = {
       email
     );
 
-    const conflicted = existingUsers.find((u) => u.id !== userId);
-
-    if (conflicted) {
+    if (existingUsers.length > 0) {
       throw new BaseError(400, "Tài khoản hoặc email đã tồn tại");
     }
 
