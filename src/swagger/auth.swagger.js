@@ -59,7 +59,7 @@ const AuthSwagger = {
                 required: true,
                 content: {
                     'application/json': {
-                        schema: AuthSchemas.LogoutRequest,
+                        schema: AuthSchemas.LogoutForMobileRequest,
                     }
                 }
             },
