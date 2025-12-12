@@ -11,11 +11,14 @@ const APP_NAME = env.APP_NAME;
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465, // SSL port
-  secure: true, // true cho port 465
+  port: 587, // ✅ ĐÚNG
+  secure: false, // ✅ STARTTLS
   auth: {
     user: USER,
-    pass: PASS, // App Password, không phải mật khẩu Gmail
+    pass: PASS, // App Password (16 ký tự)
+  },
+  tls: {
+    rejectUnauthorized: false, // optional – tránh lỗi cert ở VPS
   },
 });
 
