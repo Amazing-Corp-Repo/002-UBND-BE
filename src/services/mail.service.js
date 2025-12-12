@@ -91,8 +91,12 @@ const MailService = {
       subject,
       html,
     };
-
-    return transporter.sendMail(mailOptions);
+    try {
+      return transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Lỗi gửi email:", error);
+      return null;
+    }
   },
 
   async sendMailCC({ to, cc = [], bcc = [], type, data = {} }) {
@@ -125,8 +129,12 @@ const MailService = {
       subject,
       html,
     };
-
-    return transporter.sendMail(mailOptions);
+    try {
+      return transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Lỗi gửi email với CC/BCC:", error);
+      return null;
+    }
   },
 };
 
