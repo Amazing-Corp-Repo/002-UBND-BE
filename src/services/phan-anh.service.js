@@ -507,12 +507,12 @@ const handleSendMailNotification = async (
       userData.url = urlUser;
     }
 
-    await MailService.sendMailCC({
-      to: existingUser.email,
-      cc: [...(firstAdminEmail ? [firstAdminEmail] : []), ...managerMailList],
-      type: MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
-      data: userData,
-    });
+    await MailService.sendMail(
+      existingUser.email,
+      MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
+      userData,
+    );
+    
   } else {
     console.log("User không có email → không gửi thông báo cho user");
   }

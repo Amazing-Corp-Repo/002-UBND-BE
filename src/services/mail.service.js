@@ -11,11 +11,14 @@ const APP_NAME = env.APP_NAME;
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465, // SSL port
-  secure: true, // true cho port 465
+  port: 587, // ✅ ĐÚNG
+  secure: false, // ✅ STARTTLS
   auth: {
     user: USER,
-    pass: PASS, // App Password, không phải mật khẩu Gmail
+    pass: PASS, // App Password (16 ký tự)
+  },
+  tls: {
+    rejectUnauthorized: false, // optional – tránh lỗi cert ở VPS
   },
 });
 
@@ -78,6 +81,10 @@ const MailService = {
       case MAIL_TYPE.UPDATE_PROFILE:
         subject = "Thông tin tài khoản của bạn đã được cập nhật";
         templateFile = "update-profile.html";
+        break;
+      case MAIL_TYPE.PHAN_ANH_STATUS_UPDATED:
+        subject = `[${APP_NAME}] Phản ánh đã được cập nhật trạng thái #${data.maPhanAnh}`;
+        templateFile = "report-status-updated.html";
         break;
       default:
         throw new BaseError(400, "Loại email không hợp lệ");
