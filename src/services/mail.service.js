@@ -82,6 +82,10 @@ const MailService = {
         subject = "Thông tin tài khoản của bạn đã được cập nhật";
         templateFile = "update-profile.html";
         break;
+      case MAIL_TYPE.PHAN_ANH_STATUS_UPDATED:
+        subject = `[${APP_NAME}] Phản ánh đã được cập nhật trạng thái #${data.maPhanAnh}`;
+        templateFile = "report-status-updated.html";
+        break;
       default:
         throw new BaseError(400, "Loại email không hợp lệ");
     }
