@@ -35,6 +35,21 @@ export const LogoutRequest = Joi.object({
         }),
 });
 
+export const LogoutForMobileRequest = Joi.object({
+    refreshToken: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'Refresh token là bắt buộc',
+        }),
+    fcmToken: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'FCM token là bắt buộc',
+        }),
+});
+
 export const ChangePasswordRequest = Joi.object({
     matKhauHienTai: Joi.string()
         .trim()

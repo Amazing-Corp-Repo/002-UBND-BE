@@ -222,11 +222,23 @@ const UserService = {
     if (!user) {
       throw new BaseError(404, "Không tìm thấy người dùng");
     }
-    let userUpdated = await UserRepository.updateUser(userId, {
-      fcm_token: fcmToken,
+
+    if (!fcmToken) {
+      throw new BaseError(400, "FCM token không hợp lệ");
+    }
+
+    const currentTokens = user.fcm_token || [];
+
+    const updatedTokens = currentTokens.includes(fcmToken)
+      ? currentTokens
+      : [...currentTokens, fcmToken];
+
+    const userUpdated = await UserRepository.updateUser(userId, {
+      fcm_token: updatedTokens,
       nguoi_cap_nhat: userId,
       thoi_gian_cap_nhat: new Date().toISOString(),
     });
+
     return toUserResponse(userUpdated);
   },
 

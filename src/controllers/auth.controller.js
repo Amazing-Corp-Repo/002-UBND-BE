@@ -18,9 +18,9 @@ const AuthController = {
   },
 
   async logoutForMobile(req, res) {
-    const { refreshToken } = req.body;
+    const { refreshToken, fcmToken } = req.body;
     const ip = req.clientIp;
-    await AuthService.logoutForMobile(refreshToken, ip);
+    await AuthService.logoutForMobile(refreshToken, fcmToken, ip);
     return successResponse(res, null, "Đăng xuất thành công");
   },
 

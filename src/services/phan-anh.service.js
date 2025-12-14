@@ -17,6 +17,7 @@ import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
+import e from "express";
 
 const ORDER = [
   PHAN_ANH_STATUS.DA_GUI,
@@ -99,7 +100,11 @@ const PhanAnhService = {
         idLinhVucPhanAnh
       );
 
-    let firstAdminEmail = await UserRepository.geteFirstAdminEmail();
+    let allAdmin = await UserRepository.getAllAdmin();
+
+    let bcc = [...allAdmin, ...managerMailList];
+
+    const uniqueEmails = [...new Set(bcc)];
 
     let res = {
       id_phan_anh: createdPhanAnh.id,
@@ -118,12 +123,6 @@ const PhanAnhService = {
         kich_thuoc_file_mb: f.sizeMB,
       })),
     };
-
-    const managerTarget = resolveMailTarget(firstAdminEmail, managerMailList);
-
-    if (!managerTarget) {
-      return res;
-    }
 
     const safeUrl = (base, id) => {
       if (!base) return null;
@@ -145,8 +144,7 @@ const PhanAnhService = {
     }
 
     await MailService.sendMailCC({
-      to: managerTarget.to,
-      cc: managerTarget.cc,
+      bcc: uniqueEmails,
       type: MAIL_TYPE.CREATE_PHAN_ANH,
       data: mailData,
     });
@@ -333,7 +331,6 @@ const PhanAnhService = {
           phanAnh.id_linh_vuc_phan_anh
         );
 
-      let firstAdminEmail = await UserRepository.geteFirstAdminEmail();
 
       await handleSendMailNotification(
         phanAnh,
@@ -341,7 +338,6 @@ const PhanAnhService = {
         ghiChu,
         phanAnh.nguoi_tao,
         managerMailList,
-        firstAdminEmail
       );
 
       await handleSendNotificationByExpo(
@@ -406,11 +402,17 @@ const handleSendNotificationByExpo = async (
     data: {
       ma_phan_anh: phanAnh.ma_phan_anh,
       ghi_chu: ghiChu ?? "",
+      id: phanAnh.id,
     },
   };
 
+
   try {
-    await ExpoNotiRepository.sendNotification(expoPushToken, message);
+    if (expoPushToken.length !== 0) {
+      for (let token of expoPushToken) {
+        await ExpoNotiRepository.sendNotification(token, message);
+      }
+    }
   } catch (err) {
     console.error("Expo push error:", err);
   }
@@ -475,8 +477,7 @@ const handleSendMailNotification = async (
   trangThai,
   ghiChu,
   userId,
-  managerMailList,
-  firstAdminEmail
+  managerMailList
 ) => {
   const existingUser = await UserRepository.findById(userId);
 
@@ -510,15 +511,12 @@ const handleSendMailNotification = async (
     await MailService.sendMail(
       existingUser.email,
       MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
-      userData,
+      userData
     );
-    
   } else {
     console.log("User không có email → không gửi thông báo cho user");
   }
 
-  const managerTarget = resolveMailTarget(firstAdminEmail, managerMailList);
-  if (!managerTarget) return;
 
   const managerData = {
     maPhanAnh: phanAnh.ma_phan_anh,
@@ -533,9 +531,14 @@ const handleSendMailNotification = async (
     managerData.url = urlManager;
   }
 
+    let allAdmin = await UserRepository.getAllAdmin();
+
+    let bcc = [...allAdmin, ...managerMailList];
+
+    const uniqueEmails = [...new Set(bcc)];
+
   await MailService.sendMailCC({
-    to: managerTarget.to,
-    cc: managerTarget.cc,
+    bcc: uniqueEmails,
     type: MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
     data: managerData,
   });

@@ -81,11 +81,12 @@ const AuthService = {
     await RefreshTokenService.revoke(refreshToken, ip);
   },
 
-  async logoutForMobile(refreshToken, ip) {
+  async logoutForMobile(refreshToken, fcmToken, ip) {
     let decoded = await RefreshTokenService.verify(refreshToken, ip);
     let user = await UserRepository.findById(decoded.userId);
     if (user && user.fcm_token) {
-      await UserRepository.updateUser(user.id, { fcm_token: null });
+      const updatedTokens = user.fcm_token.filter(token => token !== fcmToken);
+      await UserRepository.updateUser(user.id, { fcm_token: updatedTokens });
     }
   },
 

@@ -9,6 +9,7 @@ import validate from "../middlewares/validate.middleware.js";
 import {
   CreateAccountRequest,
   CreateAdminAccountRequest,
+  UpdateFcmTokenRequest,
   UpdateProfileByAdminRequest,
   UpdateProfileRequest,
   UpdateStatusByAdminRequest,
@@ -74,6 +75,7 @@ userRoute.delete(
 userRoute.put(
   "/fcm-token",
   authenticate,
+  validate(UpdateFcmTokenRequest),
   audit_logs(AUDIT_LOGS.UPDATE, AUDIT_LOG_ACTIONS.UPDATE_PROFILE),
   UserController.updateFcmToken
 );
