@@ -1,9 +1,10 @@
 import JoiToSwagger from 'joi-to-swagger';
-import { ChangePasswordRequest, LoginRequest, LoginWithCaptchaRequest, LogoutRequest, RefreshTokenRequest, ResetPasswordRequest, SendOTPRequest, VerifyEnableOrDisable2FARequest, VerifyTwoFactorAuthRequest } from '../validators/auth.validator.js';
+import { ChangePasswordRequest, LoginRequest, LoginWithCaptchaRequest, LogoutRequest, LogoutForMobileRequest, RefreshTokenRequest, ResetPasswordRequest, SendOTPRequest, VerifyEnableOrDisable2FARequest, VerifyTwoFactorAuthRequest } from '../validators/auth.validator.js';
 
 const { swagger: LoginRequestSchema } = JoiToSwagger(LoginRequest);
 const { swagger: RefreshTokenRequestSchema } = JoiToSwagger(RefreshTokenRequest);
 const { swagger: LogoutRequestSchema } = JoiToSwagger(LogoutRequest);
+const { swagger: LogoutForMobileRequestSchema } = JoiToSwagger(LogoutForMobileRequest);
 const { swagger: ChangePasswordRequestSchema } = JoiToSwagger(ChangePasswordRequest);
 const { swagger: VerifyTwoFactorAuthRequestSchema } = JoiToSwagger(VerifyTwoFactorAuthRequest);
 const { swagger: SendOTPRequestSchema } = JoiToSwagger(SendOTPRequest);
@@ -15,6 +16,7 @@ const AuthSchemas = {
     LoginRequest: LoginRequestSchema,
     RefreshTokenRequest: RefreshTokenRequestSchema,
     LogoutRequest: LogoutRequestSchema,
+    LogoutForMobileRequest: LogoutForMobileRequestSchema,
     ChangePasswordRequest: ChangePasswordRequestSchema,
     VerifyTwoFactorAuthRequest: VerifyTwoFactorAuthRequestSchema,
     SendOTPRequest: SendOTPRequestSchema,

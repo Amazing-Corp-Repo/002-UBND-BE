@@ -99,7 +99,7 @@ const MailService = {
       html,
     };
     try {
-      return transporter.sendMail(mailOptions);
+      transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Lỗi gửi email:", error);
       return null;
@@ -130,14 +130,12 @@ const MailService = {
     const html = await this.renderTemplate(templateFile, data);
     const mailOptions = {
       from: `"${APP_NAME}" <${USER}>`,
-      to,
-      cc,
       bcc,
       subject,
       html,
     };
     try {
-      return transporter.sendMail(mailOptions);
+      transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Lỗi gửi email với CC/BCC:", error);
       return null;

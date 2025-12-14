@@ -5,6 +5,7 @@ import {
   LoginRequest,
   LoginWithCaptchaRequest,
   LogoutRequest,
+  LogoutForMobileRequest,
   RefreshTokenRequest,
   ResetPasswordRequest,
   SendOTPRequest,
@@ -34,7 +35,7 @@ authRoute.post(
 
 authRoute.post(
   "/logout-for-mobile",
-  validate(LogoutRequest),
+  validate(LogoutForMobileRequest),
   clientInfo,
   AuthController.logoutForMobile
 );
