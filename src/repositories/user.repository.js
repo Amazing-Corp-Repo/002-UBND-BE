@@ -221,6 +221,17 @@ const UserRepository = {
     return adminUser?.email ?? null;
   },
 
+  async findEmailsByRoleId(roleId){
+    const users = await prisma.nguoi_dung.findMany({
+      where: {
+        is_delete: false,
+        user_roles: { some: { role_id: roleId } },
+      },
+      select: { email: true },
+    });
+    return users.map((u) => u.email?.trim()).filter(Boolean);
+  },
+
   async searchUsers(search) {
     const whereBase = {
       is_delete: false,

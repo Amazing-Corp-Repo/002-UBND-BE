@@ -222,8 +222,13 @@ const UserService = {
     if (!user) {
       throw new BaseError(404, "Không tìm thấy người dùng");
     }
+
+    const currentTokens = user.fcm_token || [];
+
+    const updatedTokens = [...currentTokens, fcmToken];
+
     let userUpdated = await UserRepository.updateUser(userId, {
-      fcm_token: fcmToken,
+      fcm_token: updatedTokens,
       nguoi_cap_nhat: userId,
       thoi_gian_cap_nhat: new Date().toISOString(),
     });
