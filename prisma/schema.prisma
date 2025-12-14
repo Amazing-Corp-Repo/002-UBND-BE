@@ -226,7 +226,7 @@ model nguoi_dung {
   nguoi_cap_nhat                                                                            String?                           @db.Uuid
   thoi_gian_tao                                                                             DateTime?                         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                                                                        DateTime?                         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  fcm_token                                                                                 String[]
+  fcm_token                                                                                 String[]                          @db.VarChar
   audit_logs                                                                                audit_logs[]
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung                        cach_thuc_thuc_hien[]             @relation("cach_thuc_thuc_hien_nguoi_cap_nhatTonguoi_dung")
   cach_thuc_thuc_hien_cach_thuc_thuc_hien_nguoi_taoTonguoi_dung                             cach_thuc_thuc_hien[]             @relation("cach_thuc_thuc_hien_nguoi_taoTonguoi_dung")

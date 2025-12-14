@@ -198,8 +198,8 @@ const UserRepository = {
     });
   },
 
-  async geteFirstAdminEmail() {
-    const adminUser = await prisma.nguoi_dung.findFirst({
+  async getAllAdmin() {
+    const adminUsers = await prisma.nguoi_dung.findMany({
       where: {
         is_delete: false,
         user_roles: {
@@ -210,15 +210,11 @@ const UserRepository = {
           },
         },
       },
-      orderBy: {
-        thoi_gian_tao: "asc",
-      },
       select: {
         email: true,
       },
     });
-
-    return adminUser?.email ?? null;
+    return adminUsers.map((user) => user.email).filter(Boolean);;
   },
 
   async findEmailsByRoleId(roleId){

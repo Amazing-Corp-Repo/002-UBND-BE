@@ -4,8 +4,6 @@ import handlebars from "handlebars";
 import env from "../config/environment.config.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import { BaseError } from "../utils/base-error.util.js";
-import UserRepository from "../repositories/user.repository.js";
-import RoleRepository from "../repositories/role.repository.js";
 
 const USER = env.MAIL_USER;
 const PASS = env.MAIL_PASS;
@@ -23,25 +21,6 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false, // optional – tránh lỗi cert ở VPS
   },
 });
-
-let cachedAdminEmails = [];
-let cachedAt = 0;
-const ADMIN_BCC_TTL_MS = 5 * 60 * 1000;
-
-const getAdminEmails = async () => {
-  const now = Date.now();
-  if (cachedAdminEmails.length && now - cachedAt < ADMIN_BCC_TTL_MS){
-    return cachedAdminEmails;
-  }
-  const adminRole = await RoleRepository.findRoleByName("ADMIN");
-  if (!adminRole) return [];
-
-  const users = await UserRepository.findEmailsByRoleId(adminRole.id);
-  const emails = users.map(u => u.email?.trim()).filter(Boolean);
-  cachedAdminEmails = Array.from(new Set(emails));
-  cachedAt = now;
-  return cachedAdminEmails;
-}
 
 const MailService = {
   async renderTemplate(fileName, data) {
@@ -120,7 +99,7 @@ const MailService = {
       html,
     };
     try {
-      return transporter.sendMail(mailOptions);
+      transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Lỗi gửi email:", error);
       return null;
@@ -148,20 +127,15 @@ const MailService = {
         throw new BaseError(400, "Loại email không hợp lệ cho sendMailCC");
     }
 
-    const adminBcc = await getAdminEmails();
-    const mergeBcc = (arr = []) => Array.from(new Set([...(arr || []), ...adminBcc]));
-
     const html = await this.renderTemplate(templateFile, data);
     const mailOptions = {
       from: `"${APP_NAME}" <${USER}>`,
-      to,
-      cc,
-      bcc: mergeBcc(bcc),
+      bcc,
       subject,
       html,
     };
     try {
-      return transporter.sendMail(mailOptions);
+      transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Lỗi gửi email với CC/BCC:", error);
       return null;
