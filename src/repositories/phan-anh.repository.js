@@ -430,10 +430,20 @@ const PhanAnhRepository = {
   async searhByTieuDe(search) {
     return await prisma.phan_anh.findMany({
       where: {
-        tieu_de: {
-          contains: search,
-          mode: "insensitive",
-        },
+        OR: [
+          {
+            tieu_de: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            ma_phan_anh: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ],
       },
       select: {
         id: true,
