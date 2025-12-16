@@ -260,6 +260,7 @@ const UserRepository = {
         id: true,
         ho_va_ten: true,
         ten_dang_nhap: true,
+        email: true,
       },
     });
     return users;
