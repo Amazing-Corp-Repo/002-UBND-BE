@@ -18,14 +18,15 @@ export const toSnakeCaseNonAccent = (str) => {
 };
 
 export const capitalizeWords = (str) => {
-  if (!str) return "";
+  // if (!str) return "";
+  // return str
+  //   .trim()
+  //   .toLowerCase()
+  //   .split(" ")
+  //   .filter(Boolean) // loại bỏ khoảng trắng thừa
+  //   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  //   .join(" ");
   return str
-    .trim()
-    .toLowerCase()
-    .split(" ")
-    .filter(Boolean) // loại bỏ khoảng trắng thừa
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
 };
 
 export const appendDeleteSuffixc = (str) => {
