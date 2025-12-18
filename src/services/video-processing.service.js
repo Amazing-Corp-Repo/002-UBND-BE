@@ -101,10 +101,22 @@ const VideoProcessingService = {
             status: VIDEO_STATUS.DONE,
             final_hls_url: relativeUrl,
             updated_at: new Date().toISOString(),
+            final_mp4_url: null,
         });
+
+        await safeDeleteMp4(mp4Path);
 
         return { hlsPath: hlsPlaylistPath, relativeUrl };
     },
 };
+
+const safeDeleteMp4 = async (mp4Path) => {
+    try {
+        await fs.promises.access(mp4Path, fs.constants.F_OK);
+        await fs.promises.unlink(mp4Path);
+    } catch (err) {
+        console.warn(`Không thể xoá mp4: ${mp4Path}`, err.message);
+    }
+}
 
 export default VideoProcessingService;
