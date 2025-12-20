@@ -50,14 +50,14 @@ const VideoUploadRepository = {
         },
         created_at: { lt: cutoffDate },
       },
-      select: { 
+      select: {
         id: true,
         video_upload_chunks: {
           select: {
             id: true,
             path: true,
-          }
-        } 
+          },
+        },
       },
     });
   },
@@ -65,6 +65,21 @@ const VideoUploadRepository = {
   async deleteChunk(id) {
     return await prisma.video_upload_chunks.delete({
       where: { id },
+    });
+  },
+
+  async getVideosByIds(ids) {
+    if (!ids.length) return [];
+
+    return prisma.video_uploads.findMany({
+      where: {
+        id: { in: ids },
+        final_hls_url: { not: null },
+      },
+      select: {
+        id: true,
+        final_hls_url: true,
+      },
     });
   },
 };
