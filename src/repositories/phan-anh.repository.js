@@ -545,6 +545,56 @@ const PhanAnhRepository = {
 
     return { data: phanAnhs, totalItems: total[0].count };
   },
+
+  async getPhanAnhToDowload(from, to) {
+    let whereClause = {
+      thoi_gian_tao: {
+        gte: from,
+        lte: to,
+      },
+    };
+
+    let data = await prisma.phan_anh.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        tieu_de: true,
+        ma_phan_anh: true,
+        muc_do: true,
+        ten_nguoi_phan_anh: true,
+        sdt_nguoi_phan_anh: true,
+        mo_ta: true,
+        vi_tri: true,
+        thoi_gian_tiep_nhan: true,
+        thoi_gian_tao: true,
+        id_video: true,
+        dinh_kem_phan_anh: {
+          select: {
+            dinh_dang_file: true,
+            url_file: true,
+          },
+        },
+        linh_vuc_phan_anh: {
+          select: {
+            ten: true,
+          },
+        },
+        lich_su_trang_thai: {
+          orderBy: {
+            thoi_gian_tao: "desc",
+          },
+          select: {
+            ten: true,
+            thoi_gian_tao: true,
+            ghi_chu: true,
+            nguoi_tao: true,
+          },
+        },
+      },
+    });
+
+    return data;
+  },
 };
 
 export default PhanAnhRepository;

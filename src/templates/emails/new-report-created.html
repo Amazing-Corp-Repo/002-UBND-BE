@@ -5,20 +5,26 @@
 </p>
 
 <p style="margin:0 0 12px 0;">
-    <strong>Mã phản ánh:</strong> {{maPhanAnh}}<br/>
-    <strong>Tiêu đề:</strong> {{tieuDe}}<br/>
-    <strong>Mức độ:</strong> {{mucDo}}<br/>
-    <strong>Vị trí:</strong> {{viTri}}<br/>
+    <strong>Mã phản ánh:</strong> {{maPhanAnh}}<br />
+    <strong>Tiêu đề:</strong> {{tieuDe}}<br />
+    <strong>Mức độ:</strong> {{mucDo}}<br />
+    <strong>Vị trí:</strong> {{viTri}}<br />
 </p>
 
 <p style="margin:0 0 12px 0;">
-    <strong>Mô tả:</strong><br/>
+    <strong>Mô tả:</strong><br />
     {{moTa}}
 </p>
 
 {{#if url}}
 <p style="margin:0 0 12px 0;">
-    <strong>Xem chi tiết phản ánh:</strong><br/>
+    <a href="{{url}}" target="_blank" class="btn">
+        Xem chi tiết phản ánh
+    </a>
+</p>
+
+<p style="margin:0 0 12px 0;" class="muted">
+    Nếu nút không bấm được, bạn có thể copy link sau vào trình duyệt:<br />
     <a href="{{url}}" target="_blank">{{url}}</a>
 </p>
 {{/if}}
@@ -26,4 +32,3 @@
 <p style="margin-top:12px;">
     Vui lòng truy cập hệ thống để xử lý phản ánh này.
 </p>
-

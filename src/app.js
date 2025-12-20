@@ -107,6 +107,10 @@ import("../src/workers/video.worker.js")
   .then(() => console.log("Worker started cùng server"))
   .catch((err) => console.error("Worker error:", err));
 
+import("../src/workers/export-phan-anh.worker.js")
+  .then(() => console.log("Export worker started cùng server"))
+  .catch((err) => console.error("Export worker error:", err));
+
 import("./cron/cleanup-chunks.cron.js")
   .then((m) => {
     m.registerCleanupCron();
