@@ -17,7 +17,6 @@ import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
-import e from "express";
 
 const ORDER = [
   PHAN_ANH_STATUS.DA_GUI,
@@ -331,13 +330,12 @@ const PhanAnhService = {
           phanAnh.id_linh_vuc_phan_anh
         );
 
-
       await handleSendMailNotification(
         phanAnh,
         trangThai,
         ghiChu,
         phanAnh.nguoi_tao,
-        managerMailList,
+        managerMailList
       );
 
       await handleSendNotificationByExpo(
@@ -405,7 +403,6 @@ const handleSendNotificationByExpo = async (
       id: phanAnh.id,
     },
   };
-
 
   try {
     if (expoPushToken.length !== 0) {
@@ -517,7 +514,6 @@ const handleSendMailNotification = async (
     console.log("User không có email → không gửi thông báo cho user");
   }
 
-
   const managerData = {
     maPhanAnh: phanAnh.ma_phan_anh,
     trangThaiMoi: trangThai,
@@ -531,11 +527,11 @@ const handleSendMailNotification = async (
     managerData.url = urlManager;
   }
 
-    let allAdmin = await UserRepository.getAllAdmin();
+  let allAdmin = await UserRepository.getAllAdmin();
 
-    let bcc = [...allAdmin, ...managerMailList];
+  let bcc = [...allAdmin, ...managerMailList];
 
-    const uniqueEmails = [...new Set(bcc)];
+  const uniqueEmails = [...new Set(bcc)];
 
   await MailService.sendMailCC({
     bcc: uniqueEmails,

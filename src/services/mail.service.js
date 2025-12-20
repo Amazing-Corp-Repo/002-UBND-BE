@@ -63,28 +63,32 @@ const MailService = {
 
     switch (type) {
       case MAIL_TYPE.RESET_PASSWORD:
-        subject = "Khôi phục mật khẩu";
+        subject = `[${APP_NAME}] Đặt lại mật khẩu`;
         templateFile = "reset-password.html";
         break;
       case MAIL_TYPE.ACCOUNT_CREATED:
-        subject = "Tài khoản của bạn đã được tạo";
+        subject = `[${APP_NAME}] Tài khoản của bạn đã được tạo`;
         templateFile = "account-created.html";
         break;
       case MAIL_TYPE.ENABLE_OR_DISABLE_2FA:
-        subject = "Xác nhận bật/tắt xác thực hai yếu tố (2FA)";
+        subject = `[${APP_NAME}] Thay đổi trạng thái xác thực hai yếu tố (2FA)`;
         templateFile = "enable-or-disable-2fa.html";
         break;
       case MAIL_TYPE.LOGIN_2FA:
-        subject = "Mã xác thực hai yếu tố (2FA) đăng nhập";
+        subject = `[${APP_NAME}] Mã xác thực hai yếu tố (2FA)`;
         templateFile = "login-2fa-otp.html";
         break;
       case MAIL_TYPE.UPDATE_PROFILE:
-        subject = "Thông tin tài khoản của bạn đã được cập nhật";
+        subject = `[${APP_NAME}] Cập nhật thông tin cá nhân`;
         templateFile = "update-profile.html";
         break;
       case MAIL_TYPE.PHAN_ANH_STATUS_UPDATED:
         subject = `[${APP_NAME}] Phản ánh đã được cập nhật trạng thái #${data.maPhanAnh}`;
         templateFile = "report-status-updated.html";
+        break;
+      case MAIL_TYPE.EXPORT_READY:
+        subject = `[${APP_NAME}] File export đã sẵn sàng`;
+        templateFile = "export-ready.html";
         break;
       default:
         throw new BaseError(400, "Loại email không hợp lệ");

@@ -27,6 +27,7 @@ const env = {
     queues : {
         videoMerge: process.env.RABBITMQ_QUEUE_VIDEO_MERGE,
         videoHLS: process.env.RABBITMQ_QUEUE_VIDEO_HLS,
+        exportPhanAnh: process.env.RABBITMQ_QUEUE_EXPORT_PHAN_ANH,
     },
     FIREBASE_FIREBASE_TYPE: process.env.FIREBASE_FIREBASE_TYPE,
     FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
@@ -45,6 +46,7 @@ const env = {
     URL_PHAN_ANH_MANAGER: process.env.URL_PHAN_ANH_MANAGER,
     URL_PHAN_ANH_USER: process.env.URL_PHAN_ANH_USER,
     EXPO_NOTI_SERVICE_URL: process.env.EXPO_NOTI_SERVICE_URL,
+    URL_EXPORT_PHAN_ANH: process.env.URL_EXPORT_PHAN_ANH,
 }
 
 export default env;

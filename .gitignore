@@ -503,6 +503,7 @@ used queries
 .env
 # Ignore mọi thứ dưới uploads
 src/public/uploads/**
+src/public/export/**
 
 # Nhưng KHÔNG ignore thư mục (dấu / ở cuối rất quan trọng)
 !src/public/uploads/**/
