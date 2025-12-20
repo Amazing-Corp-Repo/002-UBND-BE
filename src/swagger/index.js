@@ -17,6 +17,7 @@ import RoleSwagger from './role.swagger.js';
 import PermissionSwagger from './permission.swagger.js';
 import NotificationSwagger from './notification.swagger.js';
 import AuditLogSwagger from './audit-log.swagger.js';
+import ExportSwagger from './export.swagger.js';
 
 const swaggerDocument = {
 
@@ -52,6 +53,7 @@ const swaggerDocument = {
         ...PermissionSwagger,
         ...NotificationSwagger,
         ...AuditLogSwagger,
+        ...ExportSwagger,
     },
 
     components: {
