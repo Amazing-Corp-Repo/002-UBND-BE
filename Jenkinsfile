@@ -149,6 +149,7 @@ pipeline {
             -e PORT=${PORT} \
             -p ${PORT}:${PORT} \
             -v /var/www/public/uploads:/app/src/public/uploads:rw \
+            --network proxy \
             ${IMAGE_NAME}:${IMAGE_TAG}
         '''
       }
