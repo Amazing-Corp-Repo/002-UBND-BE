@@ -32,6 +32,20 @@ const UserRepository = {
     });
   },
 
+  async createAdminAccount(userData) {
+    return await prisma.$transaction(async (tx) => {
+      const user = await tx.nguoi_dung.create({
+        data: {
+          ten_dang_nhap: userData.ten_dang_nhap,
+          email: userData.email,
+          mat_khau: userData.mat_khau,
+          nguoi_tao: userData.nguoi_tao,
+        },
+      });
+      return user;
+    });
+  },
+
   async updateUserByAdmin(userId, updateData, roleId) {
     return await prisma.$transaction(async (tx) => {
       const user = await tx.nguoi_dung.update({
@@ -214,10 +228,10 @@ const UserRepository = {
         email: true,
       },
     });
-    return adminUsers.map((user) => user.email).filter(Boolean);;
+    return adminUsers.map((user) => user.email).filter(Boolean);
   },
 
-  async findEmailsByRoleId(roleId){
+  async findEmailsByRoleId(roleId) {
     const users = await prisma.nguoi_dung.findMany({
       where: {
         is_delete: false,
@@ -228,7 +242,7 @@ const UserRepository = {
     return users.map((u) => u.email?.trim()).filter(Boolean);
   },
 
-  async findEmailsByRoleId(roleId){
+  async findEmailsByRoleId(roleId) {
     const users = await prisma.nguoi_dung.findMany({
       where: {
         is_delete: false,

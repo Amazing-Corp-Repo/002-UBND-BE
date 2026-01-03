@@ -28,7 +28,7 @@ export const CreateAccountSeed = async () => {
   let user = await UserRepository.findUserByUsername(username);
 
   if (!user) {
-    user = await UserRepository.createUser({
+    user = await UserRepository.createAdminAccount({
       ten_dang_nhap: username,
       mat_khau: await hash(password),
       email: email,
