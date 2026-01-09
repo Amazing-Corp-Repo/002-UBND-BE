@@ -10,6 +10,7 @@ import {
   CreateAccountRequest,
   CreateAdminAccountRequest,
   UpdateFcmTokenRequest,
+  UpdateFirstLoginRequest,
   UpdateProfileByAdminRequest,
   UpdateProfileRequest,
   UpdateStatusByAdminRequest,
@@ -23,6 +24,7 @@ import {
   PERMISSION,
   PERMISSION_DESC,
 } from "../constants/permission.constant.js";
+import { clientInfo } from "../middlewares/client-info.middleware.js";
 
 const userRoute = express.Router();
 
@@ -55,6 +57,7 @@ userRoute.put(
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.ND_UPDATE),
   UserController.updateProfileByAdmin
 );
+
 userRoute.put(
   "/update-status/:userId",
   authenticate,
@@ -94,5 +97,12 @@ userRoute.post(
   logAuthMiddleware,
   validate(CreateAdminAccountRequest),
   UserController.createAdminAccount
+);
+
+userRoute.put(
+  "/update-first-login",
+  validate(UpdateFirstLoginRequest),
+  clientInfo,
+  UserController.updateFirstLogin
 );
 export default userRoute;

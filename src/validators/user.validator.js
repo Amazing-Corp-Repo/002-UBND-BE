@@ -152,3 +152,43 @@ export const CreateAdminAccountRequest = Joi.object({
             'any.required': 'Mật khẩu là bắt buộc',
         }),
 });
+
+export const UpdateFirstLoginRequest = Joi.object({
+    tenDangNhap: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'Tên đăng nhập không được để trống',
+        }),
+    tmpPassword: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'Mật khẩu tạm thời không được để trống',
+        }),
+    newPassword: Joi.string()
+        .trim()
+        .min(6)
+        .max(255)
+        .required()
+        .messages({
+            'string.min': 'Mật khẩu mới phải có ít nhất 6 ký tự',
+            'any.required': 'Mật khẩu mới là bắt buộc',
+        }),
+    email: Joi.string()
+        .trim()
+        .email()
+        .max(100)
+        .required()
+        .messages({
+            'string.email': 'Email không hợp lệ',
+            'any.required': 'Email là bắt buộc',
+            'string.max': 'Email không được vượt quá 100 ký tự',
+        }),
+    recaptchaToken: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            'any.required': 'reCAPTCHA token là bắt buộc',
+        }),
+});
