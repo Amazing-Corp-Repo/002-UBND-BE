@@ -1,4 +1,4 @@
-import { hash } from "../utils/bcrypt.util.js";
+import { compare, hash } from "../utils/bcrypt.util.js";
 import toUserResponse from "../mapper/user.mapper.js";
 import UserRepository from "../repositories/user.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
@@ -7,6 +7,7 @@ import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 import RoleRepository from "../repositories/role.repository.js";
+import CaptchaRepository from "../repositories/http/captcha.repository.js";
 
 const UserService = {
   async getUserById(userId) {
@@ -270,6 +271,40 @@ const UserService = {
   async searchUsers(search) {
     const users = await UserRepository.searchUsers(search);
     return users;
+  },
+
+  async updateFirstLogin(tenDangNhap, tmpPassword, newPassword, email, recaptchaToken, ip) {
+    let user = await UserRepository.findByUsername(tenDangNhap);
+
+    if (!user) {
+      throw new BaseError(404, "Không tìm thấy người dùng");
+    }
+
+    const data = await CaptchaRepository.verify(recaptchaToken, ip);
+
+    if (!data.success) {
+      throw new BaseError(400, "Xác thực reCAPTCHA không thành công");
+    }
+
+    if ((await compare(tmpPassword, user.mat_khau)) === false) {
+      throw new BaseError(400, "Mật khẩu hiện tại không đúng");
+    }
+
+    let existingUserEmail = await UserRepository.findByEmail(email);
+
+    if (existingUserEmail) {
+      throw new BaseError(400, "Email đã được sử dụng bởi người dùng khác");
+    }
+
+    const hashedPassword = await hash(newPassword);
+
+    user = await UserRepository.updateUser(user.id, {
+      mat_khau: hashedPassword,
+      email: email,
+      is_active: true,
+      nguoi_cap_nhat: user.id,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    });
   },
 };
 

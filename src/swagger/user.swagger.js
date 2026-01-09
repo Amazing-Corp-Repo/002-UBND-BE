@@ -209,6 +209,23 @@ const UserSwagger = {
       responses: {},
     },
   },
+  "/api/users/update-first-login": {
+    put: {
+      tags: ["Users"],
+      summary: "Cập nhật mật khẩu lần đầu đăng nhập",
+      description:
+        "Người dùng cập nhật mật khẩu khi đăng nhập lần đầu hoặc sau khi được đặt lại mật khẩu",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: UserSchemas.UpdateFirstLoginRequest,
+          },
+        },
+      },
+      responses: {},
+    },
+  },
 };
 
 export default UserSwagger;

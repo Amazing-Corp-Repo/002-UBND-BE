@@ -127,13 +127,31 @@ const UserController = {
       email,
       matKhau
     );
-    return successResponse(res, result, 'Tạo tài khoản quản trị viên thành công');
+    return successResponse(
+      res,
+      result,
+      "Tạo tài khoản quản trị viên thành công"
+    );
   },
 
   async searchUsers(req, res) {
     const { search } = req.query;
     const result = await UserService.searchUsers(search);
     return successResponse(res, result, "Tìm kiếm người dùng thành công");
+  },
+
+  async updateFirstLogin(req, res) {
+    const { tenDangNhap, tmpPassword, newPassword, email, recaptchaToken } = req.body;
+    const ip = req.clientIp;
+    await UserService.updateFirstLogin(
+      tenDangNhap,
+      tmpPassword,
+      newPassword,
+      email,
+      recaptchaToken,
+      ip
+    );
+    return successResponse(res, null, "Cập nhật mật khẩu thành công");
   },
 };
 export default UserController;
