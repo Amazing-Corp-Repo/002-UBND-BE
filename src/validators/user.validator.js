@@ -179,10 +179,10 @@ export const UpdateFirstLoginRequest = Joi.object({
         .trim()
         .email()
         .max(100)
-        .required()
+        .optional()
+        .allow(null, '')
         .messages({
             'string.email': 'Email không hợp lệ',
-            'any.required': 'Email là bắt buộc',
             'string.max': 'Email không được vượt quá 100 ký tự',
         }),
     recaptchaToken: Joi.string()
