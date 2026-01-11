@@ -450,7 +450,24 @@ const PhanAnhRepository = {
         ma_phan_anh: true,
         tieu_de: true,
         mo_ta: true,
+        linh_vuc_phan_anh: {
+          select: {
+            ten: true,
+          },
+        },
+        thoi_gian_tao: true,
+        lich_su_trang_thai: {
+          orderBy: {
+            thoi_gian_tao: "desc",
+          },
+          select: {
+            ten: true,
+            thoi_gian_tao: true,
+          },
+          take: 1,
+        },
       },
+      take: 1000,
     });
   },
 

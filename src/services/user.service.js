@@ -273,7 +273,14 @@ const UserService = {
     return users;
   },
 
-  async updateFirstLogin(tenDangNhap, tmpPassword, newPassword, email, recaptchaToken, ip) {
+  async updateFirstLogin(
+    tenDangNhap,
+    tmpPassword,
+    newPassword,
+    email,
+    recaptchaToken,
+    ip
+  ) {
     let user = await UserRepository.findByUsername(tenDangNhap);
 
     if (!user) {
@@ -290,10 +297,12 @@ const UserService = {
       throw new BaseError(400, "Mật khẩu hiện tại không đúng");
     }
 
-    let existingUserEmail = await UserRepository.findByEmail(email);
+    if (email) {
+      let existingUserEmail = await UserRepository.findByEmail(email);
 
-    if (existingUserEmail) {
-      throw new BaseError(400, "Email đã được sử dụng bởi người dùng khác");
+      if (existingUserEmail) {
+        throw new BaseError(400, "Email đã được sử dụng bởi người dùng khác");
+      }
     }
 
     const hashedPassword = await hash(newPassword);
