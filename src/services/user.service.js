@@ -281,7 +281,7 @@ const UserService = {
     recaptchaToken,
     ip
   ) {
-    let user = await UserRepository.findByUsername(tenDangNhap);
+    let user = await UserRepository.findByUsername(tenDangNhap.toLowerCase());
 
     if (!user) {
       throw new BaseError(404, "Không tìm thấy người dùng");
@@ -307,13 +307,18 @@ const UserService = {
 
     const hashedPassword = await hash(newPassword);
 
-    user = await UserRepository.updateUser(user.id, {
+    let dataUpdate = {
       mat_khau: hashedPassword,
-      email: email,
       is_active: true,
       nguoi_cap_nhat: user.id,
       thoi_gian_cap_nhat: new Date().toISOString(),
-    });
+    }
+
+    if (email) {
+      dataUpdate.email = email;
+    }
+
+    user = await UserRepository.updateUser(user.id, dataUpdate);
   },
 };
 
