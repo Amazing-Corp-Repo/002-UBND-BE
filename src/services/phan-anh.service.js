@@ -372,7 +372,11 @@ const PhanAnhService = {
     };
   },
 
-  async searhByTieuDe(search) {
+  async searhByTieuDe(search = '') {
+    if(search.trim().length <= 2) {
+      throw new BaseError(400, "Từ khóa tìm kiếm phải có ít nhất 3 ký tự");
+    }
+
     return await PhanAnhRepository.searhByTieuDe(search);
   },
 };
