@@ -226,6 +226,23 @@ const UserSwagger = {
       responses: {},
     },
   },
+  "/api/users/data/{key}": {
+    get: {
+      tags: ["Users"],
+      summary: "Lấy dữ liệu mẫu theo khóa",
+      description: "Lấy dữ liệu mẫu để thử nghiệm hoặc phát triển",
+      parameters: [
+        {
+          name: "key",
+          in: "path",
+          required: true,
+          schema: { type: "string" },
+          description: "Khóa để lấy dữ liệu mẫu",
+        },
+      ],
+      responses: {},
+    },
+  },
 };
 
 export default UserSwagger;

@@ -50,7 +50,7 @@ const UserService = {
       size,
       isActive,
       role,
-      search
+      search,
     );
     const userResponses = users.map((user) => {
       let vai_tro = "";
@@ -74,7 +74,7 @@ const UserService = {
     // }
     const existingUsers = await UserRepository.findByUsernameOrEmailList(
       tenDangNhap,
-      email
+      email,
     );
 
     if (existingUsers.length > 0) {
@@ -110,7 +110,7 @@ const UserService = {
     tenDangNhap,
     email,
     matKhau,
-    currentUser
+    currentUser,
   ) {
     const existingRole = await RoleRepository.getById(vaiTro);
     if (!existingRole) {
@@ -129,7 +129,7 @@ const UserService = {
     // }
     const existingUsers = await UserRepository.findByUsernameOrEmailList(
       tenDangNhap,
-      email
+      email,
     );
 
     const conflicted = existingUsers.find((u) => u.id !== userId);
@@ -154,7 +154,7 @@ const UserService = {
     const updatedUser = await UserRepository.updateUserByAdmin(
       userId,
       data,
-      vaiTro
+      vaiTro,
     );
     updatedUser.vai_tro = existingRole.name;
 
@@ -181,7 +181,7 @@ const UserService = {
     if (user.is_active) {
       throw new BaseError(
         400,
-        "Không thể xóa người dùng đang hoạt động. Vui lòng vô hiệu hóa người dùng trước khi xóa."
+        "Không thể xóa người dùng đang hoạt động. Vui lòng vô hiệu hóa người dùng trước khi xóa.",
       );
     }
     await UserRepository.updateUser(userId, {
@@ -207,13 +207,13 @@ const UserService = {
     if (vai_tro === "ADMIN") {
       throw new BaseError(
         400,
-        "Không thể thay đổi trạng thái của quản trị viên"
+        "Không thể thay đổi trạng thái của quản trị viên",
       );
     }
     let userUpdated = await UserRepository.updateStatusByAdmin(
       userId,
       isActive,
-      currentUser
+      currentUser,
     );
     return toUserResponse(userUpdated);
   },
@@ -246,7 +246,7 @@ const UserService = {
   async createAdminAccount(tenDangNhap, email, matKhau) {
     const existingUsers = await UserRepository.findByUsernameOrEmailList(
       tenDangNhap,
-      email
+      email,
     );
 
     const conflicted = existingUsers.find((u) => u.id !== userId);
@@ -279,7 +279,7 @@ const UserService = {
     newPassword,
     email,
     recaptchaToken,
-    ip
+    ip,
   ) {
     let user = await UserRepository.findByUsername(tenDangNhap.toLowerCase());
 
@@ -312,13 +312,20 @@ const UserService = {
       is_active: true,
       nguoi_cap_nhat: user.id,
       thoi_gian_cap_nhat: new Date().toISOString(),
-    }
+    };
 
     if (email) {
       dataUpdate.email = email;
     }
 
     user = await UserRepository.updateUser(user.id, dataUpdate);
+  },
+
+  async getDataMock(key) {
+    let result = {
+      address: `123 Đường ABC, Phường XYZ, Quận 1, TP.HCM -  ${key}`,
+    };
+    return result;
   },
 };
 
