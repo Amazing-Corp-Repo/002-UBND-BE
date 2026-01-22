@@ -322,13 +322,18 @@ const UserService = {
   },
 
   async getDataMock(key) {
-    if (key != '123456') {
-      throw new BaseError(400, "Khóa không hợp lệ");
-    }
     let result = {
       address: `123 Đường ABC, Phường XYZ, Quận 1, TP.HCM -  ${key}`,
     };
-    return result;
+
+    if (key == "0792040011111") {
+      return result;
+    } else if (key == "0792040026969") {
+      return result;
+    } else if (key == "0792040028989") {
+      return result;
+    }
+    throw new BaseError(400, "Khóa không hợp lệ");
   },
 };
 
