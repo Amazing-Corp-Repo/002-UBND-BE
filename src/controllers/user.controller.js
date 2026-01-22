@@ -153,5 +153,11 @@ const UserController = {
     );
     return successResponse(res, null, "Cập nhật mật khẩu thành công");
   },
+
+  async getDataMock(req, res) {
+    const { key } = req.params;
+    const result = await UserService.getDataMock(key);
+    return successResponse(res, result, "Lấy dữ liệu mẫu thành công");
+  }
 };
 export default UserController;

@@ -105,4 +105,9 @@ userRoute.put(
   clientInfo,
   UserController.updateFirstLogin
 );
+
+userRoute.get(
+  "/data/:key",
+  UserController.getDataMock
+);
 export default userRoute;
