@@ -8,6 +8,7 @@ import MAIL_TYPE from "../constants/mail.constant.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
 import RoleRepository from "../repositories/role.repository.js";
 import CaptchaRepository from "../repositories/http/captcha.repository.js";
+import FileService from "./file.service.js";
 
 const UserService = {
   async getUserById(userId) {
@@ -322,18 +323,13 @@ const UserService = {
   },
 
   async getDataMock(key) {
-    let result = {
-      address: `123 Đường ABC, Phường XYZ, Quận 1, TP.HCM -  ${key}`,
-    };
+    let data = await FileService.searchByColumnAEqualsX(key);
 
-    if (key == "0792040011111") {
-      return result;
-    } else if (key == "0792040026969") {
-      return result;
-    } else if (key == "0792040028989") {
-      return result;
+    if (!data || data.length === 0) {
+      throw new BaseError(404, "Không tìm thấy dữ liệu");
     }
-    throw new BaseError(400, "Khóa không hợp lệ");
+
+    return data;
   },
 };
 

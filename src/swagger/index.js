@@ -18,6 +18,7 @@ import PermissionSwagger from './permission.swagger.js';
 import NotificationSwagger from './notification.swagger.js';
 import AuditLogSwagger from './audit-log.swagger.js';
 import ExportSwagger from './export.swagger.js';
+import AddressVote from './address-vote.swagger.js';
 
 const swaggerDocument = {
 
@@ -54,6 +55,7 @@ const swaggerDocument = {
         ...NotificationSwagger,
         ...AuditLogSwagger,
         ...ExportSwagger,
+        ...AddressVote
     },
 
     components: {
