@@ -4,8 +4,35 @@ import ExcelJS from "exceljs";
 import { buildContentTxt, toVNDateFolder } from "../utils/string.util.js";
 import VideoProcessingService from "./video-processing.service.js";
 import archiver from "archiver";
+import XLSX from "xlsx";
 
 const PUBLIC_DIR = path.join(process.cwd(), "src", "public");
+
+const XLSX_PATH = path.join(
+  process.cwd(),
+  "src",
+  "public",
+  "uploads",
+  "ADDRESS_VOTE",
+  "address_vote_uploads.xlsx",
+);
+
+// Cache workbook
+let cachedWb = null;
+let cachedMtimeMs = 0;
+
+// Load / reload workbook khi file thay đổi
+const getWorkbook = () => {
+  const stat = fs.statSync(XLSX_PATH);
+
+  if (!cachedWb || stat.mtimeMs !== cachedMtimeMs) {
+    cachedWb = XLSX.readFile(XLSX_PATH, { cellDates: true });
+    cachedMtimeMs = stat.mtimeMs;
+  }
+  return cachedWb;
+};
+
+// Search cột A === X, trả mảng object theo header
 
 const FileService = {
   async deleteFileByAbsolutePath(absolutePath) {
@@ -42,7 +69,7 @@ const FileService = {
           await fs.remove(parentDir);
         } else {
           console.log(
-            `Thư mục ${parentDir} vẫn còn ${files.length} file, không xóa.`
+            `Thư mục ${parentDir} vẫn còn ${files.length} file, không xóa.`,
           );
         }
       } else {
@@ -158,7 +185,7 @@ const FileService = {
       await fs.promises.writeFile(
         path.join(paDir, "content.txt"),
         contentTxt,
-        "utf8"
+        "utf8",
       );
     }
   },
@@ -185,7 +212,7 @@ const FileService = {
       exportRoot,
       dateFolder,
       pa.ma_phan_anh,
-      "videos"
+      "videos",
     );
     await this.ensureDir(videoDir);
 
@@ -195,7 +222,7 @@ const FileService = {
       const outputMp4 = path.join(videoDir, `${pa.ma_phan_anh}-${i + 1}.mp4`);
       await VideoProcessingService.convertHLSToMp4ForExport(
         playlistPath,
-        outputMp4
+        outputMp4,
       );
     }
 
@@ -272,7 +299,6 @@ const FileService = {
     return path.join(PUBLIC_DIR, clean);
   },
 
-
   async deleteFileByAbsolutePath(absPath) {
     try {
       if (!absPath) return;
@@ -326,6 +352,26 @@ const FileService = {
         await this.deleteDirByAbsolutePath(video.hlsDir);
       }
     }
+  },
+
+  async searchByColumnAEqualsX(x) {
+    const wb = getWorkbook();
+    const sheetName = wb.SheetNames[0];
+    if (!sheetName) return [];
+
+    const ws = wb.Sheets[sheetName];
+
+    // Dữ liệu dạng object theo header hàng 1
+    const rows = XLSX.utils.sheet_to_json(ws, {
+      defval: null,
+      raw: true,
+    });
+
+    // Lấy tên header của cột A (ô A1)
+    const headerA = ws["A1"]?.v;
+    if (!headerA) return [];
+
+    return rows.filter((row) => row?.[headerA] === x);
   },
 };
 

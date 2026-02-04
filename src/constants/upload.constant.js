@@ -4,6 +4,7 @@ const UPLOAD_TYPE = {
     PHAN_ANH: "PHAN_ANH",
     TIN_TUC: "TIN_TUC",
     LICH_TIEP_DAN: "LICH_TIEP_DAN",
+    ADDRESS_VOTE: "ADDRESS_VOTE",
 };
 
 export default UPLOAD_TYPE;
