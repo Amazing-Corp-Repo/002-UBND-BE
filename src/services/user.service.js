@@ -274,6 +274,11 @@ const UserService = {
     return users;
   },
 
+  async getUsersByRoleName(roleName) {
+    const users = await UserRepository.findUsersByRoleName(roleName);
+    return users;
+  },
+
   async updateFirstLogin(
     tenDangNhap,
     tmpPassword,

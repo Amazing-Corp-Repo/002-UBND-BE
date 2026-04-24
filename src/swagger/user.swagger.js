@@ -209,6 +209,15 @@ const UserSwagger = {
       responses: {},
     },
   },
+  "/api/users/khu-pho": {
+    get: {
+      tags: ["Users"],
+      summary: "Lấy danh sách user có vai trò Khu Phố",
+      description:
+        "API public trả về danh sách người dùng đang hoạt động có role name là Khu Phố",
+      responses: {},
+    },
+  },
   "/api/users/update-first-login": {
     put: {
       tags: ["Users"],
