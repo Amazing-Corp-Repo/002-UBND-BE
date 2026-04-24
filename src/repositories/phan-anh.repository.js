@@ -86,14 +86,14 @@ const PhanAnhRepository = {
     maPhanAnh,
     page,
     size,
-    sortTime
+    sortTime,
   ) {
     const skip = (page - 1) * size;
 
     const orderDirection = sortTime === "asc" ? "asc" : "desc";
 
     const params = [];
-    let whereSql = `WHERE 1=1`;
+    let whereSql = `WHERE 1=1 AND (pa.is_approve = true OR pa.is_approve IS NULL)`;
 
     if (idLinhVucPhanAnh) {
       params.push(idLinhVucPhanAnh);
@@ -134,7 +134,7 @@ const PhanAnhRepository = {
         ORDER BY pa.thoi_gian_tao ${orderDirection}
         LIMIT $${params.length - 1} OFFSET $${params.length};
     `,
-      ...params
+      ...params,
     );
 
     const ids = rows.map((r) => r.id);
@@ -156,7 +156,7 @@ const PhanAnhRepository = {
         ) lst ON lst.id_phan_anh = pa.id
         ${whereSql};
     `,
-      ...params.slice(0, params.length - 2)
+      ...params.slice(0, params.length - 2),
     );
 
     // Fetch dữ liệu full bằng Prisma (include đầy đủ)
@@ -231,7 +231,7 @@ const PhanAnhRepository = {
     });
 
     const allVideoIds = phanAnhs.flatMap((p) =>
-      Array.isArray(p.id_video) ? p.id_video : []
+      Array.isArray(p.id_video) ? p.id_video : [],
     );
     let videosMap = new Map();
     if (allVideoIds.length > 0) {
@@ -345,8 +345,8 @@ const PhanAnhRepository = {
         0,
         0,
         0,
-        0
-      )
+        0,
+      ),
     );
 
     const endOfTodayUTC = new Date(
@@ -357,8 +357,8 @@ const PhanAnhRepository = {
         23,
         59,
         59,
-        999
-      )
+        999,
+      ),
     );
 
     // Tổng số trạng thái tạo hôm nay theo UTC
@@ -479,7 +479,7 @@ const PhanAnhRepository = {
     maPhanAnh,
     page,
     size,
-    sortTime
+    sortTime,
   ) {
     const skip = (page - 1) * size;
     const orderDirection = sortTime === "asc" ? "asc" : "desc";
@@ -527,7 +527,7 @@ const PhanAnhRepository = {
       ORDER BY pa.thoi_gian_tao ${orderDirection}
       LIMIT $${params.length - 1} OFFSET $${params.length};
     `,
-      ...params
+      ...params,
     );
 
     const ids = rows.map((r) => r.id);
@@ -545,7 +545,7 @@ const PhanAnhRepository = {
       ) lst ON lst.id_phan_anh = pa.id
       ${whereSql};
     `,
-      ...params.slice(0, params.length - 2)
+      ...params.slice(0, params.length - 2),
     );
 
     const phanAnhs = await prisma.phan_anh.findMany({
@@ -611,6 +611,73 @@ const PhanAnhRepository = {
     });
 
     return data;
+  },
+
+  async getById(idPhanAnh) {
+    return await prisma.phan_anh.findUnique({
+      where: { id: idPhanAnh },
+      include: {
+        lich_su_trang_thai: {
+          orderBy: { thoi_gian_tao: "desc" },
+        },
+        dinh_kem_phan_anh: true,
+        linh_vuc_phan_anh: true,
+        to_phu_trach: {
+          select: { id: true, ho_va_ten: true, email: true },
+        },
+      },
+    });
+  },
+
+  async updatePhanAnh(idPhanAnh, data) {
+    return await prisma.phan_anh.update({
+      where: { id: idPhanAnh },
+      data: data,
+    });
+  },
+
+  async getPendingApprovalPhanAnh(idTo, page, size, sortTime) {
+    const skip = (page - 1) * size;
+    const orderDirection = sortTime === "asc" ? "asc" : "desc";
+
+    // Get feedback pending approval for this ward (is_approve = false and not null)
+    const data = await prisma.phan_anh.findMany({
+      where: {
+        id_to: idTo,
+        is_approve: false, // Chờ duyệt
+      },
+      orderBy: { thoi_gian_tao: orderDirection },
+      skip,
+      take: size,
+      include: {
+        lich_su_trang_thai: {
+          orderBy: { thoi_gian_tao: "desc" },
+          select: {
+            ten: true,
+            thoi_gian_tao: true,
+          },
+        },
+        linh_vuc_phan_anh: {
+          select: { ten: true },
+        },
+        dinh_kem_phan_anh: {
+          select: {
+            dinh_dang_file: true,
+            url_file: true,
+            kich_thuoc_file_mb: true,
+          },
+        },
+      },
+    });
+
+    const totalItems = await prisma.phan_anh.count({
+      where: {
+        id_to: idTo,
+        is_approve: false,
+      },
+    });
+
+    return { data, totalItems };
   },
 };
 

@@ -39,14 +39,13 @@ const PhanAnhService = {
     soDienThoaiNguoiPhanAnh,
     userId,
     file,
-    idVideo = []
+    idVideo = [],
   ) {
     if (!file || file.length === 0) {
       throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
     }
-    const existingLinhVuc = await LinhVucPhanAnhRepository.findById(
-      idLinhVucPhanAnh
-    );
+    const existingLinhVuc =
+      await LinhVucPhanAnhRepository.findById(idLinhVucPhanAnh);
 
     if (!existingLinhVuc || existingLinhVuc.is_active === false) {
       throw new BaseError(400, "Lĩnh vực phản ánh không tồn tại");
@@ -96,7 +95,7 @@ const PhanAnhService = {
 
     let managerMailList =
       await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
-        idLinhVucPhanAnh
+        idLinhVucPhanAnh,
       );
 
     let allAdmin = await UserRepository.getAllAdmin();
@@ -170,7 +169,7 @@ const PhanAnhService = {
     page,
     size,
     sortTime,
-    payload
+    payload,
   ) {
     let role = parseCommaString(payload.roles);
     let cate = parseCommaString(payload.cate);
@@ -183,7 +182,7 @@ const PhanAnhService = {
         maPhanAnh,
         page,
         size,
-        sortTime
+        sortTime,
       );
       let pagination = createPagination(page, size, totalItems);
       return { data, pagination };
@@ -192,7 +191,7 @@ const PhanAnhService = {
     if (idLinhVucPhanAnh && !cate.includes(idLinhVucPhanAnh.trim())) {
       throw new BaseError(
         403,
-        "Bạn không có quyền truy cập lĩnh vực phản ánh này"
+        "Bạn không có quyền truy cập lĩnh vực phản ánh này",
       );
     }
 
@@ -205,7 +204,7 @@ const PhanAnhService = {
       maPhanAnh,
       page,
       size,
-      sortTime
+      sortTime,
     );
 
     return {
@@ -253,7 +252,7 @@ const PhanAnhService = {
     ngayDuKienHoanThanh,
     trangThai,
     ghiChu,
-    currentUser
+    currentUser,
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -270,7 +269,7 @@ const PhanAnhService = {
     ) {
       throw new BaseError(
         400,
-        "Không thể cập nhật trạng thái cho phản ánh đã được giải quyết hoặc đóng"
+        "Không thể cập nhật trạng thái cho phản ánh đã được giải quyết hoặc đóng",
       );
     }
     if (trangThai !== PHAN_ANH_STATUS.DONG) {
@@ -284,7 +283,7 @@ const PhanAnhService = {
       if (nextIndex !== currentIndex + 1) {
         throw new BaseError(
           400,
-          `Trạng thái tiếp theo phải là: ${ORDER[currentIndex + 1]}`
+          `Trạng thái tiếp theo phải là: ${ORDER[currentIndex + 1]}`,
         );
       }
     }
@@ -313,7 +312,7 @@ const PhanAnhService = {
     await PhanAnhRepository.updateStatusWithHistory(
       idPhanAnh,
       phanAnhPatch,
-      historyData
+      historyData,
     );
 
     if (phanAnh.nguoi_tao) {
@@ -327,7 +326,7 @@ const PhanAnhService = {
 
       let managerMailList =
         await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
-          phanAnh.id_linh_vuc_phan_anh
+          phanAnh.id_linh_vuc_phan_anh,
         );
 
       await handleSendMailNotification(
@@ -335,14 +334,14 @@ const PhanAnhService = {
         trangThai,
         ghiChu,
         phanAnh.nguoi_tao,
-        managerMailList
+        managerMailList,
       );
 
       await handleSendNotificationByExpo(
         phanAnh,
         trangThai,
         ghiChu,
-        phanAnh.nguoi_tao
+        phanAnh.nguoi_tao,
       );
     }
   },
@@ -372,12 +371,165 @@ const PhanAnhService = {
     };
   },
 
-  async searhByTieuDe(search = '') {
-    if(search.trim().length <= 2) {
+  async searhByTieuDe(search = "") {
+    if (search.trim().length <= 2) {
       throw new BaseError(400, "Từ khóa tìm kiếm phải có ít nhất 3 ký tự");
     }
 
     return await PhanAnhRepository.searhByTieuDe(search);
+  },
+
+  async createPhanAnhPublic(
+    idLinhVucPhanAnh,
+    idTo,
+    tieuDe,
+    moTa,
+    viTri,
+    mucDo,
+    tenNguoiPhanAnh,
+    soDienThoaiNguoiPhanAnh,
+    file,
+    idVideo = [],
+  ) {
+    // Validate file exists
+    if (!file || file.length === 0) {
+      throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
+    }
+
+    // Validate category exists
+    const existingLinhVuc =
+      await LinhVucPhanAnhRepository.findById(idLinhVucPhanAnh);
+    if (!existingLinhVuc || existingLinhVuc.is_active === false) {
+      throw new BaseError(400, "Lĩnh vực phản ánh không tồn tại");
+    }
+
+    // Validate ward/district user exists
+    const existingTo = await UserRepository.findById(idTo);
+    if (!existingTo || existingTo.is_active === false) {
+      throw new BaseError(400, "Khu phố không tồn tại");
+    }
+
+    tieuDe = capitalizeWords(tieuDe);
+    tenNguoiPhanAnh = capitalizeWords(tenNguoiPhanAnh);
+
+    let data = {
+      id_linh_vuc_phan_anh: idLinhVucPhanAnh,
+      id_to: idTo,
+      tieu_de: tieuDe,
+      mo_ta: moTa,
+      vi_tri: viTri,
+      muc_do: mucDo,
+      ten_nguoi_phan_anh: tenNguoiPhanAnh,
+      sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
+      id_video: idVideo,
+      ma_phan_anh: generateUniqueCode(),
+      is_approve: false, // Chưa duyệt
+    };
+
+    let createdPhanAnh = await PhanAnhRepository.create(data);
+
+    // Create initial status
+    let trangThai = await PhanAnhRepository.createLichSuTrangThaiPhanAnh({
+      id_phan_anh: createdPhanAnh.id,
+      ten: PHAN_ANH_STATUS.DA_GUI,
+    });
+
+    // Add file attachments
+    const attachments = file.map((f) => ({
+      id_phan_anh: createdPhanAnh.id,
+      dinh_dang_file: f.mimetype,
+      url_file: f.relativeUrl,
+      kich_thuoc_file_mb: f.sizeMB,
+    }));
+
+    await PhanAnhRepository.addFileToPhanAnh(attachments);
+
+    return {
+      id_phan_anh: createdPhanAnh.id,
+      ma_phan_anh: createdPhanAnh.ma_phan_anh,
+      tieu_de: createdPhanAnh.tieu_de,
+      mo_ta: createdPhanAnh.mo_ta,
+      vi_tri: createdPhanAnh.vi_tri,
+      muc_do: createdPhanAnh.muc_do,
+      ten_nguoi_phan_anh: createdPhanAnh.ten_nguoi_phan_anh,
+      sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
+      trang_thai: trangThai.ten,
+      is_approve: createdPhanAnh.is_approve,
+      hinh_anh_dinh_kems: file.map((f) => ({
+        dinh_dang_file: f.mimetype,
+        url_file: f.relativeUrl,
+        kich_thuoc_file_mb: f.sizeMB,
+      })),
+    };
+  },
+
+  async getPendingApprovalPhanAnh(page, size, sortTime, userPayload) {
+    // Get ward info from user payload (user phải là ward)
+    const userId = userPayload.userId;
+    console.log("User ID from payload:", userId);
+    const user = await UserRepository.findById(userId);
+
+    if (!user) {
+      throw new BaseError(404, "Người dùng không tồn tại");
+    }
+
+    const { data, totalItems } =
+      await PhanAnhRepository.getPendingApprovalPhanAnh(
+        userId,
+        page,
+        size,
+        sortTime,
+      );
+
+    let pagination = createPagination(page, size, totalItems);
+
+    return { data, pagination };
+  },
+
+  async approveOrRejectPhanAnh(idPhanAnh, isApprove, userPayload) {
+    const userId = userPayload.userId;
+
+    // Find feedback
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(404, "Phản ánh không tồn tại");
+    }
+
+    // Check if this ward is the one assigned
+    if (phanAnh.id_to !== userId) {
+      throw new BaseError(403, "Bạn không có quyền duyệt phản ánh này");
+    }
+
+    // Check if already approved/rejected
+    if (phanAnh.is_approve !== null && phanAnh.is_approve !== false) {
+      throw new BaseError(400, "Phản ánh này đã được xử lý");
+    }
+
+    if (isApprove) {
+      // Approve: update is_approve and assign to ward
+      let updatedPhanAnh = await PhanAnhRepository.updatePhanAnh(idPhanAnh, {
+        is_approve: true,
+        // nguoi_tao will be set to the ward user
+        nguoi_tao: userId,
+      });
+
+
+      return {
+        id_phan_anh: updatedPhanAnh.id,
+        is_approve: updatedPhanAnh.is_approve,
+        message: "Phản ánh đã được duyệt",
+      };
+    } else {
+      // Reject: just mark as rejected (not approved)
+      await PhanAnhRepository.updatePhanAnh(idPhanAnh, {
+        is_approve: false,
+      });
+
+      return {
+        id_phan_anh: idPhanAnh,
+        is_approve: false,
+      };
+    }
   },
 };
 
@@ -385,13 +537,13 @@ const handleSendNotificationByExpo = async (
   phanAnh,
   trangThai,
   ghiChu,
-  userId
+  userId,
 ) => {
   const existingUser = await UserRepository.findById(userId);
 
   if (!existingUser || !existingUser.fcm_token) {
     console.log(
-      "Người dùng không tồn tại hoặc không có Expo push token để gửi thông báo"
+      "Người dùng không tồn tại hoặc không có Expo push token để gửi thông báo",
     );
     return;
   }
@@ -422,7 +574,7 @@ const handleSendNotificationByExpo = async (
 const handleSendNotification = (phanAnh, trangThai, ghiChu) => {
   // Gửi thông báo qua socket.io
   console.log(
-    `Gửi thông báo trạng thái phản ánh [${phanAnh.ma_phan_anh}] mới: ${trangThai} đến người dùng ID: ${phanAnh.nguoi_tao}`
+    `Gửi thông báo trạng thái phản ánh [${phanAnh.ma_phan_anh}] mới: ${trangThai} đến người dùng ID: ${phanAnh.nguoi_tao}`,
   );
 
   const io = getIO();
@@ -445,12 +597,12 @@ const handleSendNotificationByFirebase = async (
   phanAnh,
   trangThai,
   ghiChu,
-  userId
+  userId,
 ) => {
   const existingUser = await UserRepository.findById(userId);
   if (!existingUser || !existingUser.fcm_token) {
     console.log(
-      `Người dùng không tồn tại hoặc không có FCM token để gửi thông báo`
+      `Người dùng không tồn tại hoặc không có FCM token để gửi thông báo`,
     );
     return;
   }
@@ -478,7 +630,7 @@ const handleSendMailNotification = async (
   trangThai,
   ghiChu,
   userId,
-  managerMailList
+  managerMailList,
 ) => {
   const existingUser = await UserRepository.findById(userId);
 
@@ -512,7 +664,7 @@ const handleSendMailNotification = async (
     await MailService.sendMail(
       existingUser.email,
       MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
-      userData
+      userData,
     );
   } else {
     console.log("User không có email → không gửi thông báo cho user");
