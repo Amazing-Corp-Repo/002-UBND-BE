@@ -248,6 +248,7 @@ model nguoi_dung {
   mau_don_mau_don_nguoi_taoTonguoi_dung                                                     mau_don[]                         @relation("mau_don_nguoi_taoTonguoi_dung")
   notifications                                                                             notifications[]
   otp                                                                                       otp[]
+  phan_anh_phan_anh_id_toTonguoi_dung                                                       phan_anh[]                        @relation("phan_anh_id_to_nguoi_dung")
   phan_anh_phan_anh_nguoi_cap_nhatTonguoi_dung                                              phan_anh[]                        @relation("phan_anh_nguoi_cap_nhatTonguoi_dung")
   phan_anh_phan_anh_nguoi_taoTonguoi_dung                                                   phan_anh[]                        @relation("phan_anh_nguoi_taoTonguoi_dung")
   refresh_token                                                                             refresh_token[]
@@ -325,12 +326,14 @@ model phan_anh {
   id                                             String               @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   ma_phan_anh                                    String               @unique @db.VarChar(255)
   id_linh_vuc_phan_anh                           String?              @db.Uuid
+  id_to                                          String?              @db.Uuid
   tieu_de                                        String?
   mo_ta                                          String?
   muc_do                                         String?              @db.VarChar(255)
   vi_tri                                         String?
   ten_nguoi_phan_anh                             String?              @db.VarChar(255)
   sdt_nguoi_phan_anh                             String?              @db.VarChar(20)
+  is_approve                                     Boolean?             @default(false)
   thoi_gian_tiep_nhan                            DateTime?            @db.Timestamp(6)
   thoi_gian_phan_hoi_du_kien                     DateTime?            @db.Timestamp(6)
   ngay_du_kien_hoan_thanh                        DateTime?            @db.Timestamp(6)
@@ -342,10 +345,13 @@ model phan_anh {
   dinh_kem_phan_anh                              dinh_kem_phan_anh[]
   lich_su_trang_thai                             lich_su_trang_thai[]
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")
+  to_phu_trach                                   nguoi_dung?          @relation("phan_anh_id_to_nguoi_dung", fields: [id_to], references: [id], onUpdate: NoAction, map: "fk_phan_anh_id_to")
   nguoi_dung_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_cap_nhat")
   nguoi_dung_phan_anh_nguoi_taoTonguoi_dung      nguoi_dung?          @relation("phan_anh_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_tao")
 
   @@index([id_linh_vuc_phan_anh], map: "idx_phan_anh_id_linh_vuc_phan_anh")
+  @@index([id_to], map: "idx_phan_anh_id_to")
+  @@index([is_approve], map: "idx_phan_anh_is_approve")
   @@index([id_video], map: "idx_phan_anh_id_video")
   @@index([ma_phan_anh], map: "idx_phan_anh_ma_phan_anh")
   @@index([nguoi_tao], map: "idx_phan_anh_nguoi_tao")

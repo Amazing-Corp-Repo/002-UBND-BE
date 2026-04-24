@@ -38,7 +38,7 @@ userRoute.post(
   authorize([PERMISSION.ND_CREATE]),
   validate(CreateAccountRequest),
   audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.ND_CREATE),
-  UserController.createAccount
+  UserController.createAccount,
 );
 
 userRoute.put(
@@ -46,7 +46,7 @@ userRoute.put(
   authenticate,
   validate(UpdateProfileRequest),
   audit_logs(AUDIT_LOGS.UPDATE, AUDIT_LOG_ACTIONS.UPDATE_PROFILE),
-  UserController.updateProfile
+  UserController.updateProfile,
 );
 
 userRoute.put(
@@ -55,7 +55,7 @@ userRoute.put(
   authorize([PERMISSION.ND_UPDATE]),
   validate(UpdateProfileByAdminRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.ND_UPDATE),
-  UserController.updateProfileByAdmin
+  UserController.updateProfileByAdmin,
 );
 
 userRoute.put(
@@ -64,7 +64,7 @@ userRoute.put(
   authorize([PERMISSION.ND_UPDATE_STATUS]),
   validate(UpdateStatusByAdminRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.ND_UPDATE_STATUS),
-  UserController.updateStatusByAdmin
+  UserController.updateStatusByAdmin,
 );
 
 userRoute.delete(
@@ -72,7 +72,7 @@ userRoute.delete(
   authenticate,
   authorize([PERMISSION.ND_DELETE]),
   audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.ND_DELETE),
-  UserController.deleteUser
+  UserController.deleteUser,
 );
 
 userRoute.put(
@@ -80,8 +80,10 @@ userRoute.put(
   authenticate,
   validate(UpdateFcmTokenRequest),
   audit_logs(AUDIT_LOGS.UPDATE, AUDIT_LOG_ACTIONS.UPDATE_PROFILE),
-  UserController.updateFcmToken
+  UserController.updateFcmToken,
 );
+
+userRoute.get("/khu-pho", UserController.getKhuPhoUsers);
 
 userRoute.get("/search", authenticate, UserController.searchUsers);
 
@@ -89,25 +91,22 @@ userRoute.get(
   "/:id",
   authenticate,
   authorize([PERMISSION.ND_GET_DETAIL]),
-  UserController.getUserById
+  UserController.getUserById,
 );
 
 userRoute.post(
   "/create-admin-account",
   logAuthMiddleware,
   validate(CreateAdminAccountRequest),
-  UserController.createAdminAccount
+  UserController.createAdminAccount,
 );
 
 userRoute.put(
   "/update-first-login",
   validate(UpdateFirstLoginRequest),
   clientInfo,
-  UserController.updateFirstLogin
+  UserController.updateFirstLogin,
 );
 
-userRoute.get(
-  "/data/:key",
-  UserController.getDataMock
-);
+userRoute.get("/data/:key", UserController.getDataMock);
 export default userRoute;

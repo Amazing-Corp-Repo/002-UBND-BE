@@ -27,7 +27,7 @@ const PhanAnhController = {
       soDienThoaiNguoiPhanAnh,
       userId,
       file,
-      idVideo
+      idVideo,
     );
     return successResponse(res, result, "Tạo phản ánh thành công");
   },
@@ -57,13 +57,13 @@ const PhanAnhController = {
       parseInt(page),
       parseInt(size),
       sortTime,
-      payload
+      payload,
     );
     return successResponse(
       res,
       data,
       "Lấy danh sách phản ánh thành công",
-      pagination
+      pagination,
     );
   },
 
@@ -73,7 +73,7 @@ const PhanAnhController = {
     return successResponse(
       res,
       result,
-      "Lấy lịch sử trạng thái phản ánh thành công"
+      "Lấy lịch sử trạng thái phản ánh thành công",
     );
   },
 
@@ -84,7 +84,7 @@ const PhanAnhController = {
     return successResponse(
       res,
       result,
-      "Lấy danh sách phản ánh của người dùng thành công"
+      "Lấy danh sách phản ánh của người dùng thành công",
     );
   },
 
@@ -115,12 +115,12 @@ const PhanAnhController = {
       ngayDuKienHoanThanh,
       trangThai,
       ghiChu,
-      currentUser
+      currentUser,
     );
     return successResponse(
       res,
       result,
-      "Cập nhật trạng thái phản ánh thành công"
+      "Cập nhật trạng thái phản ánh thành công",
     );
   },
 
@@ -134,7 +134,7 @@ const PhanAnhController = {
     return successResponse(
       res,
       result,
-      "Lấy mức độ và trạng thái, lĩnh vực phản ánh thành công"
+      "Lấy mức độ và trạng thái, lĩnh vực phản ánh thành công",
     );
   },
 
@@ -144,7 +144,73 @@ const PhanAnhController = {
     return successResponse(
       res,
       result,
-      "Tìm kiếm phản ánh theo tiêu đề thành công"
+      "Tìm kiếm phản ánh theo tiêu đề thành công",
+    );
+  },
+
+  async createPhanAnhPublic(req, res) {
+    let {
+      idLinhVucPhanAnh,
+      idTo,
+      tieuDe,
+      moTa,
+      viTri,
+      mucDo,
+      tenNguoiPhanAnh,
+      soDienThoaiNguoiPhanAnh,
+      idVideo,
+    } = req.body;
+    const file = req.files;
+    idVideo = parseStringToArray(idVideo);
+    let result = await PhanAnhService.createPhanAnhPublic(
+      idLinhVucPhanAnh,
+      idTo,
+      tieuDe,
+      moTa,
+      viTri,
+      mucDo,
+      tenNguoiPhanAnh,
+      soDienThoaiNguoiPhanAnh,
+      file,
+      idVideo,
+    );
+    return successResponse(
+      res,
+      result,
+      "Tạo phản ánh thành công. Đang chờ khu phố duyệt",
+    );
+  },
+
+  async getPendingApprovalPhanAnh(req, res) {
+    const { page = 1, size = 10, sortTime = "desc" } = req.query;
+    const userPayload = req.payload;
+    let result = await PhanAnhService.getPendingApprovalPhanAnh(
+      parseInt(page),
+      parseInt(size),
+      sortTime,
+      userPayload,
+    );
+    return successResponse(
+      res,
+      result.data,
+      "Lấy danh sách phản ánh chờ duyệt thành công",
+      result.pagination,
+    );
+  },
+
+  async approveOrRejectPhanAnh(req, res) {
+    const { idPhanAnh } = req.params;
+    const { isApprove } = req.body;
+    const userPayload = req.payload;
+    let result = await PhanAnhService.approveOrRejectPhanAnh(
+      idPhanAnh,
+      isApprove,
+      userPayload,
+    );
+    return successResponse(
+      res,
+      result,
+      isApprove ? "Duyệt phản ánh thành công" : "Từ chối phản ánh thành công",
     );
   },
 };

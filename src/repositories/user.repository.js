@@ -279,6 +279,32 @@ const UserRepository = {
     });
     return users;
   },
+
+  async findUsersByRoleName(roleName) {
+    return await prisma.nguoi_dung.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        user_roles: {
+          some: {
+            roles: {
+              name: {
+                equals: roleName,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        ten_dang_nhap: "asc",
+      },
+      select: {
+        id: true,
+        ten_dang_nhap: true,
+      },
+    });
+  },
 };
 
 export default UserRepository;

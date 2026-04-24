@@ -16,12 +16,12 @@ const UserController = {
     const result = await UserService.updateUserProfile(
       userId,
       hoVaTen,
-      soDienThoai
+      soDienThoai,
     );
     return successResponse(
       res,
       result,
-      "Cập nhật thông tin cá nhân thành công"
+      "Cập nhật thông tin cá nhân thành công",
     );
   },
 
@@ -33,13 +33,13 @@ const UserController = {
       parseInt(size),
       isActive,
       vaiTro,
-      search
+      search,
     );
     return successResponse(
       res,
       result.data,
       "Lấy tất cả người dùng thành công",
-      result.pagination
+      result.pagination,
     );
   },
 
@@ -51,7 +51,7 @@ const UserController = {
       email,
       matKhau,
       vaiTro,
-      currentUser
+      currentUser,
     );
     return successResponse(res, result.user, result.message);
   },
@@ -75,12 +75,12 @@ const UserController = {
       tenDangNhap,
       email,
       matKhau,
-      currentUser
+      currentUser,
     );
     return successResponse(
       res,
       result,
-      "Cập nhật thông tin người dùng thành công"
+      "Cập nhật thông tin người dùng thành công",
     );
   },
 
@@ -98,12 +98,12 @@ const UserController = {
     const result = await UserService.updateStatusByAdmin(
       userId,
       isActive,
-      currentUser
+      currentUser,
     );
     return successResponse(
       res,
       result,
-      "Cập nhật trạng thái người dùng thành công"
+      "Cập nhật trạng thái người dùng thành công",
     );
   },
 
@@ -125,12 +125,12 @@ const UserController = {
     const result = await UserService.createAdminAccount(
       tenDangNhap,
       email,
-      matKhau
+      matKhau,
     );
     return successResponse(
       res,
       result,
-      "Tạo tài khoản quản trị viên thành công"
+      "Tạo tài khoản quản trị viên thành công",
     );
   },
 
@@ -140,8 +140,18 @@ const UserController = {
     return successResponse(res, result, "Tìm kiếm người dùng thành công");
   },
 
+  async getKhuPhoUsers(req, res) {
+    const result = await UserService.getUsersByRoleName("Khu Phố");
+    return successResponse(
+      res,
+      result,
+      "Lấy danh sách user Khu Phố thành công",
+    );
+  },
+
   async updateFirstLogin(req, res) {
-    const { tenDangNhap, tmpPassword, newPassword, email, recaptchaToken } = req.body;
+    const { tenDangNhap, tmpPassword, newPassword, email, recaptchaToken } =
+      req.body;
     const ip = req.clientIp;
     await UserService.updateFirstLogin(
       tenDangNhap,
@@ -149,7 +159,7 @@ const UserController = {
       newPassword,
       email,
       recaptchaToken,
-      ip
+      ip,
     );
     return successResponse(res, null, "Cập nhật mật khẩu thành công");
   },
@@ -158,6 +168,6 @@ const UserController = {
     const { key } = req.params;
     const result = await UserService.getDataMock(key);
     return successResponse(res, result, "Lấy dữ liệu mẫu thành công");
-  }
+  },
 };
 export default UserController;

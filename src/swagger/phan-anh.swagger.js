@@ -245,6 +245,126 @@ const PhanAnhSwagger = {
       responses: {},
     },
   },
+  "/api/phan-anh/public/create": {
+    post: {
+      tags: ["PhanAnh"],
+      summary: "Tạo phản ánh mới từ công dân (không cần đăng nhập)",
+      description:
+        "API công khai để người dân tạo phản ánh. Phản ánh sẽ chờ khu phố duyệt",
+      requestBody: {
+        content: {
+          "multipart/form-data": {
+            schema: PhanAnhSchemas.CreatePhanAnhPublicRequest,
+          },
+        },
+        required: true,
+      },
+      responses: {
+        200: {
+          description: "Tạo phản ánh thành công, đang chờ khu phố duyệt",
+        },
+        400: {
+          description:
+            "Dữ liệu không hợp lệ hoặc lĩnh vực/khu phố không tồn tại",
+        },
+      },
+    },
+  },
+  "/api/phan-anh/pending-approval/list": {
+    get: {
+      tags: ["PhanAnh"],
+      summary: "Lấy danh sách phản ánh chờ duyệt (Cho khu phố)",
+      description:
+        "Lấy danh sách phản ánh chưa được duyệt của khu phố hiện tại",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "page",
+          in: "query",
+          required: false,
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+          description: "Số trang hiện tại",
+        },
+        {
+          name: "size",
+          in: "query",
+          required: false,
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+          description: "Số mục trên mỗi trang",
+        },
+        {
+          name: "sortTime",
+          in: "query",
+          required: false,
+          schema: {
+            type: "string",
+            enum: ["asc", "desc"],
+            default: "desc",
+          },
+          description: "Sắp xếp theo thời gian",
+        },
+      ],
+      responses: {
+        200: {
+          description: "Danh sách phản ánh chờ duyệt",
+        },
+        401: {
+          description: "Không được xác thực",
+        },
+        403: {
+          description: "Không có quyền duyệt phản ánh",
+        },
+      },
+    },
+  },
+  "/api/phan-anh/approve-or-reject/{idPhanAnh}": {
+    put: {
+      tags: ["PhanAnh"],
+      summary: "Duyệt hoặc từ chối phản ánh (Cho khu phố)",
+      description: "Khu phố duyệt hoặc từ chối phản ánh được gửi đến",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "idPhanAnh",
+          in: "path",
+          required: true,
+          schema: {
+            type: "string",
+            format: "uuid",
+          },
+          description: "ID phản ánh cần duyệt/từ chối",
+        },
+      ],
+      requestBody: {
+        content: {
+          "application/json": {
+            schema: PhanAnhSchemas.ApproveOrRejectPhanAnhRequest,
+          },
+        },
+        required: true,
+      },
+      responses: {
+        200: {
+          description: "Duyệt hoặc từ chối phản ánh thành công",
+        },
+        400: {
+          description: "Phản ánh không tồn tại hoặc đã được xử lý",
+        },
+        401: {
+          description: "Không được xác thực",
+        },
+        403: {
+          description: "Khu phố không có quyền duyệt phản ánh này",
+        },
+      },
+    },
+  },
 };
 
 export default PhanAnhSwagger;
