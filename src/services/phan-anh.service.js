@@ -63,6 +63,7 @@ const PhanAnhService = {
       ten_nguoi_phan_anh: tenNguoiPhanAnh,
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
       id_video: idVideo,
+      is_approve: true,
     };
 
     if (userId != null && userId !== "") {
