@@ -32,8 +32,6 @@ const videoUploadRouter = express.Router();
 videoUploadRouter.post(
   "/upload",
   uploadChunkLimiter,
-  authenticate,
-  authorize([PERMISSION.PA_CREATE]),
   createUploader({
     type: UPLOAD_TYPE.PHAN_ANH,
     fieldName: "file",
