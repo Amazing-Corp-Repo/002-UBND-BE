@@ -151,7 +151,6 @@ const PhanAnhController = {
   async createPhanAnhPublic(req, res) {
     let {
       idLinhVucPhanAnh,
-      idTo,
       tieuDe,
       moTa,
       viTri,
@@ -164,7 +163,6 @@ const PhanAnhController = {
     idVideo = parseStringToArray(idVideo);
     let result = await PhanAnhService.createPhanAnhPublic(
       idLinhVucPhanAnh,
-      idTo,
       tieuDe,
       moTa,
       viTri,
@@ -177,40 +175,7 @@ const PhanAnhController = {
     return successResponse(
       res,
       result,
-      "Tạo phản ánh thành công. Đang chờ khu phố duyệt",
-    );
-  },
-
-  async getPendingApprovalPhanAnh(req, res) {
-    const { page = 1, size = 10, sortTime = "desc" } = req.query;
-    const userPayload = req.payload;
-    let result = await PhanAnhService.getPendingApprovalPhanAnh(
-      parseInt(page),
-      parseInt(size),
-      sortTime,
-      userPayload,
-    );
-    return successResponse(
-      res,
-      result.data,
-      "Lấy danh sách phản ánh chờ duyệt thành công",
-      result.pagination,
-    );
-  },
-
-  async approveOrRejectPhanAnh(req, res) {
-    const { idPhanAnh } = req.params;
-    const { isApprove } = req.body;
-    const userPayload = req.payload;
-    let result = await PhanAnhService.approveOrRejectPhanAnh(
-      idPhanAnh,
-      isApprove,
-      userPayload,
-    );
-    return successResponse(
-      res,
-      result,
-      isApprove ? "Duyệt phản ánh thành công" : "Từ chối phản ánh thành công",
+      "Tạo phản ánh thành công",
     );
   },
 };
