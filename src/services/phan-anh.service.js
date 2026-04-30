@@ -324,27 +324,27 @@ const PhanAnhService = {
         target_type: "PHAN_ANH",
         title: "Cập nhật trạng thái phản ánh",
       });
-
-      let managerMailList =
-        await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
-          phanAnh.id_linh_vuc_phan_anh,
-        );
-
-      await handleSendMailNotification(
-        phanAnh,
-        trangThai,
-        ghiChu,
-        phanAnh.nguoi_tao,
-        managerMailList,
-      );
-
-      await handleSendNotificationByExpo(
-        phanAnh,
-        trangThai,
-        ghiChu,
-        phanAnh.nguoi_tao,
-      );
     }
+
+    let managerMailList =
+      await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
+        phanAnh.id_linh_vuc_phan_anh,
+      );
+
+    await handleSendMailNotification(
+      phanAnh,
+      trangThai,
+      ghiChu,
+      phanAnh.nguoi_tao,
+      managerMailList,
+    );
+
+    await handleSendNotificationByExpo(
+      phanAnh,
+      trangThai,
+      ghiChu,
+      phanAnh.nguoi_tao,
+    );
   },
 
   async getTongQuanPhanAnh() {
@@ -382,7 +382,6 @@ const PhanAnhService = {
 
   async createPhanAnhPublic(
     idLinhVucPhanAnh,
-    idTo,
     tieuDe,
     moTa,
     viTri,
@@ -409,13 +408,12 @@ const PhanAnhService = {
     if (!existingTo || existingTo.is_active === false) {
       throw new BaseError(400, "Khu phố không tồn tại");
     }
-
     tieuDe = capitalizeWords(tieuDe);
     tenNguoiPhanAnh = capitalizeWords(tenNguoiPhanAnh);
 
     let data = {
       id_linh_vuc_phan_anh: idLinhVucPhanAnh,
-      id_to: idTo,
+
       tieu_de: tieuDe,
       mo_ta: moTa,
       vi_tri: viTri,
@@ -424,7 +422,7 @@ const PhanAnhService = {
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
       id_video: idVideo,
       ma_phan_anh: generateUniqueCode(),
-      is_approve: false, // Chưa duyệt
+      is_approve: true,
     };
 
     let createdPhanAnh = await PhanAnhRepository.create(data);
@@ -462,75 +460,6 @@ const PhanAnhService = {
         kich_thuoc_file_mb: f.sizeMB,
       })),
     };
-  },
-
-  async getPendingApprovalPhanAnh(page, size, sortTime, userPayload) {
-    // Get ward info from user payload (user phải là ward)
-    const userId = userPayload.userId;
-    console.log("User ID from payload:", userId);
-    const user = await UserRepository.findById(userId);
-
-    if (!user) {
-      throw new BaseError(404, "Người dùng không tồn tại");
-    }
-
-    const { data, totalItems } =
-      await PhanAnhRepository.getPendingApprovalPhanAnh(
-        userId,
-        page,
-        size,
-        sortTime,
-      );
-
-    let pagination = createPagination(page, size, totalItems);
-
-    return { data, pagination };
-  },
-
-  async approveOrRejectPhanAnh(idPhanAnh, isApprove, userPayload) {
-    const userId = userPayload.userId;
-
-    // Find feedback
-    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
-    if (!phanAnh) {
-      throw new BaseError(404, "Phản ánh không tồn tại");
-    }
-
-    // Check if this ward is the one assigned
-    if (phanAnh.id_to !== userId) {
-      throw new BaseError(403, "Bạn không có quyền duyệt phản ánh này");
-    }
-
-    // Check if already approved/rejected
-    if (phanAnh.is_approve !== null && phanAnh.is_approve !== false) {
-      throw new BaseError(400, "Phản ánh này đã được xử lý");
-    }
-
-    if (isApprove) {
-      // Approve: update is_approve and assign to ward
-      let updatedPhanAnh = await PhanAnhRepository.updatePhanAnh(idPhanAnh, {
-        is_approve: true,
-        // nguoi_tao will be set to the ward user
-        nguoi_tao: userId,
-      });
-
-
-      return {
-        id_phan_anh: updatedPhanAnh.id,
-        is_approve: updatedPhanAnh.is_approve,
-        message: "Phản ánh đã được duyệt",
-      };
-    } else {
-      // Reject: just mark as rejected (not approved)
-      await PhanAnhRepository.updatePhanAnh(idPhanAnh, {
-        is_approve: false,
-      });
-
-      return {
-        id_phan_anh: idPhanAnh,
-        is_approve: false,
-      };
-    }
   },
 };
 
@@ -648,7 +577,7 @@ const handleSendMailNotification = async (
     hour12: false,
   });
 
-  if (existingUser?.email) {
+  if (existingUser && existingUser?.email) {
     const userData = {
       maPhanAnh: phanAnh.ma_phan_anh,
       trangThaiMoi: trangThai,

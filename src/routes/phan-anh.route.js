@@ -10,7 +10,6 @@ import {
   CreatePhanAnhRequest,
   UpdatePhanAnhStatusRequest,
   CreatePhanAnhPublicRequest,
-  ApproveOrRejectPhanAnhRequest,
 } from "../validators/phan-anh.validator.js";
 import {
   PERMISSION,
@@ -31,22 +30,6 @@ phanAnhRouter.post(
     allowed_types: ["image/jpeg", "image/png"],
   }),
   PhanAnhController.createPhanAnhPublic,
-);
-
-// API duyệt/từ chối phản ánh - Cho khu phố duyệt
-phanAnhRouter.put(
-  "/approve-or-reject/:idPhanAnh",
-  authenticate,
-  validate(ApproveOrRejectPhanAnhRequest),
-  audit_logs(AUDIT_LOGS.UPDATE, "Duyệt hoặc từ chối phản ánh"),
-  PhanAnhController.approveOrRejectPhanAnh,
-);
-
-// API lấy danh sách phản ánh chờ duyệt - Cho khu phố xem
-phanAnhRouter.get(
-  "/pending-approval/list",
-  authenticate,
-  PhanAnhController.getPendingApprovalPhanAnh,
 );
 
 // Existing routes below
