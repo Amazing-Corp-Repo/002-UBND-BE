@@ -403,11 +403,6 @@ const PhanAnhService = {
       throw new BaseError(400, "Lĩnh vực phản ánh không tồn tại");
     }
 
-    // Validate ward/district user exists
-    const existingTo = await UserRepository.findById(idTo);
-    if (!existingTo || existingTo.is_active === false) {
-      throw new BaseError(400, "Khu phố không tồn tại");
-    }
     tieuDe = capitalizeWords(tieuDe);
     tenNguoiPhanAnh = capitalizeWords(tenNguoiPhanAnh);
 
