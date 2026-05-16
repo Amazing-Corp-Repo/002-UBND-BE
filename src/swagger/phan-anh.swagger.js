@@ -212,6 +212,105 @@ const PhanAnhSwagger = {
       responses: {},
     },
   },
+  "/api/phan-anh/update-linh-vuc/{idPhanAnh}": {
+    put: {
+      tags: ["PhanAnh"],
+      summary: "Cập nhật lĩnh vực phản ánh",
+      security: [{ bearerAuth: [] }],
+      description:
+        "Cập nhật (reassign) lĩnh vực phản ánh sang lĩnh vực khác. Yêu cầu permission PA_UPDATE_LINH_VUC. Không cho phép cập nhật nếu phản ánh đã ở trạng thái DA_GIAI_QUYET hoặc DONG.",
+      parameters: [
+        {
+          name: "idPhanAnh",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+          description: "ID phản ánh cần cập nhật lĩnh vực",
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: PhanAnhSchemas.UpdatePhanAnhLinhVucRequest,
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Cập nhật lĩnh vực phản ánh thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  message: {
+                    type: "string",
+                    example: "Cập nhật lĩnh vực phản ánh thành công",
+                  },
+                  pagination: { type: "object", nullable: true, example: null },
+                  data: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string", format: "uuid" },
+                      ma_phan_anh: { type: "string" },
+                      tieu_de: { type: "string" },
+                      mo_ta: { type: "string" },
+                      vi_tri: { type: "string" },
+                      muc_do: { type: "string" },
+                      id_linh_vuc_phan_anh: {
+                        type: "string",
+                        format: "uuid",
+                        description: "ID lĩnh vực mới vừa cập nhật",
+                      },
+                      ten_nguoi_phan_anh: { type: "string" },
+                      sdt_nguoi_phan_anh: { type: "string" },
+                      nguoi_tao: {
+                        type: "string",
+                        format: "uuid",
+                        nullable: true,
+                      },
+                      nguoi_cap_nhat: { type: "string", format: "uuid" },
+                      thoi_gian_tao: { type: "string", format: "date-time" },
+                      thoi_gian_cap_nhat: {
+                        type: "string",
+                        format: "date-time",
+                      },
+                      is_approve: { type: "boolean" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description:
+            "Dữ liệu không hợp lệ. Các trường hợp: ID rỗng, phản ánh không tồn tại, lĩnh vực mới trùng lĩnh vực hiện tại, lĩnh vực mới không tồn tại/không active, phản ánh đã giải quyết/đóng, người dùng không tồn tại.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: false },
+                  message: {
+                    type: "string",
+                    example: "Lĩnh vực phản ánh mới phải khác lĩnh vực hiện tại",
+                  },
+                  errors: { nullable: true },
+                },
+              },
+            },
+          },
+        },
+        401: { description: "Chưa xác thực hoặc token hết hạn" },
+        403: {
+          description: "Không có quyền PA_UPDATE_LINH_VUC",
+        },
+      },
+    },
+  },
   "/api/phan-anh/tong-quan": {
     get: {
       tags: ["PhanAnh"],

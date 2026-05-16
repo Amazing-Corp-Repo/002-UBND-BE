@@ -10,6 +10,7 @@ import {
   CreatePhanAnhRequest,
   UpdatePhanAnhStatusRequest,
   CreatePhanAnhPublicRequest,
+  UpdatePhanAnhLinhVucRequest,
 } from "../validators/phan-anh.validator.js";
 import {
   PERMISSION,
@@ -105,6 +106,15 @@ phanAnhRouter.put(
   validate(UpdatePhanAnhStatusRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,
+);
+
+phanAnhRouter.put(
+  "/update-linh-vuc/:idPhanAnh",
+  authenticate,
+  authorize([PERMISSION.PA_UPDATE_STATUS]),
+  validate(UpdatePhanAnhLinhVucRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_LINH_VUC),
+  PhanAnhController.updateLinhVucPhanAnh,
 );
 
 export default phanAnhRouter;
