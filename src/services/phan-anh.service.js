@@ -438,6 +438,42 @@ const PhanAnhService = {
 
     await PhanAnhRepository.addFileToPhanAnh(attachments);
 
+    let managerMailList =
+      await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
+        idLinhVucPhanAnh,
+      );
+
+    let allAdmin = await UserRepository.getAllAdmin();
+
+    let bcc = [...allAdmin, ...managerMailList];
+
+    const uniqueEmails = [...new Set(bcc)];
+
+    const safeUrl = (base, id) => {
+      if (!base) return null;
+      return `${base}/${id}`;
+    };
+
+    const url = safeUrl(URL_PHAN_ANH_MANAGER, createdPhanAnh.id);
+
+    let mailData = {
+      maPhanAnh: createdPhanAnh.ma_phan_anh,
+      tieuDe: createdPhanAnh.tieu_de,
+      moTa: createdPhanAnh.mo_ta,
+      mucDo: createdPhanAnh.muc_do,
+      viTri: createdPhanAnh.vi_tri,
+    };
+
+    if (url) {
+      mailData.url = url;
+    }
+
+    await MailService.sendMailCC({
+      bcc: uniqueEmails,
+      type: MAIL_TYPE.CREATE_PHAN_ANH,
+      data: mailData,
+    });
+
     return {
       id_phan_anh: createdPhanAnh.id,
       ma_phan_anh: createdPhanAnh.ma_phan_anh,
