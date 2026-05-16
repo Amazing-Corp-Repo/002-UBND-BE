@@ -347,6 +347,55 @@ const PhanAnhService = {
     );
   },
 
+  async updateLinhVucPhanAnh(idPhanAnh, idLinhVucPhanAnh, currentUser) {
+    if (idPhanAnh === null || idPhanAnh === undefined) {
+      throw new BaseError(400, "ID phản ánh không được để trống");
+    }
+    if (idLinhVucPhanAnh === null || idLinhVucPhanAnh === undefined) {
+      throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
+    }
+
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+
+    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    if (
+      lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
+      lastStatus === PHAN_ANH_STATUS.DONG
+    ) {
+      throw new BaseError(
+        400,
+        "Không thể cập nhật lĩnh vực cho phản ánh đã được giải quyết hoặc đóng",
+      );
+    }
+
+    if (phanAnh.id_linh_vuc_phan_anh === idLinhVucPhanAnh) {
+      throw new BaseError(
+        400,
+        "Lĩnh vực phản ánh mới phải khác lĩnh vực hiện tại",
+      );
+    }
+
+    const existingLinhVuc =
+      await LinhVucPhanAnhRepository.findById(idLinhVucPhanAnh);
+    if (!existingLinhVuc || existingLinhVuc.is_active === false) {
+      throw new BaseError(400, "Lĩnh vực phản ánh không tồn tại");
+    }
+
+    const existingUser = await UserRepository.findById(currentUser);
+    if (!existingUser) {
+      throw new BaseError(400, "Người dùng không tồn tại");
+    }
+
+    return await PhanAnhRepository.updatePhanAnh(idPhanAnh, {
+      id_linh_vuc_phan_anh: idLinhVucPhanAnh,
+      nguoi_cap_nhat: currentUser,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    });
+  },
+
   async getTongQuanPhanAnh() {
     let { nhat_ky_hoat_dong, tong_hom_nay, thong_ke_theo_trang_thai } =
       await PhanAnhRepository.getTongQuanPhanAnh();

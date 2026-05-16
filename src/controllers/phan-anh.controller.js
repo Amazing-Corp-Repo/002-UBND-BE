@@ -124,6 +124,22 @@ const PhanAnhController = {
     );
   },
 
+  async updateLinhVucPhanAnh(req, res) {
+    const { idPhanAnh } = req.params;
+    const { idLinhVucPhanAnh } = req.body;
+    const currentUser = req.payload.userId;
+    let result = await PhanAnhService.updateLinhVucPhanAnh(
+      idPhanAnh,
+      idLinhVucPhanAnh,
+      currentUser,
+    );
+    return successResponse(
+      res,
+      result,
+      "Cập nhật lĩnh vực phản ánh thành công",
+    );
+  },
+
   async getTongQuanPhanAnh(req, res) {
     let result = await PhanAnhService.getTongQuanPhanAnh();
     return successResponse(res, result, "Lấy tổng quát phản ánh thành công");

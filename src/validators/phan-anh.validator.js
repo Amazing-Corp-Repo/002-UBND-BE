@@ -46,6 +46,13 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
   }),
 });
 
+export const UpdatePhanAnhLinhVucRequest = Joi.object({
+  idLinhVucPhanAnh: Joi.string().trim().uuid().required().messages({
+    "string.uuid": "idLinhVucPhanAnh must be a valid UUID",
+    "any.required": "Lĩnh vực phản ánh là bắt buộc",
+  }),
+});
+
 export const CreatePhanAnhPublicRequest = Joi.object({
   idLinhVucPhanAnh: Joi.string().trim().uuid().required().messages({
     "string.uuid": "idLinhVucPhanAnh must be a valid UUID",
