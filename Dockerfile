@@ -9,8 +9,10 @@ COPY package*.json ./
 # running `prisma generate` before schema is available in the image.
 RUN npm ci --ignore-scripts
 
-# Copy prisma schema and generate client during build
+# Copy prisma schema + config and generate client during build.
+# Prisma 7 sinh client vào ./src/generated/prisma (custom output, KHÔNG còn nằm trong node_modules).
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npx prisma generate \
   && npm prune --omit=dev
 
@@ -23,6 +25,9 @@ RUN addgroup -S nodegrp && adduser -S nodeuser -G nodegrp
 # Copy code trước khi gán quyền
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Prisma 7: client được generate ở stage `deps` và bị .gitignore (không có trên host),
+# nên PHẢI copy thủ công sang runner, nếu không runtime sẽ thiếu client → "Cannot find module".
+COPY --from=deps /app/src/generated ./src/generated
 
 # Gán quyền toàn bộ project cho nodeuser (bao gồm cả thư mục mới tạo runtime)
 RUN chown -R nodeuser:nodegrp /app
