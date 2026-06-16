@@ -1,22 +1,36 @@
 # CLAUDE.md — UBND-BE (API + Realtime + Workers)
 
-> Context tổng fullstack ở `../CLAUDE.md`. File này đào sâu **BE** để biết chỗ tái sử dụng (response/error/pagination util, middleware, constants, layering, hệ thống bất đồng bộ). Nhánh làm việc: **`staging`**.
+> Context tổng fullstack ở `../CLAUDE.md`. File này đào sâu **BE** để biết chỗ tái sử dụng (response/error/pagination util, middleware, constants, layering, hệ thống bất đồng bộ). Nhánh làm việc: **`staging`** — riêng việc nâng cấp **Prisma 7** hiện nằm ở nhánh **`upgrade/prisma-7`** (chưa merge về `staging`); mục dưới đã mô tả theo Prisma 7.
 
 ## Stack & chạy
-Node ≥18 (ESM, `"type":"module"`), **Express 5**, **Prisma 6** + PostgreSQL ≥13, Socket.IO, **RabbitMQ** (amqplib), **FFmpeg** (`@ffmpeg-installer` + `fluent-ffmpeg`) cho HLS, Nodemailer + Handlebars, JWT + bcrypt, Joi (+ joi-to-swagger), Winston, firebase-admin.
+Node **≥22.6** (cần `--experimental-strip-types` để chạy client `.ts`; ESM, `"type":"module"`), **Express 5**, **Prisma 7** (generator `prisma-client` sinh TypeScript + **driver adapter `@prisma/adapter-pg` + `pg`**) + PostgreSQL ≥13, Socket.IO, **RabbitMQ** (amqplib), **FFmpeg** (`@ffmpeg-installer` + `fluent-ffmpeg`) cho HLS, Nodemailer + Handlebars, JWT + bcrypt, Joi (+ joi-to-swagger), Winston, firebase-admin.
 ```
 npm install            # postinstall tự chạy prisma generate
-npx prisma generate
-npm run dev            # node --watch src/app.js
-npm start
+npx prisma generate    # sinh client TS → src/generated/prisma
+npm run dev            # node --watch --experimental-strip-types src/app.js
+npm start              # node --experimental-strip-types src/app.js
 # Swagger: :8880/api-docs (basic auth) · Prisma Studio: npx prisma studio (:5555)
 ```
+
+### Prisma 7 — đặc thù (khác v6)
+- **Generator** `prisma-client` (không phải `prisma-client-js`) → output **`src/generated/prisma`** dưới dạng **`.ts`**; app import thẳng `client.ts`, chạy nhờ Node native type-stripping (`--experimental-strip-types`).
+- **Driver adapter bắt buộc**: `config/database.config.js` khởi tạo `new PrismaClient({ adapter: new PrismaPg(...) })` — không còn `new PrismaClient()` đọc thẳng `DATABASE_URL`. Adapter `pg` **KHÔNG tự áp `?schema=`** của connection string → phải parse `schema` từ URL và truyền tường minh cho `PrismaPg`, nếu không sẽ query nhầm schema `public`. (pg cũng không có `connectionTimeout` mặc định — v6 trước là 5s.)
+- **`prisma.config.ts`** (mới ở v7): nạp `.env` thủ công (`import 'dotenv/config'`), khai báo `schema` + `datasource.url = process.env.MIGRATE_DATABASE_URL || process.env.DATABASE_URL` cho **CLI migrate/db**. Tách `MIGRATE_DATABASE_URL` vì CLI chạy DDL nên cần user **OWNER bảng** (`ubnd_admin`), khác runtime dùng user hạn chế (`user_staging`/`DATABASE_URL`). Dùng `process.env` trực tiếp, KHÔNG dùng helper `env()` (ném lỗi khi biến vắng → fail `prisma generate` ở Docker build).
+- **Schema**: `datasource db` trong `schema.prisma` chỉ còn `provider`, **không còn `url`** (URL chuyển sang `prisma.config.ts`).
+
+### Migrations (đã baseline — QUAN TRỌNG)
+Dự án trước đây dùng `db push` (không có lịch sử migration); prod/staging đã được **baseline** về một lịch sử sạch chung:
+- `prisma/migrations/0_init/` — baseline **đủ 33 bảng** hiện trạng, **schema-agnostic** (tên bảng không qualify schema → schema do `?schema=` của connection chọn; có `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`). Đã `migrate resolve --applied` trên cả 2 môi trường (chỉ ghi metadata, không tạo lại bảng).
+- `prisma/migrations/0001_sync_phan_anh_fk/` — đồng bộ FK `phan_anh.id_to` về schema.
+- **Quy tắc vàng:** TUYỆT ĐỐI không `migrate dev`/`migrate reset` lên prod/staging (có thể drop & reset). Chỉ dùng `migrate deploy` (áp migration mới) trên server.
+- **Thêm thay đổi schema:** sửa `schema.prisma` → `prisma migrate dev --name <ten>` ở **DB dev cục bộ** (tạo file migration) → khi sinh migration mới nhớ giữ **schema-agnostic** (gỡ `"<SCHEMA>".` qualifier + dòng `CREATE SCHEMA`) → `prisma migrate deploy` lên staging rồi prod.
+- **Khác schema theo môi trường:** staging `ubnd_staging`/`UBND_DB_STG`, prod `ubnd_db`/`UBND_DB` (cùng host, user owner `ubnd_admin`). Set `MIGRATE_DATABASE_URL` đúng env trước khi chạy CLI. **Luôn backup (`pg_dump -n '"<SCHEMA>"'`) trước khi deploy lên prod.**
 
 ## Bootstrap — `src/app.js`
 Thứ tự: CORS (`env.CORS_ORIGIN`, hỗ trợ `*`, `credentials:true`) → `express.json()` → static `src/public` → **rate limit** (`RATE_LIMIT_WINDOW_MS`/`MAX`, **skip** path chứa `/video/upload`) → mount `rootRouter` tại `PREFIX_API` (mặc định `/api`) → `CreateAccountSeed()` → **`errorHandler` (cuối cùng)** → Swagger `/api-docs` (basic auth). Khởi tạo `connectRabbitMQ()` + assert tất cả queue, import workers `video.worker.js` & `export-phan-anh.worker.js`, đăng ký cron. `GET /health` → `ok`. Port `env.PORT` (mặc định 8880). Socket.IO khởi tạo trong `src/realtime/socket/`.
 
 ## Phân lớp (chuẩn cho MỌI module mới)
-`routes/*.route.js` → `controllers/*.controller.js` → `services/*.service.js` → `repositories/*.repository.js` → **Prisma singleton** (`config/database.config.js`, `import prisma from ...`).
+`routes/*.route.js` → `controllers/*.controller.js` → `services/*.service.js` → `repositories/*.repository.js` → **Prisma singleton** (`config/database.config.js` — instance dùng driver adapter `@prisma/adapter-pg`, `import prisma from ...`; là chỗ duy nhất tạo `PrismaClient`).
 - **Controller** mỏng: đọc `req.body`/`req.files`/`req.payload`, gọi service, trả `successResponse`.
 - **Service** chứa business logic + validate nghiệp vụ (ném `BaseError`), gọi repository.
 - **Repository** chỉ thao tác Prisma. `mapper/` chuyển snake_case ↔ camelCase. `validators/` = Joi object, `schemas/` = bản Joi→Swagger.
@@ -91,5 +105,5 @@ Chi tiết: `auth.route.js` (login, login-with-captcha, refresh-token, change/re
 1. Đi đủ chuỗi route→controller→service→repository; dùng `successResponse`/`BaseError`.
 2. Bảo vệ route: `authenticate` + `authorize([PERMISSION.*])`; thêm code mới vào `permission.constant.js`.
 3. Validate bằng Joi trong `validators/` + `validate(...)`; lỗi tiếng Việt.
-4. Bảng mới: PK UUID, giữ bộ cột audit (`nguoi_tao/nguoi_cap_nhat/thoi_gian_tao/thoi_gian_cap_nhat`) + `is_active`/`is_delete` (xóa mềm). Cập nhật `prisma/schema.prisma` rồi `prisma generate`.
+4. Bảng mới: PK UUID, giữ bộ cột audit (`nguoi_tao/nguoi_cap_nhat/thoi_gian_tao/thoi_gian_cap_nhat`) + `is_active`/`is_delete` (xóa mềm). Cập nhật `prisma/schema.prisma` → `prisma migrate dev --name <ten>` (DB dev cục bộ, sinh file migration + `prisma generate`) → giữ migration **schema-agnostic** → `migrate deploy` lên staging/prod. **Không** chỉ `db push` lên server (sẽ tạo lại drift không-track như trước đây).
 5. Tác vụ nặng (video/email/export) → đẩy RabbitMQ, không chặn request.

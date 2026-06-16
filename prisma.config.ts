@@ -6,10 +6,12 @@ import { defineConfig } from 'prisma/config';
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   // Prisma 7: connection URL phải nằm ở đây (không còn trong schema). Dùng cho migrate/db CLI.
-  // Dùng process.env trực tiếp (KHÔNG dùng helper env() vì nó ném lỗi khi biến vắng mặt —
-  // sẽ làm `prisma generate` fail ở Docker build stage nơi chưa có .env). Runtime kết nối
-  // qua driver adapter trong src/config/database.config.js.
+  // CLI migrate chạy DDL (ALTER/CREATE) nên cần user OWNER bảng (ubnd_admin), khác với runtime
+  // dùng user hạn chế (user_staging) qua DATABASE_URL. Ưu tiên MIGRATE_DATABASE_URL, fallback
+  // DATABASE_URL nếu không set. Dùng process.env trực tiếp (KHÔNG dùng helper env() — nó ném lỗi
+  // khi biến vắng mặt → fail `prisma generate` ở Docker build stage chưa có .env). Runtime kết nối
+  // qua driver adapter trong src/config/database.config.js (luôn dùng DATABASE_URL).
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env.MIGRATE_DATABASE_URL || process.env.DATABASE_URL,
   },
 });
