@@ -47,6 +47,8 @@ const PhanAnhController = {
       page = 1,
       size = 10,
       sortTime,
+      sortBy,
+      sortOrder,
     } = req.query;
     const payload = req.payload;
     let { data, pagination } = await PhanAnhService.getAll(
@@ -58,6 +60,8 @@ const PhanAnhController = {
       parseInt(size),
       sortTime,
       payload,
+      sortBy,
+      sortOrder,
     );
     return successResponse(
       res,

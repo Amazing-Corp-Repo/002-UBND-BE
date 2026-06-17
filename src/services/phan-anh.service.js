@@ -172,6 +172,8 @@ const PhanAnhService = {
     size,
     sortTime,
     payload,
+    sortBy,
+    sortOrder,
   ) {
     let role = parseCommaString(payload.roles);
     let cate = parseCommaString(payload.cate);
@@ -185,6 +187,8 @@ const PhanAnhService = {
         page,
         size,
         sortTime,
+        sortBy,
+        sortOrder,
       );
       let pagination = createPagination(page, size, totalItems);
       return { data, pagination };
@@ -207,6 +211,8 @@ const PhanAnhService = {
       page,
       size,
       sortTime,
+      sortBy,
+      sortOrder,
     );
 
     return {
