@@ -45,9 +45,11 @@ const PhanAnhRepository = {
         },
         dinh_kem_phan_anh: {
           select: {
+            id: true,
             dinh_dang_file: true,
             url_file: true,
             kich_thuoc_file_mb: true,
+            loai: true,
           },
         },
         linh_vuc_phan_anh: {
@@ -217,9 +219,11 @@ const PhanAnhRepository = {
         },
         dinh_kem_phan_anh: {
           select: {
+            id: true,
             dinh_dang_file: true,
             url_file: true,
             kich_thuoc_file_mb: true,
+            loai: true,
           },
         },
         linh_vuc_phan_anh: {
@@ -277,9 +281,11 @@ const PhanAnhRepository = {
         },
         dinh_kem_phan_anh: {
           select: {
+            id: true,
             dinh_dang_file: true,
             url_file: true,
             kich_thuoc_file_mb: true,
+            loai: true,
           },
         },
         linh_vuc_phan_anh: {
@@ -308,7 +314,12 @@ const PhanAnhRepository = {
     return phanAnh;
   },
 
-  async updateStatusWithHistory(idPhanAnh, phanAnhPatch, historyData) {
+  async updateStatusWithHistory(
+    idPhanAnh,
+    phanAnhPatch,
+    historyData,
+    dinhKems = [],
+  ) {
     return await prisma.$transaction(async (tx) => {
       // Cập nhật bảng phản ánh
       await tx.phan_anh.update({
@@ -331,6 +342,13 @@ const PhanAnhRepository = {
           nguoi_tao: historyData.nguoi_tao,
         },
       });
+
+      // Lưu ảnh hiện trường (đính kèm loại GIAI_QUYET) nếu có
+      if (dinhKems.length > 0) {
+        await tx.dinh_kem_phan_anh.createMany({
+          data: dinhKems.map((d) => ({ ...d, id_phan_anh: idPhanAnh })),
+        });
+      }
     });
   },
 
@@ -587,8 +605,10 @@ const PhanAnhRepository = {
         id_video: true,
         dinh_kem_phan_anh: {
           select: {
+            id: true,
             dinh_dang_file: true,
             url_file: true,
+            loai: true,
           },
         },
         linh_vuc_phan_anh: {
@@ -662,9 +682,11 @@ const PhanAnhRepository = {
         },
         dinh_kem_phan_anh: {
           select: {
+            id: true,
             dinh_dang_file: true,
             url_file: true,
             kich_thuoc_file_mb: true,
+            loai: true,
           },
         },
       },

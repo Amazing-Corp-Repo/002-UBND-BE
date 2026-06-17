@@ -93,6 +93,7 @@ model dinh_kem_phan_anh {
   dinh_dang_file     String?   @db.VarChar(50)
   url_file           String?   @db.VarChar(500)
   kich_thuoc_file_mb Decimal?  @db.Decimal(10, 2)
+  loai               String?   @default("PHAN_ANH") @db.VarChar(50)
   thoi_gian_tao      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   phan_anh           phan_anh? @relation(fields: [id_phan_anh], references: [id], onUpdate: NoAction, map: "fk_dinh_kem_phan_anh_phan_anh")
 }
