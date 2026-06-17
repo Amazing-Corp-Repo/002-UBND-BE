@@ -80,6 +80,7 @@ const UserRepository = {
   },
 
   async findById(userId) {
+    if (!userId) return null;
     return await prisma.nguoi_dung.findUnique({
       where: {
         id: userId,
