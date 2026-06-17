@@ -51,6 +51,11 @@ export const UpdatePhanAnhLinhVucRequest = Joi.object({
     "string.uuid": "idLinhVucPhanAnh must be a valid UUID",
     "any.required": "Lĩnh vực phản ánh là bắt buộc",
   }),
+  lyDo: Joi.string().trim().max(1000).required().messages({
+    "string.empty": "Lý do chuyển lĩnh vực không được để trống",
+    "string.max": "Lý do chuyển lĩnh vực không được vượt quá 1000 ký tự",
+    "any.required": "Lý do chuyển lĩnh vực là bắt buộc",
+  }),
 });
 
 export const CreatePhanAnhPublicRequest = Joi.object({

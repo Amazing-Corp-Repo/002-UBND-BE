@@ -662,6 +662,24 @@ const PhanAnhRepository = {
     });
   },
 
+  async updateLinhVucWithHistory(idPhanAnh, patch, historyData) {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.phan_anh.update({
+        where: { id: idPhanAnh },
+        data: patch,
+      });
+      await tx.lich_su_trang_thai.create({
+        data: {
+          id_phan_anh: idPhanAnh,
+          ten: historyData.ten,
+          ghi_chu: historyData.ghi_chu,
+          nguoi_tao: historyData.nguoi_tao,
+        },
+      });
+      return updated;
+    });
+  },
+
   async getPendingApprovalPhanAnh(idTo, page, size, sortTime) {
     const skip = (page - 1) * size;
     const orderDirection = sortTime === "asc" ? "asc" : "desc";

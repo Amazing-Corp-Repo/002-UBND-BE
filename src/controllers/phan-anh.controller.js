@@ -128,11 +128,12 @@ const PhanAnhController = {
 
   async updateLinhVucPhanAnh(req, res) {
     const { idPhanAnh } = req.params;
-    const { idLinhVucPhanAnh } = req.body;
+    const { idLinhVucPhanAnh, lyDo } = req.body;
     const currentUser = req.payload.userId;
     let result = await PhanAnhService.updateLinhVucPhanAnh(
       idPhanAnh,
       idLinhVucPhanAnh,
+      lyDo,
       currentUser,
     );
     return successResponse(

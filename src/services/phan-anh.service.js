@@ -368,7 +368,7 @@ const PhanAnhService = {
     );
   },
 
-  async updateLinhVucPhanAnh(idPhanAnh, idLinhVucPhanAnh, currentUser) {
+  async updateLinhVucPhanAnh(idPhanAnh, idLinhVucPhanAnh, lyDo, currentUser) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
@@ -410,11 +410,23 @@ const PhanAnhService = {
       throw new BaseError(400, "Người dùng không tồn tại");
     }
 
-    return await PhanAnhRepository.updatePhanAnh(idPhanAnh, {
-      id_linh_vuc_phan_anh: idLinhVucPhanAnh,
-      nguoi_cap_nhat: currentUser,
-      thoi_gian_cap_nhat: new Date().toISOString(),
-    });
+    const tenLinhVucCu = phanAnh.linh_vuc_phan_anh?.ten || "lĩnh vực cũ";
+
+    // Đổi lĩnh vực + ghi lịch sử kèm lý do (giữ ten = trạng thái hiện tại để
+    // không phá luồng trạng thái tuyến tính). Atomic trong 1 transaction.
+    return await PhanAnhRepository.updateLinhVucWithHistory(
+      idPhanAnh,
+      {
+        id_linh_vuc_phan_anh: idLinhVucPhanAnh,
+        nguoi_cap_nhat: currentUser,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+      {
+        ten: lastStatus,
+        ghi_chu: `Chuyển lĩnh vực từ "${tenLinhVucCu}" sang "${existingLinhVuc.ten}". Lý do: ${lyDo}`,
+        nguoi_tao: currentUser,
+      },
+    );
   },
 
   async getTongQuanPhanAnh() {
