@@ -89,10 +89,23 @@ const PhanAnhRepository = {
     page,
     size,
     sortTime,
+    sortBy,
+    sortOrder,
   ) {
     const skip = (page - 1) * size;
 
-    const orderDirection = sortTime === "asc" ? "asc" : "desc";
+    // Whitelist cột sort (chống SQL injection vì query là raw). sortBy ưu tiên;
+    // không có sortBy thì giữ tương thích cũ (sort theo thời gian + sortTime).
+    const SORT_COLUMNS = {
+      thoi_gian_tao: "pa.thoi_gian_tao",
+      ma_phan_anh: "pa.ma_phan_anh",
+      tieu_de: "pa.tieu_de",
+      muc_do: "pa.muc_do",
+      trang_thai: "lst.ten",
+    };
+    const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
+    const orderDirection =
+      (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
     let whereSql = `WHERE 1=1 AND (pa.is_approve = true OR pa.is_approve IS NULL)`;
@@ -133,7 +146,7 @@ const PhanAnhRepository = {
             ORDER BY id_phan_anh, thoi_gian_tao DESC
         ) lst ON lst.id_phan_anh = pa.id
         ${whereSql}
-        ORDER BY pa.thoi_gian_tao ${orderDirection}
+        ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
         LIMIT $${params.length - 1} OFFSET $${params.length};
     `,
       ...params,
@@ -164,7 +177,6 @@ const PhanAnhRepository = {
     // Fetch dữ liệu full bằng Prisma (include đầy đủ)
     const phanAnhs = await prisma.phan_anh.findMany({
       where: { id: { in: ids } },
-      orderBy: { thoi_gian_tao: orderDirection },
       include: {
         lich_su_trang_thai: {
           orderBy: { thoi_gian_tao: "desc" },
@@ -180,6 +192,10 @@ const PhanAnhRepository = {
         },
       },
     });
+
+    // findMany theo id IN (...) không giữ thứ tự → sắp lại đúng thứ tự đã sort từ raw SQL.
+    const idOrder = new Map(ids.map((id, i) => [id, i]));
+    phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
     return {
       data: phanAnhs,
@@ -498,9 +514,20 @@ const PhanAnhRepository = {
     page,
     size,
     sortTime,
+    sortBy,
+    sortOrder,
   ) {
     const skip = (page - 1) * size;
-    const orderDirection = sortTime === "asc" ? "asc" : "desc";
+    const SORT_COLUMNS = {
+      thoi_gian_tao: "pa.thoi_gian_tao",
+      ma_phan_anh: "pa.ma_phan_anh",
+      tieu_de: "pa.tieu_de",
+      muc_do: "pa.muc_do",
+      trang_thai: "lst.ten",
+    };
+    const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
+    const orderDirection =
+      (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
     let whereSql = `WHERE 1=1`;
@@ -542,7 +569,7 @@ const PhanAnhRepository = {
           ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id
       ${whereSql}
-      ORDER BY pa.thoi_gian_tao ${orderDirection}
+      ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
       LIMIT $${params.length - 1} OFFSET $${params.length};
     `,
       ...params,
@@ -568,7 +595,6 @@ const PhanAnhRepository = {
 
     const phanAnhs = await prisma.phan_anh.findMany({
       where: { id: { in: ids } },
-      orderBy: { thoi_gian_tao: orderDirection },
       include: {
         lich_su_trang_thai: {
           orderBy: { thoi_gian_tao: "desc" },
@@ -577,6 +603,9 @@ const PhanAnhRepository = {
         linh_vuc_phan_anh: { select: { ten: true } },
       },
     });
+
+    const idOrder = new Map(ids.map((id, i) => [id, i]));
+    phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
     return { data: phanAnhs, totalItems: total[0].count };
   },
