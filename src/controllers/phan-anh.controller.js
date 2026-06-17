@@ -109,6 +109,7 @@ const PhanAnhController = {
     const { thoiGianPhanHoiDuKien, ngayDuKienHoanThanh, trangThai, ghiChu } =
       req.body;
     const currentUser = req.payload.userId;
+    const file = req.files;
     let result = await PhanAnhService.updateStatusPhanAnh(
       idPhanAnh,
       thoiGianPhanHoiDuKien,
@@ -116,6 +117,7 @@ const PhanAnhController = {
       trangThai,
       ghiChu,
       currentUser,
+      file,
     );
     return successResponse(
       res,

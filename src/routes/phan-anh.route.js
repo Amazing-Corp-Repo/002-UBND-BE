@@ -103,6 +103,15 @@ phanAnhRouter.put(
   "/update-status/:idPhanAnh",
   authenticate,
   authorize([PERMISSION.PA_UPDATE_STATUS]),
+  // Cho phép đính kèm ảnh hiện trường khi cập nhật trạng thái (bắt buộc khi "Đã giải quyết").
+  // Uploader chạy TRƯỚC validate để multer parse text fields vào req.body + ảnh vào req.files.
+  createUploader({
+    type: UPLOAD_TYPE.PHAN_ANH,
+    fieldName: "file",
+    maxCount: 5,
+    maxSizeMB: 5,
+    allowed_types: ["image/jpeg", "image/png"],
+  }),
   validate(UpdatePhanAnhStatusRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,

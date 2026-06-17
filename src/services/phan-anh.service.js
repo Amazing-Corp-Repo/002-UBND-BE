@@ -16,6 +16,7 @@ import NotificationRepository from "../repositories/notification.repository.js";
 import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
+import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 
 const ORDER = [
@@ -254,6 +255,7 @@ const PhanAnhService = {
     trangThai,
     ghiChu,
     currentUser,
+    file,
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -294,6 +296,24 @@ const PhanAnhService = {
       throw new BaseError(400, "Người dùng không tồn tại");
     }
 
+    // Bắt buộc đính kèm ≥1 ảnh hiện trường khi chuyển sang "Đã giải quyết".
+    const uploadedFiles = Array.isArray(file) ? file : [];
+    if (
+      trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET &&
+      uploadedFiles.length === 0
+    ) {
+      throw new BaseError(
+        400,
+        "Phải đính kèm ít nhất 1 ảnh hiện trường khi giải quyết phản ánh",
+      );
+    }
+    const dinhKemGiaiQuyet = uploadedFiles.map((f) => ({
+      dinh_dang_file: f.mimetype,
+      url_file: f.relativeUrl,
+      kich_thuoc_file_mb: f.sizeMB,
+      loai: DINH_KEM_LOAI.GIAI_QUYET,
+    }));
+
     const phanAnhPatch = {
       nguoi_cap_nhat: currentUser,
       thoi_gian_tiep_nhan:
@@ -314,6 +334,7 @@ const PhanAnhService = {
       idPhanAnh,
       phanAnhPatch,
       historyData,
+      dinhKemGiaiQuyet,
     );
 
     if (phanAnh.nguoi_tao) {
