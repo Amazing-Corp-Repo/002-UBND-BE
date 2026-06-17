@@ -90,6 +90,10 @@ const MailService = {
         subject = `[${APP_NAME}] File export đã sẵn sàng`;
         templateFile = "export-ready.html";
         break;
+      case MAIL_TYPE.DAILY_OVERVIEW_REPORT:
+        subject = `[${APP_NAME}] Báo cáo thống kê phản ánh ngày ${data.ngay}`;
+        templateFile = "daily-overview-report.html";
+        break;
       default:
         throw new BaseError(400, "Loại email không hợp lệ");
     }
