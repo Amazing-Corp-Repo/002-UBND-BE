@@ -240,6 +240,18 @@ const UserRepository = {
     });
   },
 
+  async findEmailsByIds(userIds) {
+    const users = await prisma.nguoi_dung.findMany({
+      where: {
+        id: { in: userIds },
+        is_delete: false,
+        is_active: true,
+      },
+      select: { email: true },
+    });
+    return users.map((u) => u.email?.trim()).filter(Boolean);
+  },
+
   async getAllAdmin() {
     const adminUsers = await prisma.nguoi_dung.findMany({
       where: {

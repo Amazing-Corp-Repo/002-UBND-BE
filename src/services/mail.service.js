@@ -127,6 +127,10 @@ const MailService = {
         subject = `[${APP_NAME}] Phản ánh đã được cập nhật trạng thái #${data.maPhanAnh}`;
         templateFile = "report-status-updated.html";
         break;
+      case MAIL_TYPE.LINH_VUC_MANAGER_ASSIGNED:
+        subject = `[${APP_NAME}] Bạn được phân công quản lý lĩnh vực phản ánh`;
+        templateFile = "assigned-linh-vuc-manager.html";
+        break;
       default:
         throw new BaseError(400, "Loại email không hợp lệ cho sendMailCC");
     }
