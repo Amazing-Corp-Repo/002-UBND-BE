@@ -96,6 +96,18 @@ const TinTucRepository = {
     return { data, totalItems };
   },
 
+  async getStatistics() {
+    const [tongBaiViet, viewAgg] = await Promise.all([
+      prisma.tin_tuc.count({ where: { is_delete: false } }),
+      // Tổng lượt xem thật (SUM view_count) trên các bài chưa xóa.
+      prisma.tin_tuc_view.aggregate({
+        where: { tin_tuc: { is_delete: false } },
+        _sum: { view_count: true },
+      }),
+    ]);
+    return { tongBaiViet, tongLuotXem: viewAgg._sum.view_count || 0 };
+  },
+
   async findByIdDanhMuc(id) {
     return prisma.tin_tuc.findFirst({
       where: {

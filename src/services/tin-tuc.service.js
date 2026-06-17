@@ -114,6 +114,10 @@ const TinTucService = {
     return { data, pagination };
   },
 
+  async getStatistics() {
+    return await TinTucRepository.getStatistics();
+  },
+
   async delete(id, currentUser) {
     if (!id === null || id === undefined) {
       throw new BaseError(400, "ID tin tức không được để trống");
