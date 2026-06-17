@@ -159,12 +159,28 @@ const UserRepository = {
 
   async getUserStatistics() {
     const where = { is_delete: false };
-    const [total, inactive] = await Promise.all([
+    const [total, inactive, roleGroups, roles] = await Promise.all([
       prisma.nguoi_dung.count({ where }),
       prisma.nguoi_dung.count({ where: { ...where, is_active: false } }),
+      // PK [user_id, role_id] là duy nhất → đếm rows theo role_id = số user của vai trò.
+      // Lọc theo nguoi_dung không bị xóa mềm.
+      prisma.user_roles.groupBy({
+        by: ["role_id"],
+        where: { nguoi_dung: { is_delete: false } },
+        _count: { _all: true },
+      }),
+      prisma.roles.findMany({ select: { id: true, name: true } }),
     ]);
+
+    const roleNameById = new Map(roles.map((r) => [r.id, r.name]));
+    const byRole = {};
+    for (const g of roleGroups) {
+      const name = roleNameById.get(g.role_id);
+      if (name) byRole[name] = (byRole[name] || 0) + g._count._all;
+    }
+
     // active = phần còn lại (is_active true hoặc null) — khớp ngữ nghĩa UI "!== false".
-    return { total, active: total - inactive, inactive };
+    return { total, active: total - inactive, inactive, byRole };
   },
 
   async findByUsernameOrEmail(ten_dang_nhap, email) {
