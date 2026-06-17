@@ -345,6 +345,35 @@ const UserRepository = {
       },
     });
   },
+
+  async findUsersByPermissionCode(permissionCode) {
+    return await prisma.nguoi_dung.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        email: { not: null },
+        user_roles: {
+          some: {
+            roles: {
+              is_delete: false,
+              is_active: true,
+              role_permissions: {
+                some: { permission_code: permissionCode },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        ten_dang_nhap: "asc",
+      },
+      select: {
+        id: true,
+        ho_va_ten: true,
+        email: true,
+      },
+    });
+  },
 };
 
 export default UserRepository;

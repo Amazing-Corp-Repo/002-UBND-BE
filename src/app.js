@@ -118,6 +118,13 @@ import("./cron/cleanup-chunks.cron.js")
   })
   .catch((err) => console.error("Cron error:", err));
 
+import("./cron/daily-overview-report.cron.js")
+  .then((m) => {
+    m.registerDailyOverviewReportCron();
+    console.log("Daily overview report cron started cùng server");
+  })
+  .catch((err) => console.error("Daily overview report cron error:", err));
+
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
