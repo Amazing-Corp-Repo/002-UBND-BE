@@ -81,10 +81,10 @@ export const CreatePhanAnhPublicRequest = Joi.object({
   soDienThoaiNguoiPhanAnh: Joi.string()
     .trim()
     .pattern(/^[0-9]{10,15}$/)
-    .required()
+    .optional()
+    .allow(null, "")
     .messages({
       "string.pattern.base": "Số điện thoại không hợp lệ",
-      "any.required": "Số điện thoại là bắt buộc",
     }),
   idVideo: Joi.array().items(Joi.string().trim()).optional().messages({
     "array.base": "idVideo phải là một mảng",
