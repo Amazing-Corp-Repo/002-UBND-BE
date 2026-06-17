@@ -251,6 +251,20 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+
+    // Phản ánh từ tài khoản không nhập tay tên/SĐT → lấy từ thông tin người gửi.
+    const nguoiGui = phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
+    if (nguoiGui) {
+      if (!phanAnh.ten_nguoi_phan_anh) {
+        phanAnh.ten_nguoi_phan_anh =
+          nguoiGui.ho_va_ten || nguoiGui.ten_dang_nhap || null;
+      }
+      if (!phanAnh.sdt_nguoi_phan_anh) {
+        phanAnh.sdt_nguoi_phan_anh = nguoiGui.so_dien_thoai || null;
+      }
+    }
+    delete phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
+
     return phanAnh;
   },
 
