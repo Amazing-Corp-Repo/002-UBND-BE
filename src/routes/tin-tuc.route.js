@@ -55,6 +55,8 @@ tinTucRouter.get(
   TinTucController.getTinTucToView
 );
 
+tinTucRouter.get("/statistics", authenticate, TinTucController.getStatistics);
+
 tinTucRouter.get("/:id", TinTucController.getDetails);
 
 tinTucRouter.get("/", TinTucController.getAll);
