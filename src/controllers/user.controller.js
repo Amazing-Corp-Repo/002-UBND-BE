@@ -43,14 +43,22 @@ const UserController = {
     );
   },
 
+  async getUserStatistics(req, res) {
+    const result = await UserService.getUserStatistics();
+    return successResponse(res, result, "Thống kê người dùng thành công");
+  },
+
   async createAccount(req, res) {
-    const { tenDangNhap, email, matKhau, vaiTro } = req.body;
+    const { tenDangNhap, email, matKhau, vaiTro, hoVaTen, soDienThoai } =
+      req.body;
     const currentUser = req.payload.userId;
     const result = await UserService.createAccount(
       tenDangNhap,
       email,
       matKhau,
       vaiTro,
+      hoVaTen,
+      soDienThoai,
       currentUser,
     );
     return successResponse(res, result.user, result.message);

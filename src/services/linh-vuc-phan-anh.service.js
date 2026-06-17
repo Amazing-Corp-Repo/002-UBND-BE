@@ -3,8 +3,28 @@ import UserRepository from "../repositories/user.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
 import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
+import MailService from "./mail.service.js";
+import MAIL_TYPE from "../constants/mail.constant.js";
+import env from "../config/environment.config.js";
 
 const LinhVucPhanAnhService = {
+  // Gửi mail báo cho những người MỚI được phân công quản lý lĩnh vực phản ánh.
+  // Không chặn luồng chính nếu gửi mail lỗi (mail là phụ).
+  async notifyAssignedManagers(managerIds, tenLinhVuc) {
+    if (!managerIds || managerIds.length === 0) return;
+    try {
+      const emails = await UserRepository.findEmailsByIds(managerIds);
+      if (emails.length === 0) return;
+      await MailService.sendMailCC({
+        bcc: emails,
+        type: MAIL_TYPE.LINH_VUC_MANAGER_ASSIGNED,
+        data: { tenLinhVuc, url: env.URL_PHAN_ANH_MANAGER || "" },
+      });
+    } catch (error) {
+      console.error("Lỗi gửi mail phân công quản lý lĩnh vực:", error.message);
+    }
+  },
+
   async createLinhVucPhanAnh(ten, moTa, nguoiQuanLyIds, currentUser) {
     if (nguoiQuanLyIds && nguoiQuanLyIds.length > 0) {
       const validCount = await UserRepository.countUserByIds(nguoiQuanLyIds);
@@ -27,6 +47,8 @@ const LinhVucPhanAnhService = {
       { ten, moTa, currentUser },
       nguoiQuanLyIds
     );
+    // Tất cả người quản lý khi tạo mới đều là người mới → gửi mail cho toàn bộ.
+    await this.notifyAssignedManagers(nguoiQuanLyIds, ten);
     return result;
   },
 
@@ -73,8 +95,16 @@ const LinhVucPhanAnhService = {
       nguoi_cap_nhat: currentUser,
       thoi_gian_cap_nhat: new Date().toISOString(),
     };
-    const result = await LinhVucPhanAnhRepository.updateWithManagers(id, data, nguoiQuanLyIds, currentUser);
-    return result;
+    const { updated, addedManagerIds } =
+      await LinhVucPhanAnhRepository.updateWithManagers(
+        id,
+        data,
+        nguoiQuanLyIds,
+        currentUser
+      );
+    // Chỉ gửi mail cho người MỚI được thêm, tránh spam người đã là quản lý.
+    await this.notifyAssignedManagers(addedManagerIds, ten);
+    return updated;
   },
 
   async updateLinhVucPhanAnhStatus(id, isActive, currentUser) {

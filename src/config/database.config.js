@@ -13,7 +13,14 @@ const connectionString = process.env.DATABASE_URL;
 const schemaMatch = connectionString?.match(/[?&]schema=([^&]+)/);
 const schema = schemaMatch ? decodeURIComponent(schemaMatch[1]) : undefined;
 
-const adapter = new PrismaPg({ connectionString }, schema ? { schema } : undefined);
+// QUAN TRỌNG (raw queries): `{ schema }` ở dưới chỉ áp cho query Prisma SINH RA (findMany...),
+// adapter v7 KHÔNG set search_path nên `$queryRaw`/`$queryRawUnsafe` với tên bảng không qualify
+// sẽ "relation ... does not exist" khi schema != public. → Set search_path NGAY lúc khởi tạo
+// connection qua tham số `options` của libpq (server áp GUC trước mọi query → race-free, không
+// cần SET thủ công). Quote tên schema để giữ hoa-thường (vd "UBND_DB_STG").
+const options = schema ? `-c search_path="${schema}",public` : undefined;
+
+const adapter = new PrismaPg({ connectionString, options }, schema ? { schema } : undefined);
 
 const prisma = new PrismaClient({ adapter });
 

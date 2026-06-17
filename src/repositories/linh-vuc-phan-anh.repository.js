@@ -138,7 +138,9 @@ const LinhVucPhanAnhRepository = {
         });
       }
 
-      return updated;
+      // Trả thêm danh sách quản lý MỚI được thêm để service gửi mail đúng người
+      // (tránh email lại cho người đã là quản lý từ trước).
+      return { updated, addedManagerIds: toAdd };
     });
   },
 

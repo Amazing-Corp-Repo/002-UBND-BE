@@ -65,7 +65,19 @@ const UserService = {
     return { data: userResponses, pagination };
   },
 
-  async createAccount(tenDangNhap, email, matKhau, vaiTro, currentUser) {
+  async getUserStatistics() {
+    return await UserRepository.getUserStatistics();
+  },
+
+  async createAccount(
+    tenDangNhap,
+    email,
+    matKhau,
+    vaiTro,
+    hoVaTen,
+    soDienThoai,
+    currentUser,
+  ) {
     let existingRole = await RoleRepository.getById(vaiTro);
     if (!existingRole) {
       throw new BaseError(400, "Vai trò không hợp lệ");
@@ -89,6 +101,8 @@ const UserService = {
       email,
       vai_tro: vaiTro,
       mat_khau: hashedPassword,
+      ho_va_ten: hoVaTen,
+      so_dien_thoai: soDienThoai,
       nguoi_tao: currentUser,
     });
 

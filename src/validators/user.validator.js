@@ -34,6 +34,22 @@ export const CreateAccountRequest = Joi.object({
             'any.required': 'Vai trò là bắt buộc',
             'string.uuid': 'Vai trò không hợp lệ',
         }),
+    hoVaTen: Joi.string()
+        .trim()
+        .max(150)
+        .required()
+        .messages({
+            'any.required': 'Họ và tên không được để trống',
+            'string.max': 'Họ và tên không được vượt quá 150 ký tự',
+        }),
+    soDienThoai: Joi.string()
+        .trim()
+        .pattern(/^[0-9]{10,15}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Số điện thoại không hợp lệ',
+            'any.required': 'Số điện thoại là bắt buộc',
+        }),
 });
 
 export const UpdateProfileRequest = Joi.object({
