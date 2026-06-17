@@ -680,6 +680,15 @@ const PhanAnhRepository = {
         to_phu_trach: {
           select: { id: true, ho_va_ten: true, email: true },
         },
+        // Người gửi (phản ánh từ tài khoản) — để lấy tên/SĐT khi không nhập tay.
+        nguoi_dung_phan_anh_nguoi_taoTonguoi_dung: {
+          select: {
+            id: true,
+            ho_va_ten: true,
+            ten_dang_nhap: true,
+            so_dien_thoai: true,
+          },
+        },
       },
     });
   },
