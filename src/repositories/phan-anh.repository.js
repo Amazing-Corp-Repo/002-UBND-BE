@@ -639,6 +639,12 @@ const PhanAnhRepository = {
       include: {
         lich_su_trang_thai: {
           orderBy: { thoi_gian_tao: "desc" },
+          // Kèm người thực hiện đổi trạng thái (để biết AI tiếp nhận/xử lý + lúc nào).
+          include: {
+            nguoi_dung: {
+              select: { id: true, ho_va_ten: true, ten_dang_nhap: true },
+            },
+          },
         },
         dinh_kem_phan_anh: true,
         linh_vuc_phan_anh: true,
