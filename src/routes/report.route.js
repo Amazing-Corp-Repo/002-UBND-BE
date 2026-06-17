@@ -13,6 +13,13 @@ reportRouter.get(
 );
 
 reportRouter.get(
+  "/phan-anh/theo-thang",
+  authenticate,
+  authorize([PERMISSION.RPT_GET_DETAIL]),
+  ReportController.getPhanAnhTheoThang
+);
+
+reportRouter.get(
   "/thu-tuc",
   authenticate,
   authorize([PERMISSION.RPT_GET_DETAIL]),
