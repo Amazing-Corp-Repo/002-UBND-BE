@@ -87,6 +87,8 @@ userRoute.get("/khu-pho", UserController.getKhuPhoUsers);
 
 userRoute.get("/search", authenticate, UserController.searchUsers);
 
+userRoute.get("/statistics", authenticate, UserController.getUserStatistics);
+
 userRoute.get(
   "/:id",
   authenticate,

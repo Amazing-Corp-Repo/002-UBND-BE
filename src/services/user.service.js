@@ -65,6 +65,10 @@ const UserService = {
     return { data: userResponses, pagination };
   },
 
+  async getUserStatistics() {
+    return await UserRepository.getUserStatistics();
+  },
+
   async createAccount(
     tenDangNhap,
     email,

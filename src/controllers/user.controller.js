@@ -43,6 +43,11 @@ const UserController = {
     );
   },
 
+  async getUserStatistics(req, res) {
+    const result = await UserService.getUserStatistics();
+    return successResponse(res, result, "Thống kê người dùng thành công");
+  },
+
   async createAccount(req, res) {
     const { tenDangNhap, email, matKhau, vaiTro, hoVaTen, soDienThoai } =
       req.body;

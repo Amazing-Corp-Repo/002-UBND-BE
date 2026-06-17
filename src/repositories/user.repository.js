@@ -157,6 +157,16 @@ const UserRepository = {
     return { users, total };
   },
 
+  async getUserStatistics() {
+    const where = { is_delete: false };
+    const [total, inactive] = await Promise.all([
+      prisma.nguoi_dung.count({ where }),
+      prisma.nguoi_dung.count({ where: { ...where, is_active: false } }),
+    ]);
+    // active = phần còn lại (is_active true hoặc null) — khớp ngữ nghĩa UI "!== false".
+    return { total, active: total - inactive, inactive };
+  },
+
   async findByUsernameOrEmail(ten_dang_nhap, email) {
     return await prisma.nguoi_dung.findFirst({
       where: {
