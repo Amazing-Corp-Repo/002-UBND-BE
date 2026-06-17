@@ -23,7 +23,7 @@ const TinTucRepository = {
   },
 
   async getDetails(id) {
-    return prisma.tin_tuc.findFirst({
+    const result = await prisma.tin_tuc.findFirst({
       where: {
         id,
         is_delete: false,
@@ -31,11 +31,21 @@ const TinTucRepository = {
       include: {
         dinh_kem_tin_tuc: true,
         danh_muc_tin_tuc: true,
+        // _count.tin_tuc_view = số người xem DUY NHẤT (theo ip+device).
         _count: {
           select: { tin_tuc_view: true },
         },
       },
     });
+    if (result) {
+      // luot_xem = TỔNG lượt xem thật (gồm cả lượt lặp lại) = SUM(view_count).
+      const agg = await prisma.tin_tuc_view.aggregate({
+        where: { id_tin_tuc: id },
+        _sum: { view_count: true },
+      });
+      result.luot_xem = agg._sum.view_count || 0;
+    }
+    return result;
   },
 
   async getAll(page, size, idDanhMuc, isActive, search) {
@@ -65,6 +75,24 @@ const TinTucRepository = {
       }),
       prisma.tin_tuc.count({ where }),
     ]);
+
+    // Gắn TỔNG lượt xem thật (SUM view_count) cho từng bài trong trang.
+    // (_count.tin_tuc_view chỉ là số người xem duy nhất theo ip+device.)
+    const ids = data.map((d) => d.id);
+    const sums = ids.length
+      ? await prisma.tin_tuc_view.groupBy({
+          by: ["id_tin_tuc"],
+          where: { id_tin_tuc: { in: ids } },
+          _sum: { view_count: true },
+        })
+      : [];
+    const sumMap = new Map(
+      sums.map((s) => [s.id_tin_tuc, s._sum.view_count || 0])
+    );
+    data.forEach((d) => {
+      d.luot_xem = sumMap.get(d.id) || 0;
+    });
+
     return { data, totalItems };
   },
 
