@@ -150,6 +150,44 @@ const ReportService = {
     };
   },
 
+  // Báo cáo phản ánh nhận theo từng tháng (kèm chi tiết từng phản ánh).
+  async getPhanAnhTheoThang(fromRaw, toRaw, idLinhVuc) {
+    const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
+    const to = toRaw ? toUTCFromVN_End(toRaw) : null;
+
+    const danhSach = await ReportRepository.getPhanAnhTheoThang(
+      from,
+      to,
+      idLinhVuc,
+    );
+
+    // Nhóm theo tháng (YYYY-MM theo giờ VN).
+    const map = {};
+    for (const pa of danhSach) {
+      const thang = formatMonth(pa.thoi_gian_tao);
+      if (!map[thang]) {
+        map[thang] = { thang, tong: 0, danh_sach: [] };
+      }
+      map[thang].tong++;
+      map[thang].danh_sach.push({
+        ma_phan_anh: pa.ma_phan_anh,
+        tieu_de: pa.tieu_de,
+        linh_vuc_phan_anh: pa.linh_vuc_phan_anh?.ten || null,
+        muc_do: pa.muc_do,
+        vi_tri: pa.vi_tri,
+        trang_thai_hien_tai: pa.lich_su_trang_thai[0]?.ten || null,
+        thoi_gian_tao: pa.thoi_gian_tao,
+      });
+    }
+
+    // Sắp xếp tháng mới nhất trước.
+    const theo_thang = Object.values(map).sort((a, b) =>
+      b.thang.localeCompare(a.thang),
+    );
+
+    return { tong_phan_anh: danhSach.length, theo_thang };
+  },
+
   async getReportThuTuc(fromRaw, toRaw) {
     const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
     const to = toRaw ? toUTCFromVN_End(toRaw) : null;
@@ -532,6 +570,11 @@ const ReportService = {
 const formatDate = (date) => {
   let toVN = new Date(date.getTime() + 7 * 60 * 60 * 1000);
   return toVN.toISOString().split("T")[0];
+};
+
+const formatMonth = (date) => {
+  let toVN = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+  return toVN.toISOString().slice(0, 7); // YYYY-MM
 };
 
 const sortLinhVucByTongPhanAnh = (linhVuc) => {

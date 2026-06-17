@@ -99,6 +99,31 @@ const ReportRepository = {
     return { phanAnh, phanAnhMoiCapNhat, linh_vuc, totalPhanAnh };
   },
 
+  async getPhanAnhTheoThang(from, to, idLinhVuc) {
+    const where = {
+      ...(idLinhVuc && { id_linh_vuc_phan_anh: idLinhVuc }),
+      ...(from && to && { thoi_gian_tao: { gte: from, lte: to } }),
+    };
+    return await prisma.phan_anh.findMany({
+      where,
+      select: {
+        id: true,
+        ma_phan_anh: true,
+        tieu_de: true,
+        muc_do: true,
+        vi_tri: true,
+        thoi_gian_tao: true,
+        linh_vuc_phan_anh: { select: { id: true, ten: true } },
+        lich_su_trang_thai: {
+          orderBy: { thoi_gian_tao: "desc" },
+          take: 1,
+          select: { ten: true },
+        },
+      },
+      orderBy: { thoi_gian_tao: "desc" },
+    });
+  },
+
   async getReportThuTuc(from, to) {
     let whereClause = {};
     if (from && to) {

@@ -8,6 +8,16 @@ const ReportController = {
     return successResponse(res, data, "Lấy báo cáo phản ánh thành công");
   },
 
+  async getPhanAnhTheoThang(req, res) {
+    const { from, to, id_linh_vuc } = req.query;
+    let data = await ReportService.getPhanAnhTheoThang(from, to, id_linh_vuc);
+    return successResponse(
+      res,
+      data,
+      "Lấy báo cáo phản ánh theo tháng thành công",
+    );
+  },
+
   async getReportThuTuc(req, res) {
     const { from, to } = req.query;
     let data = await ReportService.getReportThuTuc(from, to);
