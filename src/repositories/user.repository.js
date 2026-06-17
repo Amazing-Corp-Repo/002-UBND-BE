@@ -17,6 +17,8 @@ const UserRepository = {
           ten_dang_nhap: userData.ten_dang_nhap,
           email: userData.email,
           mat_khau: userData.mat_khau,
+          ho_va_ten: userData.ho_va_ten,
+          so_dien_thoai: userData.so_dien_thoai,
           nguoi_tao: userData.nguoi_tao,
         },
       });
