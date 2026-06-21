@@ -278,6 +278,31 @@ const LinhVucPhanAnhRepository = {
       )
       .filter((email) => email); // Lọc bỏ các email undefined hoặc null
   },
+
+  async getManagersByLinhVucId(linhVucId) {
+    const managers = await prisma.linh_vuc_phan_anh_nguoi_quan_ly.findMany({
+      where: {
+        id_linh_vuc_phan_anh: linhVucId,
+      },
+      select: {
+        nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung: {
+          select: {
+            id: true,
+            ho_va_ten: true,
+            ten_dang_nhap: true,
+            email: true,
+          },
+        },
+      },
+    });
+    return managers
+      .map(
+        (manager) =>
+          manager
+            .nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung,
+      )
+      .filter(Boolean);
+  },
 };
 
 export default LinhVucPhanAnhRepository;

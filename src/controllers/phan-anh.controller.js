@@ -147,6 +147,29 @@ const PhanAnhController = {
     );
   },
 
+  async getAssignableUsers(req, res) {
+    const { idPhanAnh } = req.params;
+    let result = await PhanAnhService.getAssignableUsers(idPhanAnh);
+    return successResponse(
+      res,
+      result,
+      "Lấy danh sách chuyên viên xử lý thành công",
+    );
+  },
+
+  async assignPhanAnh(req, res) {
+    const { idPhanAnh } = req.params;
+    const { idNguoiXuLy, lyDo } = req.body;
+    const currentUser = req.payload.userId;
+    let result = await PhanAnhService.assignPhanAnh(
+      idPhanAnh,
+      idNguoiXuLy,
+      lyDo,
+      currentUser,
+    );
+    return successResponse(res, result, "Phân công xử lý phản ánh thành công");
+  },
+
   async getTongQuanPhanAnh(req, res) {
     let result = await PhanAnhService.getTongQuanPhanAnh();
     return successResponse(res, result, "Lấy tổng quát phản ánh thành công");

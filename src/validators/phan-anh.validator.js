@@ -58,6 +58,18 @@ export const UpdatePhanAnhLinhVucRequest = Joi.object({
   }),
 });
 
+export const AssignPhanAnhRequest = Joi.object({
+  idNguoiXuLy: Joi.string().trim().uuid().required().messages({
+    "string.uuid": "idNguoiXuLy must be a valid UUID",
+    "any.required": "Chuyên viên xử lý là bắt buộc",
+  }),
+  lyDo: Joi.string().trim().max(1000).required().messages({
+    "string.empty": "Lý do chuyển xử lý không được để trống",
+    "string.max": "Lý do chuyển xử lý không được vượt quá 1000 ký tự",
+    "any.required": "Lý do chuyển xử lý là bắt buộc",
+  }),
+});
+
 export const CreatePhanAnhPublicRequest = Joi.object({
   idLinhVucPhanAnh: Joi.string().trim().uuid().required().messages({
     "string.uuid": "idLinhVucPhanAnh must be a valid UUID",

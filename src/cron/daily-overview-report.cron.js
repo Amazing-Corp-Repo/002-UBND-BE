@@ -35,7 +35,6 @@ export const runDailyOverviewReport = async () => {
     ngay: formatNgay(new Date()),
     tongHomNay: tong_hom_nay ?? 0,
     daGui: thong_ke_theo_trang_thai?.[PHAN_ANH_STATUS.DA_GUI] ?? 0,
-    daTiepNhan: thong_ke_theo_trang_thai?.[PHAN_ANH_STATUS.DA_TIEP_NHAN] ?? 0,
     dangXuLy: thong_ke_theo_trang_thai?.[PHAN_ANH_STATUS.DANG_XU_LY] ?? 0,
     daGiaiQuyet: thong_ke_theo_trang_thai?.[PHAN_ANH_STATUS.DA_GIAI_QUYET] ?? 0,
     dong: thong_ke_theo_trang_thai?.[PHAN_ANH_STATUS.DONG] ?? 0,

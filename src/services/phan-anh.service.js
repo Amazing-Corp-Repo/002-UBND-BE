@@ -21,7 +21,6 @@ import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 
 const ORDER = [
   PHAN_ANH_STATUS.DA_GUI,
-  PHAN_ANH_STATUS.DA_TIEP_NHAN,
   PHAN_ANH_STATUS.DANG_XU_LY,
   PHAN_ANH_STATUS.DA_GIAI_QUYET,
 ];
@@ -337,7 +336,7 @@ const PhanAnhService = {
     const phanAnhPatch = {
       nguoi_cap_nhat: currentUser,
       thoi_gian_tiep_nhan:
-        trangThai === PHAN_ANH_STATUS.DA_TIEP_NHAN
+        trangThai === PHAN_ANH_STATUS.DANG_XU_LY
           ? new Date().toISOString()
           : phanAnh.thoi_gian_tiep_nhan,
       // thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
@@ -447,6 +446,98 @@ const PhanAnhService = {
         nguoi_tao: currentUser,
       },
     );
+  },
+
+  async getAssignableUsers(idPhanAnh) {
+    if (idPhanAnh === null || idPhanAnh === undefined) {
+      throw new BaseError(400, "ID phản ánh không được để trống");
+    }
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+    if (!phanAnh.id_linh_vuc_phan_anh) {
+      return [];
+    }
+    return await LinhVucPhanAnhRepository.getManagersByLinhVucId(
+      phanAnh.id_linh_vuc_phan_anh,
+    );
+  },
+
+  async assignPhanAnh(idPhanAnh, idNguoiXuLy, lyDo, currentUser) {
+    if (idPhanAnh === null || idPhanAnh === undefined) {
+      throw new BaseError(400, "ID phản ánh không được để trống");
+    }
+    if (!idNguoiXuLy) {
+      throw new BaseError(400, "Chuyên viên xử lý không được để trống");
+    }
+
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+
+    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    if (
+      lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
+      lastStatus === PHAN_ANH_STATUS.DONG
+    ) {
+      throw new BaseError(
+        400,
+        "Không thể phân công cho phản ánh đã được giải quyết hoặc đóng",
+      );
+    }
+
+    if (phanAnh.id_to === idNguoiXuLy) {
+      throw new BaseError(
+        400,
+        "Chuyên viên xử lý mới phải khác người đang phụ trách",
+      );
+    }
+
+    const existingUser = await UserRepository.findById(currentUser);
+    if (!existingUser) {
+      throw new BaseError(400, "Người dùng không tồn tại");
+    }
+
+    // Chuyên viên được gán phải nằm trong nhóm quản lý lĩnh vực của phản ánh.
+    const managers = await LinhVucPhanAnhRepository.getManagersByLinhVucId(
+      phanAnh.id_linh_vuc_phan_anh,
+    );
+    const target = managers.find((m) => m.id === idNguoiXuLy);
+    if (!target) {
+      throw new BaseError(
+        400,
+        "Chuyên viên được chọn không quản lý lĩnh vực của phản ánh này",
+      );
+    }
+
+    // Đổi người phụ trách + ghi lịch sử kèm lý do (giữ ten = trạng thái hiện tại
+    // để không phá luồng trạng thái tuyến tính). Atomic trong 1 transaction.
+    await PhanAnhRepository.updateLinhVucWithHistory(
+      idPhanAnh,
+      {
+        id_to: idNguoiXuLy,
+        nguoi_cap_nhat: currentUser,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+      {
+        ten: lastStatus,
+        ghi_chu: `Chuyển xử lý cho "${target.ho_va_ten || target.ten_dang_nhap}". Lý do: ${lyDo}`,
+        nguoi_tao: currentUser,
+      },
+    );
+
+    // Thông báo cho chuyên viên được phân công.
+    await NotificationRepository.createNotification({
+      user_id: idNguoiXuLy,
+      body: `Bạn được phân công xử lý phản ánh với mã ${phanAnh.ma_phan_anh}`,
+      target_id: phanAnh.ma_phan_anh,
+      target_type: "PHAN_ANH",
+      title: "Phân công xử lý phản ánh",
+    });
+
+    return { id_to: idNguoiXuLy };
   },
 
   async getTongQuanPhanAnh() {

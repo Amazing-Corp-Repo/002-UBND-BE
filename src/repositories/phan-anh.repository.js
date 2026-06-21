@@ -190,6 +190,9 @@ const PhanAnhRepository = {
             ten: true,
           },
         },
+        to_phu_trach: {
+          select: { id: true, ho_va_ten: true, email: true },
+        },
       },
     });
 
@@ -601,6 +604,9 @@ const PhanAnhRepository = {
           select: { ten: true, thoi_gian_tao: true },
         },
         linh_vuc_phan_anh: { select: { ten: true } },
+        to_phu_trach: {
+          select: { id: true, ho_va_ten: true, email: true },
+        },
       },
     });
 
