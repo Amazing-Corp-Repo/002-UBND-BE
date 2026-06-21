@@ -86,7 +86,7 @@ const ReportService = {
           linh_vuc_1[key.ten].da_xu_ly++;
 
           const start = p.lich_su_trang_thai.find(
-            (status) => status.ten === PHAN_ANH_STATUS.DA_TIEP_NHAN
+            (status) => status.ten === PHAN_ANH_STATUS.DANG_XU_LY
           );
           const end = p.lich_su_trang_thai.find(
             (status) =>
@@ -123,7 +123,6 @@ const ReportService = {
 
     const ORDER = [
       PHAN_ANH_STATUS.DA_GUI,
-      PHAN_ANH_STATUS.DA_TIEP_NHAN,
       PHAN_ANH_STATUS.DANG_XU_LY,
       PHAN_ANH_STATUS.DA_GIAI_QUYET,
       PHAN_ANH_STATUS.DONG,

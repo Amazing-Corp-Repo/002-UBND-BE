@@ -11,6 +11,7 @@ import {
   UpdatePhanAnhStatusRequest,
   CreatePhanAnhPublicRequest,
   UpdatePhanAnhLinhVucRequest,
+  AssignPhanAnhRequest,
 } from "../validators/phan-anh.validator.js";
 import {
   PERMISSION,
@@ -124,6 +125,24 @@ phanAnhRouter.put(
   validate(UpdatePhanAnhLinhVucRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_LINH_VUC),
   PhanAnhController.updateLinhVucPhanAnh,
+);
+
+// Danh sách chuyên viên có thể phân công (cán bộ quản lý lĩnh vực của phản ánh)
+phanAnhRouter.get(
+  "/:idPhanAnh/nguoi-xu-ly",
+  authenticate,
+  authorize([PERMISSION.PA_ASSIGN]),
+  PhanAnhController.getAssignableUsers,
+);
+
+// Phân công / chuyển phản ánh cho chuyên viên khác xử lý
+phanAnhRouter.put(
+  "/assign/:idPhanAnh",
+  authenticate,
+  authorize([PERMISSION.PA_ASSIGN]),
+  validate(AssignPhanAnhRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_ASSIGN),
+  PhanAnhController.assignPhanAnh,
 );
 
 export default phanAnhRouter;

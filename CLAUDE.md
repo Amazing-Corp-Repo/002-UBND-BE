@@ -71,7 +71,7 @@ router.post("/", authenticate, authorize([PERMISSION.PA_CREATE]),
 
 ## Constants — `src/constants/` (nguồn chân lý)
 - **`permission.constant.js`** — `PERMISSION` (codes `<MODULE>_<ACTION>`), `PERMISSION_DESC`, `PERMISSION_CATEGORIES`, `PERMISSION_TYPE`. Modules: `CSV, DMTT, LTD, LVPA, LVTTHC, MD, PA, RPT, TT, TTIN, UB, ND, ROLE, PERM, ADL`. Actions: `CREATE/UPDATE/DELETE/UPDATE_STATUS/GET_ALL/GET_DETAIL/GET_TEMPLATE/GET_EXCEL`. VD: `PA_CREATE, PA_UPDATE_STATUS, PA_GET_ALL, PA_GET_DETAIL, TTIN_CREATE, ND_UPDATE_STATUS, RPT_GET_EXCEL`. → Thêm endpoint cần quyền mới: thêm code ở đây **và** sync sang `permissions` table (route `POST /api/permission/sync`).
-- **`phan-anh-status.constant.js`** — `DA_GUI='Đã gửi', DA_TIEP_NHAN='Đã tiếp nhận', DANG_XU_LY='Đang xử lý', DA_GIAI_QUYET='Đã giải quyết', DONG='Đóng'` (tiến tuyến tính).
+- **`phan-anh-status.constant.js`** — `DA_GUI='Đã gửi', DANG_XU_LY='Đang xử lý', DA_GIAI_QUYET='Đã giải quyết', DONG='Đóng'` (tiến tuyến tính; "Đã tiếp nhận" đã gộp vào "Đang xử lý").
 - **`phan-anh-muc-do.constant.js`** — `THONG_THUONG='Thông thường', KHAN_CAP='Khẩn cấp'`.
 - **`video-status.constant.js`** — `UPLOADING, READY, MERGING, DONE, FAILED, CLEANED_UP`.
 - **`otp.constants.js`** — `ENABLE_2FA, DISABLE_2FA, RESET_PASSWORD, LOGIN_2FA`.
