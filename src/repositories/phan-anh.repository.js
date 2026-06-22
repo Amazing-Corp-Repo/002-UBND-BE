@@ -1,6 +1,75 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 
+const ATTACHMENT_SELECT = {
+  id: true,
+  dinh_dang_file: true,
+  url_file: true,
+  kich_thuoc_file_mb: true,
+  loai: true,
+};
+
+const BASIC_VIDEO_SELECT = {
+  id: true,
+  status: true,
+  final_hls_url: true,
+  created_at: true,
+  updated_at: true,
+};
+
+const DETAIL_VIDEO_SELECT = {
+  ...BASIC_VIDEO_SELECT,
+  final_mp4_url: true,
+};
+
+const mapMediaForPhanAnh = async (
+  phanAnhOrList,
+  { includeFinalMp4 = false } = {},
+) => {
+  const items = Array.isArray(phanAnhOrList) ? phanAnhOrList : [phanAnhOrList];
+  const validItems = items.filter(Boolean);
+
+  if (validItems.length === 0) {
+    return Array.isArray(phanAnhOrList) ? [] : phanAnhOrList;
+  }
+
+  const allVideoIds = validItems.flatMap((item) => {
+    const idVideo = Array.isArray(item.id_video) ? item.id_video : [];
+    const idVideoGiaiQuyet = Array.isArray(item.id_video_giai_quyet)
+      ? item.id_video_giai_quyet
+      : [];
+    return [...idVideo, ...idVideoGiaiQuyet];
+  });
+
+  const uniqueVideoIds = [...new Set(allVideoIds.filter(Boolean))];
+  let videosMap = new Map();
+
+  if (uniqueVideoIds.length > 0) {
+    const videos = await prisma.video_uploads.findMany({
+      where: { id: { in: uniqueVideoIds } },
+      select: includeFinalMp4 ? DETAIL_VIDEO_SELECT : BASIC_VIDEO_SELECT,
+    });
+    videosMap = new Map(videos.map((video) => [video.id, video]));
+  }
+
+  const normalized = validItems.map((item) => {
+    const videoCongDan = Array.isArray(item.id_video) ? item.id_video : [];
+    const videoGiaiQuyet = Array.isArray(item.id_video_giai_quyet)
+      ? item.id_video_giai_quyet
+      : [];
+
+    return {
+      ...item,
+      videos: videoCongDan.map((id) => videosMap.get(id)).filter(Boolean),
+      videos_giai_quyet: videoGiaiQuyet
+        .map((id) => videosMap.get(id))
+        .filter(Boolean),
+    };
+  });
+
+  return Array.isArray(phanAnhOrList) ? normalized : normalized[0];
+};
+
 const PhanAnhRepository = {
   async create(data) {
     return await prisma.phan_anh.create({
@@ -44,13 +113,7 @@ const PhanAnhRepository = {
           },
         },
         dinh_kem_phan_anh: {
-          select: {
-            id: true,
-            dinh_dang_file: true,
-            url_file: true,
-            kich_thuoc_file_mb: true,
-            loai: true,
-          },
+          select: ATTACHMENT_SELECT,
         },
         linh_vuc_phan_anh: {
           select: {
@@ -60,25 +123,7 @@ const PhanAnhRepository = {
       },
     });
 
-    if (!phanAnh) return phanAnh;
-
-    // attach video metadata if present (id_video is an array of upload ids)
-    if (Array.isArray(phanAnh.id_video) && phanAnh.id_video.length > 0) {
-      const videos = await prisma.video_uploads.findMany({
-        where: { id: { in: phanAnh.id_video } },
-        select: {
-          id: true,
-          status: true,
-          final_mp4_url: true,
-          final_hls_url: true,
-          created_at: true,
-          updated_at: true,
-        },
-      });
-      return { ...phanAnh, videos };
-    }
-
-    return phanAnh;
+    return await mapMediaForPhanAnh(phanAnh, { includeFinalMp4: true });
   },
 
   async getAll(
@@ -237,13 +282,7 @@ const PhanAnhRepository = {
           },
         },
         dinh_kem_phan_anh: {
-          select: {
-            id: true,
-            dinh_dang_file: true,
-            url_file: true,
-            kich_thuoc_file_mb: true,
-            loai: true,
-          },
+          select: ATTACHMENT_SELECT,
         },
         linh_vuc_phan_anh: {
           select: {
@@ -253,84 +292,7 @@ const PhanAnhRepository = {
       },
     });
 
-    const allVideoIds = phanAnhs.flatMap((p) =>
-      Array.isArray(p.id_video) ? p.id_video : [],
-    );
-    let videosMap = new Map();
-    if (allVideoIds.length > 0) {
-      const videos = await prisma.video_uploads.findMany({
-        where: { id: { in: allVideoIds } },
-        select: {
-          id: true,
-          status: true,
-          final_hls_url: true,
-          created_at: true,
-          updated_at: true,
-        },
-      });
-      videosMap = new Map(videos.map((v) => [v.id, v]));
-    }
-
-    return phanAnhs.map((p) => {
-      if (Array.isArray(p.id_video) && p.id_video.length > 0) {
-        const vids = p.id_video.map((id) => videosMap.get(id)).filter(Boolean);
-        return { ...p, videos: vids };
-      }
-      return p;
-    });
-  },
-
-  async getById(idPhanAnh) {
-    const phanAnh = await prisma.phan_anh.findUnique({
-      where: {
-        id: idPhanAnh,
-      },
-      include: {
-        lich_su_trang_thai: {
-          orderBy: {
-            thoi_gian_tao: "desc",
-          },
-          include: {
-            nguoi_dung: {
-              select: {
-                ten_dang_nhap: true,
-              },
-            },
-          },
-        },
-        dinh_kem_phan_anh: {
-          select: {
-            id: true,
-            dinh_dang_file: true,
-            url_file: true,
-            kich_thuoc_file_mb: true,
-            loai: true,
-          },
-        },
-        linh_vuc_phan_anh: {
-          select: {
-            ten: true,
-            mo_ta: true,
-          },
-        },
-      },
-    });
-
-    if (!phanAnh) return phanAnh;
-
-    if (Array.isArray(phanAnh.id_video) && phanAnh.id_video.length > 0) {
-      const videos = await prisma.video_uploads.findMany({
-        where: { id: { in: phanAnh.id_video } },
-        select: {
-          id: true,
-          status: true,
-          final_hls_url: true,
-        },
-      });
-      return { ...phanAnh, videos };
-    }
-
-    return phanAnh;
+    return await mapMediaForPhanAnh(phanAnhs);
   },
 
   async updateStatusWithHistory(
@@ -683,7 +645,9 @@ const PhanAnhRepository = {
             },
           },
         },
-        dinh_kem_phan_anh: true,
+        dinh_kem_phan_anh: {
+          select: ATTACHMENT_SELECT,
+        },
         linh_vuc_phan_anh: true,
         to_phu_trach: {
           select: { id: true, ho_va_ten: true, email: true },
@@ -700,36 +664,7 @@ const PhanAnhRepository = {
       },
     });
 
-    if (!phanAnh) return phanAnh;
-
-    // Resolve video (id_video: của công dân; id_video_giai_quyet: hiện trường đã xử lý).
-    const videoCongDan = Array.isArray(phanAnh.id_video) ? phanAnh.id_video : [];
-    const videoGiaiQuyet = Array.isArray(phanAnh.id_video_giai_quyet)
-      ? phanAnh.id_video_giai_quyet
-      : [];
-    const allVideoIds = [...videoCongDan, ...videoGiaiQuyet];
-
-    let videosMap = new Map();
-    if (allVideoIds.length > 0) {
-      const videos = await prisma.video_uploads.findMany({
-        where: { id: { in: allVideoIds } },
-        select: {
-          id: true,
-          status: true,
-          final_hls_url: true,
-          created_at: true,
-          updated_at: true,
-        },
-      });
-      videosMap = new Map(videos.map((v) => [v.id, v]));
-    }
-
-    phanAnh.videos = videoCongDan.map((id) => videosMap.get(id)).filter(Boolean);
-    phanAnh.videos_giai_quyet = videoGiaiQuyet
-      .map((id) => videosMap.get(id))
-      .filter(Boolean);
-
-    return phanAnh;
+    return await mapMediaForPhanAnh(phanAnh);
   },
 
   async updatePhanAnh(idPhanAnh, data) {
