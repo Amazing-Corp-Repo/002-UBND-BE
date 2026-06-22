@@ -7,10 +7,6 @@ import {
   UpdatePhanAnhLinhVucRequest,
 } from "../validators/phan-anh.validator.js";
 
-const { swagger: UpdatePhanAnhStatusRequestSchema } = joiToSwagger(
-  UpdatePhanAnhStatusRequest,
-);
-
 const { swagger: UpdatePhanAnhLinhVucRequestSchema } = joiToSwagger(
   UpdatePhanAnhLinhVucRequest,
 );
@@ -19,14 +15,24 @@ const PhanAnhSchemas = {
   CreatePhanAnhRequest: addFileToJoiSchema(CreatePhanAnhRequest, {
     fieldName: "file",
     maxCount: 5,
-    description: "Các tệp tin đính kèm cho phản ánh. Tối đa 5 tệp.",
+    description:
+      "Các tệp tin đính kèm cho phản ánh. Chỉ cần có 1 trong 2: file hoặc idVideo. Tối đa 5 tệp.",
+    allowNull: true,
   }),
-  UpdatePhanAnhStatusRequest: UpdatePhanAnhStatusRequestSchema,
+  UpdatePhanAnhStatusRequest: addFileToJoiSchema(UpdatePhanAnhStatusRequest, {
+    fieldName: "file",
+    maxCount: 5,
+    description:
+      "Các tệp đính kèm xử lý phản ánh. Hỗ trợ ảnh và tài liệu. Khi chuyển sang trạng thái đã giải quyết, chỉ cần có 1 trong 2: file hoặc idVideoGiaiQuyet.",
+    allowNull: true,
+  }),
   UpdatePhanAnhLinhVucRequest: UpdatePhanAnhLinhVucRequestSchema,
   CreatePhanAnhPublicRequest: addFileToJoiSchema(CreatePhanAnhPublicRequest, {
     fieldName: "file",
     maxCount: 5,
-    description: "Các tệp tin đính kèm cho phản ánh. Tối đa 5 tệp.",
+    description:
+      "Các tệp tin đính kèm cho phản ánh. Chỉ cần có 1 trong 2: file hoặc idVideo. Tối đa 5 tệp.",
+    allowNull: true,
   }),
 };
 
