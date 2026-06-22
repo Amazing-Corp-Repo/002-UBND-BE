@@ -65,6 +65,7 @@ const PhanAnhService = {
       ten_nguoi_phan_anh: tenNguoiPhanAnh,
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
       id_video: idVideo,
+      id_video_giai_quyet: [],
       is_approve: true,
     };
 
@@ -625,6 +626,7 @@ const PhanAnhService = {
       ten_nguoi_phan_anh: tenNguoiPhanAnh,
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
       id_video: idVideo,
+      id_video_giai_quyet: [],
       ma_phan_anh: generateUniqueCode(),
       is_approve: true,
     };
