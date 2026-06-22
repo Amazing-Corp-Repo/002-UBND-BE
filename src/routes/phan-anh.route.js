@@ -110,7 +110,7 @@ phanAnhRouter.put(
     type: UPLOAD_TYPE.PHAN_ANH,
     fieldName: "file",
     maxCount: 5,
-    maxSizeMB: 5,
+    maxSizeMB: 10,
     allowed_types: [
       "image/jpeg",
       "image/png",
