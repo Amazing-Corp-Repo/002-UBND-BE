@@ -110,10 +110,12 @@ const ReportRepository = {
         id: true,
         ma_phan_anh: true,
         tieu_de: true,
+        mo_ta: true,
         muc_do: true,
         vi_tri: true,
         thoi_gian_tao: true,
         linh_vuc_phan_anh: { select: { id: true, ten: true } },
+        to_phu_trach: { select: { ho_va_ten: true } },
         lich_su_trang_thai: {
           orderBy: { thoi_gian_tao: "desc" },
           take: 1,
@@ -151,6 +153,7 @@ const ReportRepository = {
     const baseFrom = `
       FROM phan_anh pa
       LEFT JOIN linh_vuc_phan_anh lv ON lv.id = pa.id_linh_vuc_phan_anh
+      LEFT JOIN nguoi_dung nd ON nd.id = pa.id_to
       LEFT JOIN (
         SELECT id_phan_anh, ten,
           ROW_NUMBER() OVER (PARTITION BY id_phan_anh ORDER BY thoi_gian_tao DESC) AS rn
@@ -160,8 +163,8 @@ const ReportRepository = {
     `;
 
     let dataSql = `
-      SELECT pa.id, pa.ma_phan_anh, pa.tieu_de, pa.thoi_gian_cap_nhat,
-             lv.ten AS linh_vuc, ls.ten AS trang_thai_hien_tai
+      SELECT pa.id, pa.ma_phan_anh, pa.tieu_de, pa.mo_ta, pa.thoi_gian_cap_nhat,
+             lv.ten AS linh_vuc, nd.ho_va_ten AS chuyen_vien, ls.ten AS trang_thai_hien_tai
       ${baseFrom}
       ORDER BY pa.thoi_gian_cap_nhat DESC NULLS LAST
     `;

@@ -44,6 +44,15 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
   ghiChu: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Ghi chú phải là chuỗi ký tự",
   }),
+  // Video hiện trường đã xử lý (mảng id của video_uploads đã upload HLS).
+  // .single() để nhận cả khi multipart gửi 1 giá trị đơn.
+  idVideoGiaiQuyet: Joi.array()
+    .items(Joi.string().trim())
+    .single()
+    .optional()
+    .messages({
+      "array.base": "idVideoGiaiQuyet phải là một mảng",
+    }),
 });
 
 export const UpdatePhanAnhLinhVucRequest = Joi.object({

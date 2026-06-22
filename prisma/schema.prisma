@@ -343,6 +343,7 @@ model phan_anh {
   thoi_gian_tao                                  DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                             DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   id_video                                       String[]             @db.VarChar(255)
+  id_video_giai_quyet                            String[]             @db.VarChar(255)
   dinh_kem_phan_anh                              dinh_kem_phan_anh[]
   lich_su_trang_thai                             lich_su_trang_thai[]
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")

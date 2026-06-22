@@ -41,8 +41,10 @@ const PhanAnhService = {
     file,
     idVideo = [],
   ) {
-    if (!file || file.length === 0) {
-      throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
+    const hasFile = Array.isArray(file) && file.length > 0;
+    const hasVideo = Array.isArray(idVideo) && idVideo.length > 0;
+    if (!hasFile && !hasVideo) {
+      throw new BaseError(400, "Phải đính kèm ít nhất một ảnh hoặc video");
     }
     const existingLinhVuc =
       await LinhVucPhanAnhRepository.findById(idLinhVucPhanAnh);
@@ -85,14 +87,16 @@ const PhanAnhService = {
       ten: PHAN_ANH_STATUS.DA_GUI,
     });
 
-    const attachments = file.map((f) => ({
+    const attachments = (file || []).map((f) => ({
       id_phan_anh: createdPhanAnh.id,
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
     }));
 
-    await PhanAnhRepository.addFileToPhanAnh(attachments);
+    if (attachments.length > 0) {
+      await PhanAnhRepository.addFileToPhanAnh(attachments);
+    }
 
     let managerMailList =
       await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
@@ -116,7 +120,7 @@ const PhanAnhService = {
       sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
       trang_thai: trangThai.ten,
       nguoi_tao: createdPhanAnh.nguoi_tao,
-      hinh_anh_dinh_kems: file.map((f) => ({
+      hinh_anh_dinh_kems: (file || []).map((f) => ({
         dinh_dang_file: f.mimetype,
         url_file: f.relativeUrl,
         kich_thuoc_file_mb: f.sizeMB,
@@ -275,6 +279,7 @@ const PhanAnhService = {
     ghiChu,
     currentUser,
     file,
+    idVideoGiaiQuyet = [],
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -315,15 +320,19 @@ const PhanAnhService = {
       throw new BaseError(400, "Người dùng không tồn tại");
     }
 
-    // Bắt buộc đính kèm ≥1 ảnh hiện trường khi chuyển sang "Đã giải quyết".
+    // Bắt buộc đính kèm ≥1 ảnh HOẶC ≥1 video hiện trường khi chuyển "Đã giải quyết".
     const uploadedFiles = Array.isArray(file) ? file : [];
+    const videoGiaiQuyet = Array.isArray(idVideoGiaiQuyet)
+      ? idVideoGiaiQuyet.filter(Boolean)
+      : [];
     if (
       trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET &&
-      uploadedFiles.length === 0
+      uploadedFiles.length === 0 &&
+      videoGiaiQuyet.length === 0
     ) {
       throw new BaseError(
         400,
-        "Phải đính kèm ít nhất 1 ảnh hiện trường khi giải quyết phản ánh",
+        "Phải đính kèm ít nhất 1 ảnh hoặc video hiện trường khi giải quyết phản ánh",
       );
     }
     const dinhKemGiaiQuyet = uploadedFiles.map((f) => ({
@@ -339,6 +348,10 @@ const PhanAnhService = {
         trangThai === PHAN_ANH_STATUS.DANG_XU_LY
           ? new Date().toISOString()
           : phanAnh.thoi_gian_tiep_nhan,
+      // Lưu video hiện trường đã xử lý (nếu có) — tách riêng với id_video của công dân.
+      ...(videoGiaiQuyet.length > 0 && {
+        id_video_giai_quyet: videoGiaiQuyet,
+      }),
       // thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
       // ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
     };
@@ -585,8 +598,10 @@ const PhanAnhService = {
     idVideo = [],
   ) {
     // Validate file exists
-    if (!file || file.length === 0) {
-      throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
+    const hasFile = Array.isArray(file) && file.length > 0;
+    const hasVideo = Array.isArray(idVideo) && idVideo.length > 0;
+    if (!hasFile && !hasVideo) {
+      throw new BaseError(400, "Phải đính kèm ít nhất một ảnh hoặc video");
     }
 
     // Validate category exists
@@ -622,14 +637,16 @@ const PhanAnhService = {
     });
 
     // Add file attachments
-    const attachments = file.map((f) => ({
+    const attachments = (file || []).map((f) => ({
       id_phan_anh: createdPhanAnh.id,
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
     }));
 
-    await PhanAnhRepository.addFileToPhanAnh(attachments);
+    if (attachments.length > 0) {
+      await PhanAnhRepository.addFileToPhanAnh(attachments);
+    }
 
     let managerMailList =
       await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
@@ -678,7 +695,7 @@ const PhanAnhService = {
       sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
       trang_thai: trangThai.ten,
       is_approve: createdPhanAnh.is_approve,
-      hinh_anh_dinh_kems: file.map((f) => ({
+      hinh_anh_dinh_kems: (file || []).map((f) => ({
         dinh_dang_file: f.mimetype,
         url_file: f.relativeUrl,
         kich_thuoc_file_mb: f.sizeMB,
