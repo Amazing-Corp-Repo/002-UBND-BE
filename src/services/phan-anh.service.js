@@ -92,6 +92,7 @@ const PhanAnhService = {
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
+      loai: DINH_KEM_LOAI.PHAN_ANH,
     }));
 
     if (attachments.length > 0) {
@@ -642,6 +643,7 @@ const PhanAnhService = {
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
+      loai: DINH_KEM_LOAI.PHAN_ANH,
     }));
 
     if (attachments.length > 0) {
