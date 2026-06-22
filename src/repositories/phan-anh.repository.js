@@ -348,6 +348,8 @@ const PhanAnhRepository = {
           thoi_gian_phan_hoi_du_kien: phanAnhPatch.thoi_gian_phan_hoi_du_kien,
           ngay_du_kien_hoan_thanh: phanAnhPatch.ngay_du_kien_hoan_thanh,
           nguoi_cap_nhat: phanAnhPatch.nguoi_cap_nhat,
+          // undefined → Prisma bỏ qua (giữ nguyên); chỉ set khi có video giải quyết
+          id_video_giai_quyet: phanAnhPatch.id_video_giai_quyet,
           thoi_gian_cap_nhat: new Date().toISOString(),
         },
       });
@@ -669,7 +671,7 @@ const PhanAnhRepository = {
   },
 
   async getById(idPhanAnh) {
-    return await prisma.phan_anh.findUnique({
+    const phanAnh = await prisma.phan_anh.findUnique({
       where: { id: idPhanAnh },
       include: {
         lich_su_trang_thai: {
@@ -697,6 +699,37 @@ const PhanAnhRepository = {
         },
       },
     });
+
+    if (!phanAnh) return phanAnh;
+
+    // Resolve video (id_video: của công dân; id_video_giai_quyet: hiện trường đã xử lý).
+    const videoCongDan = Array.isArray(phanAnh.id_video) ? phanAnh.id_video : [];
+    const videoGiaiQuyet = Array.isArray(phanAnh.id_video_giai_quyet)
+      ? phanAnh.id_video_giai_quyet
+      : [];
+    const allVideoIds = [...videoCongDan, ...videoGiaiQuyet];
+
+    let videosMap = new Map();
+    if (allVideoIds.length > 0) {
+      const videos = await prisma.video_uploads.findMany({
+        where: { id: { in: allVideoIds } },
+        select: {
+          id: true,
+          status: true,
+          final_hls_url: true,
+          created_at: true,
+          updated_at: true,
+        },
+      });
+      videosMap = new Map(videos.map((v) => [v.id, v]));
+    }
+
+    phanAnh.videos = videoCongDan.map((id) => videosMap.get(id)).filter(Boolean);
+    phanAnh.videos_giai_quyet = videoGiaiQuyet
+      .map((id) => videosMap.get(id))
+      .filter(Boolean);
+
+    return phanAnh;
   },
 
   async updatePhanAnh(idPhanAnh, data) {

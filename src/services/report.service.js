@@ -173,7 +173,9 @@ const ReportService = {
       map[thang].danh_sach.push({
         ma_phan_anh: pa.ma_phan_anh,
         tieu_de: pa.tieu_de,
+        mo_ta: pa.mo_ta,
         linh_vuc_phan_anh: pa.linh_vuc_phan_anh?.ten || null,
+        chuyen_vien: pa.to_phu_trach?.ho_va_ten || null,
         muc_do: pa.muc_do,
         vi_tri: pa.vi_tri,
         trang_thai_hien_tai: pa.lich_su_trang_thai[0]?.ten || null,
@@ -421,7 +423,9 @@ const ReportService = {
     const list = data.map((pa) => ({
       ma_phan_anh: pa.ma_phan_anh,
       tieu_de: pa.tieu_de,
+      mo_ta: pa.mo_ta,
       linh_vuc_phan_anh: pa.linh_vuc,
+      chuyen_vien: pa.chuyen_vien,
       trang_thai_hien_tai: pa.trang_thai_hien_tai,
       thoi_gian_cap_nhat: pa.thoi_gian_cap_nhat,
     }));
@@ -450,7 +454,7 @@ const ReportService = {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Chi tiết phản ánh");
 
-    FileService.excelStyles.title(sheet, 1, "CHI TIẾT PHẢN ÁNH", 5);
+    FileService.excelStyles.title(sheet, 1, "CHI TIẾT PHẢN ÁNH", 8);
 
     sheet.getCell(2, 1).value = "Ngày xuất";
     sheet.getCell(2, 1).font = { bold: true };
@@ -470,7 +474,9 @@ const ReportService = {
       "STT",
       "Mã phản ánh",
       "Tiêu đề",
+      "Nội dung",
       "Lĩnh vực",
+      "Chuyên viên",
       "Trạng thái",
       "Ngày cập nhật",
     ];
@@ -481,7 +487,9 @@ const ReportService = {
         idx + 1,
         pa.ma_phan_anh,
         pa.tieu_de,
+        pa.mo_ta,
         pa.linh_vuc,
+        pa.chuyen_vien || "—",
         pa.trang_thai_hien_tai,
         toVNDateTimeString(pa.thoi_gian_cap_nhat),
       ]);
@@ -491,8 +499,10 @@ const ReportService = {
     sheet.columns = [
       { width: 6 },
       { width: 16 },
-      { width: 45 },
+      { width: 40 },
+      { width: 50 },
       { width: 28 },
+      { width: 24 },
       { width: 16 },
       { width: 22 },
     ];
