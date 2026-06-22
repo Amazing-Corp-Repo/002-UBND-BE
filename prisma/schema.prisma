@@ -90,7 +90,7 @@ model danh_muc_tin_tuc {
 model dinh_kem_phan_anh {
   id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   id_phan_anh        String?   @db.Uuid
-  dinh_dang_file     String?   @db.VarChar(50)
+  dinh_dang_file     String?   @db.VarChar(255)
   url_file           String?   @db.VarChar(500)
   kich_thuoc_file_mb Decimal?  @db.Decimal(10, 2)
   loai               String?   @default("PHAN_ANH") @db.VarChar(50)
