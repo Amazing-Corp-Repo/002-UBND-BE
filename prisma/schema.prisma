@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model audit_logs {
@@ -90,9 +90,10 @@ model danh_muc_tin_tuc {
 model dinh_kem_phan_anh {
   id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   id_phan_anh        String?   @db.Uuid
-  dinh_dang_file     String?   @db.VarChar(50)
+  dinh_dang_file     String?   @db.VarChar(255)
   url_file           String?   @db.VarChar(500)
   kich_thuoc_file_mb Decimal?  @db.Decimal(10, 2)
+  loai               String?   @default("PHAN_ANH") @db.VarChar(50)
   thoi_gian_tao      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   phan_anh           phan_anh? @relation(fields: [id_phan_anh], references: [id], onUpdate: NoAction, map: "fk_dinh_kem_phan_anh_phan_anh")
 }
@@ -342,6 +343,7 @@ model phan_anh {
   thoi_gian_tao                                  DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat                             DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   id_video                                       String[]             @db.VarChar(255)
+  id_video_giai_quyet                            String[]             @db.VarChar(255)
   dinh_kem_phan_anh                              dinh_kem_phan_anh[]
   lich_su_trang_thai                             lich_su_trang_thai[]
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")

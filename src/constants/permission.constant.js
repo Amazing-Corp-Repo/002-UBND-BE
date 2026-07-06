@@ -41,6 +41,8 @@ export const PERMISSION = {
   PA_UPDATE_STATUS: "PA_UPDATE_STATUS",
   PA_GET_DETAIL: "PA_GET_DETAIL",
   PA_GET_ALL: "PA_GET_ALL",
+  PA_THUONG_TRUC: "PA_THUONG_TRUC",
+  PA_ASSIGN: "PA_ASSIGN",
 
   // Report
   RPT_GET_DETAIL: "RPT_GET_DETAIL",
@@ -119,6 +121,9 @@ export const PERMISSION_DESC = {
   PA_UPDATE_STATUS: "Cập nhật trạng thái phản ánh",
   PA_GET_DETAIL: "Xem chi tiết phản ánh",
   PA_GET_ALL: "Xem tất cả phản ánh",
+  PA_THUONG_TRUC: "Thường trực - nhận báo cáo thống kê phản ánh hằng ngày",
+  PA_UPDATE_LINH_VUC: "Cập nhật lĩnh vực phản ánh",
+  PA_ASSIGN: "Phân công chuyên viên xử lý phản ánh",
 
   RPT_GET_DETAIL: "Xem báo cáo",
   RPT_GET_EXCEL: "Xuất báo cáo Excel",
@@ -176,8 +181,10 @@ export const PERMISSION_TYPE = {
   UPDATE: "Thay đổi thông tin",
   DELETE: "Xóa",
   UPDATE_STATUS: "Cập nhật trạng thái",
+  ASSIGN: "Phân công",
   GET_TEMPLATE: "Lấy mẫu",
   GET_DETAIL: "Xem chi tiết",
   GET_ALL: "Xem tất cả",
   GET_EXCEL: "Xuất Excel",
+  THUONG_TRUC: "Thường trực",
 };

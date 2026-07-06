@@ -16,11 +16,11 @@ import NotificationRepository from "../repositories/notification.repository.js";
 import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
+import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 
 const ORDER = [
   PHAN_ANH_STATUS.DA_GUI,
-  PHAN_ANH_STATUS.DA_TIEP_NHAN,
   PHAN_ANH_STATUS.DANG_XU_LY,
   PHAN_ANH_STATUS.DA_GIAI_QUYET,
 ];
@@ -41,8 +41,10 @@ const PhanAnhService = {
     file,
     idVideo = [],
   ) {
-    if (!file || file.length === 0) {
-      throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
+    const hasFile = Array.isArray(file) && file.length > 0;
+    const hasVideo = Array.isArray(idVideo) && idVideo.length > 0;
+    if (!hasFile && !hasVideo) {
+      throw new BaseError(400, "Phải đính kèm ít nhất một ảnh hoặc video");
     }
     const existingLinhVuc =
       await LinhVucPhanAnhRepository.findById(idLinhVucPhanAnh);
@@ -63,6 +65,7 @@ const PhanAnhService = {
       ten_nguoi_phan_anh: tenNguoiPhanAnh,
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
       id_video: idVideo,
+      id_video_giai_quyet: [],
       is_approve: true,
     };
 
@@ -85,14 +88,17 @@ const PhanAnhService = {
       ten: PHAN_ANH_STATUS.DA_GUI,
     });
 
-    const attachments = file.map((f) => ({
+    const attachments = (file || []).map((f) => ({
       id_phan_anh: createdPhanAnh.id,
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
+      loai: DINH_KEM_LOAI.PHAN_ANH,
     }));
 
-    await PhanAnhRepository.addFileToPhanAnh(attachments);
+    if (attachments.length > 0) {
+      await PhanAnhRepository.addFileToPhanAnh(attachments);
+    }
 
     let managerMailList =
       await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
@@ -116,7 +122,7 @@ const PhanAnhService = {
       sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
       trang_thai: trangThai.ten,
       nguoi_tao: createdPhanAnh.nguoi_tao,
-      hinh_anh_dinh_kems: file.map((f) => ({
+      hinh_anh_dinh_kems: (file || []).map((f) => ({
         dinh_dang_file: f.mimetype,
         url_file: f.relativeUrl,
         kich_thuoc_file_mb: f.sizeMB,
@@ -171,6 +177,8 @@ const PhanAnhService = {
     size,
     sortTime,
     payload,
+    sortBy,
+    sortOrder,
   ) {
     let role = parseCommaString(payload.roles);
     let cate = parseCommaString(payload.cate);
@@ -184,6 +192,8 @@ const PhanAnhService = {
         page,
         size,
         sortTime,
+        sortBy,
+        sortOrder,
       );
       let pagination = createPagination(page, size, totalItems);
       return { data, pagination };
@@ -206,6 +216,8 @@ const PhanAnhService = {
       page,
       size,
       sortTime,
+      sortBy,
+      sortOrder,
     );
 
     return {
@@ -244,6 +256,20 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+
+    // Phản ánh từ tài khoản không nhập tay tên/SĐT → lấy từ thông tin người gửi.
+    const nguoiGui = phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
+    if (nguoiGui) {
+      if (!phanAnh.ten_nguoi_phan_anh) {
+        phanAnh.ten_nguoi_phan_anh =
+          nguoiGui.ho_va_ten || nguoiGui.ten_dang_nhap || null;
+      }
+      if (!phanAnh.sdt_nguoi_phan_anh) {
+        phanAnh.sdt_nguoi_phan_anh = nguoiGui.so_dien_thoai || null;
+      }
+    }
+    delete phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
+
     return phanAnh;
   },
 
@@ -254,6 +280,8 @@ const PhanAnhService = {
     trangThai,
     ghiChu,
     currentUser,
+    file,
+    idVideoGiaiQuyet = [],
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -294,12 +322,38 @@ const PhanAnhService = {
       throw new BaseError(400, "Người dùng không tồn tại");
     }
 
+    // Bắt buộc đính kèm ≥1 ảnh HOẶC ≥1 video hiện trường khi chuyển "Đã giải quyết".
+    const uploadedFiles = Array.isArray(file) ? file : [];
+    const videoGiaiQuyet = Array.isArray(idVideoGiaiQuyet)
+      ? idVideoGiaiQuyet.filter(Boolean)
+      : [];
+    if (
+      trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET &&
+      uploadedFiles.length === 0 &&
+      videoGiaiQuyet.length === 0
+    ) {
+      throw new BaseError(
+        400,
+        "Phải đính kèm ít nhất 1 ảnh hoặc video hiện trường khi giải quyết phản ánh",
+      );
+    }
+    const dinhKemGiaiQuyet = uploadedFiles.map((f) => ({
+      dinh_dang_file: f.mimetype,
+      url_file: f.relativeUrl,
+      kich_thuoc_file_mb: f.sizeMB,
+      loai: DINH_KEM_LOAI.GIAI_QUYET,
+    }));
+
     const phanAnhPatch = {
       nguoi_cap_nhat: currentUser,
       thoi_gian_tiep_nhan:
-        trangThai === PHAN_ANH_STATUS.DA_TIEP_NHAN
+        trangThai === PHAN_ANH_STATUS.DANG_XU_LY
           ? new Date().toISOString()
           : phanAnh.thoi_gian_tiep_nhan,
+      // Lưu video hiện trường đã xử lý (nếu có) — tách riêng với id_video của công dân.
+      ...(videoGiaiQuyet.length > 0 && {
+        id_video_giai_quyet: videoGiaiQuyet,
+      }),
       // thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
       // ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
     };
@@ -314,6 +368,7 @@ const PhanAnhService = {
       idPhanAnh,
       phanAnhPatch,
       historyData,
+      dinhKemGiaiQuyet,
     );
 
     if (phanAnh.nguoi_tao) {
@@ -347,7 +402,7 @@ const PhanAnhService = {
     );
   },
 
-  async updateLinhVucPhanAnh(idPhanAnh, idLinhVucPhanAnh, currentUser) {
+  async updateLinhVucPhanAnh(idPhanAnh, idLinhVucPhanAnh, lyDo, currentUser) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
@@ -389,11 +444,115 @@ const PhanAnhService = {
       throw new BaseError(400, "Người dùng không tồn tại");
     }
 
-    return await PhanAnhRepository.updatePhanAnh(idPhanAnh, {
-      id_linh_vuc_phan_anh: idLinhVucPhanAnh,
-      nguoi_cap_nhat: currentUser,
-      thoi_gian_cap_nhat: new Date().toISOString(),
+    const tenLinhVucCu = phanAnh.linh_vuc_phan_anh?.ten || "lĩnh vực cũ";
+
+    // Đổi lĩnh vực + ghi lịch sử kèm lý do (giữ ten = trạng thái hiện tại để
+    // không phá luồng trạng thái tuyến tính). Atomic trong 1 transaction.
+    return await PhanAnhRepository.updateLinhVucWithHistory(
+      idPhanAnh,
+      {
+        id_linh_vuc_phan_anh: idLinhVucPhanAnh,
+        nguoi_cap_nhat: currentUser,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+      {
+        ten: lastStatus,
+        ghi_chu: `Chuyển lĩnh vực từ "${tenLinhVucCu}" sang "${existingLinhVuc.ten}". Lý do: ${lyDo}`,
+        nguoi_tao: currentUser,
+      },
+    );
+  },
+
+  async getAssignableUsers(idPhanAnh) {
+    if (idPhanAnh === null || idPhanAnh === undefined) {
+      throw new BaseError(400, "ID phản ánh không được để trống");
+    }
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+    if (!phanAnh.id_linh_vuc_phan_anh) {
+      return [];
+    }
+    return await LinhVucPhanAnhRepository.getManagersByLinhVucId(
+      phanAnh.id_linh_vuc_phan_anh,
+    );
+  },
+
+  async assignPhanAnh(idPhanAnh, idNguoiXuLy, lyDo, currentUser) {
+    if (idPhanAnh === null || idPhanAnh === undefined) {
+      throw new BaseError(400, "ID phản ánh không được để trống");
+    }
+    if (!idNguoiXuLy) {
+      throw new BaseError(400, "Chuyên viên xử lý không được để trống");
+    }
+
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+
+    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    if (
+      lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
+      lastStatus === PHAN_ANH_STATUS.DONG
+    ) {
+      throw new BaseError(
+        400,
+        "Không thể phân công cho phản ánh đã được giải quyết hoặc đóng",
+      );
+    }
+
+    if (phanAnh.id_to === idNguoiXuLy) {
+      throw new BaseError(
+        400,
+        "Chuyên viên xử lý mới phải khác người đang phụ trách",
+      );
+    }
+
+    const existingUser = await UserRepository.findById(currentUser);
+    if (!existingUser) {
+      throw new BaseError(400, "Người dùng không tồn tại");
+    }
+
+    // Chuyên viên được gán phải nằm trong nhóm quản lý lĩnh vực của phản ánh.
+    const managers = await LinhVucPhanAnhRepository.getManagersByLinhVucId(
+      phanAnh.id_linh_vuc_phan_anh,
+    );
+    const target = managers.find((m) => m.id === idNguoiXuLy);
+    if (!target) {
+      throw new BaseError(
+        400,
+        "Chuyên viên được chọn không quản lý lĩnh vực của phản ánh này",
+      );
+    }
+
+    // Đổi người phụ trách + ghi lịch sử kèm lý do (giữ ten = trạng thái hiện tại
+    // để không phá luồng trạng thái tuyến tính). Atomic trong 1 transaction.
+    await PhanAnhRepository.updateLinhVucWithHistory(
+      idPhanAnh,
+      {
+        id_to: idNguoiXuLy,
+        nguoi_cap_nhat: currentUser,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+      {
+        ten: lastStatus,
+        ghi_chu: `Chuyển xử lý cho "${target.ho_va_ten || target.ten_dang_nhap}". Lý do: ${lyDo}`,
+        nguoi_tao: currentUser,
+      },
+    );
+
+    // Thông báo cho chuyên viên được phân công.
+    await NotificationRepository.createNotification({
+      user_id: idNguoiXuLy,
+      body: `Bạn được phân công xử lý phản ánh với mã ${phanAnh.ma_phan_anh}`,
+      target_id: phanAnh.ma_phan_anh,
+      target_type: "PHAN_ANH",
+      title: "Phân công xử lý phản ánh",
     });
+
+    return { id_to: idNguoiXuLy };
   },
 
   async getTongQuanPhanAnh() {
@@ -441,8 +600,10 @@ const PhanAnhService = {
     idVideo = [],
   ) {
     // Validate file exists
-    if (!file || file.length === 0) {
-      throw new BaseError(400, "Phải tải lên ít nhất một tệp tin đính kèm");
+    const hasFile = Array.isArray(file) && file.length > 0;
+    const hasVideo = Array.isArray(idVideo) && idVideo.length > 0;
+    if (!hasFile && !hasVideo) {
+      throw new BaseError(400, "Phải đính kèm ít nhất một ảnh hoặc video");
     }
 
     // Validate category exists
@@ -465,6 +626,7 @@ const PhanAnhService = {
       ten_nguoi_phan_anh: tenNguoiPhanAnh,
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
       id_video: idVideo,
+      id_video_giai_quyet: [],
       ma_phan_anh: generateUniqueCode(),
       is_approve: true,
     };
@@ -478,14 +640,17 @@ const PhanAnhService = {
     });
 
     // Add file attachments
-    const attachments = file.map((f) => ({
+    const attachments = (file || []).map((f) => ({
       id_phan_anh: createdPhanAnh.id,
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
+      loai: DINH_KEM_LOAI.PHAN_ANH,
     }));
 
-    await PhanAnhRepository.addFileToPhanAnh(attachments);
+    if (attachments.length > 0) {
+      await PhanAnhRepository.addFileToPhanAnh(attachments);
+    }
 
     let managerMailList =
       await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
@@ -534,7 +699,7 @@ const PhanAnhService = {
       sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
       trang_thai: trangThai.ten,
       is_approve: createdPhanAnh.is_approve,
-      hinh_anh_dinh_kems: file.map((f) => ({
+      hinh_anh_dinh_kems: (file || []).map((f) => ({
         dinh_dang_file: f.mimetype,
         url_file: f.relativeUrl,
         kich_thuoc_file_mb: f.sizeMB,

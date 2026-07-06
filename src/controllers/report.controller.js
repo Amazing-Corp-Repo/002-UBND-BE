@@ -8,6 +8,54 @@ const ReportController = {
     return successResponse(res, data, "Lấy báo cáo phản ánh thành công");
   },
 
+  async getPhanAnhTheoThang(req, res) {
+    const { from, to, id_linh_vuc } = req.query;
+    let data = await ReportService.getPhanAnhTheoThang(from, to, id_linh_vuc);
+    return successResponse(
+      res,
+      data,
+      "Lấy báo cáo phản ánh theo tháng thành công",
+    );
+  },
+
+  async getChiTietPhanAnh(req, res) {
+    const { from, to, id_linh_vuc, trang_thai, page = 1, size = 10 } =
+      req.query;
+    const { data, pagination } = await ReportService.getChiTietPhanAnh(
+      from,
+      to,
+      id_linh_vuc,
+      trang_thai,
+      parseInt(page),
+      parseInt(size),
+    );
+    return successResponse(
+      res,
+      data,
+      "Lấy chi tiết phản ánh thành công",
+      pagination,
+    );
+  },
+
+  async exportChiTietPhanAnh(req, res) {
+    const { from, to, id_linh_vuc, trang_thai } = req.query;
+    const buffer = await ReportService.exportChiTietPhanAnhExcel(
+      from,
+      to,
+      id_linh_vuc,
+      trang_thai,
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=chi_tiet_phan_anh.xlsx",
+    );
+    return res.send(buffer);
+  },
+
   async getReportThuTuc(req, res) {
     const { from, to } = req.query;
     let data = await ReportService.getReportThuTuc(from, to);

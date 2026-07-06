@@ -31,7 +31,7 @@ export const CreatePhanAnhRequest = Joi.object({
   userId: Joi.string().trim().uuid().optional().allow(null, "").messages({
     "string.uuid": "userId must be a valid UUID",
   }),
-  idVideo: Joi.array().items(Joi.string().trim()).optional().messages({
+  idVideo: Joi.array().items(Joi.string().trim()).single().optional().messages({
     "array.base": "idVideo phải là một mảng",
   }),
 });
@@ -44,12 +44,38 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
   ghiChu: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Ghi chú phải là chuỗi ký tự",
   }),
+  // Video hiện trường đã xử lý (mảng id của video_uploads đã upload HLS).
+  // .single() để nhận cả khi multipart gửi 1 giá trị đơn.
+  idVideoGiaiQuyet: Joi.array()
+    .items(Joi.string().trim())
+    .single()
+    .optional()
+    .messages({
+      "array.base": "idVideoGiaiQuyet phải là một mảng",
+    }),
 });
 
 export const UpdatePhanAnhLinhVucRequest = Joi.object({
   idLinhVucPhanAnh: Joi.string().trim().uuid().required().messages({
     "string.uuid": "idLinhVucPhanAnh must be a valid UUID",
     "any.required": "Lĩnh vực phản ánh là bắt buộc",
+  }),
+  lyDo: Joi.string().trim().max(1000).required().messages({
+    "string.empty": "Lý do chuyển lĩnh vực không được để trống",
+    "string.max": "Lý do chuyển lĩnh vực không được vượt quá 1000 ký tự",
+    "any.required": "Lý do chuyển lĩnh vực là bắt buộc",
+  }),
+});
+
+export const AssignPhanAnhRequest = Joi.object({
+  idNguoiXuLy: Joi.string().trim().uuid().required().messages({
+    "string.uuid": "idNguoiXuLy must be a valid UUID",
+    "any.required": "Chuyên viên xử lý là bắt buộc",
+  }),
+  lyDo: Joi.string().trim().max(1000).required().messages({
+    "string.empty": "Lý do chuyển xử lý không được để trống",
+    "string.max": "Lý do chuyển xử lý không được vượt quá 1000 ký tự",
+    "any.required": "Lý do chuyển xử lý là bắt buộc",
   }),
 });
 
@@ -76,10 +102,10 @@ export const CreatePhanAnhPublicRequest = Joi.object({
   soDienThoaiNguoiPhanAnh: Joi.string()
     .trim()
     .pattern(/^[0-9]{10,15}$/)
-    .required()
+    .optional()
+    .allow(null, "")
     .messages({
       "string.pattern.base": "Số điện thoại không hợp lệ",
-      "any.required": "Số điện thoại là bắt buộc",
     }),
   idVideo: Joi.array().items(Joi.string().trim()).optional().messages({
     "array.base": "idVideo phải là một mảng",

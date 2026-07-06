@@ -17,6 +17,8 @@ const UserRepository = {
           ten_dang_nhap: userData.ten_dang_nhap,
           email: userData.email,
           mat_khau: userData.mat_khau,
+          ho_va_ten: userData.ho_va_ten,
+          so_dien_thoai: userData.so_dien_thoai,
           nguoi_tao: userData.nguoi_tao,
         },
       });
@@ -78,6 +80,7 @@ const UserRepository = {
   },
 
   async findById(userId) {
+    if (!userId) return null;
     return await prisma.nguoi_dung.findUnique({
       where: {
         id: userId,
@@ -155,6 +158,32 @@ const UserRepository = {
     return { users, total };
   },
 
+  async getUserStatistics() {
+    const where = { is_delete: false };
+    const [total, inactive, roleGroups, roles] = await Promise.all([
+      prisma.nguoi_dung.count({ where }),
+      prisma.nguoi_dung.count({ where: { ...where, is_active: false } }),
+      // PK [user_id, role_id] là duy nhất → đếm rows theo role_id = số user của vai trò.
+      // Lọc theo nguoi_dung không bị xóa mềm.
+      prisma.user_roles.groupBy({
+        by: ["role_id"],
+        where: { nguoi_dung: { is_delete: false } },
+        _count: { _all: true },
+      }),
+      prisma.roles.findMany({ select: { id: true, name: true } }),
+    ]);
+
+    const roleNameById = new Map(roles.map((r) => [r.id, r.name]));
+    const byRole = {};
+    for (const g of roleGroups) {
+      const name = roleNameById.get(g.role_id);
+      if (name) byRole[name] = (byRole[name] || 0) + g._count._all;
+    }
+
+    // active = phần còn lại (is_active true hoặc null) — khớp ngữ nghĩa UI "!== false".
+    return { total, active: total - inactive, inactive, byRole };
+  },
+
   async findByUsernameOrEmail(ten_dang_nhap, email) {
     return await prisma.nguoi_dung.findFirst({
       where: {
@@ -210,6 +239,18 @@ const UserRepository = {
         is_active: true,
       },
     });
+  },
+
+  async findEmailsByIds(userIds) {
+    const users = await prisma.nguoi_dung.findMany({
+      where: {
+        id: { in: userIds },
+        is_delete: false,
+        is_active: true,
+      },
+      select: { email: true },
+    });
+    return users.map((u) => u.email?.trim()).filter(Boolean);
   },
 
   async getAllAdmin() {
@@ -302,6 +343,35 @@ const UserRepository = {
       select: {
         id: true,
         ten_dang_nhap: true,
+      },
+    });
+  },
+
+  async findUsersByPermissionCode(permissionCode) {
+    return await prisma.nguoi_dung.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        email: { not: null },
+        user_roles: {
+          some: {
+            roles: {
+              is_delete: false,
+              is_active: true,
+              role_permissions: {
+                some: { permission_code: permissionCode },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        ten_dang_nhap: "asc",
+      },
+      select: {
+        id: true,
+        ho_va_ten: true,
+        email: true,
       },
     });
   },

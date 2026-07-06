@@ -11,6 +11,7 @@ import {
   UpdatePhanAnhStatusRequest,
   CreatePhanAnhPublicRequest,
   UpdatePhanAnhLinhVucRequest,
+  AssignPhanAnhRequest,
 } from "../validators/phan-anh.validator.js";
 import {
   PERMISSION,
@@ -103,6 +104,23 @@ phanAnhRouter.put(
   "/update-status/:idPhanAnh",
   authenticate,
   authorize([PERMISSION.PA_UPDATE_STATUS]),
+  // Cho phép đính kèm ảnh hiện trường khi cập nhật trạng thái (bắt buộc khi "Đã giải quyết").
+  // Uploader chạy TRƯỚC validate để multer parse text fields vào req.body + ảnh vào req.files.
+  createUploader({
+    type: UPLOAD_TYPE.PHAN_ANH,
+    fieldName: "file",
+    maxCount: 5,
+    maxSizeMB: 10,
+    allowed_types: [
+      "image/jpeg",
+      "image/png",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ],
+  }),
   validate(UpdatePhanAnhStatusRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,
@@ -115,6 +133,24 @@ phanAnhRouter.put(
   validate(UpdatePhanAnhLinhVucRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_LINH_VUC),
   PhanAnhController.updateLinhVucPhanAnh,
+);
+
+// Danh sách chuyên viên có thể phân công (cán bộ quản lý lĩnh vực của phản ánh)
+phanAnhRouter.get(
+  "/:idPhanAnh/nguoi-xu-ly",
+  authenticate,
+  authorize([PERMISSION.PA_ASSIGN]),
+  PhanAnhController.getAssignableUsers,
+);
+
+// Phân công / chuyển phản ánh cho chuyên viên khác xử lý
+phanAnhRouter.put(
+  "/assign/:idPhanAnh",
+  authenticate,
+  authorize([PERMISSION.PA_ASSIGN]),
+  validate(AssignPhanAnhRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_ASSIGN),
+  PhanAnhController.assignPhanAnh,
 );
 
 export default phanAnhRouter;

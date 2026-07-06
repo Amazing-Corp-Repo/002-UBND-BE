@@ -52,6 +52,11 @@ const TinTucController = {
     );
   },
 
+  async getStatistics(req, res) {
+    const result = await TinTucService.getStatistics();
+    return successResponse(res, result, "Thống kê tin tức thành công");
+  },
+
   async delete(req, res) {
     const { id } = req.params;
     const currentUser = req.payload.userId;

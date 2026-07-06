@@ -13,6 +13,27 @@ reportRouter.get(
 );
 
 reportRouter.get(
+  "/phan-anh/theo-thang",
+  authenticate,
+  authorize([PERMISSION.RPT_GET_DETAIL]),
+  ReportController.getPhanAnhTheoThang
+);
+
+reportRouter.get(
+  "/phan-anh/chi-tiet",
+  authenticate,
+  authorize([PERMISSION.RPT_GET_DETAIL]),
+  ReportController.getChiTietPhanAnh
+);
+
+reportRouter.get(
+  "/phan-anh/chi-tiet/export",
+  authenticate,
+  authorize([PERMISSION.RPT_GET_EXCEL]),
+  ReportController.exportChiTietPhanAnh
+);
+
+reportRouter.get(
   "/thu-tuc",
   authenticate,
   authorize([PERMISSION.RPT_GET_DETAIL]),

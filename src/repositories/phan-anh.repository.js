@@ -1,6 +1,75 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 
+const ATTACHMENT_SELECT = {
+  id: true,
+  dinh_dang_file: true,
+  url_file: true,
+  kich_thuoc_file_mb: true,
+  loai: true,
+};
+
+const BASIC_VIDEO_SELECT = {
+  id: true,
+  status: true,
+  final_hls_url: true,
+  created_at: true,
+  updated_at: true,
+};
+
+const DETAIL_VIDEO_SELECT = {
+  ...BASIC_VIDEO_SELECT,
+  final_mp4_url: true,
+};
+
+const mapMediaForPhanAnh = async (
+  phanAnhOrList,
+  { includeFinalMp4 = false } = {},
+) => {
+  const items = Array.isArray(phanAnhOrList) ? phanAnhOrList : [phanAnhOrList];
+  const validItems = items.filter(Boolean);
+
+  if (validItems.length === 0) {
+    return Array.isArray(phanAnhOrList) ? [] : phanAnhOrList;
+  }
+
+  const allVideoIds = validItems.flatMap((item) => {
+    const idVideo = Array.isArray(item.id_video) ? item.id_video : [];
+    const idVideoGiaiQuyet = Array.isArray(item.id_video_giai_quyet)
+      ? item.id_video_giai_quyet
+      : [];
+    return [...idVideo, ...idVideoGiaiQuyet];
+  });
+
+  const uniqueVideoIds = [...new Set(allVideoIds.filter(Boolean))];
+  let videosMap = new Map();
+
+  if (uniqueVideoIds.length > 0) {
+    const videos = await prisma.video_uploads.findMany({
+      where: { id: { in: uniqueVideoIds } },
+      select: includeFinalMp4 ? DETAIL_VIDEO_SELECT : BASIC_VIDEO_SELECT,
+    });
+    videosMap = new Map(videos.map((video) => [video.id, video]));
+  }
+
+  const normalized = validItems.map((item) => {
+    const videoCongDan = Array.isArray(item.id_video) ? item.id_video : [];
+    const videoGiaiQuyet = Array.isArray(item.id_video_giai_quyet)
+      ? item.id_video_giai_quyet
+      : [];
+
+    return {
+      ...item,
+      videos: videoCongDan.map((id) => videosMap.get(id)).filter(Boolean),
+      videos_giai_quyet: videoGiaiQuyet
+        .map((id) => videosMap.get(id))
+        .filter(Boolean),
+    };
+  });
+
+  return Array.isArray(phanAnhOrList) ? normalized : normalized[0];
+};
+
 const PhanAnhRepository = {
   async create(data) {
     return await prisma.phan_anh.create({
@@ -44,11 +113,7 @@ const PhanAnhRepository = {
           },
         },
         dinh_kem_phan_anh: {
-          select: {
-            dinh_dang_file: true,
-            url_file: true,
-            kich_thuoc_file_mb: true,
-          },
+          select: ATTACHMENT_SELECT,
         },
         linh_vuc_phan_anh: {
           select: {
@@ -58,25 +123,7 @@ const PhanAnhRepository = {
       },
     });
 
-    if (!phanAnh) return phanAnh;
-
-    // attach video metadata if present (id_video is an array of upload ids)
-    if (Array.isArray(phanAnh.id_video) && phanAnh.id_video.length > 0) {
-      const videos = await prisma.video_uploads.findMany({
-        where: { id: { in: phanAnh.id_video } },
-        select: {
-          id: true,
-          status: true,
-          final_mp4_url: true,
-          final_hls_url: true,
-          created_at: true,
-          updated_at: true,
-        },
-      });
-      return { ...phanAnh, videos };
-    }
-
-    return phanAnh;
+    return await mapMediaForPhanAnh(phanAnh, { includeFinalMp4: true });
   },
 
   async getAll(
@@ -87,10 +134,23 @@ const PhanAnhRepository = {
     page,
     size,
     sortTime,
+    sortBy,
+    sortOrder,
   ) {
     const skip = (page - 1) * size;
 
-    const orderDirection = sortTime === "asc" ? "asc" : "desc";
+    // Whitelist cột sort (chống SQL injection vì query là raw). sortBy ưu tiên;
+    // không có sortBy thì giữ tương thích cũ (sort theo thời gian + sortTime).
+    const SORT_COLUMNS = {
+      thoi_gian_tao: "pa.thoi_gian_tao",
+      ma_phan_anh: "pa.ma_phan_anh",
+      tieu_de: "pa.tieu_de",
+      muc_do: "pa.muc_do",
+      trang_thai: "lst.ten",
+    };
+    const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
+    const orderDirection =
+      (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
     let whereSql = `WHERE 1=1 AND (pa.is_approve = true OR pa.is_approve IS NULL)`;
@@ -131,7 +191,7 @@ const PhanAnhRepository = {
             ORDER BY id_phan_anh, thoi_gian_tao DESC
         ) lst ON lst.id_phan_anh = pa.id
         ${whereSql}
-        ORDER BY pa.thoi_gian_tao ${orderDirection}
+        ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
         LIMIT $${params.length - 1} OFFSET $${params.length};
     `,
       ...params,
@@ -162,7 +222,6 @@ const PhanAnhRepository = {
     // Fetch dữ liệu full bằng Prisma (include đầy đủ)
     const phanAnhs = await prisma.phan_anh.findMany({
       where: { id: { in: ids } },
-      orderBy: { thoi_gian_tao: orderDirection },
       include: {
         lich_su_trang_thai: {
           orderBy: { thoi_gian_tao: "desc" },
@@ -176,8 +235,15 @@ const PhanAnhRepository = {
             ten: true,
           },
         },
+        to_phu_trach: {
+          select: { id: true, ho_va_ten: true, email: true },
+        },
       },
     });
+
+    // findMany theo id IN (...) không giữ thứ tự → sắp lại đúng thứ tự đã sort từ raw SQL.
+    const idOrder = new Map(ids.map((id, i) => [id, i]));
+    phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
     return {
       data: phanAnhs,
@@ -216,11 +282,7 @@ const PhanAnhRepository = {
           },
         },
         dinh_kem_phan_anh: {
-          select: {
-            dinh_dang_file: true,
-            url_file: true,
-            kich_thuoc_file_mb: true,
-          },
+          select: ATTACHMENT_SELECT,
         },
         linh_vuc_phan_anh: {
           select: {
@@ -230,85 +292,15 @@ const PhanAnhRepository = {
       },
     });
 
-    const allVideoIds = phanAnhs.flatMap((p) =>
-      Array.isArray(p.id_video) ? p.id_video : [],
-    );
-    let videosMap = new Map();
-    if (allVideoIds.length > 0) {
-      const videos = await prisma.video_uploads.findMany({
-        where: { id: { in: allVideoIds } },
-        select: {
-          id: true,
-          status: true,
-          final_hls_url: true,
-          created_at: true,
-          updated_at: true,
-        },
-      });
-      videosMap = new Map(videos.map((v) => [v.id, v]));
-    }
-
-    return phanAnhs.map((p) => {
-      if (Array.isArray(p.id_video) && p.id_video.length > 0) {
-        const vids = p.id_video.map((id) => videosMap.get(id)).filter(Boolean);
-        return { ...p, videos: vids };
-      }
-      return p;
-    });
+    return await mapMediaForPhanAnh(phanAnhs);
   },
 
-  async getById(idPhanAnh) {
-    const phanAnh = await prisma.phan_anh.findUnique({
-      where: {
-        id: idPhanAnh,
-      },
-      include: {
-        lich_su_trang_thai: {
-          orderBy: {
-            thoi_gian_tao: "desc",
-          },
-          include: {
-            nguoi_dung: {
-              select: {
-                ten_dang_nhap: true,
-              },
-            },
-          },
-        },
-        dinh_kem_phan_anh: {
-          select: {
-            dinh_dang_file: true,
-            url_file: true,
-            kich_thuoc_file_mb: true,
-          },
-        },
-        linh_vuc_phan_anh: {
-          select: {
-            ten: true,
-            mo_ta: true,
-          },
-        },
-      },
-    });
-
-    if (!phanAnh) return phanAnh;
-
-    if (Array.isArray(phanAnh.id_video) && phanAnh.id_video.length > 0) {
-      const videos = await prisma.video_uploads.findMany({
-        where: { id: { in: phanAnh.id_video } },
-        select: {
-          id: true,
-          status: true,
-          final_hls_url: true,
-        },
-      });
-      return { ...phanAnh, videos };
-    }
-
-    return phanAnh;
-  },
-
-  async updateStatusWithHistory(idPhanAnh, phanAnhPatch, historyData) {
+  async updateStatusWithHistory(
+    idPhanAnh,
+    phanAnhPatch,
+    historyData,
+    dinhKems = [],
+  ) {
     return await prisma.$transaction(async (tx) => {
       // Cập nhật bảng phản ánh
       await tx.phan_anh.update({
@@ -318,6 +310,8 @@ const PhanAnhRepository = {
           thoi_gian_phan_hoi_du_kien: phanAnhPatch.thoi_gian_phan_hoi_du_kien,
           ngay_du_kien_hoan_thanh: phanAnhPatch.ngay_du_kien_hoan_thanh,
           nguoi_cap_nhat: phanAnhPatch.nguoi_cap_nhat,
+          // undefined → Prisma bỏ qua (giữ nguyên); chỉ set khi có video giải quyết
+          id_video_giai_quyet: phanAnhPatch.id_video_giai_quyet,
           thoi_gian_cap_nhat: new Date().toISOString(),
         },
       });
@@ -331,6 +325,13 @@ const PhanAnhRepository = {
           nguoi_tao: historyData.nguoi_tao,
         },
       });
+
+      // Lưu ảnh hiện trường (đính kèm loại GIAI_QUYET) nếu có
+      if (dinhKems.length > 0) {
+        await tx.dinh_kem_phan_anh.createMany({
+          data: dinhKems.map((d) => ({ ...d, id_phan_anh: idPhanAnh })),
+        });
+      }
     });
   },
 
@@ -480,9 +481,20 @@ const PhanAnhRepository = {
     page,
     size,
     sortTime,
+    sortBy,
+    sortOrder,
   ) {
     const skip = (page - 1) * size;
-    const orderDirection = sortTime === "asc" ? "asc" : "desc";
+    const SORT_COLUMNS = {
+      thoi_gian_tao: "pa.thoi_gian_tao",
+      ma_phan_anh: "pa.ma_phan_anh",
+      tieu_de: "pa.tieu_de",
+      muc_do: "pa.muc_do",
+      trang_thai: "lst.ten",
+    };
+    const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
+    const orderDirection =
+      (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
     let whereSql = `WHERE 1=1`;
@@ -524,7 +536,7 @@ const PhanAnhRepository = {
           ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id
       ${whereSql}
-      ORDER BY pa.thoi_gian_tao ${orderDirection}
+      ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
       LIMIT $${params.length - 1} OFFSET $${params.length};
     `,
       ...params,
@@ -550,15 +562,20 @@ const PhanAnhRepository = {
 
     const phanAnhs = await prisma.phan_anh.findMany({
       where: { id: { in: ids } },
-      orderBy: { thoi_gian_tao: orderDirection },
       include: {
         lich_su_trang_thai: {
           orderBy: { thoi_gian_tao: "desc" },
           select: { ten: true, thoi_gian_tao: true },
         },
         linh_vuc_phan_anh: { select: { ten: true } },
+        to_phu_trach: {
+          select: { id: true, ho_va_ten: true, email: true },
+        },
       },
     });
+
+    const idOrder = new Map(ids.map((id, i) => [id, i]));
+    phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
     return { data: phanAnhs, totalItems: total[0].count };
   },
@@ -587,8 +604,10 @@ const PhanAnhRepository = {
         id_video: true,
         dinh_kem_phan_anh: {
           select: {
+            id: true,
             dinh_dang_file: true,
             url_file: true,
+            loai: true,
           },
         },
         linh_vuc_phan_anh: {
@@ -614,25 +633,62 @@ const PhanAnhRepository = {
   },
 
   async getById(idPhanAnh) {
-    return await prisma.phan_anh.findUnique({
+    const phanAnh = await prisma.phan_anh.findUnique({
       where: { id: idPhanAnh },
       include: {
         lich_su_trang_thai: {
           orderBy: { thoi_gian_tao: "desc" },
+          // Kèm người thực hiện đổi trạng thái (để biết AI tiếp nhận/xử lý + lúc nào).
+          include: {
+            nguoi_dung: {
+              select: { id: true, ho_va_ten: true, ten_dang_nhap: true },
+            },
+          },
         },
-        dinh_kem_phan_anh: true,
+        dinh_kem_phan_anh: {
+          select: ATTACHMENT_SELECT,
+        },
         linh_vuc_phan_anh: true,
         to_phu_trach: {
           select: { id: true, ho_va_ten: true, email: true },
         },
+        // Người gửi (phản ánh từ tài khoản) — để lấy tên/SĐT khi không nhập tay.
+        nguoi_dung_phan_anh_nguoi_taoTonguoi_dung: {
+          select: {
+            id: true,
+            ho_va_ten: true,
+            ten_dang_nhap: true,
+            so_dien_thoai: true,
+          },
+        },
       },
     });
+
+    return await mapMediaForPhanAnh(phanAnh);
   },
 
   async updatePhanAnh(idPhanAnh, data) {
     return await prisma.phan_anh.update({
       where: { id: idPhanAnh },
       data: data,
+    });
+  },
+
+  async updateLinhVucWithHistory(idPhanAnh, patch, historyData) {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.phan_anh.update({
+        where: { id: idPhanAnh },
+        data: patch,
+      });
+      await tx.lich_su_trang_thai.create({
+        data: {
+          id_phan_anh: idPhanAnh,
+          ten: historyData.ten,
+          ghi_chu: historyData.ghi_chu,
+          nguoi_tao: historyData.nguoi_tao,
+        },
+      });
+      return updated;
     });
   },
 
@@ -662,9 +718,11 @@ const PhanAnhRepository = {
         },
         dinh_kem_phan_anh: {
           select: {
+            id: true,
             dinh_dang_file: true,
             url_file: true,
             kich_thuoc_file_mb: true,
+            loai: true,
           },
         },
       },

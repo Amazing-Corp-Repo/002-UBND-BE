@@ -4,7 +4,9 @@ import {
   nowVN,
   toUTCFromVN_End,
   toUTCFromVN_Start,
+  toVNDateTimeString,
 } from "../utils/string.util.js";
+import { createPagination } from "../utils/response.util.js";
 import FileService from "./file.service.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
@@ -84,7 +86,7 @@ const ReportService = {
           linh_vuc_1[key.ten].da_xu_ly++;
 
           const start = p.lich_su_trang_thai.find(
-            (status) => status.ten === PHAN_ANH_STATUS.DA_TIEP_NHAN
+            (status) => status.ten === PHAN_ANH_STATUS.DANG_XU_LY
           );
           const end = p.lich_su_trang_thai.find(
             (status) =>
@@ -121,7 +123,6 @@ const ReportService = {
 
     const ORDER = [
       PHAN_ANH_STATUS.DA_GUI,
-      PHAN_ANH_STATUS.DA_TIEP_NHAN,
       PHAN_ANH_STATUS.DANG_XU_LY,
       PHAN_ANH_STATUS.DA_GIAI_QUYET,
       PHAN_ANH_STATUS.DONG,
@@ -148,6 +149,46 @@ const ReportService = {
       chi_tiet_theo_linh_vuc: linh_vuc_1,
       top_5_linh_vuc_theo_phan_anh: top_5_linh_vuc_theo_phan_anh,
     };
+  },
+
+  // Báo cáo phản ánh nhận theo từng tháng (kèm chi tiết từng phản ánh).
+  async getPhanAnhTheoThang(fromRaw, toRaw, idLinhVuc) {
+    const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
+    const to = toRaw ? toUTCFromVN_End(toRaw) : null;
+
+    const danhSach = await ReportRepository.getPhanAnhTheoThang(
+      from,
+      to,
+      idLinhVuc,
+    );
+
+    // Nhóm theo tháng (YYYY-MM theo giờ VN).
+    const map = {};
+    for (const pa of danhSach) {
+      const thang = formatMonth(pa.thoi_gian_tao);
+      if (!map[thang]) {
+        map[thang] = { thang, tong: 0, danh_sach: [] };
+      }
+      map[thang].tong++;
+      map[thang].danh_sach.push({
+        ma_phan_anh: pa.ma_phan_anh,
+        tieu_de: pa.tieu_de,
+        mo_ta: pa.mo_ta,
+        linh_vuc_phan_anh: pa.linh_vuc_phan_anh?.ten || null,
+        chuyen_vien: pa.to_phu_trach?.ho_va_ten || null,
+        muc_do: pa.muc_do,
+        vi_tri: pa.vi_tri,
+        trang_thai_hien_tai: pa.lich_su_trang_thai[0]?.ten || null,
+        thoi_gian_tao: pa.thoi_gian_tao,
+      });
+    }
+
+    // Sắp xếp tháng mới nhất trước.
+    const theo_thang = Object.values(map).sort((a, b) =>
+      b.thang.localeCompare(a.thang),
+    );
+
+    return { tong_phan_anh: danhSach.length, theo_thang };
   },
 
   async getReportThuTuc(fromRaw, toRaw) {
@@ -365,6 +406,110 @@ const ReportService = {
     return await workbook.xlsx.writeBuffer();
   },
 
+  // Danh sách chi tiết phản ánh có lọc + phân trang (cho bảng "Chi tiết phản ánh").
+  async getChiTietPhanAnh(fromRaw, toRaw, idLinhVuc, trangThai, page, size) {
+    const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
+    const to = toRaw ? toUTCFromVN_End(toRaw) : null;
+
+    const { data, totalItems } = await ReportRepository.getChiTietPhanAnh(
+      from,
+      to,
+      idLinhVuc,
+      trangThai,
+      page,
+      size,
+    );
+
+    const list = data.map((pa) => ({
+      ma_phan_anh: pa.ma_phan_anh,
+      tieu_de: pa.tieu_de,
+      mo_ta: pa.mo_ta,
+      linh_vuc_phan_anh: pa.linh_vuc,
+      chuyen_vien: pa.chuyen_vien,
+      trang_thai_hien_tai: pa.trang_thai_hien_tai,
+      thoi_gian_cap_nhat: pa.thoi_gian_cap_nhat,
+    }));
+
+    return {
+      data: list,
+      pagination: createPagination(page, size, totalItems),
+    };
+  },
+
+  // Xuất Excel danh sách chi tiết phản ánh (đồng bộ) — lọc ngày + lĩnh vực + trạng thái.
+  async exportChiTietPhanAnhExcel(fromRaw, toRaw, idLinhVuc, trangThai) {
+    const from = fromRaw ? toUTCFromVN_Start(fromRaw) : null;
+    const to = toRaw ? toUTCFromVN_End(toRaw) : null;
+
+    // size = null → lấy tất cả phản ánh khớp bộ lọc.
+    const { data } = await ReportRepository.getChiTietPhanAnh(
+      from,
+      to,
+      idLinhVuc,
+      trangThai,
+      1,
+      null,
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Chi tiết phản ánh");
+
+    FileService.excelStyles.title(sheet, 1, "CHI TIẾT PHẢN ÁNH", 8);
+
+    sheet.getCell(2, 1).value = "Ngày xuất";
+    sheet.getCell(2, 1).font = { bold: true };
+    sheet.getCell(2, 2).value = nowVN().split(" ")[0];
+    sheet.getCell(3, 1).value = "Từ ngày";
+    sheet.getCell(3, 1).font = { bold: true };
+    sheet.getCell(3, 2).value = fromRaw || "Tất cả";
+    sheet.getCell(4, 1).value = "Đến ngày";
+    sheet.getCell(4, 1).font = { bold: true };
+    sheet.getCell(4, 2).value = toRaw || "Tất cả";
+    sheet.getCell(5, 1).value = "Trạng thái lọc";
+    sheet.getCell(5, 1).font = { bold: true };
+    sheet.getCell(5, 2).value = trangThai || "Tất cả";
+
+    const headerRow = sheet.getRow(7);
+    headerRow.values = [
+      "STT",
+      "Mã phản ánh",
+      "Tiêu đề",
+      "Nội dung",
+      "Lĩnh vực",
+      "Chuyên viên",
+      "Trạng thái",
+      "Ngày cập nhật",
+    ];
+    FileService.excelStyles.tableHeader(headerRow);
+
+    data.forEach((pa, idx) => {
+      const row = sheet.addRow([
+        idx + 1,
+        pa.ma_phan_anh,
+        pa.tieu_de,
+        pa.mo_ta,
+        pa.linh_vuc,
+        pa.chuyen_vien || "—",
+        pa.trang_thai_hien_tai,
+        toVNDateTimeString(pa.thoi_gian_cap_nhat),
+      ]);
+      FileService.excelStyles.tableRow(row);
+    });
+
+    sheet.columns = [
+      { width: 6 },
+      { width: 16 },
+      { width: 40 },
+      { width: 50 },
+      { width: 28 },
+      { width: 24 },
+      { width: 16 },
+      { width: 22 },
+    ];
+
+    return await workbook.xlsx.writeBuffer();
+  },
+
   async exportReportThuTuc(fromRaw, toRaw) {
     const data = await this.getReportThuTuc(fromRaw, toRaw);
 
@@ -532,6 +677,11 @@ const ReportService = {
 const formatDate = (date) => {
   let toVN = new Date(date.getTime() + 7 * 60 * 60 * 1000);
   return toVN.toISOString().split("T")[0];
+};
+
+const formatMonth = (date) => {
+  let toVN = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+  return toVN.toISOString().slice(0, 7); // YYYY-MM
 };
 
 const sortLinhVucByTongPhanAnh = (linhVuc) => {

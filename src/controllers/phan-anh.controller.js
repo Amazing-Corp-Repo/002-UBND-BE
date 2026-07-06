@@ -47,6 +47,8 @@ const PhanAnhController = {
       page = 1,
       size = 10,
       sortTime,
+      sortBy,
+      sortOrder,
     } = req.query;
     const payload = req.payload;
     let { data, pagination } = await PhanAnhService.getAll(
@@ -58,6 +60,8 @@ const PhanAnhController = {
       parseInt(size),
       sortTime,
       payload,
+      sortBy,
+      sortOrder,
     );
     return successResponse(
       res,
@@ -106,9 +110,15 @@ const PhanAnhController = {
 
   async updateStatusPhanAnh(req, res) {
     const { idPhanAnh } = req.params;
-    const { thoiGianPhanHoiDuKien, ngayDuKienHoanThanh, trangThai, ghiChu } =
-      req.body;
+    const {
+      thoiGianPhanHoiDuKien,
+      ngayDuKienHoanThanh,
+      trangThai,
+      ghiChu,
+      idVideoGiaiQuyet,
+    } = req.body;
     const currentUser = req.payload.userId;
+    const file = req.files;
     let result = await PhanAnhService.updateStatusPhanAnh(
       idPhanAnh,
       thoiGianPhanHoiDuKien,
@@ -116,6 +126,8 @@ const PhanAnhController = {
       trangThai,
       ghiChu,
       currentUser,
+      file,
+      idVideoGiaiQuyet,
     );
     return successResponse(
       res,
@@ -126,11 +138,12 @@ const PhanAnhController = {
 
   async updateLinhVucPhanAnh(req, res) {
     const { idPhanAnh } = req.params;
-    const { idLinhVucPhanAnh } = req.body;
+    const { idLinhVucPhanAnh, lyDo } = req.body;
     const currentUser = req.payload.userId;
     let result = await PhanAnhService.updateLinhVucPhanAnh(
       idPhanAnh,
       idLinhVucPhanAnh,
+      lyDo,
       currentUser,
     );
     return successResponse(
@@ -138,6 +151,29 @@ const PhanAnhController = {
       result,
       "Cập nhật lĩnh vực phản ánh thành công",
     );
+  },
+
+  async getAssignableUsers(req, res) {
+    const { idPhanAnh } = req.params;
+    let result = await PhanAnhService.getAssignableUsers(idPhanAnh);
+    return successResponse(
+      res,
+      result,
+      "Lấy danh sách chuyên viên xử lý thành công",
+    );
+  },
+
+  async assignPhanAnh(req, res) {
+    const { idPhanAnh } = req.params;
+    const { idNguoiXuLy, lyDo } = req.body;
+    const currentUser = req.payload.userId;
+    let result = await PhanAnhService.assignPhanAnh(
+      idPhanAnh,
+      idNguoiXuLy,
+      lyDo,
+      currentUser,
+    );
+    return successResponse(res, result, "Phân công xử lý phản ánh thành công");
   },
 
   async getTongQuanPhanAnh(req, res) {
