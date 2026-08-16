@@ -138,6 +138,7 @@ model lich_tiep_dan {
   thoi_gian_cap_nhat                                  DateTime?   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   nguoi_dung_lich_tiep_dan_nguoi_cap_nhatTonguoi_dung nguoi_dung? @relation("lich_tiep_dan_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_lich_tiep_dan_nguoi_cap_nhat")
   nguoi_dung_lich_tiep_dan_nguoi_taoTonguoi_dung      nguoi_dung? @relation("lich_tiep_dan_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_lich_tiep_dan_nguoi_tao")
+  dang_ky_tiep_dan                                     dang_ky_tiep_dan[]
 
   @@index([is_active], map: "idx_lich_tiep_dan_is_active")
   @@index([is_delete], map: "idx_lich_tiep_dan_is_delete")
@@ -346,6 +347,7 @@ model phan_anh {
   id_video_giai_quyet                            String[]             @db.VarChar(255)
   dinh_kem_phan_anh                              dinh_kem_phan_anh[]
   lich_su_trang_thai                             lich_su_trang_thai[]
+  danh_gia_phan_anh                              danh_gia_phan_anh[]
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")
   to_phu_trach                                   nguoi_dung?          @relation("phan_anh_id_to_nguoi_dung", fields: [id_to], references: [id], onUpdate: NoAction, map: "fk_phan_anh_id_to")
   nguoi_dung_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_cap_nhat")
@@ -403,6 +405,7 @@ model roles {
   nguoi_dung_roles_nguoi_cap_nhatTonguoi_dung nguoi_dung?        @relation("roles_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_roles_nguoi_cap_nhat")
   nguoi_dung_roles_nguoi_taoTonguoi_dung      nguoi_dung?        @relation("roles_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_roles_nguoi_tao")
   user_roles                                  user_roles[]
+  thu_vien_tai_lieu_quyen                     thu_vien_tai_lieu_quyen[]
 
   @@index([is_active, is_delete], map: "idx_roles_is_active_is_delete")
   @@index([name], map: "idx_roles_name")
@@ -638,4 +641,206 @@ model linh_vuc_phan_anh_nguoi_quan_ly {
   nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_nguoi_taoTonguoi_dung     nguoi_dung        @relation("linh_vuc_phan_anh_nguoi_quan_ly_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_lvpq_nguoi_tao")
 
   @@id([id_linh_vuc_phan_anh, id_nguoi_dung])
+}
+
+// ══════════════ BỔ SUNG — CỔNG THÔNG TIN CÔNG DÂN (PHASE 2) ══════════════
+
+// Đánh giá hài lòng phản ánh — 1 phản ánh đã giải quyết = 1 đánh giá
+model danh_gia_phan_anh {
+  id                String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_phan_anh       String    @unique @db.Uuid
+  diem              Int
+  nhan_xet          String?
+  is_active         Boolean?  @default(true)
+  is_delete         Boolean?  @default(false)
+  nguoi_tao         String?   @db.Uuid
+  nguoi_cap_nhat    String?   @db.Uuid
+  thoi_gian_tao     DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  phan_anh          phan_anh @relation(fields: [id_phan_anh], references: [id], onUpdate: NoAction, map: "fk_danh_gia_phan_anh_phan_anh")
+
+  @@index([diem], map: "idx_danh_gia_phan_anh_diem")
+  @@index([is_active], map: "idx_danh_gia_phan_anh_is_active")
+  @@index([is_delete], map: "idx_danh_gia_phan_anh_is_delete")
+}
+
+// Đăng ký tiếp dân / gặp lãnh đạo
+model dang_ky_tiep_dan {
+  id                 String        @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  loai               String?       @db.VarChar(30) // COUNTER_RECEPTION | LEADER_MEETING
+  ma_tiep_dan        String?       @db.VarChar(50) // ticket: TD-... / LD-...
+  id_lich_tiep_dan   String?       @db.Uuid
+  ngay               DateTime?     @db.Date
+  slot               String?       @db.VarChar(50)
+  chu_de             String?       @db.VarChar(255)
+  ly_do              String?
+  ho_ten             String?       @db.VarChar(150)
+  sdt                String?       @db.VarChar(20)
+  cccd               String?       @db.VarChar(20)
+  dia_chi            String?
+  bo_phan            String?
+  ten_lanh_dao       String?       @db.VarChar(255)
+  chuc_vu_lanh_dao   String?       @db.VarChar(255)
+  trang_thai         String?       @default("PENDING") @db.VarChar(30)
+  is_active          Boolean?      @default(true)
+  is_delete          Boolean?      @default(false)
+  nguoi_tao          String?       @db.Uuid
+  nguoi_cap_nhat     String?       @db.Uuid
+  thoi_gian_tao      DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  lich_tiep_dan      lich_tiep_dan? @relation(fields: [id_lich_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_lich_tiep_dan")
+  danh_gia_tiep_dan  danh_gia_tiep_dan[]
+
+  @@index([ma_tiep_dan], map: "idx_dang_ky_tiep_dan_ma_tiep_dan")
+  @@index([trang_thai], map: "idx_dang_ky_tiep_dan_trang_thai")
+  @@index([loai], map: "idx_dang_ky_tiep_dan_loai")
+}
+
+// Đánh giá sau buổi tiếp dân / gặp lãnh đạo
+model danh_gia_tiep_dan {
+  id                   String           @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_dang_ky_tiep_dan  String           @unique @db.Uuid
+  diem_tong            Int?
+  tieu_chi             Json?
+  ly_do                Json?
+  nhan_xet             String?
+  is_active            Boolean?         @default(true)
+  is_delete            Boolean?         @default(false)
+  nguoi_tao            String?          @db.Uuid
+  nguoi_cap_nhat       String?          @db.Uuid
+  thoi_gian_tao        DateTime?        @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat   DateTime?        @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  dang_ky_tiep_dan     dang_ky_tiep_dan @relation(fields: [id_dang_ky_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_danh_gia_tiep_dan_dang_ky")
+
+  @@index([id_dang_ky_tiep_dan], map: "idx_danh_gia_tiep_dan_id_dang_ky")
+}
+
+// Danh mục Thư viện số
+model thu_vien_danh_muc {
+  id                String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ten               String             @db.VarChar(255)
+  mo_ta             String?
+  icon              String?            @db.VarChar(50)
+  tone              String?            @db.VarChar(20)
+  thu_tu            Int?
+  is_active         Boolean?           @default(true)
+  is_delete         Boolean?           @default(false)
+  nguoi_tao         String?            @db.Uuid
+  nguoi_cap_nhat    String?            @db.Uuid
+  thoi_gian_tao     DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime?         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thu_vien_tai_lieu thu_vien_tai_lieu[]
+
+  @@index([is_active], map: "idx_thu_vien_danh_muc_is_active")
+  @@index([is_delete], map: "idx_thu_vien_danh_muc_is_delete")
+}
+
+// Thư viện số — tài liệu (gộp sách/tài liệu/văn bản/bản đồ + pháp luật; cột nhóm luật để NULL)
+model thu_vien_tai_lieu {
+  id                     String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_danh_muc            String?                   @db.Uuid
+  loai                   String?                   @db.VarChar(30) // SACH | TAI_LIEU | VAN_BAN | BAN_DO | PHAP_LUAT
+  tieu_de                String?                   @db.VarChar(255)
+  tac_gia                String?                   @db.VarChar(255)
+  mo_ta                  String?
+  url_bia                String?                   @db.VarChar(500)
+  so_luot_tai            BigInt?                   @default(0)
+  is_featured            Boolean?                  @default(false)
+  noi_dung               String?
+  sections               Json?
+  so_hieu                String?                   @db.VarChar(100)
+  co_quan_ban_hanh       String?                   @db.VarChar(255)
+  ngay_ban_hanh          DateTime?                 @db.Date
+  ngay_hieu_luc          DateTime?                 @db.Date
+  trang_thai_hieu_luc    String?                   @db.VarChar(50)
+  chuong                 Json?
+  trang_thai             String?                   @default("NHAP") @db.VarChar(30) // NHAP|CHO_DUYET|DA_DUYET|LUU_TRU
+  pham_vi                String?                   @default("CONG_KHAI") @db.VarChar(30) // CONG_KHAI|NOI_BO|HAN_CHE
+  nguon                  String?
+  nguoi_duyet            String?                   @db.Uuid
+  thoi_gian_duyet        DateTime?                 @db.Timestamp(6)
+  ngay_dang              Int?
+  ngon_ngu               String?                   @db.VarChar(10)
+  is_active              Boolean?                  @default(true)
+  is_delete              Boolean?                  @default(false)
+  nguoi_tao              String?                   @db.Uuid
+  nguoi_cap_nhat         String?                   @db.Uuid
+  thoi_gian_tao          DateTime?                 @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat     DateTime?                 @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thu_vien_danh_muc      thu_vien_danh_muc?        @relation(fields: [id_danh_muc], references: [id], onUpdate: NoAction, map: "fk_thu_vien_tai_lieu_danh_muc")
+  thu_vien_tai_lieu_tag  thu_vien_tai_lieu_tag[]
+  thu_vien_tai_lieu_file thu_vien_tai_lieu_file[]
+  thu_vien_tai_lieu_quyen thu_vien_tai_lieu_quyen[]
+
+  @@index([loai], map: "idx_thu_vien_tai_lieu_loai")
+  @@index([trang_thai], map: "idx_thu_vien_tai_lieu_trang_thai")
+  @@index([pham_vi], map: "idx_thu_vien_tai_lieu_pham_vi")
+  @@index([is_active], map: "idx_thu_vien_tai_lieu_is_active")
+  @@index([is_delete], map: "idx_thu_vien_tai_lieu_is_delete")
+}
+
+// Thẻ phân loại tài liệu
+model thu_vien_tag {
+  id                     String                   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ten                    String                   @unique @db.VarChar(100)
+  is_active              Boolean?                 @default(true)
+  is_delete              Boolean?                 @default(false)
+  nguoi_tao              String?                  @db.Uuid
+  nguoi_cap_nhat         String?                  @db.Uuid
+  thoi_gian_tao          DateTime?                @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat     DateTime?                @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thu_vien_tai_lieu_tag  thu_vien_tai_lieu_tag[]
+
+  @@index([is_active], map: "idx_thu_vien_tag_is_active")
+  @@index([is_delete], map: "idx_thu_vien_tag_is_delete")
+}
+
+// Bảng nối tài liệu ↔ tag
+model thu_vien_tai_lieu_tag {
+  id                String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_tai_lieu       String             @db.Uuid
+  id_tag            String             @db.Uuid
+  thu_vien_tai_lieu thu_vien_tai_lieu  @relation(fields: [id_tai_lieu], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tlt_tag_tai_lieu")
+  thu_vien_tag      thu_vien_tag       @relation(fields: [id_tag], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tlt_tag_tag")
+
+  @@unique([id_tai_lieu, id_tag])
+}
+
+// File / phiên bản tài liệu (storage DEV private)
+model thu_vien_tai_lieu_file {
+  id                    String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_tai_lieu           String             @db.Uuid
+  ten_file              String?            @db.VarChar(255)
+  duong_dan             String?            @db.VarChar(500)
+  dinh_dang             String?            @db.VarChar(50) // MIME
+  kich_thuoc_mb         Decimal?           @db.Decimal(10, 2)
+  phien_ban             Int?
+  la_phien_ban_hien_tai Boolean?           @default(false)
+  mo_ta                 String?
+  is_active             Boolean?           @default(true)
+  is_delete             Boolean?           @default(false)
+  nguoi_tao             String?            @db.Uuid
+  nguoi_cap_nhat        String?            @db.Uuid
+  thoi_gian_tao         DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat    DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thu_vien_tai_lieu     thu_vien_tai_lieu  @relation(fields: [id_tai_lieu], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tl_file_tai_lieu")
+
+  @@index([id_tai_lieu], map: "idx_tl_file_id_tai_lieu")
+  @@index([la_phien_ban_hien_tai], map: "idx_tl_file_la_phien_ban_hien_tai")
+}
+
+// Quyền truy cập tài liệu theo vai trò (dùng khi pham_vi = HAN_CHE)
+model thu_vien_tai_lieu_quyen {
+  id                String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_tai_lieu       String             @db.Uuid
+  id_vai_tro        String             @db.Uuid
+  nguoi_tao         String?            @db.Uuid
+  nguoi_cap_nhat    String?            @db.Uuid
+  thoi_gian_tao     DateTime?          @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime?         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thu_vien_tai_lieu thu_vien_tai_lieu  @relation(fields: [id_tai_lieu], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tl_quyen_tai_lieu")
+  roles             roles              @relation(fields: [id_vai_tro], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tl_quyen_roles")
+
+  @@index([id_tai_lieu], map: "idx_tl_quyen_id_tai_lieu")
+  @@index([id_vai_tro], map: "idx_tl_quyen_id_vai_tro")
 }
