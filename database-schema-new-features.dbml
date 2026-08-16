@@ -1,0 +1,659 @@
+// UBND - Database Schema (sinh từ prisma/schema.prisma)
+
+Table audit_logs {
+  id uuid
+  local_address inet
+  remote_address inet
+  table_name varchar(255)
+  action varchar(255)
+  performed_by uuid
+  username varchar(100)
+  request_received_at timestamp
+  response_sent_at timestamp
+  duration_ms int
+  response_status_code int
+  request_body json
+  response_body json
+  timestamp timestamp
+}
+
+Table cach_thuc_thuc_hien {
+  id uuid
+  id_thu_tuc uuid
+  hinh_thuc_ap_dung varchar(255)
+  mo_ta_chi_tiet varchar(255)
+  thoi_gian_giai_quyet varchar(255)
+  le_phi varchar(255)
+  ghi_chu_le_phi varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table co_so_dich_vu_cong {
+  id uuid
+  ten_co_so varchar(255)
+  dia_chi varchar(500)
+  so_dien_thoai varchar(20)
+  mo_ta varchar(255)
+  link_google_map varchar(500)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table danh_muc_tin_tuc {
+  id uuid
+  ten_danh_muc varchar(255)
+  mo_ta varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table dinh_kem_phan_anh {
+  id uuid
+  id_phan_anh uuid
+  dinh_dang_file varchar(255)
+  url_file varchar(500)
+  kich_thuoc_file_mb decimal(10,2)
+  loai varchar(50)
+  thoi_gian_tao timestamp
+}
+
+Table dinh_kem_tin_tuc {
+  id uuid
+  id_tin_tuc uuid
+  dinh_dang_file varchar(50)
+  url_file varchar(500)
+  kich_thuoc_file_mb decimal(10,2)
+  nguoi_tao uuid
+  thoi_gian_tao timestamp
+}
+
+Table lich_su_trang_thai {
+  id uuid
+  id_phan_anh uuid
+  ten varchar(255)
+  ghi_chu varchar(255)
+  thoi_gian_tao timestamp
+  nguoi_tao uuid
+}
+
+Table lich_tiep_dan {
+  id uuid
+  dia_diem varchar(255)
+  ten_can_bo varchar(255)
+  thoi_gian varchar(50)
+  ngay_tiep_dan date
+  ghi_chu varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table linh_vuc {
+  id uuid
+  ten_linh_vuc varchar(255)
+  mo_ta varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table linh_vuc_phan_anh {
+  id uuid
+  ten varchar(255)
+  mo_ta varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table mau_don {
+  id uuid
+  ten_mau_don varchar(255)
+  mo_ta varchar(255)
+  ma_mau_don varchar(50)
+  url_file_pdf varchar(500)
+  kich_thuoc_file_mb decimal(10,2)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table nguoi_dung {
+  id uuid
+  ten_dang_nhap varchar(100)
+  mat_khau varchar(255)
+  ho_va_ten varchar(150)
+  email varchar(150)
+  so_dien_thoai varchar(20)
+  is_enable_two_factor bool
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+  fcm_token varchar[]
+}
+
+Table notifications {
+  id uuid
+  user_id uuid
+  title varchar(255)
+  body varchar(255)
+  target_type varchar(50)
+  target_id varchar(255)
+  is_read bool
+  read_at timestamp
+  created_at timestamp
+}
+
+Table otp {
+  id uuid
+  id_nguoi_dung uuid
+  ma_otp varchar(10)
+  loai_otp varchar(50)
+  expires_at timestamp
+  is_used bool
+  sent_to_email varchar(150)
+}
+
+Table permissions {
+  code varchar(150)
+  description varchar(255)
+  thoi_gian_tao timestamp
+}
+
+Table phan_anh {
+  id uuid
+  ma_phan_anh varchar(255)
+  id_linh_vuc_phan_anh uuid
+  id_to uuid
+  tieu_de varchar(255)
+  mo_ta varchar(255)
+  muc_do varchar(255)
+  vi_tri varchar(255)
+  ten_nguoi_phan_anh varchar(255)
+  sdt_nguoi_phan_anh varchar(20)
+  is_approve bool
+  thoi_gian_tiep_nhan timestamp
+  thoi_gian_phan_hoi_du_kien timestamp
+  ngay_du_kien_hoan_thanh timestamp
+  nguoi_cap_nhat uuid
+  nguoi_tao uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+  id_video varchar(255)[]
+  id_video_giai_quyet varchar(255)[]
+}
+
+Table refresh_token {
+  id uuid
+  id_nguoi_dung uuid
+  token_hash varchar(255)
+  expires_at timestamp
+  created_by_ip inet
+  device varchar(100)
+  is_revoked bool
+  revoked_by_ip inet
+  replaced_by_token_hash varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table role_permissions {
+  role_id uuid
+  permission_code varchar(150)
+}
+
+Table roles {
+  id uuid
+  name varchar(150)
+  description varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thanh_phan_ho_so {
+  id uuid
+  id_truong_hop uuid
+  ten_thanh_phan varchar(255)
+  mo_ta_chi_tiet varchar(255)
+  so_luong_ban_chinh int
+  so_luong_ban_sao int
+  ghi_chu varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_tuc_hanh_chinh {
+  id uuid
+  id_co_so_dich_vu_cong uuid
+  ten_thu_tuc varchar(255)
+  ma_thu_tuc varchar(50)
+  doi_tuong_thuc_hien varchar(255)
+  yeu_cau_dieu_kien_chung varchar(255)
+  so_quyet_dinh varchar(255)
+  is_featured bool
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_tuc_hanh_chinh_linh_vuc {
+  id uuid
+  id_thu_tuc_hanh_chinh uuid
+  id_linh_vuc uuid
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_tuc_hanh_chinh_mau_don {
+  id uuid
+  id_thu_tuc uuid
+  id_mau_don uuid
+  ghi_chu varchar(255)
+  so_luong_ban_chinh int
+  so_luong_ban_sao int
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table tin_tuc {
+  id uuid
+  id_danh_muc uuid
+  tieu_de varchar(255)
+  noi_dung varchar(255)
+  trich_doan text
+  tac_gia varchar(255)
+  url_anh_dai_dien varchar(500)
+  is_quan_trong bool
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+  is_noti bool
+}
+
+Table trinh_tu_thuc_hien_thu_tuc {
+  id uuid
+  id_thu_tuc uuid
+  ten_buoc varchar(255)
+  mo_ta_buoc varchar(255)
+  thu_tu_buoc int
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table truong_hop_thu_tuc {
+  id uuid
+  id_thu_tuc uuid
+  ten_truong_hop varchar(255)
+  mo_ta varchar(255)
+  thu_tu int
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table user_roles {
+  user_id uuid
+  role_id uuid
+}
+
+Table user_session_logs {
+  id uuid
+  id_nguoi_dung uuid
+  ip inet
+  device varchar(100)
+  thoi_gian_dang_nhap timestamp
+  thoi_gian_dang_xuat timestamp
+  is_active bool
+}
+
+Table uy_ban {
+  id uuid
+  ten_don_vi varchar(255)
+  dia_chi_tru_so varchar(500)
+  so_dien_thoai varchar(20)
+  email varchar(100)
+  gio_lam_viec json
+  link_google_map varchar(500)
+  ghi_chu varchar(255)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table video_upload_chunks {
+  id uuid
+  upload_id varchar(255)
+  chunk_index int
+  path varchar(500)
+  size_mb decimal(10,2)
+  created_at timestamp
+}
+
+Table video_uploads {
+  id varchar(255)
+  total_chunks int
+  received_chunks int
+  status varchar(20)
+  final_mp4_url varchar(500)
+  final_hls_url varchar(500)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table tin_tuc_view {
+  id uuid
+  id_tin_tuc uuid
+  ip_address varchar(100)
+  device_info varchar(255)
+  view_count int
+  last_view_at timestamp
+  thoi_gian_tao timestamp
+}
+
+Table linh_vuc_phan_anh_nguoi_quan_ly {
+  id_linh_vuc_phan_anh uuid
+  id_nguoi_dung uuid
+  nguoi_tao uuid
+  thoi_gian_tao timestamp
+}
+
+// ══════════════ BỔ SUNG — CỔNG THÔNG TIN CÔNG DÂN (SOS_TNP_LONGLO) ══════════════
+
+Table danh_gia_phan_anh {
+  id uuid [pk]
+  id_phan_anh uuid [unique, ref: > phan_anh.id]
+  diem int
+  nhan_xet text
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table dang_ky_tiep_dan {
+  id uuid [pk]
+  loai varchar(30)
+  ma_tiep_dan varchar(50)
+  id_lich_tiep_dan uuid [ref: > lich_tiep_dan.id]
+  ngay date
+  slot varchar(50)
+  chu_de varchar(255)
+  ly_do text
+  ho_ten varchar(150)
+  sdt varchar(20)
+  cccd varchar(20)
+  cccd_ngay_cap date
+  cccd_noi_cap text
+  dia_chi text
+  bo_phan text
+  ten_lanh_dao varchar(255)
+  chuc_vu_lanh_dao varchar(255)
+  trang_thai varchar(30)
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table danh_gia_tiep_dan {
+  id uuid [pk]
+  id_dang_ky_tiep_dan uuid [unique, ref: > dang_ky_tiep_dan.id]
+  diem_tong int
+  tieu_chi json
+  ly_do json
+  nhan_xet text
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_vien_danh_muc {
+  id uuid [pk]
+  ten varchar(255)
+  mo_ta text
+  icon varchar(50)
+  tone varchar(20)
+  thu_tu int
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_vien_tai_lieu {
+  id uuid [pk]
+  id_danh_muc uuid [ref: > thu_vien_danh_muc.id]
+  loai varchar(30)
+  tieu_de varchar(255)
+  tac_gia varchar(255)
+  mo_ta text
+  url_bia varchar(500)
+  so_luot_tai bigint
+  is_featured bool
+  noi_dung text
+  sections json
+  so_hieu varchar(100)
+  co_quan_ban_hanh varchar(255)
+  ngay_ban_hanh date
+  ngay_hieu_luc date
+  trang_thai_hieu_luc varchar(50)
+  chuong json
+  trang_thai varchar(30)         // NHAP | CHO_DUYET | DA_DUYET | LUU_TRU
+  pham_vi varchar(30)            // CONG_KHAI | NOI_BO | HAN_CHE
+  nguon text                     // nguồn tài liệu
+  nguoi_duyet uuid [ref: > nguoi_dung.id]
+  thoi_gian_duyet timestamp
+  ngay_dang int                  // số trang (metadata)
+  ngon_ngu varchar(10)           // vi/en (metadata)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_vien_tag {
+  id uuid [pk]
+  ten varchar(100)
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_vien_tai_lieu_tag {
+  id uuid [pk]
+  id_tai_lieu uuid [ref: > thu_vien_tai_lieu.id]
+  id_tag uuid [ref: > thu_vien_tag.id]
+}
+
+Table thu_vien_tai_lieu_file {
+  id uuid [pk]
+  id_tai_lieu uuid [ref: > thu_vien_tai_lieu.id]
+  ten_file varchar(255)
+  duong_dan varchar(500)         // storage DEV private (KHÔNG src/public/uploads)
+  dinh_dang varchar(50)          // MIME
+  kich_thuoc_mb decimal(10,2)
+  phien_ban int
+  la_phien_ban_hien_tai bool
+  mo_ta text
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table thu_vien_tai_lieu_quyen {
+  id uuid [pk]
+  id_tai_lieu uuid [ref: > thu_vien_tai_lieu.id]
+  id_vai_tro uuid [ref: > roles.id]
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Table banner_trang_chu {
+  id uuid [pk]
+  tieu_de varchar(255)
+  eyebrow varchar(255)
+  mo_ta text
+  metric varchar(50)
+  metric_label varchar(255)
+  url_anh varchar(500)
+  thu_tu int
+  is_active bool
+  is_delete bool
+  nguoi_tao uuid
+  nguoi_cap_nhat uuid
+  thoi_gian_tao timestamp
+  thoi_gian_cap_nhat timestamp
+}
+
+Ref: audit_logs.performed_by > nguoi_dung.id
+Ref: cach_thuc_thuc_hien.id_thu_tuc > thu_tuc_hanh_chinh.id
+Ref: cach_thuc_thuc_hien.nguoi_tao > nguoi_dung.id
+Ref: cach_thuc_thuc_hien.nguoi_cap_nhat > nguoi_dung.id
+Ref: co_so_dich_vu_cong.nguoi_tao > nguoi_dung.id
+Ref: co_so_dich_vu_cong.nguoi_cap_nhat > nguoi_dung.id
+Ref: danh_muc_tin_tuc.nguoi_tao > nguoi_dung.id
+Ref: danh_muc_tin_tuc.nguoi_cap_nhat > nguoi_dung.id
+Ref: dinh_kem_phan_anh.id_phan_anh > phan_anh.id
+Ref: dinh_kem_tin_tuc.id_tin_tuc > tin_tuc.id
+Ref: dinh_kem_tin_tuc.nguoi_tao > nguoi_dung.id
+Ref: lich_su_trang_thai.id_phan_anh > phan_anh.id
+Ref: lich_su_trang_thai.nguoi_tao > nguoi_dung.id
+Ref: lich_tiep_dan.nguoi_tao > nguoi_dung.id
+Ref: lich_tiep_dan.nguoi_cap_nhat > nguoi_dung.id
+Ref: linh_vuc.nguoi_tao > nguoi_dung.id
+Ref: linh_vuc.nguoi_cap_nhat > nguoi_dung.id
+Ref: linh_vuc_phan_anh.nguoi_tao > nguoi_dung.id
+Ref: linh_vuc_phan_anh.nguoi_cap_nhat > nguoi_dung.id
+Ref: mau_don.nguoi_tao > nguoi_dung.id
+Ref: mau_don.nguoi_cap_nhat > nguoi_dung.id
+Ref: notifications.user_id > nguoi_dung.id
+Ref: otp.id_nguoi_dung > nguoi_dung.id
+Ref: phan_anh.id_linh_vuc_phan_anh > linh_vuc_phan_anh.id
+Ref: phan_anh.id_to > nguoi_dung.id
+Ref: phan_anh.nguoi_cap_nhat > nguoi_dung.id
+Ref: phan_anh.nguoi_tao > nguoi_dung.id
+Ref: refresh_token.id_nguoi_dung > nguoi_dung.id
+Ref: role_permissions.role_id > roles.id
+Ref: role_permissions.permission_code > permissions.code
+Ref: roles.nguoi_tao > nguoi_dung.id
+Ref: roles.nguoi_cap_nhat > nguoi_dung.id
+Ref: thanh_phan_ho_so.id_truong_hop > truong_hop_thu_tuc.id
+Ref: thanh_phan_ho_so.nguoi_tao > nguoi_dung.id
+Ref: thanh_phan_ho_so.nguoi_cap_nhat > nguoi_dung.id
+Ref: thu_tuc_hanh_chinh.id_co_so_dich_vu_cong > co_so_dich_vu_cong.id
+Ref: thu_tuc_hanh_chinh.nguoi_tao > nguoi_dung.id
+Ref: thu_tuc_hanh_chinh.nguoi_cap_nhat > nguoi_dung.id
+Ref: thu_tuc_hanh_chinh_linh_vuc.id_thu_tuc_hanh_chinh > thu_tuc_hanh_chinh.id
+Ref: thu_tuc_hanh_chinh_linh_vuc.id_linh_vuc > linh_vuc.id
+Ref: thu_tuc_hanh_chinh_mau_don.id_thu_tuc > thu_tuc_hanh_chinh.id
+Ref: thu_tuc_hanh_chinh_mau_don.id_mau_don > mau_don.id
+Ref: thu_tuc_hanh_chinh_mau_don.nguoi_tao > nguoi_dung.id
+Ref: thu_tuc_hanh_chinh_mau_don.nguoi_cap_nhat > nguoi_dung.id
+Ref: tin_tuc.id_danh_muc > danh_muc_tin_tuc.id
+Ref: tin_tuc.nguoi_tao > nguoi_dung.id
+Ref: tin_tuc.nguoi_cap_nhat > nguoi_dung.id
+Ref: trinh_tu_thuc_hien_thu_tuc.id_thu_tuc > thu_tuc_hanh_chinh.id
+Ref: trinh_tu_thuc_hien_thu_tuc.nguoi_tao > nguoi_dung.id
+Ref: trinh_tu_thuc_hien_thu_tuc.nguoi_cap_nhat > nguoi_dung.id
+Ref: truong_hop_thu_tuc.id_thu_tuc > thu_tuc_hanh_chinh.id
+Ref: truong_hop_thu_tuc.nguoi_tao > nguoi_dung.id
+Ref: truong_hop_thu_tuc.nguoi_cap_nhat > nguoi_dung.id
+Ref: user_roles.user_id > nguoi_dung.id
+Ref: user_roles.role_id > roles.id
+Ref: user_session_logs.id_nguoi_dung > nguoi_dung.id
+Ref: uy_ban.nguoi_tao > nguoi_dung.id
+Ref: uy_ban.nguoi_cap_nhat > nguoi_dung.id
+Ref: video_upload_chunks.upload_id > video_uploads.id
+Ref: tin_tuc_view.id_tin_tuc > tin_tuc.id
+Ref: linh_vuc_phan_anh_nguoi_quan_ly.id_linh_vuc_phan_anh > linh_vuc_phan_anh.id
+Ref: linh_vuc_phan_anh_nguoi_quan_ly.id_nguoi_dung > nguoi_dung.id
+Ref: linh_vuc_phan_anh_nguoi_quan_ly.nguoi_tao > nguoi_dung.id
+
+// Bổ sung — cổng công dân
+Ref: dang_ky_tiep_dan.nguoi_tao > nguoi_dung.id
+Ref: dang_ky_tiep_dan.nguoi_cap_nhat > nguoi_dung.id
+Ref: thu_vien_danh_muc.nguoi_tao > nguoi_dung.id
+Ref: thu_vien_danh_muc.nguoi_cap_nhat > nguoi_dung.id
+Ref: thu_vien_tai_lieu.nguoi_tao > nguoi_dung.id
+Ref: thu_vien_tai_lieu.nguoi_cap_nhat > nguoi_dung.id
+Ref: banner_trang_chu.nguoi_tao > nguoi_dung.id
+Ref: banner_trang_chu.nguoi_cap_nhat > nguoi_dung.id
+Ref: thu_vien_tai_lieu_tag.id_tai_lieu > thu_vien_tai_lieu.id
+Ref: thu_vien_tai_lieu_tag.id_tag > thu_vien_tag.id
+Ref: thu_vien_tai_lieu_file.id_tai_lieu > thu_vien_tai_lieu.id
+Ref: thu_vien_tai_lieu_quyen.id_tai_lieu > thu_vien_tai_lieu.id
+Ref: thu_vien_tai_lieu_quyen.id_vai_tro > roles.id
+
