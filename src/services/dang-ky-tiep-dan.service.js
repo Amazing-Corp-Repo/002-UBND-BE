@@ -67,6 +67,56 @@ const mapStaffRegistration = (item) => ({
       : null,
 });
 
+const mapStaffRegistrationDetail = (item) => {
+  const rating = item.danh_gia_tiep_dan?.[0] || null;
+  return {
+    id: item.id,
+    receptionCode: item.ma_tiep_dan,
+    receptionType: item.loai,
+    schedule: item.lich_tiep_dan
+      ? {
+          id: item.lich_tiep_dan.id,
+          officerName: item.lich_tiep_dan.ten_can_bo,
+          location: item.lich_tiep_dan.dia_diem,
+          receptionDate: item.lich_tiep_dan.ngay_tiep_dan,
+          timeRange: item.lich_tiep_dan.thoi_gian,
+          note: item.lich_tiep_dan.ghi_chu,
+        }
+      : null,
+    receptionDate: item.ngay,
+    timeSlot: item.slot,
+    topic: item.chu_de,
+    workingContent: item.ly_do,
+    applicant: {
+      fullName: item.ho_ten,
+      phoneNumber: item.sdt,
+      citizenId: item.cccd,
+      address: item.dia_chi,
+    },
+    department: item.bo_phan,
+    approvalStatus: item.trang_thai,
+    approver: item.ten_lanh_dao
+      ? {
+          name: item.ten_lanh_dao,
+          title: item.chuc_vu_lanh_dao,
+          approvedAt: item.thoi_gian_cap_nhat,
+        }
+      : null,
+    ratingStatus: rating ? "RATED" : "NOT_RATED",
+    rating: rating
+      ? {
+          id: rating.id,
+          score: rating.diem_tong,
+          suggestions: rating.ly_do,
+          comment: rating.nhan_xet,
+          createdAt: rating.thoi_gian_tao,
+        }
+      : null,
+    createdAt: item.thoi_gian_tao,
+    updatedAt: item.thoi_gian_cap_nhat,
+  };
+};
+
 const DangKyTiepDanService = {
   async createCounterReception(input) {
     const schedule = await DangKyTiepDanRepository.findScheduleById(
@@ -153,6 +203,14 @@ const DangKyTiepDanService = {
       data: data.map(mapStaffRegistration),
       pagination: createPagination(filters.page, filters.size, totalItems),
     };
+  },
+
+  async getDetailForStaff(id) {
+    const registration = await DangKyTiepDanRepository.findDetailById(id);
+    if (!registration) {
+      throw new BaseError(404, "Đăng ký tiếp dân không tồn tại");
+    }
+    return mapStaffRegistrationDetail(registration);
   },
 };
 

@@ -20,6 +20,7 @@ export const PERMISSION = {
 
   // Đăng ký tiếp dân
   RR_GET_ALL: "RR_GET_ALL",
+  RR_GET_DETAIL: "RR_GET_DETAIL",
 
   // Lĩnh vực phản ánh
   LVPA_CREATE: "LVPA_CREATE",
@@ -106,6 +107,7 @@ export const PERMISSION_DESC = {
   LTD_GET_TEMPLATE: "Lấy mẫu lịch tiếp dân",
 
   RR_GET_ALL: "Xem danh sách đăng ký tiếp dân",
+  RR_GET_DETAIL: "Xem chi tiết đăng ký tiếp dân",
 
   LVPA_CREATE: "Tạo lĩnh vực phản ánh",
   LVPA_UPDATE: "Cập nhật lĩnh vực phản ánh",

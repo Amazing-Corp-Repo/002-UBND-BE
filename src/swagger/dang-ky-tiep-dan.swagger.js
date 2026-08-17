@@ -102,6 +102,28 @@ const DangKyTiepDanSwagger = {
       },
     },
   },
+  "/api/reception-registrations/{id}": {
+    get: {
+      tags: ["ReceptionRegistration"],
+      summary: "Get reception registration details for staff",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        200: { description: "Full citizen-submitted registration details" },
+        400: { description: "Invalid registration ID" },
+        401: { description: "Missing or invalid access token" },
+        403: { description: "Missing RR_GET_DETAIL permission" },
+        404: { description: "Registration not found" },
+      },
+    },
+  },
 };
 
 export default DangKyTiepDanSwagger;

@@ -90,6 +90,40 @@ const DangKyTiepDanRepository = {
 
     return { data, totalItems };
   },
+
+  async findDetailById(id) {
+    return prisma.dang_ky_tiep_dan.findFirst({
+      where: {
+        id,
+        loai: "COUNTER_RECEPTION",
+        is_active: true,
+        is_delete: false,
+      },
+      include: {
+        lich_tiep_dan: {
+          select: {
+            id: true,
+            ten_can_bo: true,
+            dia_diem: true,
+            ngay_tiep_dan: true,
+            thoi_gian: true,
+            ghi_chu: true,
+          },
+        },
+        danh_gia_tiep_dan: {
+          where: { is_delete: false },
+          select: {
+            id: true,
+            diem_tong: true,
+            ly_do: true,
+            nhan_xet: true,
+            thoi_gian_tao: true,
+          },
+          take: 1,
+        },
+      },
+    });
+  },
 };
 
 export default DangKyTiepDanRepository;

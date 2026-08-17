@@ -80,3 +80,10 @@ export const GetDangKyTiepDanQuery = Joi.object({
     .optional()
     .messages({ "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8" }),
 });
+
+export const ReceptionRegistrationIdParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID đăng ký tiếp dân không hợp lệ",
+    "any.required": "ID đăng ký tiếp dân là bắt buộc",
+  }),
+});

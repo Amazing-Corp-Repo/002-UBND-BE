@@ -23,6 +23,13 @@ const DangKyTiepDanController = {
       result.pagination
     );
   },
+
+  async getDetail(req, res) {
+    const data = await DangKyTiepDanService.getDetailForStaff(
+      req.validatedParams.id
+    );
+    return successResponse(res, data, "Lấy chi tiết đăng ký tiếp dân thành công");
+  },
 };
 
 export default DangKyTiepDanController;

@@ -4,12 +4,14 @@ import DangKyTiepDanController from "../controllers/dang-ky-tiep-dan.controller.
 import { receptionAudit } from "../middlewares/reception-audit.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
+import validateParams from "../middlewares/validate-params.middleware.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import {
   CreateDangKyTiepDanRequest,
   GetDangKyTiepDanQuery,
   LookupDangKyTiepDanRequest,
+  ReceptionRegistrationIdParams,
 } from "../validators/dang-ky-tiep-dan.validator.js";
 
 const dangKyTiepDanRouter = express.Router();
@@ -26,6 +28,14 @@ dangKyTiepDanRouter.post(
   "/lookup",
   validate(LookupDangKyTiepDanRequest),
   DangKyTiepDanController.lookup
+);
+
+dangKyTiepDanRouter.get(
+  "/:id",
+  authenticate,
+  authorize([PERMISSION.RR_GET_DETAIL]),
+  validateParams(ReceptionRegistrationIdParams),
+  DangKyTiepDanController.getDetail
 );
 
 dangKyTiepDanRouter.post(
