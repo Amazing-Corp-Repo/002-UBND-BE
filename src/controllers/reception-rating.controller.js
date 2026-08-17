@@ -33,6 +33,13 @@ const ReceptionRatingController = {
     );
     return successResponse(res, data, "Lấy chi tiết đánh giá tiếp dân thành công");
   },
+
+  async getStatistics(req, res) {
+    const data = await ReceptionRatingService.getStatisticsForLeader(
+      req.validatedQuery
+    );
+    return successResponse(res, data, "Lấy thống kê đánh giá tiếp dân thành công");
+  },
 };
 
 export default ReceptionRatingController;

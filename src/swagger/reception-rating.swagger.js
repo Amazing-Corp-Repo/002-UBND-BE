@@ -88,6 +88,24 @@ const ReceptionRatingSwagger = {
       },
     },
   },
+  "/api/reception-ratings/statistics": {
+    get: {
+      tags: ["ReceptionRating"],
+      summary: "Get basic reception rating statistics",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "department", in: "query", schema: { type: "string", example: "QUAY_1" } },
+        { name: "fromDate", in: "query", schema: { type: "string", format: "date" } },
+        { name: "toDate", in: "query", schema: { type: "string", format: "date" } },
+      ],
+      responses: {
+        200: { description: "Totals, average score, satisfaction rate, score distribution and counter breakdown" },
+        400: { description: "Invalid filters" },
+        401: { description: "Missing or invalid access token" },
+        403: { description: "Missing RRT_GET_STATS permission" },
+      },
+    },
+  },
 };
 
 export default ReceptionRatingSwagger;

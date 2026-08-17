@@ -6,6 +6,7 @@ import validate from "../middlewares/validate.middleware.js";
 import {
   CreateReceptionRatingRequest,
   GetReceptionRatingsQuery,
+  GetReceptionRatingStatisticsQuery,
   ReceptionRatingIdParams,
 } from "../validators/reception-rating.validator.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
@@ -26,6 +27,14 @@ receptionRatingRouter.get(
 receptionRatingRouter.get(
   "/configuration",
   ReceptionRatingController.getConfiguration
+);
+
+receptionRatingRouter.get(
+  "/statistics",
+  authenticate,
+  authorize([PERMISSION.RRT_GET_STATS]),
+  validateQuery(GetReceptionRatingStatisticsQuery),
+  ReceptionRatingController.getStatistics
 );
 
 receptionRatingRouter.get(

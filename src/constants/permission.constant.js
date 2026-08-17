@@ -26,6 +26,7 @@ export const PERMISSION = {
   // Đánh giá tiếp dân
   RRT_GET_ALL: "RRT_GET_ALL",
   RRT_GET_DETAIL: "RRT_GET_DETAIL",
+  RRT_GET_STATS: "RRT_GET_STATS",
 
   // Lĩnh vực phản ánh
   LVPA_CREATE: "LVPA_CREATE",
@@ -117,6 +118,7 @@ export const PERMISSION_DESC = {
 
   RRT_GET_ALL: "Xem danh sách đánh giá tiếp dân",
   RRT_GET_DETAIL: "Xem chi tiết đánh giá tiếp dân",
+  RRT_GET_STATS: "Xem thống kê đánh giá tiếp dân",
 
   LVPA_CREATE: "Tạo lĩnh vực phản ánh",
   LVPA_UPDATE: "Cập nhật lĩnh vực phản ánh",

@@ -54,3 +54,12 @@ export const ReceptionRatingIdParams = Joi.object({
     "any.required": "ID đánh giá tiếp dân là bắt buộc",
   }),
 });
+
+export const GetReceptionRatingStatisticsQuery = Joi.object({
+  department: Joi.string()
+    .pattern(/^QUAY_[1-8]$/)
+    .optional()
+    .messages({ "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8" }),
+  fromDate: Joi.date().iso().optional(),
+  toDate: Joi.date().iso().optional(),
+});

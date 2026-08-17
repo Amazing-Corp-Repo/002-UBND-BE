@@ -77,6 +77,29 @@ const mapRatingDetail = (rating) => {
   };
 };
 
+const normalizeDateFilters = (filters) => {
+  const normalized = {
+    ...filters,
+    fromDate: filters.fromDate
+      ? new Date(filters.fromDate).toISOString().slice(0, 10)
+      : undefined,
+    toDate: filters.toDate
+      ? new Date(filters.toDate).toISOString().slice(0, 10)
+      : undefined,
+  };
+  if (
+    normalized.fromDate &&
+    normalized.toDate &&
+    normalized.fromDate > normalized.toDate
+  ) {
+    throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
+  }
+  return normalized;
+};
+
+const roundToTwoDecimals = (value) =>
+  value === null || value === undefined ? 0 : Math.round(value * 100) / 100;
+
 const ReceptionRatingService = {
   getConfiguration() {
     return {
@@ -136,22 +159,7 @@ const ReceptionRatingService = {
   },
 
   async getAllForLeader(filters) {
-    const normalized = {
-      ...filters,
-      fromDate: filters.fromDate
-        ? new Date(filters.fromDate).toISOString().slice(0, 10)
-        : undefined,
-      toDate: filters.toDate
-        ? new Date(filters.toDate).toISOString().slice(0, 10)
-        : undefined,
-    };
-    if (
-      normalized.fromDate &&
-      normalized.toDate &&
-      normalized.fromDate > normalized.toDate
-    ) {
-      throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
-    }
+    const normalized = normalizeDateFilters(filters);
 
     const { data, totalItems } =
       await ReceptionRatingRepository.findAllForLeader(normalized);
@@ -167,6 +175,37 @@ const ReceptionRatingService = {
       throw new BaseError(404, "Đánh giá tiếp dân không tồn tại");
     }
     return mapRatingDetail(rating);
+  },
+
+  async getStatisticsForLeader(filters) {
+    const normalized = normalizeDateFilters(filters);
+    const { overall, scoreGroups, departmentGroups } =
+      await ReceptionRatingRepository.getStatistics(normalized);
+    const totalRatings = overall._count._all;
+    const countByScore = new Map(
+      scoreGroups.map((group) => [group.diem_tong, group._count._all])
+    );
+    const scoreDistribution = Array.from({ length: 5 }, (_, index) => ({
+      score: index + 1,
+      count: countByScore.get(index + 1) || 0,
+    }));
+    const satisfiedCount =
+      (countByScore.get(4) || 0) + (countByScore.get(5) || 0);
+
+    return {
+      totalRatings,
+      averageScore: roundToTwoDecimals(overall._avg.diem_tong),
+      satisfactionRate:
+        totalRatings === 0
+          ? 0
+          : roundToTwoDecimals((satisfiedCount / totalRatings) * 100),
+      scoreDistribution,
+      byDepartment: departmentGroups.map((group) => ({
+        department: group.department,
+        totalRatings: group._count._all,
+        averageScore: roundToTwoDecimals(group._avg.diem_tong),
+      })),
+    };
   },
 };
 
