@@ -24,6 +24,25 @@ const registrationRequestSchema = {
 
 const DangKyTiepDanSwagger = {
   "/api/reception-registrations": {
+    get: {
+      tags: ["ReceptionRegistration"],
+      summary: "Get reception registrations for staff",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+        { name: "size", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+        { name: "search", in: "query", schema: { type: "string", maxLength: 100 } },
+        { name: "receptionDate", in: "query", schema: { type: "string", format: "date" } },
+        { name: "approvalStatus", in: "query", schema: { type: "string", example: "PENDING" } },
+        { name: "ratingStatus", in: "query", schema: { type: "string", enum: ["RATED", "NOT_RATED"] } },
+        { name: "department", in: "query", schema: { type: "string", enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"] } },
+      ],
+      responses: {
+        200: { description: "Paginated reception registrations" },
+        401: { description: "Missing or invalid access token" },
+        403: { description: "Missing RR_GET_ALL permission" },
+      },
+    },
     post: {
       tags: ["ReceptionRegistration"],
       summary: "Đăng ký lịch tiếp dân tại quầy từ Mobile",

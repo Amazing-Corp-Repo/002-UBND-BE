@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import { TIEP_DAN_STATUS, TIEP_DAN_TYPE } from "../constants/tiep-dan.constant.js";
 import DangKyTiepDanRepository from "../repositories/dang-ky-tiep-dan.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { createPagination } from "../utils/response.util.js";
 
 const MAX_CODE_RETRIES = 10;
 
@@ -44,6 +45,26 @@ const mapCitizenRegistration = (item) => ({
   status: item.trang_thai,
   createdAt: item.thoi_gian_tao,
   updatedAt: item.thoi_gian_cap_nhat,
+});
+
+const mapStaffRegistration = (item) => ({
+  id: item.id,
+  receptionCode: item.ma_tiep_dan,
+  applicantName: item.ho_ten,
+  phoneNumber: item.sdt,
+  receptionDate: item.ngay,
+  timeSlot: item.slot,
+  topic: item.chu_de,
+  workingContent: item.ly_do,
+  department: item.bo_phan,
+  approvalStatus: item.trang_thai,
+  ratingStatus:
+    item.danh_gia_tiep_dan?.length > 0 ? "RATED" : "NOT_RATED",
+  approverName: item.ten_lanh_dao,
+  approvedAt:
+    item.trang_thai === TIEP_DAN_STATUS.APPROVED
+      ? item.thoi_gian_cap_nhat
+      : null,
 });
 
 const DangKyTiepDanService = {
@@ -116,6 +137,22 @@ const DangKyTiepDanService = {
     }
 
     return registrations.map(mapCitizenRegistration);
+  },
+
+  async getAllForStaff(filters) {
+    const normalizedFilters = {
+      ...filters,
+      receptionDate: filters.receptionDate
+        ? new Date(filters.receptionDate).toISOString().slice(0, 10)
+        : undefined,
+    };
+    const { data, totalItems } =
+      await DangKyTiepDanRepository.findAllForStaff(normalizedFilters);
+
+    return {
+      data: data.map(mapStaffRegistration),
+      pagination: createPagination(filters.page, filters.size, totalItems),
+    };
   },
 };
 

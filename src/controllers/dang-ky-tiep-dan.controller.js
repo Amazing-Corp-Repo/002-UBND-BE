@@ -11,6 +11,18 @@ const DangKyTiepDanController = {
     const data = await DangKyTiepDanService.lookupForCitizen(req.body);
     return successResponse(res, data, "Tra cứu đăng ký tiếp dân thành công");
   },
+
+  async getAll(req, res) {
+    const result = await DangKyTiepDanService.getAllForStaff(
+      req.validatedQuery
+    );
+    return successResponse(
+      res,
+      result.data,
+      "Lấy danh sách đăng ký tiếp dân thành công",
+      result.pagination
+    );
+  },
 };
 
 export default DangKyTiepDanController;

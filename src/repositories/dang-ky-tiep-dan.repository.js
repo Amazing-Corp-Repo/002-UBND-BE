@@ -35,6 +35,61 @@ const DangKyTiepDanRepository = {
       take: 50,
     });
   },
+
+  async findAllForStaff(filters) {
+    const skip = (filters.page - 1) * filters.size;
+    const where = {
+      loai: "COUNTER_RECEPTION",
+      is_active: true,
+      is_delete: false,
+      ...(filters.search
+        ? {
+            OR: [
+              { ma_tiep_dan: { contains: filters.search, mode: "insensitive" } },
+              { ho_ten: { contains: filters.search, mode: "insensitive" } },
+              { sdt: { contains: filters.search } },
+            ],
+          }
+        : {}),
+      ...(filters.receptionDate
+        ? {
+            ngay: {
+              gte: new Date(`${filters.receptionDate}T00:00:00.000Z`),
+              lte: new Date(`${filters.receptionDate}T23:59:59.999Z`),
+            },
+          }
+        : {}),
+      ...(filters.approvalStatus
+        ? { trang_thai: filters.approvalStatus }
+        : {}),
+      ...(filters.department ? { bo_phan: filters.department } : {}),
+      ...(filters.ratingStatus === "RATED"
+        ? { danh_gia_tiep_dan: { some: { is_delete: false } } }
+        : {}),
+      ...(filters.ratingStatus === "NOT_RATED"
+        ? { danh_gia_tiep_dan: { none: { is_delete: false } } }
+        : {}),
+    };
+
+    const [data, totalItems] = await Promise.all([
+      prisma.dang_ky_tiep_dan.findMany({
+        where,
+        include: {
+          danh_gia_tiep_dan: {
+            where: { is_delete: false },
+            select: { id: true },
+            take: 1,
+          },
+        },
+        orderBy: [{ ngay: "desc" }, { slot: "asc" }],
+        skip,
+        take: filters.size,
+      }),
+      prisma.dang_ky_tiep_dan.count({ where }),
+    ]);
+
+    return { data, totalItems };
+  },
 };
 
 export default DangKyTiepDanRepository;

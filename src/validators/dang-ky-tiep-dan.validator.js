@@ -62,3 +62,21 @@ export const LookupDangKyTiepDanRequest = Joi.object({
     "object.missing": "Phải nhập mã tiếp dân hoặc số điện thoại",
     "object.xor": "Chỉ được tra cứu bằng mã tiếp dân hoặc số điện thoại",
   });
+
+export const GetDangKyTiepDanQuery = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  size: Joi.number().integer().min(1).max(100).default(10),
+  search: Joi.string().trim().max(100).allow("").optional(),
+  receptionDate: Joi.date().iso().optional().messages({
+    "date.format": "Ngày tiếp dân phải có định dạng YYYY-MM-DD",
+  }),
+  approvalStatus: Joi.string().trim().uppercase().max(30).optional(),
+  ratingStatus: Joi.string()
+    .valid("RATED", "NOT_RATED")
+    .optional()
+    .messages({ "any.only": "Trạng thái đánh giá không hợp lệ" }),
+  department: Joi.string()
+    .pattern(/^QUAY_[1-8]$/)
+    .optional()
+    .messages({ "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8" }),
+});
