@@ -39,6 +39,13 @@ const DangKyTiepDanController = {
     );
     return successResponse(res, data, "Phê duyệt đăng ký tiếp dân thành công");
   },
+
+  async lookupForRating(req, res) {
+    const data = await DangKyTiepDanService.lookupForRating(
+      req.validatedParams.receptionCode
+    );
+    return successResponse(res, data, "Tra cứu mã tiếp dân để đánh giá thành công");
+  },
 };
 
 export default DangKyTiepDanController;

@@ -164,6 +164,28 @@ const DangKyTiepDanSwagger = {
       },
     },
   },
+  "/api/reception-registrations/rating-lookup/{receptionCode}": {
+    get: {
+      tags: ["ReceptionRegistration"],
+      summary: "Look up an approved registration for iPad rating",
+      description:
+        "Public iPad endpoint. Returns a registration only when it is approved, assigned to QUAY_1 through QUAY_8, and has not been rated.",
+      parameters: [
+        {
+          name: "receptionCode",
+          in: "path",
+          required: true,
+          schema: { type: "string", example: "A00123" },
+        },
+      ],
+      responses: {
+        200: { description: "Registration details ready for citizen confirmation" },
+        400: { description: "Invalid reception code" },
+        404: { description: "Reception code not found" },
+        409: { description: "Not approved, not assigned to a counter, or already rated" },
+      },
+    },
+  },
 };
 
 export default DangKyTiepDanSwagger;

@@ -118,6 +118,24 @@ const mapStaffRegistrationDetail = (item) => {
   };
 };
 
+const mapRatingLookup = (item) => ({
+  registrationId: item.id,
+  receptionCode: item.ma_tiep_dan,
+  receptionDate: item.ngay,
+  timeSlot: item.slot,
+  topic: item.chu_de,
+  workingContent: item.ly_do,
+  applicant: {
+    fullName: item.ho_ten,
+    phoneNumber: maskValue(item.sdt, 4),
+    citizenId: maskValue(item.cccd, 4),
+    address: item.dia_chi,
+  },
+  department: item.bo_phan,
+  approvalStatus: item.trang_thai,
+  ratingStatus: "NOT_RATED",
+});
+
 const DangKyTiepDanService = {
   async createCounterReception(input) {
     const schedule = await DangKyTiepDanRepository.findScheduleById(
@@ -242,6 +260,26 @@ const DangKyTiepDanService = {
     }
 
     return mapStaffRegistrationDetail(approved);
+  },
+
+  async lookupForRating(receptionCode) {
+    const registration = await DangKyTiepDanRepository.findForRatingByCode(
+      receptionCode.toUpperCase()
+    );
+    if (!registration) {
+      throw new BaseError(404, "Không tìm thấy mã tiếp dân");
+    }
+    if (registration.trang_thai !== TIEP_DAN_STATUS.APPROVED) {
+      throw new BaseError(409, "Đăng ký chưa được phê duyệt để đánh giá");
+    }
+    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
+      throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
+    }
+    if (registration.danh_gia_tiep_dan?.length > 0) {
+      throw new BaseError(409, "Mã tiếp dân đã được đánh giá");
+    }
+
+    return mapRatingLookup(registration);
   },
 };
 

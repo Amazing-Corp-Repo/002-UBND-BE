@@ -13,6 +13,7 @@ import {
   GetDangKyTiepDanQuery,
   LookupDangKyTiepDanRequest,
   ReceptionRegistrationIdParams,
+  ReceptionCodeParams,
 } from "../validators/dang-ky-tiep-dan.validator.js";
 
 const dangKyTiepDanRouter = express.Router();
@@ -41,6 +42,12 @@ dangKyTiepDanRouter.post(
   "/lookup",
   validate(LookupDangKyTiepDanRequest),
   DangKyTiepDanController.lookup
+);
+
+dangKyTiepDanRouter.get(
+  "/rating-lookup/:receptionCode",
+  validateParams(ReceptionCodeParams),
+  DangKyTiepDanController.lookupForRating
 );
 
 dangKyTiepDanRouter.get(

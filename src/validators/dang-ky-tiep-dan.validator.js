@@ -88,6 +88,18 @@ export const ReceptionRegistrationIdParams = Joi.object({
   }),
 });
 
+export const ReceptionCodeParams = Joi.object({
+  receptionCode: Joi.string()
+    .trim()
+    .uppercase()
+    .pattern(/^[A-Z0-9-]{4,50}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Mã tiếp dân không hợp lệ",
+      "any.required": "Mã tiếp dân là bắt buộc",
+    }),
+});
+
 export const ApproveReceptionRegistrationRequest = Joi.object({
   department: Joi.string()
     .pattern(/^QUAY_[1-8]$/)
