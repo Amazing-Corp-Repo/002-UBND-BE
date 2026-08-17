@@ -22,6 +22,7 @@ import exportRouter from './export.route.js';
 import addressVoteRoute from './address-vote.route.js';
 import dangKyTiepDanRouter from './dang-ky-tiep-dan.route.js';
 import receptionScheduleRouter from './reception-schedule.route.js';
+import receptionRatingRouter from './reception-rating.route.js';
 
 const rootRouter = express.Router();
 
@@ -49,6 +50,7 @@ rootRouter.use('/export', exportRouter);
 rootRouter.use('/address-vote', addressVoteRoute);
 rootRouter.use('/reception-registrations', dangKyTiepDanRouter);
 rootRouter.use('/reception-schedules', receptionScheduleRouter);
+rootRouter.use('/reception-ratings', receptionRatingRouter);
 
 export default rootRouter;
 
