@@ -20,6 +20,7 @@ import roleRouter from './role.route.js';
 import auditLogRouter from './audit-log.route.js';
 import exportRouter from './export.route.js';
 import addressVoteRoute from './address-vote.route.js';
+import dangKyTiepDanRouter from './dang-ky-tiep-dan.route.js';
 
 const rootRouter = express.Router();
 
@@ -45,6 +46,7 @@ rootRouter.use('/notifications', notificationRouter);
 rootRouter.use('/audit-logs', auditLogRouter);
 rootRouter.use('/export', exportRouter);
 rootRouter.use('/address-vote', addressVoteRoute);
+rootRouter.use('/reception-registrations', dangKyTiepDanRouter);
 
 export default rootRouter;
 

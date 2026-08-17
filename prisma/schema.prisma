@@ -668,7 +668,7 @@ model danh_gia_phan_anh {
 model dang_ky_tiep_dan {
   id                 String        @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   loai               String?       @db.VarChar(30) // COUNTER_RECEPTION | LEADER_MEETING
-  ma_tiep_dan        String?       @db.VarChar(50) // ticket: TD-... / LD-...
+  ma_tiep_dan        String        @unique(map: "uq_dang_ky_tiep_dan_ma_tiep_dan") @db.VarChar(50) // Mã ngắn, ví dụ A001
   id_lich_tiep_dan   String?       @db.Uuid
   ngay               DateTime?     @db.Date
   slot               String?       @db.VarChar(50)
@@ -691,7 +691,6 @@ model dang_ky_tiep_dan {
   lich_tiep_dan      lich_tiep_dan? @relation(fields: [id_lich_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_lich_tiep_dan")
   danh_gia_tiep_dan  danh_gia_tiep_dan[]
 
-  @@index([ma_tiep_dan], map: "idx_dang_ky_tiep_dan_ma_tiep_dan")
   @@index([trang_thai], map: "idx_dang_ky_tiep_dan_trang_thai")
   @@index([loai], map: "idx_dang_ky_tiep_dan_loai")
 }
