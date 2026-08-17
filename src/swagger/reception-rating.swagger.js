@@ -66,6 +66,28 @@ const ReceptionRatingSwagger = {
       },
     },
   },
+  "/api/reception-ratings/{id}": {
+    get: {
+      tags: ["ReceptionRating"],
+      summary: "Get reception rating details for leaders",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        200: { description: "Rating and original reception registration details" },
+        400: { description: "Invalid rating ID" },
+        401: { description: "Missing or invalid access token" },
+        403: { description: "Missing RRT_GET_DETAIL permission" },
+        404: { description: "Rating not found" },
+      },
+    },
+  },
 };
 
 export default ReceptionRatingSwagger;

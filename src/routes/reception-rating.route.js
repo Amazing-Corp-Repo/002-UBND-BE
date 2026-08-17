@@ -6,10 +6,12 @@ import validate from "../middlewares/validate.middleware.js";
 import {
   CreateReceptionRatingRequest,
   GetReceptionRatingsQuery,
+  ReceptionRatingIdParams,
 } from "../validators/reception-rating.validator.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
+import validateParams from "../middlewares/validate-params.middleware.js";
 
 const receptionRatingRouter = express.Router();
 
@@ -24,6 +26,14 @@ receptionRatingRouter.get(
 receptionRatingRouter.get(
   "/configuration",
   ReceptionRatingController.getConfiguration
+);
+
+receptionRatingRouter.get(
+  "/:id",
+  authenticate,
+  authorize([PERMISSION.RRT_GET_DETAIL]),
+  validateParams(ReceptionRatingIdParams),
+  ReceptionRatingController.getDetail
 );
 
 receptionRatingRouter.post(

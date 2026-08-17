@@ -33,6 +33,50 @@ const mapRatingListItem = (rating) => ({
   ratedAt: rating.thoi_gian_tao,
 });
 
+const mapRatingDetail = (rating) => {
+  const registration = rating.dang_ky_tiep_dan;
+  return {
+    id: rating.id,
+    score: rating.diem_tong,
+    selectedSuggestions: rating.ly_do || [],
+    comment: rating.nhan_xet || "",
+    ratedAt: rating.thoi_gian_tao,
+    registration: {
+      id: registration.id,
+      receptionCode: registration.ma_tiep_dan,
+      receptionDate: registration.ngay,
+      timeSlot: registration.slot,
+      topic: registration.chu_de,
+      workingContent: registration.ly_do,
+      applicant: {
+        fullName: registration.ho_ten,
+        phoneNumber: registration.sdt,
+        citizenId: registration.cccd,
+        address: registration.dia_chi,
+      },
+      department: registration.bo_phan,
+      approvalStatus: registration.trang_thai,
+      approver: registration.ten_lanh_dao
+        ? {
+            name: registration.ten_lanh_dao,
+            title: registration.chuc_vu_lanh_dao,
+            approvedAt: registration.thoi_gian_cap_nhat,
+          }
+        : null,
+      schedule: registration.lich_tiep_dan
+        ? {
+            id: registration.lich_tiep_dan.id,
+            officerName: registration.lich_tiep_dan.ten_can_bo,
+            location: registration.lich_tiep_dan.dia_diem,
+            receptionDate: registration.lich_tiep_dan.ngay_tiep_dan,
+            timeRange: registration.lich_tiep_dan.thoi_gian,
+            note: registration.lich_tiep_dan.ghi_chu,
+          }
+        : null,
+    },
+  };
+};
+
 const ReceptionRatingService = {
   getConfiguration() {
     return {
@@ -115,6 +159,14 @@ const ReceptionRatingService = {
       data: data.map(mapRatingListItem),
       pagination: createPagination(filters.page, filters.size, totalItems),
     };
+  },
+
+  async getDetailForLeader(id) {
+    const rating = await ReceptionRatingRepository.findDetailById(id);
+    if (!rating || rating.dang_ky_tiep_dan?.loai !== "COUNTER_RECEPTION") {
+      throw new BaseError(404, "Đánh giá tiếp dân không tồn tại");
+    }
+    return mapRatingDetail(rating);
   },
 };
 

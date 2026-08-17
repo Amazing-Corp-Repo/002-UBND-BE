@@ -91,6 +91,28 @@ const ReceptionRatingRepository = {
 
     return { data, totalItems };
   },
+
+  async findDetailById(id) {
+    return prisma.danh_gia_tiep_dan.findFirst({
+      where: { id, is_active: true, is_delete: false },
+      include: {
+        dang_ky_tiep_dan: {
+          include: {
+            lich_tiep_dan: {
+              select: {
+                id: true,
+                ten_can_bo: true,
+                dia_diem: true,
+                ngay_tiep_dan: true,
+                thoi_gian: true,
+                ghi_chu: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  },
 };
 
 export default ReceptionRatingRepository;

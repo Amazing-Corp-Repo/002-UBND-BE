@@ -26,6 +26,13 @@ const ReceptionRatingController = {
       result.pagination
     );
   },
+
+  async getDetail(req, res) {
+    const data = await ReceptionRatingService.getDetailForLeader(
+      req.validatedParams.id
+    );
+    return successResponse(res, data, "Lấy chi tiết đánh giá tiếp dân thành công");
+  },
 };
 
 export default ReceptionRatingController;

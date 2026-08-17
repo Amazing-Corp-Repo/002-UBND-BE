@@ -47,3 +47,10 @@ export const GetReceptionRatingsQuery = Joi.object({
   fromDate: Joi.date().iso().optional(),
   toDate: Joi.date().iso().optional(),
 });
+
+export const ReceptionRatingIdParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID đánh giá tiếp dân không hợp lệ",
+    "any.required": "ID đánh giá tiếp dân là bắt buộc",
+  }),
+});
