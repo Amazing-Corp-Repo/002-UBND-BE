@@ -9,6 +9,11 @@ const ReceptionRatingController = {
       "Lấy cấu hình đánh giá tiếp dân thành công"
     );
   },
+
+  async create(req, res) {
+    const data = await ReceptionRatingService.create(req.body);
+    return successResponse(res, data, "Gửi đánh giá tiếp dân thành công");
+  },
 };
 
 export default ReceptionRatingController;

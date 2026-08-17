@@ -699,7 +699,7 @@ model dang_ky_tiep_dan {
 model danh_gia_tiep_dan {
   id                   String           @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   id_dang_ky_tiep_dan  String           @unique @db.Uuid
-  diem_tong            Int?
+  diem_tong            Int
   tieu_chi             Json?
   ly_do                Json?
   nhan_xet             String?
@@ -712,6 +712,7 @@ model danh_gia_tiep_dan {
   dang_ky_tiep_dan     dang_ky_tiep_dan @relation(fields: [id_dang_ky_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_danh_gia_tiep_dan_dang_ky")
 
   @@index([id_dang_ky_tiep_dan], map: "idx_danh_gia_tiep_dan_id_dang_ky")
+  @@index([diem_tong], map: "idx_danh_gia_tiep_dan_diem_tong")
 }
 
 // Danh mục Thư viện số

@@ -49,7 +49,7 @@ export const receptionAudit = (action, options = {}) => (req, res, next) => {
           performed_by: req.payload?.userId || null,
           response_sent_at: new Date().toISOString(),
           request_received_at: requestAt,
-          table_name: "dang_ky_tiep_dan",
+          table_name: options.tableName || "dang_ky_tiep_dan",
         },
       });
     } catch (error) {
