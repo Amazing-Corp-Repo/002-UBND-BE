@@ -124,6 +124,46 @@ const DangKyTiepDanSwagger = {
       },
     },
   },
+  "/api/reception-registrations/{id}/approve": {
+    patch: {
+      tags: ["ReceptionRegistration"],
+      summary: "Approve a reception registration",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["department"],
+              properties: {
+                department: {
+                  type: "string",
+                  enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Registration approved" },
+        400: { description: "Invalid ID or department" },
+        401: { description: "Missing or invalid access token" },
+        403: { description: "Missing RR_APPROVE permission" },
+        404: { description: "Registration or approver not found" },
+        409: { description: "Registration is not pending or was concurrently processed" },
+      },
+    },
+  },
 };
 
 export default DangKyTiepDanSwagger;

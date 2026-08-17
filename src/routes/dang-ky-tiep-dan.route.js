@@ -9,6 +9,7 @@ import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import {
   CreateDangKyTiepDanRequest,
+  ApproveReceptionRegistrationRequest,
   GetDangKyTiepDanQuery,
   LookupDangKyTiepDanRequest,
   ReceptionRegistrationIdParams,
@@ -22,6 +23,18 @@ dangKyTiepDanRouter.get(
   authorize([PERMISSION.RR_GET_ALL]),
   validateQuery(GetDangKyTiepDanQuery),
   DangKyTiepDanController.getAll
+);
+
+dangKyTiepDanRouter.patch(
+  "/:id/approve",
+  authenticate,
+  authorize([PERMISSION.RR_APPROVE]),
+  validateParams(ReceptionRegistrationIdParams),
+  validate(ApproveReceptionRegistrationRequest),
+  receptionAudit(AUDIT_LOGS.UPDATE, {
+    sensitiveFields: ["citizenId", "phoneNumber", "cccd", "sdt"],
+  }),
+  DangKyTiepDanController.approve
 );
 
 dangKyTiepDanRouter.post(

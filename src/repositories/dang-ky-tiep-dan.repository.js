@@ -124,6 +124,31 @@ const DangKyTiepDanRepository = {
       },
     });
   },
+
+  async findActiveById(id) {
+    return prisma.dang_ky_tiep_dan.findFirst({
+      where: {
+        id,
+        loai: "COUNTER_RECEPTION",
+        is_active: true,
+        is_delete: false,
+      },
+    });
+  },
+
+  async approvePending(id, data) {
+    const result = await prisma.dang_ky_tiep_dan.updateMany({
+      where: {
+        id,
+        trang_thai: "PENDING",
+        is_active: true,
+        is_delete: false,
+      },
+      data,
+    });
+    if (result.count === 0) return null;
+    return DangKyTiepDanRepository.findDetailById(id);
+  },
 };
 
 export default DangKyTiepDanRepository;

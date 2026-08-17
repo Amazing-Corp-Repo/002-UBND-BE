@@ -30,6 +30,15 @@ const DangKyTiepDanController = {
     );
     return successResponse(res, data, "Lấy chi tiết đăng ký tiếp dân thành công");
   },
+
+  async approve(req, res) {
+    const data = await DangKyTiepDanService.approve(
+      req.validatedParams.id,
+      req.body.department,
+      req.payload
+    );
+    return successResponse(res, data, "Phê duyệt đăng ký tiếp dân thành công");
+  },
 };
 
 export default DangKyTiepDanController;

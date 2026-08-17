@@ -3,6 +3,7 @@ import { TIEP_DAN_STATUS, TIEP_DAN_TYPE } from "../constants/tiep-dan.constant.j
 import DangKyTiepDanRepository from "../repositories/dang-ky-tiep-dan.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import UserRepository from "../repositories/user.repository.js";
 
 const MAX_CODE_RETRIES = 10;
 
@@ -211,6 +212,36 @@ const DangKyTiepDanService = {
       throw new BaseError(404, "Đăng ký tiếp dân không tồn tại");
     }
     return mapStaffRegistrationDetail(registration);
+  },
+
+  async approve(id, department, currentUser) {
+    const registration = await DangKyTiepDanRepository.findActiveById(id);
+    if (!registration) {
+      throw new BaseError(404, "Đăng ký tiếp dân không tồn tại");
+    }
+    if (registration.trang_thai !== TIEP_DAN_STATUS.PENDING) {
+      throw new BaseError(409, "Chỉ đăng ký đang chờ mới được phê duyệt");
+    }
+
+    const approver = await UserRepository.findById(currentUser.userId);
+    if (!approver) {
+      throw new BaseError(404, "Không tìm thấy người phê duyệt");
+    }
+    const approverTitle = approver.user_roles?.[0]?.roles?.name || null;
+
+    const approved = await DangKyTiepDanRepository.approvePending(id, {
+      bo_phan: department,
+      trang_thai: TIEP_DAN_STATUS.APPROVED,
+      ten_lanh_dao: approver.ho_va_ten || currentUser.username,
+      chuc_vu_lanh_dao: approverTitle,
+      nguoi_cap_nhat: currentUser.userId,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    });
+    if (!approved) {
+      throw new BaseError(409, "Đăng ký đã được xử lý bởi người khác");
+    }
+
+    return mapStaffRegistrationDetail(approved);
   },
 };
 

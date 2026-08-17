@@ -87,3 +87,13 @@ export const ReceptionRegistrationIdParams = Joi.object({
     "any.required": "ID đăng ký tiếp dân là bắt buộc",
   }),
 });
+
+export const ApproveReceptionRegistrationRequest = Joi.object({
+  department: Joi.string()
+    .pattern(/^QUAY_[1-8]$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8",
+      "any.required": "Bộ phận tiếp nhận là bắt buộc",
+    }),
+});

@@ -21,6 +21,7 @@ export const PERMISSION = {
   // Đăng ký tiếp dân
   RR_GET_ALL: "RR_GET_ALL",
   RR_GET_DETAIL: "RR_GET_DETAIL",
+  RR_APPROVE: "RR_APPROVE",
 
   // Lĩnh vực phản ánh
   LVPA_CREATE: "LVPA_CREATE",
@@ -108,6 +109,7 @@ export const PERMISSION_DESC = {
 
   RR_GET_ALL: "Xem danh sách đăng ký tiếp dân",
   RR_GET_DETAIL: "Xem chi tiết đăng ký tiếp dân",
+  RR_APPROVE: "Phê duyệt đăng ký tiếp dân",
 
   LVPA_CREATE: "Tạo lĩnh vực phản ánh",
   LVPA_UPDATE: "Cập nhật lĩnh vực phản ánh",
@@ -193,6 +195,7 @@ export const PERMISSION_TYPE = {
   GET_TEMPLATE: "Lấy mẫu",
   GET_DETAIL: "Xem chi tiết",
   GET_ALL: "Xem tất cả",
+  APPROVE: "Phê duyệt",
   GET_EXCEL: "Xuất Excel",
   THUONG_TRUC: "Thường trực",
 };
