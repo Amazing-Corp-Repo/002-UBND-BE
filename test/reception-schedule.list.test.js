@@ -3,12 +3,12 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import express from "express";
 import ReceptionScheduleController from "../src/controllers/reception-schedule.controller.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
-import LichTiepDanRepository from "../src/repositories/lich-tiep-dan.repository.js";
+import ReceptionScheduleRepository from "../src/repositories/reception-schedule.repository.js";
 import receptionScheduleRouter from "../src/routes/reception-schedule.route.js";
 import { buildHourlySlots } from "../src/services/reception-schedule.service.js";
 
 const originalFindActiveBetweenDates =
-  LichTiepDanRepository.findActiveBetweenDates;
+  ReceptionScheduleRepository.findActiveBetweenDates;
 
 const schedules = [
   {
@@ -29,11 +29,11 @@ const createTestServer = () => {
 };
 
 beforeEach(() => {
-  LichTiepDanRepository.findActiveBetweenDates = async () => schedules;
+  ReceptionScheduleRepository.findActiveBetweenDates = async () => schedules;
 });
 
 afterEach(() => {
-  LichTiepDanRepository.findActiveBetweenDates =
+  ReceptionScheduleRepository.findActiveBetweenDates =
     originalFindActiveBetweenDates;
 });
 

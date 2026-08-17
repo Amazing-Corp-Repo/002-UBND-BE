@@ -1,4 +1,4 @@
-import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
+import ReceptionScheduleRepository from "../repositories/reception-schedule.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 
 const formatVietnamDate = (date) =>
@@ -58,7 +58,7 @@ const ReceptionScheduleService = {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
 
-    const schedules = await LichTiepDanRepository.findActiveBetweenDates(
+    const schedules = await ReceptionScheduleRepository.findActiveBetweenDates(
       fromDate,
       toDate
     );

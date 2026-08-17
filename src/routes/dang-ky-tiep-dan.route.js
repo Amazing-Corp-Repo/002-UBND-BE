@@ -1,7 +1,7 @@
 import express from "express";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import DangKyTiepDanController from "../controllers/dang-ky-tiep-dan.controller.js";
-import { audit_logs } from "../middlewares/audit-logs.middleware.js";
+import { receptionAudit } from "../middlewares/reception-audit.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
   CreateDangKyTiepDanRequest,
@@ -19,7 +19,7 @@ dangKyTiepDanRouter.post(
 dangKyTiepDanRouter.post(
   "/",
   validate(CreateDangKyTiepDanRequest),
-  audit_logs(AUDIT_LOGS.CREATE, "dang_ky_tiep_dan", {
+  receptionAudit(AUDIT_LOGS.CREATE, {
     sensitiveFields: ["cccd", "sdt"],
   }),
   DangKyTiepDanController.create
