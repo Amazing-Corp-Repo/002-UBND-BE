@@ -48,6 +48,8 @@ const IDS = {
   // dang_ky_tiep_dan
   dkCounter: U('00000000-0000-4000-8000-000000000801'),
   dkLeader: U('00000000-0000-4000-8000-000000000802'),
+  dkCounterApproved: U('00000000-0000-4000-8000-000000000803'),
+  dkCounterRated: U('00000000-0000-4000-8000-000000000804'),
 };
 
 async function main() {
@@ -128,21 +130,70 @@ async function main() {
   // ---------- 2. dang_ky_tiep_dan ----------
   await prisma.dang_ky_tiep_dan.upsert({
     where: { id: IDS.dkCounter },
-    update: {},
+    update: {
+      ma_tiep_dan: 'A00001',
+      ly_do: 'Cần được hướng dẫn thành phần hồ sơ và trình tự nộp hồ sơ.',
+      bo_phan: null,
+      trang_thai: 'PENDING',
+    },
     create: {
       id: IDS.dkCounter,
       loai: 'COUNTER_RECEPTION',
-      ma_tiep_dan: 'TD-0001',
+      ma_tiep_dan: 'A00001',
       id_lich_tiep_dan: IDS.lich1,
       ngay: new Date('2026-09-01'),
       slot: '07:30 - 08:30',
       chu_de: 'Hỗ trợ thủ tục đất đai',
+      ly_do: 'Cần được hướng dẫn thành phần hồ sơ và trình tự nộp hồ sơ.',
       ho_ten: 'Lê Văn C',
       sdt: '0911111111',
       cccd: '079123456789',
       dia_chi: 'Khu 3, xã Tăng Nhơn Phú',
-      bo_phan: 'Quầy tiếp dân',
       trang_thai: 'PENDING',
+    },
+  });
+  await prisma.dang_ky_tiep_dan.upsert({
+    where: { id: IDS.dkCounterApproved },
+    update: {},
+    create: {
+      id: IDS.dkCounterApproved,
+      loai: 'COUNTER_RECEPTION',
+      ma_tiep_dan: 'A00002',
+      id_lich_tiep_dan: IDS.lich1,
+      ngay: new Date('2026-09-01'),
+      slot: '08:30 - 09:30',
+      chu_de: 'Xác nhận thông tin cư trú',
+      ly_do: 'Cần xác nhận thông tin cư trú để hoàn thiện hồ sơ hành chính.',
+      ho_ten: 'Nguyễn Văn An',
+      sdt: '0912345678',
+      cccd: '042204001234',
+      dia_chi: 'Phường Thành Sen, tỉnh Hà Tĩnh',
+      bo_phan: 'QUAY_2',
+      ten_lanh_dao: 'Lãnh đạo mẫu',
+      chuc_vu_lanh_dao: 'LEADER',
+      trang_thai: 'APPROVED',
+    },
+  });
+  await prisma.dang_ky_tiep_dan.upsert({
+    where: { id: IDS.dkCounterRated },
+    update: {},
+    create: {
+      id: IDS.dkCounterRated,
+      loai: 'COUNTER_RECEPTION',
+      ma_tiep_dan: 'A00003',
+      id_lich_tiep_dan: IDS.lich2,
+      ngay: new Date('2026-09-08'),
+      slot: '09:30 - 10:30',
+      chu_de: 'Hướng dẫn thủ tục hộ tịch',
+      ly_do: 'Cần hướng dẫn bổ sung giấy tờ cho hồ sơ hộ tịch.',
+      ho_ten: 'Trần Thị Mai',
+      sdt: '0987654321',
+      cccd: '042205009876',
+      dia_chi: 'Phường Trần Phú, tỉnh Hà Tĩnh',
+      bo_phan: 'QUAY_3',
+      ten_lanh_dao: 'Lãnh đạo mẫu',
+      chuc_vu_lanh_dao: 'LEADER',
+      trang_thai: 'APPROVED',
     },
   });
   await prisma.dang_ky_tiep_dan.upsert({
@@ -176,6 +227,17 @@ async function main() {
       tieu_chi: { attitude: 5, guidance: 5, waiting: 4 },
       ly_do: ['Được hướng dẫn rõ ràng', 'Thái độ nhiệt tình'],
       nhan_xet: 'Rất hài lòng với buổi làm việc.',
+    },
+  });
+  await prisma.danh_gia_tiep_dan.upsert({
+    where: { id_dang_ky_tiep_dan: IDS.dkCounterRated },
+    update: {},
+    create: {
+      id_dang_ky_tiep_dan: IDS.dkCounterRated,
+      diem_tong: 5,
+      tieu_chi: null,
+      ly_do: ['Cán bộ rất tận tình và chuyên nghiệp'],
+      nhan_xet: 'Tôi rất hài lòng với buổi tiếp dân.',
     },
   });
 
