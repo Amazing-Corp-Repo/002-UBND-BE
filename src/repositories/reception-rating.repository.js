@@ -22,6 +22,75 @@ const ReceptionRatingRepository = {
   async create(data) {
     return prisma.danh_gia_tiep_dan.create({ data });
   },
+
+  async findAllForLeader(filters) {
+    const registrationWhere = {
+      loai: "COUNTER_RECEPTION",
+      is_active: true,
+      is_delete: false,
+      ...(filters.department ? { bo_phan: filters.department } : {}),
+    };
+    const where = {
+      is_active: true,
+      is_delete: false,
+      ...(filters.score ? { diem_tong: filters.score } : {}),
+      ...(filters.fromDate || filters.toDate
+        ? {
+            thoi_gian_tao: {
+              ...(filters.fromDate
+                ? { gte: new Date(`${filters.fromDate}T00:00:00.000Z`) }
+                : {}),
+              ...(filters.toDate
+                ? { lte: new Date(`${filters.toDate}T23:59:59.999Z`) }
+                : {}),
+            },
+          }
+        : {}),
+      ...(filters.search
+        ? {
+            OR: [
+              { nhan_xet: { contains: filters.search, mode: "insensitive" } },
+              {
+                dang_ky_tiep_dan: {
+                  ma_tiep_dan: { contains: filters.search, mode: "insensitive" },
+                },
+              },
+              {
+                dang_ky_tiep_dan: {
+                  ho_ten: { contains: filters.search, mode: "insensitive" },
+                },
+              },
+            ],
+          }
+        : {}),
+      dang_ky_tiep_dan: registrationWhere,
+    };
+    const skip = (filters.page - 1) * filters.size;
+
+    const [data, totalItems] = await Promise.all([
+      prisma.danh_gia_tiep_dan.findMany({
+        where,
+        include: {
+          dang_ky_tiep_dan: {
+            select: {
+              ma_tiep_dan: true,
+              ho_ten: true,
+              bo_phan: true,
+              ngay: true,
+              slot: true,
+              chu_de: true,
+            },
+          },
+        },
+        orderBy: { thoi_gian_tao: "desc" },
+        skip,
+        take: filters.size,
+      }),
+      prisma.danh_gia_tiep_dan.count({ where }),
+    ]);
+
+    return { data, totalItems };
+  },
 };
 
 export default ReceptionRatingRepository;

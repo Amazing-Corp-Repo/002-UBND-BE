@@ -34,3 +34,16 @@ export const CreateReceptionRatingRequest = Joi.object({
       "string.max": `Nhận xét không được vượt quá ${RECEPTION_RATING_COMMENT_MAX_LENGTH} ký tự`,
     }),
 });
+
+export const GetReceptionRatingsQuery = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  size: Joi.number().integer().min(1).max(100).default(10),
+  search: Joi.string().trim().max(100).allow("").optional(),
+  score: Joi.number().integer().min(1).max(5).optional(),
+  department: Joi.string()
+    .pattern(/^QUAY_[1-8]$/)
+    .optional()
+    .messages({ "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8" }),
+  fromDate: Joi.date().iso().optional(),
+  toDate: Joi.date().iso().optional(),
+});

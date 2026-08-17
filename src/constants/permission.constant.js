@@ -23,6 +23,9 @@ export const PERMISSION = {
   RR_GET_DETAIL: "RR_GET_DETAIL",
   RR_APPROVE: "RR_APPROVE",
 
+  // Đánh giá tiếp dân
+  RRT_GET_ALL: "RRT_GET_ALL",
+
   // Lĩnh vực phản ánh
   LVPA_CREATE: "LVPA_CREATE",
   LVPA_UPDATE: "LVPA_UPDATE",
@@ -111,6 +114,8 @@ export const PERMISSION_DESC = {
   RR_GET_DETAIL: "Xem chi tiết đăng ký tiếp dân",
   RR_APPROVE: "Phê duyệt đăng ký tiếp dân",
 
+  RRT_GET_ALL: "Xem danh sách đánh giá tiếp dân",
+
   LVPA_CREATE: "Tạo lĩnh vực phản ánh",
   LVPA_UPDATE: "Cập nhật lĩnh vực phản ánh",
   LVPA_DELETE: "Xóa lĩnh vực phản ánh",
@@ -172,6 +177,7 @@ export const PERMISSION_CATEGORIES = {
   DMTT: "Danh mục tin tức",
   LTD: "Lịch tiếp dân",
   RR: "Đăng ký tiếp dân",
+  RRT: "Đánh giá tiếp dân",
   LVPA: "Lĩnh vực phản ánh",
   LVTTHC: "Lĩnh vực thủ tục hành chính",
   MD: "Mẫu đơn",

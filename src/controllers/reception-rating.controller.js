@@ -14,6 +14,18 @@ const ReceptionRatingController = {
     const data = await ReceptionRatingService.create(req.body);
     return successResponse(res, data, "Gửi đánh giá tiếp dân thành công");
   },
+
+  async getAll(req, res) {
+    const result = await ReceptionRatingService.getAllForLeader(
+      req.validatedQuery
+    );
+    return successResponse(
+      res,
+      result.data,
+      "Lấy danh sách đánh giá tiếp dân thành công",
+      result.pagination
+    );
+  },
 };
 
 export default ReceptionRatingController;

@@ -6,6 +6,7 @@ import {
 import ReceptionRatingRepository from "../repositories/reception-rating.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { TIEP_DAN_STATUS } from "../constants/tiep-dan.constant.js";
+import { createPagination } from "../utils/response.util.js";
 
 const isUniqueConstraintError = (error) => error?.code === "P2002";
 
@@ -16,6 +17,20 @@ const mapRating = (rating, receptionCode) => ({
   selectedSuggestions: rating.ly_do || [],
   comment: rating.nhan_xet || "",
   createdAt: rating.thoi_gian_tao,
+});
+
+const mapRatingListItem = (rating) => ({
+  id: rating.id,
+  receptionCode: rating.dang_ky_tiep_dan.ma_tiep_dan,
+  applicantName: rating.dang_ky_tiep_dan.ho_ten,
+  department: rating.dang_ky_tiep_dan.bo_phan,
+  receptionDate: rating.dang_ky_tiep_dan.ngay,
+  timeSlot: rating.dang_ky_tiep_dan.slot,
+  topic: rating.dang_ky_tiep_dan.chu_de,
+  score: rating.diem_tong,
+  selectedSuggestions: rating.ly_do || [],
+  comment: rating.nhan_xet || "",
+  ratedAt: rating.thoi_gian_tao,
 });
 
 const ReceptionRatingService = {
@@ -74,6 +89,32 @@ const ReceptionRatingService = {
       }
       throw error;
     }
+  },
+
+  async getAllForLeader(filters) {
+    const normalized = {
+      ...filters,
+      fromDate: filters.fromDate
+        ? new Date(filters.fromDate).toISOString().slice(0, 10)
+        : undefined,
+      toDate: filters.toDate
+        ? new Date(filters.toDate).toISOString().slice(0, 10)
+        : undefined,
+    };
+    if (
+      normalized.fromDate &&
+      normalized.toDate &&
+      normalized.fromDate > normalized.toDate
+    ) {
+      throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
+    }
+
+    const { data, totalItems } =
+      await ReceptionRatingRepository.findAllForLeader(normalized);
+    return {
+      data: data.map(mapRatingListItem),
+      pagination: createPagination(filters.page, filters.size, totalItems),
+    };
   },
 };
 
