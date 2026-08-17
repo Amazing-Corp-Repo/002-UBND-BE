@@ -2,9 +2,9 @@ const ReceptionScheduleSwagger = {
   "/api/reception-schedules": {
     get: {
       tags: ["ReceptionSchedule"],
-      summary: "Get active reception schedules for Mobile",
+      summary: "Lấy lịch tiếp dân đang hoạt động dành cho Mobile",
       description:
-        "Returns active, non-deleted reception schedules from today by default. Each schedule includes display-ready one-hour slots derived from its configured time range.",
+        "Trả về các lịch tiếp dân đang hoạt động và chưa bị xóa, mặc định tính từ ngày hiện tại. Mỗi lịch có các khung giờ một tiếng để Mobile hiển thị và cho người dân lựa chọn.",
       parameters: [
         {
           name: "fromDate",
@@ -20,8 +20,8 @@ const ReceptionScheduleSwagger = {
         },
       ],
       responses: {
-        200: { description: "Active reception schedules" },
-        400: { description: "Invalid date range" },
+        200: { description: "Lấy danh sách lịch tiếp dân thành công" },
+        400: { description: "Khoảng ngày không hợp lệ" },
       },
     },
   },

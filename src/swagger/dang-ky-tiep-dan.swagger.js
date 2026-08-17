@@ -26,7 +26,9 @@ const DangKyTiepDanSwagger = {
   "/api/reception-registrations": {
     get: {
       tags: ["ReceptionRegistration"],
-      summary: "Get reception registrations for staff",
+      summary: "Lấy danh sách đăng ký tiếp dân dành cho cán bộ",
+      description:
+        "Trả về danh sách đăng ký tiếp dân có phân trang. Hỗ trợ tìm kiếm và lọc theo ngày tiếp, trạng thái phê duyệt, trạng thái đánh giá và quầy tiếp nhận.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
@@ -38,9 +40,9 @@ const DangKyTiepDanSwagger = {
         { name: "department", in: "query", schema: { type: "string", enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"] } },
       ],
       responses: {
-        200: { description: "Paginated reception registrations" },
-        401: { description: "Missing or invalid access token" },
-        403: { description: "Missing RR_GET_ALL permission" },
+        200: { description: "Lấy danh sách đăng ký tiếp dân thành công" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_GET_ALL" },
       },
     },
     post: {
@@ -65,9 +67,9 @@ const DangKyTiepDanSwagger = {
   "/api/reception-registrations/lookup": {
     post: {
       tags: ["ReceptionRegistration"],
-      summary: "Look up citizen reception registrations",
+      summary: "Tra cứu đăng ký tiếp dân của người dân",
       description:
-        "Public Mobile lookup using exactly one reception code or phone number. Sensitive identity fields are masked in the response.",
+        "API công khai dành cho Mobile. Chỉ sử dụng một trong hai thông tin là mã tiếp dân hoặc số điện thoại. Các trường định danh nhạy cảm được che một phần trong kết quả.",
       requestBody: {
         required: true,
         content: {
@@ -96,16 +98,18 @@ const DangKyTiepDanSwagger = {
         },
       },
       responses: {
-        200: { description: "Matching registrations" },
-        400: { description: "Invalid lookup input" },
-        404: { description: "No registration found" },
+        200: { description: "Tra cứu đăng ký tiếp dân thành công" },
+        400: { description: "Thông tin tra cứu không hợp lệ" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
       },
     },
   },
   "/api/reception-registrations/{id}": {
     get: {
       tags: ["ReceptionRegistration"],
-      summary: "Get reception registration details for staff",
+      summary: "Lấy chi tiết đăng ký tiếp dân dành cho cán bộ",
+      description:
+        "Trả về đầy đủ thông tin người dân đã đăng ký để cán bộ kiểm tra khi bấm vào mã tiếp dân.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -116,18 +120,20 @@ const DangKyTiepDanSwagger = {
         },
       ],
       responses: {
-        200: { description: "Full citizen-submitted registration details" },
-        400: { description: "Invalid registration ID" },
-        401: { description: "Missing or invalid access token" },
-        403: { description: "Missing RR_GET_DETAIL permission" },
-        404: { description: "Registration not found" },
+        200: { description: "Lấy chi tiết đăng ký tiếp dân thành công" },
+        400: { description: "ID đăng ký tiếp dân không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_GET_DETAIL" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
       },
     },
   },
   "/api/reception-registrations/{id}/approve": {
     patch: {
       tags: ["ReceptionRegistration"],
-      summary: "Approve a reception registration",
+      summary: "Phê duyệt đăng ký tiếp dân",
+      description:
+        "Cán bộ phê duyệt yêu cầu gặp và gán đăng ký vào một trong tám quầy tiếp nhận. Hệ thống tự ghi nhận người duyệt và thời điểm duyệt.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -155,21 +161,21 @@ const DangKyTiepDanSwagger = {
         },
       },
       responses: {
-        200: { description: "Registration approved" },
-        400: { description: "Invalid ID or department" },
-        401: { description: "Missing or invalid access token" },
-        403: { description: "Missing RR_APPROVE permission" },
-        404: { description: "Registration or approver not found" },
-        409: { description: "Registration is not pending or was concurrently processed" },
+        200: { description: "Phê duyệt đăng ký tiếp dân thành công" },
+        400: { description: "ID đăng ký hoặc quầy tiếp nhận không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_APPROVE" },
+        404: { description: "Không tìm thấy đăng ký hoặc người phê duyệt" },
+        409: { description: "Đăng ký không ở trạng thái chờ duyệt hoặc đã được xử lý" },
       },
     },
   },
   "/api/reception-registrations/rating-lookup/{receptionCode}": {
     get: {
       tags: ["ReceptionRegistration"],
-      summary: "Look up an approved registration for iPad rating",
+      summary: "Tra cứu đăng ký đã duyệt để đánh giá trên iPad",
       description:
-        "Public iPad endpoint. Returns a registration only when it is approved, assigned to QUAY_1 through QUAY_8, and has not been rated.",
+        "API công khai dành cho iPad. Chỉ trả về đăng ký đã được phê duyệt, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá.",
       parameters: [
         {
           name: "receptionCode",
@@ -179,10 +185,10 @@ const DangKyTiepDanSwagger = {
         },
       ],
       responses: {
-        200: { description: "Registration details ready for citizen confirmation" },
-        400: { description: "Invalid reception code" },
-        404: { description: "Reception code not found" },
-        409: { description: "Not approved, not assigned to a counter, or already rated" },
+        200: { description: "Lấy thông tin để người dân xác nhận thành công" },
+        400: { description: "Mã tiếp dân không hợp lệ" },
+        404: { description: "Không tìm thấy mã tiếp dân" },
+        409: { description: "Đăng ký chưa được duyệt, chưa gán quầy hoặc đã được đánh giá" },
       },
     },
   },

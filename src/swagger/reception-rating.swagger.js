@@ -2,7 +2,9 @@ const ReceptionRatingSwagger = {
   "/api/reception-ratings": {
     get: {
       tags: ["ReceptionRating"],
-      summary: "Get reception ratings for leaders",
+      summary: "Lấy danh sách đánh giá tiếp dân dành cho lãnh đạo",
+      description:
+        "Trả về danh sách đánh giá có phân trang. Hỗ trợ tìm kiếm và lọc theo số sao, quầy tiếp nhận và khoảng ngày đánh giá.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
@@ -14,17 +16,17 @@ const ReceptionRatingSwagger = {
         { name: "toDate", in: "query", schema: { type: "string", format: "date" } },
       ],
       responses: {
-        200: { description: "Paginated reception ratings" },
-        400: { description: "Invalid filters" },
-        401: { description: "Missing or invalid access token" },
-        403: { description: "Missing RRT_GET_ALL permission" },
+        200: { description: "Lấy danh sách đánh giá tiếp dân thành công" },
+        400: { description: "Bộ lọc không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RRT_GET_ALL" },
       },
     },
     post: {
       tags: ["ReceptionRating"],
-      summary: "Submit a citizen reception rating from iPad",
+      summary: "Gửi đánh giá tiếp dân từ iPad",
       description:
-        "Public iPad endpoint. A reception code can be rated exactly once. Selected suggestions must belong to the submitted score configuration.",
+        "API công khai dành cho iPad. Mỗi mã tiếp dân chỉ được đánh giá một lần. Nội dung gợi ý được chọn phải thuộc cấu hình của số sao đã gửi.",
       requestBody: {
         required: true,
         content: {
@@ -48,28 +50,30 @@ const ReceptionRatingSwagger = {
         },
       },
       responses: {
-        200: { description: "Rating submitted" },
-        400: { description: "Invalid or missing rating data" },
-        404: { description: "Reception code not found" },
-        409: { description: "Not eligible or already rated" },
+        200: { description: "Gửi đánh giá tiếp dân thành công" },
+        400: { description: "Thiếu dữ liệu hoặc dữ liệu đánh giá không hợp lệ" },
+        404: { description: "Không tìm thấy mã tiếp dân" },
+        409: { description: "Đăng ký chưa đủ điều kiện hoặc đã được đánh giá" },
       },
     },
   },
   "/api/reception-ratings/configuration": {
     get: {
       tags: ["ReceptionRating"],
-      summary: "Get iPad reception rating configuration",
+      summary: "Lấy cấu hình đánh giá tiếp dân dành cho iPad",
       description:
-        "Returns the 1-5 score scale, 2000-character comment limit, and score-specific suggestion texts used by the iPad UI.",
+        "Trả về thang điểm từ 1 đến 5 sao, giới hạn nhận xét 2000 ký tự và danh sách nội dung gợi ý tương ứng với từng mức sao.",
       responses: {
-        200: { description: "Reception rating configuration" },
+        200: { description: "Lấy cấu hình đánh giá tiếp dân thành công" },
       },
     },
   },
   "/api/reception-ratings/{id}": {
     get: {
       tags: ["ReceptionRating"],
-      summary: "Get reception rating details for leaders",
+      summary: "Lấy chi tiết đánh giá tiếp dân dành cho lãnh đạo",
+      description:
+        "Trả về nội dung đánh giá cùng thông tin đăng ký tiếp dân gốc để lãnh đạo kiểm tra.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -80,18 +84,20 @@ const ReceptionRatingSwagger = {
         },
       ],
       responses: {
-        200: { description: "Rating and original reception registration details" },
-        400: { description: "Invalid rating ID" },
-        401: { description: "Missing or invalid access token" },
-        403: { description: "Missing RRT_GET_DETAIL permission" },
-        404: { description: "Rating not found" },
+        200: { description: "Lấy chi tiết đánh giá tiếp dân thành công" },
+        400: { description: "ID đánh giá không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RRT_GET_DETAIL" },
+        404: { description: "Không tìm thấy đánh giá tiếp dân" },
       },
     },
   },
   "/api/reception-ratings/statistics": {
     get: {
       tags: ["ReceptionRating"],
-      summary: "Get basic reception rating statistics",
+      summary: "Lấy thống kê cơ bản về đánh giá tiếp dân",
+      description:
+        "Thống kê tổng lượt đánh giá, điểm trung bình, tỷ lệ hài lòng, phân bố số sao và kết quả theo từng quầy tiếp nhận.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "department", in: "query", schema: { type: "string", example: "QUAY_1" } },
@@ -99,10 +105,10 @@ const ReceptionRatingSwagger = {
         { name: "toDate", in: "query", schema: { type: "string", format: "date" } },
       ],
       responses: {
-        200: { description: "Totals, average score, satisfaction rate, score distribution and counter breakdown" },
-        400: { description: "Invalid filters" },
-        401: { description: "Missing or invalid access token" },
-        403: { description: "Missing RRT_GET_STATS permission" },
+        200: { description: "Lấy thống kê đánh giá tiếp dân thành công" },
+        400: { description: "Bộ lọc không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RRT_GET_STATS" },
       },
     },
   },
