@@ -22,6 +22,19 @@ const DangKyTiepDanRepository = {
   async create(data) {
     return prisma.dang_ky_tiep_dan.create({ data });
   },
+
+  async findForCitizenLookup({ receptionCode, phoneNumber }) {
+    return prisma.dang_ky_tiep_dan.findMany({
+      where: {
+        ...(receptionCode ? { ma_tiep_dan: receptionCode } : {}),
+        ...(phoneNumber ? { sdt: phoneNumber } : {}),
+        is_active: true,
+        is_delete: false,
+      },
+      orderBy: { thoi_gian_tao: "desc" },
+      take: 50,
+    });
+  },
 };
 
 export default DangKyTiepDanRepository;

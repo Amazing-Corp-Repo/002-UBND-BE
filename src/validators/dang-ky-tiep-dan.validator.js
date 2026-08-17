@@ -44,3 +44,21 @@ export const CreateDangKyTiepDanRequest = Joi.object({
     "string.empty": "Địa chỉ là bắt buộc",
   }),
 });
+
+export const LookupDangKyTiepDanRequest = Joi.object({
+  receptionCode: Joi.string()
+    .trim()
+    .uppercase()
+    .pattern(/^[A-Z0-9-]{4,50}$/)
+    .messages({
+      "string.pattern.base": "Mã tiếp dân không hợp lệ",
+    }),
+  phoneNumber: Joi.string().trim().pattern(vietnamesePhoneRegex).messages({
+    "string.pattern.base": "Số điện thoại Việt Nam không hợp lệ",
+  }),
+})
+  .xor("receptionCode", "phoneNumber")
+  .messages({
+    "object.missing": "Phải nhập mã tiếp dân hoặc số điện thoại",
+    "object.xor": "Chỉ được tra cứu bằng mã tiếp dân hoặc số điện thoại",
+  });
