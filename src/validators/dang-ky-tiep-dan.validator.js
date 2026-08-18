@@ -9,9 +9,11 @@ export const CreateDangKyTiepDanRequest = Joi.object({
     "string.guid": "ID lịch tiếp dân không hợp lệ",
     "any.required": "ID lịch tiếp dân là bắt buộc",
   }),
-  slot: Joi.string().trim().pattern(timeSlotRegex).required().messages({
+  slotId: Joi.string().uuid().optional().messages({
+    "string.guid": "ID khung giờ tiếp dân không hợp lệ",
+  }),
+  slot: Joi.string().trim().pattern(timeSlotRegex).optional().messages({
     "string.pattern.base": "Khung giờ phải có dạng HH:mm - HH:mm",
-    "any.required": "Khung giờ là bắt buộc",
   }),
   chuDe: Joi.string().trim().max(255).required().messages({
     "string.max": "Chủ đề không được vượt quá 255 ký tự",
@@ -43,7 +45,11 @@ export const CreateDangKyTiepDanRequest = Joi.object({
     "any.required": "Địa chỉ là bắt buộc",
     "string.empty": "Địa chỉ là bắt buộc",
   }),
-});
+})
+  .or("slotId", "slot")
+  .messages({
+    "object.missing": "Phải cung cấp ID khung giờ hoặc chuỗi khung giờ",
+  });
 
 export const LookupDangKyTiepDanRequest = Joi.object({
   receptionCode: Joi.string()

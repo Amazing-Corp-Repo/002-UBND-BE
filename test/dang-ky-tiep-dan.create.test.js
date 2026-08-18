@@ -32,6 +32,7 @@ const futureSchedule = {
   ngay_tiep_dan: new Date("2099-08-20T00:00:00.000Z"),
   thoi_gian: "08:00 - 09:00",
   khung_gio_tiep_dan: Array.from({ length: 8 }, (_, index) => ({
+    id: `${index + 1}23e4567-e89b-42d3-a456-426614174000`,
     khung_gio: "08:00 - 09:00",
     ma_quay: `QUAY_${index + 1}`,
     suc_chua: 2,
@@ -83,6 +84,8 @@ describe("POST /api/reception-registrations", () => {
     assert.ok(operation.description.includes("tối đa 2 đơn"));
     assert.ok(operation.responses[409]);
     assert.ok(operation.responses[429]);
+    assert.ok(operation.requestBody.content["application/json"].schema.properties.slotId);
+    assert.ok(operation.description.includes("tương thích phiên bản cũ"));
   });
 
   it("creates a valid counter reception registration", async () => {
@@ -93,6 +96,72 @@ describe("POST /api/reception-registrations", () => {
     assert.equal(result.trang_thai, "PENDING");
     assert.equal(result.ngay, futureSchedule.ngay_tiep_dan);
     assert.equal(capturedGuardInput.totalCapacity, 16);
+    assert.equal(result.slotId, futureSchedule.khung_gio_tiep_dan[0].id);
+  });
+
+  it("creates a registration from slotId without requiring the legacy slot string", async () => {
+    const { slot: _legacySlot, ...bodyWithoutSlot } = validBody;
+    const result = await DangKyTiepDanService.createCounterReception({
+      ...bodyWithoutSlot,
+      slotId: futureSchedule.khung_gio_tiep_dan[0].id,
+    });
+
+    assert.equal(capturedGuardInput.slot, "08:00 - 09:00");
+    assert.equal(
+      capturedGuardInput.slotId,
+      futureSchedule.khung_gio_tiep_dan[0].id
+    );
+    assert.equal(result.slotId, futureSchedule.khung_gio_tiep_dan[0].id);
+  });
+
+  it("rejects slotId that does not belong to the selected schedule", async () => {
+    await assert.rejects(
+      () =>
+        DangKyTiepDanService.createCounterReception({
+          ...validBody,
+          slotId: "923e4567-e89b-42d3-a456-426614174000",
+        }),
+      (error) => error.statusCode === 404
+    );
+  });
+
+  it("rejects mismatched slotId and legacy slot values", async () => {
+    await assert.rejects(
+      () =>
+        DangKyTiepDanService.createCounterReception({
+          ...validBody,
+          slotId: futureSchedule.khung_gio_tiep_dan[0].id,
+          slot: "09:00 - 10:00",
+        }),
+      (error) => error.statusCode === 400
+    );
+  });
+
+  it("rejects a time slot that has already started today", async () => {
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    DangKyTiepDanRepository.findScheduleById = async () => ({
+      ...futureSchedule,
+      ngay_tiep_dan: new Date(`${today}T00:00:00.000Z`),
+      khung_gio_tiep_dan: futureSchedule.khung_gio_tiep_dan.map((slot) => ({
+        ...slot,
+        khung_gio: "00:00 - 01:00",
+      })),
+    });
+
+    await assert.rejects(
+      () =>
+        DangKyTiepDanService.createCounterReception({
+          ...validBody,
+          slot: "00:00 - 01:00",
+        }),
+      (error) =>
+        error.statusCode === 409 && error.message.includes("đã qua")
+    );
   });
 
   it("rejects a duplicate phone in the same schedule and slot", async () => {
@@ -213,6 +282,29 @@ describe("POST /api/reception-registrations", () => {
       assert.equal(response.status, 200);
       assert.equal(body.success, true);
       assert.match(body.data.ma_tiep_dan, /^[A-Z]\d{5}$/);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("integrates route validation with slotId and no legacy slot", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const { slot: _legacySlot, ...bodyWithoutSlot } = validBody;
+      const response = await fetch(`http://127.0.0.1:${port}/api/reception-registrations`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          ...bodyWithoutSlot,
+          slotId: futureSchedule.khung_gio_tiep_dan[0].id,
+        }),
+      });
+      const body = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.equal(body.success, true);
+      assert.equal(body.data.slotId, futureSchedule.khung_gio_tiep_dan[0].id);
     } finally {
       server.close();
     }

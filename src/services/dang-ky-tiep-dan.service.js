@@ -25,11 +25,20 @@ const getVietnamDate = () =>
     day: "2-digit",
   }).format(new Date());
 
+const getVietnamTime = () =>
+  new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date());
+
 const isUniqueConstraintError = (error) => error?.code === "P2002";
 const isSerializableConflict = (error) => error?.code === "P2034";
 
 const REGISTRATION_CONFLICTS = {
   SCHEDULE_UNAVAILABLE: [404, "Lịch tiếp dân không tồn tại hoặc đã ngừng hoạt động"],
+  SLOT_NOT_FOUND: [404, "Khung giờ tiếp dân không tồn tại hoặc không thuộc lịch đã chọn"],
   INVALID_SLOT: [400, "Khung giờ không thuộc lịch tiếp dân đã chọn"],
   DUPLICATE_SLOT_PHONE: [409, "Số điện thoại đã đăng ký khung giờ này"],
   PHONE_DAILY_LIMIT: [409, "Số điện thoại chỉ được đăng ký tối đa 2 đơn trong một ngày"],
@@ -178,17 +187,38 @@ const DangKyTiepDanService = {
     }
 
     const configuredSlots = schedule.khung_gio_tiep_dan || [];
+    const selectedSlot = input.slotId
+      ? configuredSlots.find((slot) => slot.id === input.slotId)
+      : null;
+    if (input.slotId && !selectedSlot) {
+      throw new BaseError(
+        404,
+        "Khung giờ tiếp dân không tồn tại hoặc không thuộc lịch đã chọn"
+      );
+    }
+    if (selectedSlot && input.slot && selectedSlot.khung_gio !== input.slot) {
+      throw new BaseError(400, "Khung giờ không thuộc lịch tiếp dân đã chọn");
+    }
+    const resolvedSlot = selectedSlot?.khung_gio || input.slot;
     const matchingSlots = configuredSlots.filter(
-      (slot) => slot.khung_gio === input.slot
+      (slot) => slot.khung_gio === resolvedSlot
     );
     const legacySlots = configuredSlots.length === 0
       ? (schedule.thoi_gian || "")
           .split(",")
           .flatMap((period) => buildHourlySlots(period.trim()))
       : [];
-    if (matchingSlots.length === 0 && !legacySlots.includes(input.slot)) {
+    if (matchingSlots.length === 0 && !legacySlots.includes(resolvedSlot)) {
       throw new BaseError(400, "Khung giờ không thuộc lịch tiếp dân đã chọn");
     }
+    const slotStartTime = resolvedSlot.split("-")[0].trim();
+    if (
+      scheduleDate === getVietnamDate() &&
+      slotStartTime <= getVietnamTime()
+    ) {
+      throw new BaseError(409, "Khung giờ tiếp dân đã qua");
+    }
+    const resolvedSlotId = selectedSlot?.id || matchingSlots[0]?.id || null;
     const totalCapacity = matchingSlots.length > 0
       ? matchingSlots.reduce((total, slot) => total + slot.suc_chua, 0)
       : RECEPTION_COUNTER_CODES.length * DEFAULT_RECEPTION_COUNTER_CAPACITY;
@@ -196,7 +226,7 @@ const DangKyTiepDanService = {
     const data = {
       loai: TIEP_DAN_TYPE.COUNTER_RECEPTION,
       id_lich_tiep_dan: input.idLichTiepDan,
-      slot: input.slot,
+      slot: resolvedSlot,
       chu_de: input.chuDe,
       ly_do: input.lyDo,
       ho_ten: input.hoTen,
@@ -210,7 +240,8 @@ const DangKyTiepDanService = {
       try {
         const result = await DangKyTiepDanRepository.createWithGuards({
           scheduleId: input.idLichTiepDan,
-          slot: input.slot,
+          slotId: input.slotId,
+          slot: resolvedSlot,
           phoneNumber: input.sdt,
           citizenId: input.cccd,
           totalCapacity,
@@ -223,7 +254,10 @@ const DangKyTiepDanService = {
           const [statusCode, message] = REGISTRATION_CONFLICTS[result.conflict];
           throw new BaseError(statusCode, message);
         }
-        return result.registration;
+        return {
+          ...result.registration,
+          slotId: resolvedSlotId,
+        };
       } catch (error) {
         const retryable =
           isUniqueConstraintError(error) || isSerializableConflict(error);

@@ -8,6 +8,7 @@ const DangKyTiepDanRepository = {
       include: {
         khung_gio_tiep_dan: {
           where: { is_active: true, is_delete: false },
+          orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
         },
       },
     });
@@ -31,6 +32,7 @@ const DangKyTiepDanRepository = {
 
   async createWithGuards({
     scheduleId,
+    slotId,
     slot,
     phoneNumber,
     citizenId,
@@ -49,12 +51,25 @@ const DangKyTiepDanRepository = {
           is_active: true,
           is_delete: false,
         },
-        select: { khung_gio: true, suc_chua: true },
+        select: { id: true, khung_gio: true, suc_chua: true },
       });
+      const selectedSlot = slotId
+        ? configuredSlots.find((configuredSlot) => configuredSlot.id === slotId)
+        : null;
+      if (slotId && !selectedSlot) {
+        return { conflict: "SLOT_NOT_FOUND" };
+      }
+      if (selectedSlot && slot && selectedSlot.khung_gio !== slot) {
+        return { conflict: "INVALID_SLOT" };
+      }
+      const resolvedSlot = selectedSlot?.khung_gio || slot;
       const matchingSlots = configuredSlots.filter(
-        (configuredSlot) => configuredSlot.khung_gio === slot
+        (configuredSlot) => configuredSlot.khung_gio === resolvedSlot
       );
-      if (configuredSlots.length > 0 && matchingSlots.length === 0) {
+      if (
+        !resolvedSlot ||
+        (configuredSlots.length > 0 && matchingSlots.length === 0)
+      ) {
         return { conflict: "INVALID_SLOT" };
       }
       const effectiveCapacity = matchingSlots.length > 0
@@ -69,13 +84,13 @@ const DangKyTiepDanRepository = {
           tx.dang_ky_tiep_dan.findFirst({
             where: {
               id_lich_tiep_dan: scheduleId,
-              slot,
+              slot: resolvedSlot,
               sdt: phoneNumber,
             },
             select: { id: true },
           }),
           tx.dang_ky_tiep_dan.count({
-            where: { id_lich_tiep_dan: scheduleId, slot },
+            where: { id_lich_tiep_dan: scheduleId, slot: resolvedSlot },
           }),
           tx.dang_ky_tiep_dan.count({
             where: {
@@ -102,6 +117,7 @@ const DangKyTiepDanRepository = {
         data: {
           ...data,
           ngay: schedule.ngay_tiep_dan,
+          slot: resolvedSlot,
         },
       });
       return { registration };
