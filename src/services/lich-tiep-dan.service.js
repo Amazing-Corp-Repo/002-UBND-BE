@@ -346,7 +346,8 @@ const LichTiepDanService = {
     batDau,
     ketThuc,
     ghiChu,
-    currentUser
+    currentUser,
+    workingPeriods
   ) {
     if (id === null || id === undefined) {
       throw new BaseError(400, "ID lịch tiếp dân không được để trống");
@@ -366,8 +367,38 @@ const LichTiepDanService = {
         "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại"
       );
     }
-    let thoiGian = `${batDau} - ${ketThuc}`;
-    const data = await LichTiepDanRepository.update(id, {
+    const hasNewWorkingPeriods = Boolean(
+      workingPeriods?.length || (batDau && ketThuc)
+    );
+    const normalizedPeriods = hasNewWorkingPeriods
+      ? normalizeWorkingPeriods({ batDau, ketThuc, workingPeriods })
+      : null;
+    const thoiGian = normalizedPeriods
+      ? normalizedPeriods
+          .map(({ startTime, endTime }) => `${startTime} - ${endTime}`)
+          .join(", ")
+      : existing.thoi_gian;
+    const requestedDate = dayjs(ngayTiepDan).format("YYYY-MM-DD");
+    const existingDate = dayjs(existing.ngay_tiep_dan).format("YYYY-MM-DD");
+    const scheduleTimeChanged =
+      requestedDate !== existingDate || thoiGian !== existing.thoi_gian;
+    const workingPeriodsChanged =
+      normalizedPeriods !== null && thoiGian !== existing.thoi_gian;
+
+    if (scheduleTimeChanged) {
+      const registrationCount = await LichTiepDanRepository.countRegistrations(id);
+      if (registrationCount > 0) {
+        throw new BaseError(
+          400,
+          "Không được sửa ngày hoặc giờ vì lịch đã có đăng ký giữ chỗ"
+        );
+      }
+    }
+
+    const slotRows = workingPeriodsChanged
+      ? buildScheduleSlotRows(normalizedPeriods, currentUser)
+      : [];
+    const data = await LichTiepDanRepository.updateWithSlots(id, {
       ten_can_bo: tenCanBo,
       dia_diem: diaDiem,
       ngay_tiep_dan: ngayTiepDan,
@@ -375,8 +406,8 @@ const LichTiepDanService = {
       ghi_chu: ghiChu,
       nguoi_cap_nhat: currentUser,
       thoi_gian_cap_nhat: new Date().toISOString(),
-    });
-    return data;
+    }, slotRows, workingPeriodsChanged);
+    return mapCreatedSchedule(data);
   },
 };
 

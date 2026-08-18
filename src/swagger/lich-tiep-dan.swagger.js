@@ -254,6 +254,7 @@ const LichTiepDanSwagger = {
         put: {
             tags: ['LichTiepDan'],
             summary: 'Cập nhật lịch tiếp dân theo ID',
+            description: 'Cập nhật thông tin lịch. Có thể truyền workingPeriods để cấu hình tối đa hai khoảng làm việc trong ngày; hệ thống tự sinh lại các ca một tiếng cho 8 quầy. Không được đổi ngày hoặc giờ khi lịch đã có bất kỳ đăng ký giữ chỗ nào.',
             security: [{ bearerAuth: [] }],
             parameters: [
                 {
@@ -272,10 +273,26 @@ const LichTiepDanSwagger = {
                 content: {
                     "application/json": {
                         schema: LichTiepDanSchemas.UpdateLichTiepDanRequestSchemaSwagger,
+                        example: {
+                            tenCanBo: 'Nguyễn Văn An',
+                            diaDiem: 'Bộ phận tiếp công dân',
+                            ngayTiepDan: '2026-08-26',
+                            workingPeriods: [
+                                { startTime: '07:30', endTime: '11:30' },
+                                { startTime: '13:30', endTime: '16:30' },
+                            ],
+                            ghiChu: 'Lịch đã được lãnh đạo điều chỉnh',
+                        },
                     },
                 },
             },
-            responses: {}
+            responses: {
+                200: { description: 'Cập nhật lịch thành công' },
+                400: { description: 'Dữ liệu không hợp lệ, lịch trùng hoặc lịch đã có đăng ký giữ chỗ nên không thể đổi ngày/giờ' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_UPDATE' },
+                404: { description: 'Không tìm thấy lịch tiếp dân' },
+            }
         },
     },
     '/api/lich-tiep-dan/update-status/{id}': {

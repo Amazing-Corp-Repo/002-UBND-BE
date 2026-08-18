@@ -52,6 +52,40 @@ const LichTiepDanRepository = {
     });
   },
 
+  async countRegistrations(id) {
+    return prisma.dang_ky_tiep_dan.count({
+      where: { id_lich_tiep_dan: id },
+    });
+  },
+
+  async updateWithSlots(id, scheduleData, slotRows, replaceSlots) {
+    return prisma.$transaction(async (tx) => {
+      await tx.lich_tiep_dan.update({
+        where: { id },
+        data: scheduleData,
+      });
+
+      if (replaceSlots) {
+        await tx.khung_gio_tiep_dan.deleteMany({
+          where: { id_lich_tiep_dan: id },
+        });
+        await tx.khung_gio_tiep_dan.createMany({
+          data: slotRows.map((slot) => ({ ...slot, id_lich_tiep_dan: id })),
+        });
+      }
+
+      return tx.lich_tiep_dan.findUnique({
+        where: { id },
+        include: {
+          khung_gio_tiep_dan: {
+            where: { is_active: true, is_delete: false },
+            orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
+          },
+        },
+      });
+    });
+  },
+
   async findAll({ weekYear, monthYear, date, isActive }) {
     const where = {
       is_delete: false,

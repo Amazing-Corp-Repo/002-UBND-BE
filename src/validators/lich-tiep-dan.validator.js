@@ -73,6 +73,8 @@ export const CreateLichTiepDanRequest = Joi.object({
             'string.base': 'Ghi chú phải là chuỗi ký tự',
             'string.max': 'Ghi chú không được vượt quá 255 ký tự',
         }),
+}).and('batDau', 'ketThuc').messages({
+    'object.and': 'Thời gian bắt đầu và kết thúc phải được truyền cùng nhau',
 });
 
 export const UpdateLichTiepDanRequest = Joi.object({
@@ -94,17 +96,24 @@ export const UpdateLichTiepDanRequest = Joi.object({
         }),
     batDau: Joi.string()
         .pattern(timeRegex)
-        .required()
+        .optional()
         .messages({
             'string.pattern.base': 'Thời gian bắt đầu phải có dạng HH:mm (vd: 08:30)',
-            'any.required': 'Thời gian bắt đầu là bắt buộc',
         }),
     ketThuc: Joi.string()
         .pattern(timeRegex)
-        .required()
+        .optional()
         .messages({
             'string.pattern.base': 'Thời gian kết thúc phải có dạng HH:mm (vd: 17:00)',
-            'any.required': 'Thời gian kết thúc là bắt buộc',
+        }),
+    workingPeriods: Joi.array()
+        .items(WorkingPeriodSchema)
+        .min(1)
+        .max(2)
+        .optional()
+        .messages({
+            'array.min': 'Phải có ít nhất một khoảng làm việc',
+            'array.max': 'Chỉ hỗ trợ tối đa hai khoảng làm việc trong ngày',
         }),
     ngayTiepDan: Joi.date()
         .required()
