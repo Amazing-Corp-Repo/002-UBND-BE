@@ -78,9 +78,11 @@ const mapStaffRegistration = (item) => ({
     item.danh_gia_tiep_dan?.length > 0 ? "RATED" : "NOT_RATED",
   approverName: item.ten_lanh_dao,
   approvedAt:
-    item.trang_thai === TIEP_DAN_STATUS.APPROVED
+    item.thoi_gian_phe_duyet ||
+    (item.trang_thai === TIEP_DAN_STATUS.APPROVED
       ? item.thoi_gian_cap_nhat
-      : null,
+      : null),
+  completedAt: item.thoi_gian_hoan_thanh || null,
 });
 
 const mapStaffRegistrationDetail = (item) => {
@@ -115,10 +117,11 @@ const mapStaffRegistrationDetail = (item) => {
       ? {
           name: item.ten_lanh_dao,
           title: item.chuc_vu_lanh_dao,
-          approvedAt: item.thoi_gian_cap_nhat,
+          approvedAt: item.thoi_gian_phe_duyet || item.thoi_gian_cap_nhat,
         }
       : null,
     ratingStatus: rating ? "RATED" : "NOT_RATED",
+    completedAt: item.thoi_gian_hoan_thanh || null,
     rating: rating
       ? {
           id: rating.id,
@@ -292,6 +295,7 @@ const DangKyTiepDanService = {
             chuc_vu_lanh_dao: approverTitle,
             nguoi_cap_nhat: currentUser.userId,
             thoi_gian_cap_nhat: new Date().toISOString(),
+            thoi_gian_phe_duyet: new Date().toISOString(),
           }
         );
         break;
@@ -309,6 +313,32 @@ const DangKyTiepDanService = {
     }
 
     return mapStaffRegistrationDetail(result.registration);
+  },
+
+  async complete(id, currentUser) {
+    const registration = await DangKyTiepDanRepository.findActiveById(id);
+    if (!registration) {
+      throw new BaseError(404, "Đăng ký tiếp dân không tồn tại");
+    }
+    if (registration.trang_thai !== TIEP_DAN_STATUS.APPROVED) {
+      throw new BaseError(409, "Chỉ đăng ký đã phê duyệt mới được hoàn thành");
+    }
+    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
+      throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
+    }
+
+    const completedAt = new Date().toISOString();
+    const completed = await DangKyTiepDanRepository.completeApproved(id, {
+      trang_thai: TIEP_DAN_STATUS.COMPLETED,
+      thoi_gian_hoan_thanh: completedAt,
+      nguoi_hoan_thanh: currentUser.userId,
+      nguoi_cap_nhat: currentUser.userId,
+      thoi_gian_cap_nhat: completedAt,
+    });
+    if (!completed) {
+      throw new BaseError(409, "Đăng ký đã được xử lý bởi người khác");
+    }
+    return mapStaffRegistrationDetail(completed);
   },
 
   async lookupForRating(receptionCode) {

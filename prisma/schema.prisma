@@ -683,6 +683,9 @@ model dang_ky_tiep_dan {
   ten_lanh_dao       String?       @db.VarChar(255)
   chuc_vu_lanh_dao   String?       @db.VarChar(255)
   trang_thai         String?       @default("PENDING") @db.VarChar(30)
+  thoi_gian_phe_duyet DateTime?    @db.Timestamp(6)
+  thoi_gian_hoan_thanh DateTime?   @db.Timestamp(6)
+  nguoi_hoan_thanh   String?       @db.Uuid
   is_active          Boolean?      @default(true)
   is_delete          Boolean?      @default(false)
   nguoi_tao          String?       @db.Uuid

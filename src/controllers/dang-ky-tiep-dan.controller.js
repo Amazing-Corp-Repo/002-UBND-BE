@@ -40,6 +40,14 @@ const DangKyTiepDanController = {
     return successResponse(res, data, "Phê duyệt đăng ký tiếp dân thành công");
   },
 
+  async complete(req, res) {
+    const data = await DangKyTiepDanService.complete(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(res, data, "Hoàn thành buổi tiếp dân thành công");
+  },
+
   async lookupForRating(req, res) {
     const data = await DangKyTiepDanService.lookupForRating(
       req.validatedParams.receptionCode

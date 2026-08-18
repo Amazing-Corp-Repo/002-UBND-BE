@@ -171,6 +171,31 @@ const DangKyTiepDanSwagger = {
       },
     },
   },
+  "/api/reception-registrations/{id}/complete": {
+    patch: {
+      tags: ["ReceptionRegistration"],
+      summary: "Xác nhận hoàn thành buổi tiếp dân",
+      description:
+        "Cán bộ quầy hoặc lãnh đạo có permission RR_COMPLETE chuyển đơn từ APPROVED sang COMPLETED sau khi tiếp dân xong. Đơn phải được gán QUAY_1 đến QUAY_8. Backend ghi người thực hiện, thời điểm hoàn thành và audit; sau bước này người dân mới được đánh giá.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        200: { description: "Hoàn thành buổi tiếp dân thành công" },
+        400: { description: "ID đăng ký không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_COMPLETE" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
+        409: { description: "Đơn chưa APPROVED, chưa gán quầy hoặc đã được xử lý" },
+      },
+    },
+  },
   "/api/reception-registrations/rating-lookup/{receptionCode}": {
     get: {
       tags: ["ReceptionRegistration"],

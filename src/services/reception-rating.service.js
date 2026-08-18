@@ -60,7 +60,9 @@ const mapRatingDetail = (rating) => {
         ? {
             name: registration.ten_lanh_dao,
             title: registration.chuc_vu_lanh_dao,
-            approvedAt: registration.thoi_gian_cap_nhat,
+            approvedAt:
+              registration.thoi_gian_phe_duyet ||
+              registration.thoi_gian_cap_nhat,
           }
         : null,
       schedule: registration.lich_tiep_dan

@@ -39,6 +39,17 @@ dangKyTiepDanRouter.patch(
   DangKyTiepDanController.approve
 );
 
+dangKyTiepDanRouter.patch(
+  "/:id/complete",
+  authenticate,
+  authorize([PERMISSION.RR_COMPLETE]),
+  validateParams(ReceptionRegistrationIdParams),
+  receptionAudit(AUDIT_LOGS.UPDATE, {
+    sensitiveFields: ["citizenId", "phoneNumber", "cccd", "sdt"],
+  }),
+  DangKyTiepDanController.complete
+);
+
 dangKyTiepDanRouter.post(
   "/lookup",
   validate(LookupDangKyTiepDanRequest),
