@@ -1,5 +1,5 @@
 CREATE TABLE "khung_gio_tiep_dan" (
-    "id" UUID NOT NULL DEFAULT uuid_generate_v4(),
+    "id" UUID NOT NULL DEFAULT public.uuid_generate_v4(),
     "id_lich_tiep_dan" UUID NOT NULL,
     "khung_gio" VARCHAR(50) NOT NULL,
     "ma_quay" VARCHAR(20) NOT NULL,
