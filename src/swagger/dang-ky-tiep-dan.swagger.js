@@ -196,6 +196,46 @@ const DangKyTiepDanSwagger = {
       },
     },
   },
+  "/api/reception-registrations/{id}/reject": {
+    patch: {
+      tags: ["ReceptionRegistration"],
+      summary: "Từ chối đăng ký tiếp dân đang chờ",
+      description:
+        "Cán bộ phê duyệt hoặc lãnh đạo có permission RR_REJECT được chuyển đơn từ PENDING sang REJECTED và phải nhập lý do. Backend ghi người thực hiện, thời điểm và audit. Đơn bị từ chối vẫn được tính là đã giữ chỗ và không hoàn lại sức chứa.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["reason"],
+              properties: {
+                reason: { type: "string", minLength: 5, maxLength: 500 },
+              },
+            },
+            example: { reason: "Nội dung đăng ký không thuộc phạm vi tiếp nhận" },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Từ chối đăng ký tiếp dân thành công" },
+        400: { description: "ID hoặc lý do từ chối không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_REJECT" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
+        409: { description: "Đơn không còn ở trạng thái PENDING hoặc đã được xử lý" },
+      },
+    },
+  },
   "/api/reception-registrations/rating-lookup/{receptionCode}": {
     get: {
       tags: ["ReceptionRegistration"],

@@ -15,6 +15,7 @@ import {
   LookupDangKyTiepDanRequest,
   ReceptionRegistrationIdParams,
   ReceptionCodeParams,
+  RejectReceptionRegistrationRequest,
 } from "../validators/dang-ky-tiep-dan.validator.js";
 
 const dangKyTiepDanRouter = express.Router();
@@ -48,6 +49,18 @@ dangKyTiepDanRouter.patch(
     sensitiveFields: ["citizenId", "phoneNumber", "cccd", "sdt"],
   }),
   DangKyTiepDanController.complete
+);
+
+dangKyTiepDanRouter.patch(
+  "/:id/reject",
+  authenticate,
+  authorize([PERMISSION.RR_REJECT]),
+  validateParams(ReceptionRegistrationIdParams),
+  validate(RejectReceptionRegistrationRequest),
+  receptionAudit(AUDIT_LOGS.UPDATE, {
+    sensitiveFields: ["citizenId", "phoneNumber", "cccd", "sdt"],
+  }),
+  DangKyTiepDanController.reject
 );
 
 dangKyTiepDanRouter.post(

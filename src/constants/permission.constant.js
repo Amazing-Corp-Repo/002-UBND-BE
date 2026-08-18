@@ -23,6 +23,7 @@ export const PERMISSION = {
   RR_GET_DETAIL: "RR_GET_DETAIL",
   RR_APPROVE: "RR_APPROVE",
   RR_COMPLETE: "RR_COMPLETE",
+  RR_REJECT: "RR_REJECT",
 
   // Đánh giá tiếp dân
   RRT_GET_ALL: "RRT_GET_ALL",
@@ -117,6 +118,7 @@ export const PERMISSION_DESC = {
   RR_GET_DETAIL: "Xem chi tiết đăng ký tiếp dân",
   RR_APPROVE: "Phê duyệt đăng ký tiếp dân",
   RR_COMPLETE: "Hoàn thành buổi tiếp dân",
+  RR_REJECT: "Từ chối đăng ký tiếp dân",
 
   RRT_GET_ALL: "Xem danh sách đánh giá tiếp dân",
   RRT_GET_DETAIL: "Xem chi tiết đánh giá tiếp dân",
@@ -209,6 +211,7 @@ export const PERMISSION_TYPE = {
   GET_ALL: "Xem tất cả",
   APPROVE: "Phê duyệt",
   COMPLETE: "Hoàn thành",
+  REJECT: "Từ chối",
   GET_EXCEL: "Xuất Excel",
   THUONG_TRUC: "Thường trực",
 };

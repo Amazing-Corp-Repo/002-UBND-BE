@@ -303,6 +303,21 @@ const DangKyTiepDanRepository = {
     return DangKyTiepDanRepository.findDetailById(id);
   },
 
+  async rejectPending(id, data) {
+    const result = await prisma.dang_ky_tiep_dan.updateMany({
+      where: {
+        id,
+        loai: "COUNTER_RECEPTION",
+        trang_thai: "PENDING",
+        is_active: true,
+        is_delete: false,
+      },
+      data,
+    });
+    if (result.count === 0) return null;
+    return DangKyTiepDanRepository.findDetailById(id);
+  },
+
   async findForRatingByCode(receptionCode) {
     return prisma.dang_ky_tiep_dan.findFirst({
       where: {

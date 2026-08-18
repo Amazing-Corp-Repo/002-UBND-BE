@@ -109,3 +109,12 @@ export const ApproveReceptionRegistrationRequest = Joi.object({
       "any.required": "Bộ phận tiếp nhận là bắt buộc",
     }),
 });
+
+export const RejectReceptionRegistrationRequest = Joi.object({
+  reason: Joi.string().trim().min(5).max(500).required().messages({
+    "string.min": "Lý do từ chối phải có ít nhất 5 ký tự",
+    "string.max": "Lý do từ chối không được vượt quá 500 ký tự",
+    "string.empty": "Lý do từ chối là bắt buộc",
+    "any.required": "Lý do từ chối là bắt buộc",
+  }),
+});

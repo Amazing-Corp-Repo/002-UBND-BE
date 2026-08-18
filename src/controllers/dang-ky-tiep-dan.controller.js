@@ -48,6 +48,15 @@ const DangKyTiepDanController = {
     return successResponse(res, data, "Hoàn thành buổi tiếp dân thành công");
   },
 
+  async reject(req, res) {
+    const data = await DangKyTiepDanService.reject(
+      req.validatedParams.id,
+      req.body.reason,
+      req.payload
+    );
+    return successResponse(res, data, "Từ chối đăng ký tiếp dân thành công");
+  },
+
   async lookupForRating(req, res) {
     const data = await DangKyTiepDanService.lookupForRating(
       req.validatedParams.receptionCode

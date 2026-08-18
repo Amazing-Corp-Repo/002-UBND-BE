@@ -59,6 +59,8 @@ const mapCitizenRegistration = (item) => ({
   leaderName: item.ten_lanh_dao,
   leaderTitle: item.chuc_vu_lanh_dao,
   status: item.trang_thai,
+  rejectionReason: item.ly_do_tu_choi || null,
+  rejectedAt: item.thoi_gian_tu_choi || null,
   createdAt: item.thoi_gian_tao,
   updatedAt: item.thoi_gian_cap_nhat,
 });
@@ -83,6 +85,8 @@ const mapStaffRegistration = (item) => ({
       ? item.thoi_gian_cap_nhat
       : null),
   completedAt: item.thoi_gian_hoan_thanh || null,
+  rejectionReason: item.ly_do_tu_choi || null,
+  rejectedAt: item.thoi_gian_tu_choi || null,
 });
 
 const mapStaffRegistrationDetail = (item) => {
@@ -122,6 +126,8 @@ const mapStaffRegistrationDetail = (item) => {
       : null,
     ratingStatus: rating ? "RATED" : "NOT_RATED",
     completedAt: item.thoi_gian_hoan_thanh || null,
+    rejectionReason: item.ly_do_tu_choi || null,
+    rejectedAt: item.thoi_gian_tu_choi || null,
     rating: rating
       ? {
           id: rating.id,
@@ -339,6 +345,30 @@ const DangKyTiepDanService = {
       throw new BaseError(409, "Đăng ký đã được xử lý bởi người khác");
     }
     return mapStaffRegistrationDetail(completed);
+  },
+
+  async reject(id, reason, currentUser) {
+    const registration = await DangKyTiepDanRepository.findActiveById(id);
+    if (!registration) {
+      throw new BaseError(404, "Đăng ký tiếp dân không tồn tại");
+    }
+    if (registration.trang_thai !== TIEP_DAN_STATUS.PENDING) {
+      throw new BaseError(409, "Chỉ đăng ký đang chờ mới được từ chối");
+    }
+
+    const rejectedAt = new Date().toISOString();
+    const rejected = await DangKyTiepDanRepository.rejectPending(id, {
+      trang_thai: TIEP_DAN_STATUS.REJECTED,
+      ly_do_tu_choi: reason,
+      thoi_gian_tu_choi: rejectedAt,
+      nguoi_tu_choi: currentUser.userId,
+      nguoi_cap_nhat: currentUser.userId,
+      thoi_gian_cap_nhat: rejectedAt,
+    });
+    if (!rejected) {
+      throw new BaseError(409, "Đăng ký đã được xử lý bởi người khác");
+    }
+    return mapStaffRegistrationDetail(rejected);
   },
 
   async lookupForRating(receptionCode) {
