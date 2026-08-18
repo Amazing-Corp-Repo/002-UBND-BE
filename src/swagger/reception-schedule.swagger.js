@@ -4,7 +4,7 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Lấy lịch tiếp dân đang hoạt động dành cho Mobile",
       description:
-        "Trả về các lịch tiếp dân đang hoạt động và chưa bị xóa, mặc định tính từ ngày hiện tại. Mỗi ca có slotId đại diện, giờ bắt đầu, giờ kết thúc, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ nguyên để tương thích API cũ; client mới nên gửi slotId khi đăng ký.",
+        "Trả về các lịch tiếp dân đang hoạt động, chưa bị xóa và còn ít nhất một khung giờ chưa qua. Khung giờ đã bắt đầu trong ngày hiện tại không được trả về. Mỗi ca có slotId đại diện, giờ bắt đầu, giờ kết thúc, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ nguyên để tương thích API cũ; client mới nên gửi slotId khi đăng ký.",
       parameters: [
         {
           name: "fromDate",

@@ -132,6 +132,40 @@ describe("GET /api/reception-schedules", () => {
     }
   });
 
+  it("does not return time slots that have already started today", async () => {
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    ReceptionScheduleRepository.findActiveBetweenDates = async () => [{
+      ...schedules[0],
+      ngay_tiep_dan: new Date(`${today}T00:00:00.000Z`),
+      thoi_gian: "00:00 - 01:00",
+      khung_gio_tiep_dan: Array.from({ length: 8 }, (_, index) => ({
+        id: `${index + 1}23e4567-e89b-42d3-a456-426614174000`,
+        khung_gio: "00:00 - 01:00",
+        ma_quay: `QUAY_${index + 1}`,
+        suc_chua: 2,
+      })),
+      dang_ky_tiep_dan: [],
+    }];
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules`
+      );
+      const body = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.deepEqual(body.data, []);
+    } finally {
+      server.close();
+    }
+  });
+
   it("rejects an invalid date range", async () => {
     const server = createTestServer();
     const { port } = server.address();

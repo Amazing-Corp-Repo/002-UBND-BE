@@ -15,6 +15,23 @@ const formatVietnamDate = (date) =>
     day: "2-digit",
   }).format(date);
 
+const formatVietnamTime = (date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
+
+const isPastTimeSlot = (receptionDate, timeSlot, now = new Date()) => {
+  const scheduleDate = formatVietnamDate(new Date(receptionDate));
+  const today = formatVietnamDate(now);
+  if (scheduleDate !== today) return scheduleDate < today;
+
+  const startTime = timeSlot.split("-")[0].trim();
+  return startTime <= formatVietnamTime(now);
+};
+
 const addDays = (date, days) => {
   const result = new Date(date);
   result.setUTCDate(result.getUTCDate() + days);
@@ -117,22 +134,27 @@ const ReceptionScheduleService = {
       toDate
     );
 
-    return schedules.map((item) => {
-      const slots = buildScheduleAvailability(item);
-      return {
-        id: item.id,
-        officerName: item.ten_can_bo,
-        location: item.dia_diem,
-        receptionDate: item.ngay_tiep_dan,
-        timeRange: item.thoi_gian,
-        availableSlots: slots.map((slot) => slot.timeSlot),
-        openSlots: slots
-          .filter((slot) => !slot.isFull)
-          .map((slot) => slot.timeSlot),
-        slots,
-        note: item.ghi_chu,
-      };
-    });
+    return schedules
+      .map((item) => {
+        const slots = buildScheduleAvailability(item).filter(
+          (slot) =>
+            !isPastTimeSlot(item.ngay_tiep_dan, slot.timeSlot, today)
+        );
+        return {
+          id: item.id,
+          officerName: item.ten_can_bo,
+          location: item.dia_diem,
+          receptionDate: item.ngay_tiep_dan,
+          timeRange: item.thoi_gian,
+          availableSlots: slots.map((slot) => slot.timeSlot),
+          openSlots: slots
+            .filter((slot) => !slot.isFull)
+            .map((slot) => slot.timeSlot),
+          slots,
+          note: item.ghi_chu,
+        };
+      })
+      .filter((schedule) => schedule.slots.length > 0);
   },
 
   async updateSlotCapacity(scheduleId, slotId, capacity, currentUser) {
