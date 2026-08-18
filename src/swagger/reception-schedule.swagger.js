@@ -49,6 +49,39 @@ const ReceptionScheduleSwagger = {
       },
     },
   },
+  "/api/reception-schedules/{scheduleId}/slots/{slotId}/capacity": {
+    patch: {
+      tags: ["ReceptionSchedule"],
+      summary: "Cập nhật sức chứa của một quầy trong ca tiếp dân",
+      description:
+        "Cán bộ có quyền LTD_UPDATE được đặt sức chứa là số nguyên từ 1 trở lên và không giới hạn tối đa. Không được giảm thấp hơn số đơn đã gán vào quầy hoặc làm tổng sức chứa của ca thấp hơn tổng số đơn đã giữ chỗ.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "scheduleId", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        { name: "slotId", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["capacity"],
+              properties: { capacity: { type: "integer", minimum: 1, example: 3 } },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Cập nhật sức chứa quầy thành công" },
+        400: { description: "ID hoặc sức chứa không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LTD_UPDATE" },
+        404: { description: "Không tìm thấy cấu hình quầy trong lịch" },
+        409: { description: "Sức chứa mới thấp hơn số chỗ đã được giữ" },
+      },
+    },
+  },
 };
 
 export default ReceptionScheduleSwagger;

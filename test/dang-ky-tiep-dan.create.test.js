@@ -120,6 +120,9 @@ describe("POST /api/reception-registrations", () => {
       lich_tiep_dan: {
         findFirst: async () => futureSchedule,
       },
+      khung_gio_tiep_dan: {
+        findMany: async () => futureSchedule.khung_gio_tiep_dan,
+      },
       dang_ky_tiep_dan: {
         findFirst: async () => null,
         count: async ({ where }) => {

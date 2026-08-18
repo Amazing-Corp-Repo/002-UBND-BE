@@ -30,6 +30,7 @@ const isSerializableConflict = (error) => error?.code === "P2034";
 
 const REGISTRATION_CONFLICTS = {
   SCHEDULE_UNAVAILABLE: [404, "Lịch tiếp dân không tồn tại hoặc đã ngừng hoạt động"],
+  INVALID_SLOT: [400, "Khung giờ không thuộc lịch tiếp dân đã chọn"],
   DUPLICATE_SLOT_PHONE: [409, "Số điện thoại đã đăng ký khung giờ này"],
   PHONE_DAILY_LIMIT: [409, "Số điện thoại chỉ được đăng ký tối đa 2 đơn trong một ngày"],
   CITIZEN_DAILY_LIMIT: [409, "CCCD chỉ được đăng ký tối đa 2 đơn trong một ngày"],

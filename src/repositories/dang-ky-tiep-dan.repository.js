@@ -43,6 +43,27 @@ const DangKyTiepDanRepository = {
       });
       if (!schedule) return { conflict: "SCHEDULE_UNAVAILABLE" };
 
+      const configuredSlots = await tx.khung_gio_tiep_dan.findMany({
+        where: {
+          id_lich_tiep_dan: scheduleId,
+          is_active: true,
+          is_delete: false,
+        },
+        select: { khung_gio: true, suc_chua: true },
+      });
+      const matchingSlots = configuredSlots.filter(
+        (configuredSlot) => configuredSlot.khung_gio === slot
+      );
+      if (configuredSlots.length > 0 && matchingSlots.length === 0) {
+        return { conflict: "INVALID_SLOT" };
+      }
+      const effectiveCapacity = matchingSlots.length > 0
+        ? matchingSlots.reduce(
+            (total, configuredSlot) => total + configuredSlot.suc_chua,
+            0
+          )
+        : totalCapacity;
+
       const [duplicate, heldCount, phoneDailyCount, citizenDailyCount] =
         await Promise.all([
           tx.dang_ky_tiep_dan.findFirst({
@@ -75,7 +96,7 @@ const DangKyTiepDanRepository = {
       if (duplicate) return { conflict: "DUPLICATE_SLOT_PHONE" };
       if (phoneDailyCount >= 2) return { conflict: "PHONE_DAILY_LIMIT" };
       if (citizenDailyCount >= 2) return { conflict: "CITIZEN_DAILY_LIMIT" };
-      if (heldCount >= totalCapacity) return { conflict: "SLOT_FULL" };
+      if (heldCount >= effectiveCapacity) return { conflict: "SLOT_FULL" };
 
       const registration = await tx.dang_ky_tiep_dan.create({
         data: {

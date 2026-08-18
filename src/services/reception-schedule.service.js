@@ -5,6 +5,8 @@ import {
   RECEPTION_COUNTER_CODES,
 } from "../constants/reception-schedule.constant.js";
 
+const MAX_TRANSACTION_RETRIES = 3;
+
 const formatVietnamDate = (date) =>
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
@@ -121,6 +123,51 @@ const ReceptionScheduleService = {
         note: item.ghi_chu,
       };
     });
+  },
+
+  async updateSlotCapacity(scheduleId, slotId, capacity, currentUser) {
+    let result;
+    for (let attempt = 0; attempt < MAX_TRANSACTION_RETRIES; attempt += 1) {
+      try {
+        result = await ReceptionScheduleRepository.updateSlotCapacity(
+          scheduleId,
+          slotId,
+          capacity,
+          currentUser
+        );
+        break;
+      } catch (error) {
+        if (error?.code !== "P2034" || attempt === MAX_TRANSACTION_RETRIES - 1) {
+          throw error;
+        }
+      }
+    }
+    if (result.conflict === "SLOT_NOT_FOUND") {
+      throw new BaseError(404, "Không tìm thấy cấu hình quầy của lịch tiếp dân");
+    }
+    if (result.conflict === "BELOW_COUNTER_HELD") {
+      throw new BaseError(
+        409,
+        "Không được giảm sức chứa thấp hơn số đăng ký đã gán vào quầy"
+      );
+    }
+    if (result.conflict === "BELOW_SLOT_HELD") {
+      throw new BaseError(
+        409,
+        "Không được giảm tổng sức chứa ca thấp hơn số đăng ký đã giữ chỗ"
+      );
+    }
+
+    return {
+      id: result.slot.id,
+      scheduleId: result.slot.id_lich_tiep_dan,
+      timeSlot: result.slot.khung_gio,
+      counterCode: result.slot.ma_quay,
+      capacity: result.slot.suc_chua,
+      assignedCount: result.assignedCount,
+      slotHeldCount: result.heldCount,
+      slotTotalCapacity: result.totalCapacity,
+    };
   },
 };
 
