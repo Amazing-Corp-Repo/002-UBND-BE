@@ -6,6 +6,7 @@ import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionScheduleRepository from "../src/repositories/reception-schedule.repository.js";
 import receptionScheduleRouter from "../src/routes/reception-schedule.route.js";
 import { buildHourlySlots } from "../src/services/reception-schedule.service.js";
+import ReceptionScheduleSwagger from "../src/swagger/reception-schedule.swagger.js";
 
 const originalFindActiveBetweenDates =
   ReceptionScheduleRepository.findActiveBetweenDates;
@@ -38,6 +39,18 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-schedules", () => {
+  it("documents capacity and full-slot fields in Swagger", () => {
+    const operation = ReceptionScheduleSwagger["/api/reception-schedules"].get;
+
+    assert.ok(operation.description.includes("số chỗ đã giữ"));
+    assert.ok(operation.responses[200]);
+    assert.equal(
+      operation.responses[200].content["application/json"].example.data[0]
+        .slots[0].isFull,
+      false
+    );
+  });
+
   it("splits a configured time range into display slots", () => {
     assert.deepEqual(buildHourlySlots("08:00 - 10:30"), [
       "08:00 - 09:00",
@@ -64,6 +77,39 @@ describe("GET /api/reception-schedules", () => {
         "09:00 - 10:00",
         "10:00 - 10:30",
       ]);
+      assert.equal(body.data[0].slots[0].totalCapacity, 16);
+      assert.equal(body.data[0].slots[0].heldCount, 0);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("marks a configured slot full after all capacity has been held", async () => {
+    ReceptionScheduleRepository.findActiveBetweenDates = async () => [{
+      ...schedules[0],
+      thoi_gian: "08:00 - 09:00",
+      khung_gio_tiep_dan: Array.from({ length: 8 }, (_, index) => ({
+        khung_gio: "08:00 - 09:00",
+        ma_quay: `QUAY_${index + 1}`,
+        suc_chua: 1,
+      })),
+      dang_ky_tiep_dan: Array.from({ length: 8 }, () => ({
+        slot: "08:00 - 09:00",
+      })),
+    }];
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules?fromDate=2099-08-01&toDate=2099-08-31`
+      );
+      const body = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.equal(body.data[0].slots[0].heldCount, 8);
+      assert.equal(body.data[0].slots[0].remainingCapacity, 0);
+      assert.equal(body.data[0].slots[0].isFull, true);
+      assert.deepEqual(body.data[0].openSlots, []);
     } finally {
       server.close();
     }

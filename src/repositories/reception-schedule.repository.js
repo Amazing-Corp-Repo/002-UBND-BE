@@ -12,6 +12,15 @@ const ReceptionScheduleRepository = {
         },
       },
       orderBy: [{ ngay_tiep_dan: "asc" }, { thoi_gian: "asc" }],
+      include: {
+        khung_gio_tiep_dan: {
+          where: { is_active: true, is_delete: false },
+          orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
+        },
+        dang_ky_tiep_dan: {
+          select: { slot: true },
+        },
+      },
     });
   },
 };

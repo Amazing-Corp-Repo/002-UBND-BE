@@ -1,5 +1,9 @@
 import ReceptionScheduleRepository from "../repositories/reception-schedule.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import {
+  DEFAULT_RECEPTION_COUNTER_CAPACITY,
+  RECEPTION_COUNTER_CODES,
+} from "../constants/reception-schedule.constant.js";
 
 const formatVietnamDate = (date) =>
   new Intl.DateTimeFormat("en-CA", {
@@ -44,6 +48,44 @@ export const buildHourlySlots = (timeRange) => {
   return slots;
 };
 
+const buildScheduleAvailability = (schedule) => {
+  const configuredSlots = schedule.khung_gio_tiep_dan || [];
+  const registrations = schedule.dang_ky_tiep_dan || [];
+  const groupedCapacity = new Map();
+
+  configuredSlots.forEach((slot) => {
+    groupedCapacity.set(
+      slot.khung_gio,
+      (groupedCapacity.get(slot.khung_gio) || 0) + slot.suc_chua
+    );
+  });
+
+  if (groupedCapacity.size === 0) {
+    const legacySlots = (schedule.thoi_gian || "")
+      .split(",")
+      .flatMap((period) => buildHourlySlots(period.trim()));
+    legacySlots.forEach((slot) => {
+      groupedCapacity.set(
+        slot,
+        RECEPTION_COUNTER_CODES.length * DEFAULT_RECEPTION_COUNTER_CAPACITY
+      );
+    });
+  }
+
+  return [...groupedCapacity.entries()].map(([timeSlot, totalCapacity]) => {
+    const heldCount = registrations.filter(
+      (registration) => registration.slot === timeSlot
+    ).length;
+    return {
+      timeSlot,
+      totalCapacity,
+      heldCount,
+      remainingCapacity: Math.max(0, totalCapacity - heldCount),
+      isFull: heldCount >= totalCapacity,
+    };
+  });
+};
+
 const ReceptionScheduleService = {
   async getAvailableSchedules(filters = {}) {
     const today = new Date();
@@ -63,15 +105,22 @@ const ReceptionScheduleService = {
       toDate
     );
 
-    return schedules.map((item) => ({
-      id: item.id,
-      officerName: item.ten_can_bo,
-      location: item.dia_diem,
-      receptionDate: item.ngay_tiep_dan,
-      timeRange: item.thoi_gian,
-      availableSlots: buildHourlySlots(item.thoi_gian),
-      note: item.ghi_chu,
-    }));
+    return schedules.map((item) => {
+      const slots = buildScheduleAvailability(item);
+      return {
+        id: item.id,
+        officerName: item.ten_can_bo,
+        location: item.dia_diem,
+        receptionDate: item.ngay_tiep_dan,
+        timeRange: item.thoi_gian,
+        availableSlots: slots.map((slot) => slot.timeSlot),
+        openSlots: slots
+          .filter((slot) => !slot.isFull)
+          .map((slot) => slot.timeSlot),
+        slots,
+        note: item.ghi_chu,
+      };
+    });
   },
 };
 
