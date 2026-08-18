@@ -53,37 +53,47 @@ export const buildHourlySlots = (timeRange) => {
 const buildScheduleAvailability = (schedule) => {
   const configuredSlots = schedule.khung_gio_tiep_dan || [];
   const registrations = schedule.dang_ky_tiep_dan || [];
-  const groupedCapacity = new Map();
+  const groupedSlots = new Map();
 
   configuredSlots.forEach((slot) => {
-    groupedCapacity.set(
-      slot.khung_gio,
-      (groupedCapacity.get(slot.khung_gio) || 0) + slot.suc_chua
-    );
+    const configuredSlot = groupedSlots.get(slot.khung_gio);
+    groupedSlots.set(slot.khung_gio, {
+      slotId: configuredSlot?.slotId || slot.id,
+      totalCapacity: (configuredSlot?.totalCapacity || 0) + slot.suc_chua,
+    });
   });
 
-  if (groupedCapacity.size === 0) {
+  if (groupedSlots.size === 0) {
     const legacySlots = (schedule.thoi_gian || "")
       .split(",")
       .flatMap((period) => buildHourlySlots(period.trim()));
-    legacySlots.forEach((slot) => {
-      groupedCapacity.set(
-        slot,
-        RECEPTION_COUNTER_CODES.length * DEFAULT_RECEPTION_COUNTER_CAPACITY
-      );
+    legacySlots.forEach((timeSlot) => {
+      groupedSlots.set(timeSlot, {
+        slotId: null,
+        totalCapacity:
+          RECEPTION_COUNTER_CODES.length * DEFAULT_RECEPTION_COUNTER_CAPACITY,
+      });
     });
   }
 
-  return [...groupedCapacity.entries()].map(([timeSlot, totalCapacity]) => {
+  return [...groupedSlots.entries()].map(([timeSlot, configuredSlot]) => {
     const heldCount = registrations.filter(
       (registration) => registration.slot === timeSlot
     ).length;
+    const [startTime, endTime] = timeSlot
+      .split("-")
+      .map((value) => value.trim());
+    const isFull = heldCount >= configuredSlot.totalCapacity;
     return {
+      slotId: configuredSlot.slotId,
+      startTime,
+      endTime,
       timeSlot,
-      totalCapacity,
+      totalCapacity: configuredSlot.totalCapacity,
       heldCount,
-      remainingCapacity: Math.max(0, totalCapacity - heldCount),
-      isFull: heldCount >= totalCapacity,
+      remainingCapacity: Math.max(0, configuredSlot.totalCapacity - heldCount),
+      status: isFull ? "FULL" : "AVAILABLE",
+      isFull,
     };
   });
 };

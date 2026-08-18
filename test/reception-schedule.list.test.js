@@ -49,6 +49,15 @@ describe("GET /api/reception-schedules", () => {
         .slots[0].isFull,
       false
     );
+    assert.equal(
+      operation.responses[200].content["application/json"].example.data[0]
+        .slots[0].status,
+      "AVAILABLE"
+    );
+    assert.ok(
+      operation.responses[200].content["application/json"].example.data[0]
+        .slots[0].slotId
+    );
   });
 
   it("splits a configured time range into display slots", () => {
@@ -89,6 +98,7 @@ describe("GET /api/reception-schedules", () => {
       ...schedules[0],
       thoi_gian: "08:00 - 09:00",
       khung_gio_tiep_dan: Array.from({ length: 8 }, (_, index) => ({
+        id: `${index + 1}23e4567-e89b-42d3-a456-426614174000`,
         khung_gio: "08:00 - 09:00",
         ma_quay: `QUAY_${index + 1}`,
         suc_chua: 1,
@@ -108,6 +118,13 @@ describe("GET /api/reception-schedules", () => {
       assert.equal(response.status, 200);
       assert.equal(body.data[0].slots[0].heldCount, 8);
       assert.equal(body.data[0].slots[0].remainingCapacity, 0);
+      assert.equal(
+        body.data[0].slots[0].slotId,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
+      assert.equal(body.data[0].slots[0].startTime, "08:00");
+      assert.equal(body.data[0].slots[0].endTime, "09:00");
+      assert.equal(body.data[0].slots[0].status, "FULL");
       assert.equal(body.data[0].slots[0].isFull, true);
       assert.deepEqual(body.data[0].openSlots, []);
     } finally {
