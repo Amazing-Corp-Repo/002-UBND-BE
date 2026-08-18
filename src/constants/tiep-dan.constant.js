@@ -6,4 +6,6 @@ export const TIEP_DAN_TYPE = {
 export const TIEP_DAN_STATUS = {
   PENDING: "PENDING",
   APPROVED: "APPROVED",
+  COMPLETED: "COMPLETED",
+  REJECTED: "REJECTED",
 };

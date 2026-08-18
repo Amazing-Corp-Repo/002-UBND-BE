@@ -118,8 +118,8 @@ const ReceptionRatingService = {
     if (!registration) {
       throw new BaseError(404, "Không tìm thấy mã tiếp dân");
     }
-    if (registration.trang_thai !== TIEP_DAN_STATUS.APPROVED) {
-      throw new BaseError(409, "Đăng ký chưa được phê duyệt để đánh giá");
+    if (registration.trang_thai !== TIEP_DAN_STATUS.COMPLETED) {
+      throw new BaseError(409, "Buổi tiếp dân chưa hoàn thành để đánh giá");
     }
     if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
       throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");

@@ -4,11 +4,12 @@ import express from "express";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import DangKyTiepDanRepository from "../src/repositories/dang-ky-tiep-dan.repository.js";
 import dangKyTiepDanRouter from "../src/routes/dang-ky-tiep-dan.route.js";
+import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
 
 const originalFindForRatingByCode =
   DangKyTiepDanRepository.findForRatingByCode;
 
-const approvedRegistration = {
+const completedRegistration = {
   id: "123e4567-e89b-42d3-a456-426614174000",
   ma_tiep_dan: "A00123",
   ngay: new Date("2099-08-20T00:00:00.000Z"),
@@ -20,7 +21,7 @@ const approvedRegistration = {
   cccd: "042204001234",
   dia_chi: "Thành phố Hà Tĩnh",
   bo_phan: "QUAY_5",
-  trang_thai: "APPROVED",
+  trang_thai: "COMPLETED",
   danh_gia_tiep_dan: [],
 };
 
@@ -33,7 +34,7 @@ const createTestServer = () => {
 
 beforeEach(() => {
   DangKyTiepDanRepository.findForRatingByCode = async () =>
-    approvedRegistration;
+    completedRegistration;
 });
 
 afterEach(() => {
@@ -42,7 +43,17 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-registrations/rating-lookup/:receptionCode", () => {
-  it("returns approved unrated registration details", async () => {
+  it("documents COMPLETED as the required rating state", () => {
+    const operation =
+      DangKyTiepDanSwagger[
+        "/api/reception-registrations/rating-lookup/{receptionCode}"
+      ].get;
+
+    assert.ok(operation.description.includes("COMPLETED"));
+    assert.ok(operation.description.includes("APPROVED chưa đủ điều kiện"));
+  });
+
+  it("returns completed unrated registration details", async () => {
     const server = createTestServer();
     const { port } = server.address();
     try {
@@ -60,10 +71,10 @@ describe("GET /api/reception-registrations/rating-lookup/:receptionCode", () => 
     }
   });
 
-  it("rejects a registration that is not approved", async () => {
+  it("rejects an approved registration that is not completed", async () => {
     DangKyTiepDanRepository.findForRatingByCode = async () => ({
-      ...approvedRegistration,
-      trang_thai: "PENDING",
+      ...completedRegistration,
+      trang_thai: "APPROVED",
     });
     const server = createTestServer();
     const { port } = server.address();
@@ -79,7 +90,7 @@ describe("GET /api/reception-registrations/rating-lookup/:receptionCode", () => 
 
   it("rejects a registration that was already rated", async () => {
     DangKyTiepDanRepository.findForRatingByCode = async () => ({
-      ...approvedRegistration,
+      ...completedRegistration,
       danh_gia_tiep_dan: [{ id: "rating-id" }],
     });
     const server = createTestServer();

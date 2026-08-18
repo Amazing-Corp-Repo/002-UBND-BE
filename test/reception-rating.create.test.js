@@ -5,6 +5,7 @@ import prisma from "../src/config/database.config.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionRatingRepository from "../src/repositories/reception-rating.repository.js";
 import receptionRatingRouter from "../src/routes/reception-rating.route.js";
+import ReceptionRatingSwagger from "../src/swagger/reception-rating.swagger.js";
 
 const originalMethods = {
   findRegistrationByCode: ReceptionRatingRepository.findRegistrationByCode,
@@ -15,7 +16,7 @@ const originalMethods = {
 const eligibleRegistration = {
   id: "123e4567-e89b-42d3-a456-426614174000",
   ma_tiep_dan: "A00123",
-  trang_thai: "APPROVED",
+  trang_thai: "COMPLETED",
   bo_phan: "QUAY_2",
   danh_gia_tiep_dan: [],
 };
@@ -54,6 +55,13 @@ afterEach(() => {
 });
 
 describe("POST /api/reception-ratings", () => {
+  it("documents COMPLETED as a mandatory condition", () => {
+    const operation = ReceptionRatingSwagger["/api/reception-ratings"].post;
+
+    assert.ok(operation.description.includes("COMPLETED"));
+    assert.ok(operation.responses[409].description.includes("chưa hoàn thành"));
+  });
+
   it("submits a valid rating", async () => {
     const server = createTestServer();
     const { port } = server.address();
@@ -110,6 +118,29 @@ describe("POST /api/reception-ratings", () => {
           body: JSON.stringify(validBody),
         }
       );
+      assert.equal(response.status, 409);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("rejects direct rating submission while registration is only approved", async () => {
+    ReceptionRatingRepository.findRegistrationByCode = async () => ({
+      ...eligibleRegistration,
+      trang_thai: "APPROVED",
+    });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(validBody),
+        }
+      );
+
       assert.equal(response.status, 409);
     } finally {
       server.close();

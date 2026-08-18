@@ -174,9 +174,9 @@ const DangKyTiepDanSwagger = {
   "/api/reception-registrations/rating-lookup/{receptionCode}": {
     get: {
       tags: ["ReceptionRegistration"],
-      summary: "Tra cứu đăng ký đã duyệt để đánh giá trên iPad",
+      summary: "Tra cứu đăng ký đã hoàn thành để đánh giá trên iPad",
       description:
-        "API công khai dành cho iPad. Chỉ trả về đăng ký đã được phê duyệt, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá.",
+        "API công khai dành cho iPad. Chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá.",
       parameters: [
         {
           name: "receptionCode",
@@ -189,7 +189,7 @@ const DangKyTiepDanSwagger = {
         200: { description: "Lấy thông tin để người dân xác nhận thành công" },
         400: { description: "Mã tiếp dân không hợp lệ" },
         404: { description: "Không tìm thấy mã tiếp dân" },
-        409: { description: "Đăng ký chưa được duyệt, chưa gán quầy hoặc đã được đánh giá" },
+        409: { description: "Buổi tiếp chưa hoàn thành, chưa gán quầy hoặc đã được đánh giá" },
       },
     },
   },

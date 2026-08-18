@@ -26,7 +26,7 @@ const ReceptionRatingSwagger = {
       tags: ["ReceptionRating"],
       summary: "Gửi đánh giá tiếp dân từ iPad",
       description:
-        "API công khai dành cho iPad. Mỗi mã tiếp dân chỉ được đánh giá một lần. Nội dung gợi ý được chọn phải thuộc cấu hình của số sao đã gửi.",
+        "API công khai dành cho iPad. Chỉ đăng ký ở trạng thái COMPLETED mới được đánh giá và mỗi mã tiếp dân chỉ được đánh giá một lần. Nội dung gợi ý được chọn phải thuộc cấu hình của số sao đã gửi.",
       requestBody: {
         required: true,
         content: {
@@ -53,7 +53,7 @@ const ReceptionRatingSwagger = {
         200: { description: "Gửi đánh giá tiếp dân thành công" },
         400: { description: "Thiếu dữ liệu hoặc dữ liệu đánh giá không hợp lệ" },
         404: { description: "Không tìm thấy mã tiếp dân" },
-        409: { description: "Đăng ký chưa đủ điều kiện hoặc đã được đánh giá" },
+        409: { description: "Buổi tiếp dân chưa hoàn thành hoặc mã đã được đánh giá" },
       },
     },
   },
