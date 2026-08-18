@@ -54,9 +54,9 @@ const LichTiepDanController = {
     },
 
     async createLichTiepDan(req, res) {
-        const { tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu } = req.body;
+        const { tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, workingPeriods, ghiChu } = req.body;
         const currentUser = req.payload.userId;
-        const data = await LichTiepDanService.createLichTiepDan(tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu, currentUser);
+        const data = await LichTiepDanService.createLichTiepDan(tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, ghiChu, currentUser, workingPeriods);
         return successResponse(res, data, "Tạo lịch tiếp dân thành công");
     },
 

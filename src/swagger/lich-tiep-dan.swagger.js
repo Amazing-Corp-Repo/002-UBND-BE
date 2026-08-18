@@ -77,16 +77,44 @@ const LichTiepDanSwagger = {
             tags: ['LichTiepDan'],
             security: [{ bearerAuth: [] }],
             summary: 'Tạo mới lịch tiếp dân',
-            description: 'Tạo mới một lịch tiếp dân với các thông tin chi tiết liên quan.',
+            description: 'Tạo lịch tiếp dân và tự sinh cấu hình slot cho 8 quầy, mặc định 2 người/quầy/ca. Nếu không truyền giờ, hệ thống dùng 07:30-11:30 và 13:30-16:30. Request cũ dùng batDau/ketThuc vẫn được hỗ trợ.',
             requestBody: {
                 required: true,
                 content: {
                     'application/json': {
                         schema: LichTiepDanSchemas.CreateLichTiepDanRequestSchemaSwagger,
+                        examples: {
+                            defaultWorkingHours: {
+                                summary: 'Dùng thời gian làm việc mặc định',
+                                value: {
+                                    tenCanBo: 'Nguyễn Văn An',
+                                    diaDiem: 'Bộ phận tiếp công dân',
+                                    ngayTiepDan: '2026-08-25',
+                                    ghiChu: 'Tiếp công dân định kỳ',
+                                },
+                            },
+                            customWorkingHours: {
+                                summary: 'Lãnh đạo cấu hình hai khoảng làm việc',
+                                value: {
+                                    tenCanBo: 'Nguyễn Văn An',
+                                    diaDiem: 'Bộ phận tiếp công dân',
+                                    ngayTiepDan: '2026-08-25',
+                                    workingPeriods: [
+                                        { startTime: '08:00', endTime: '11:00' },
+                                        { startTime: '13:00', endTime: '16:00' },
+                                    ],
+                                },
+                            },
+                        },
                     },
                 },
             },
-            responses: {}
+            responses: {
+                200: { description: 'Tạo lịch và các slot theo quầy thành công' },
+                400: { description: 'Dữ liệu hoặc khoảng thời gian không hợp lệ, hoặc lịch đã tồn tại' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_CREATE' },
+            }
         },
     },
     '/api/lich-tiep-dan/pagination': {

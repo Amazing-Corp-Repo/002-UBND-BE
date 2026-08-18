@@ -22,6 +22,29 @@ const LichTiepDanRepository = {
     return await prisma.lich_tiep_dan.create({ data });
   },
 
+  async createWithSlots(scheduleData, slotRows) {
+    return prisma.$transaction(async (tx) => {
+      const schedule = await tx.lich_tiep_dan.create({ data: scheduleData });
+
+      await tx.khung_gio_tiep_dan.createMany({
+        data: slotRows.map((slot) => ({
+          ...slot,
+          id_lich_tiep_dan: schedule.id,
+        })),
+      });
+
+      return tx.lich_tiep_dan.findUnique({
+        where: { id: schedule.id },
+        include: {
+          khung_gio_tiep_dan: {
+            where: { is_active: true, is_delete: false },
+            orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
+          },
+        },
+      });
+    });
+  },
+
   async update(id, data) {
     return await prisma.lich_tiep_dan.update({
       where: { id },

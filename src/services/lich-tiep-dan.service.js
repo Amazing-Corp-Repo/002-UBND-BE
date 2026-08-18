@@ -7,6 +7,97 @@ import {
 import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
 import dayjs from "dayjs";
 import { createPagination } from "../utils/response.util.js";
+import {
+  DEFAULT_RECEPTION_COUNTER_CAPACITY,
+  DEFAULT_RECEPTION_WORKING_PERIODS,
+  RECEPTION_COUNTER_CODES,
+} from "../constants/reception-schedule.constant.js";
+
+const toMinutes = (value) => {
+  const [hour, minute] = value.split(":").map(Number);
+  return hour * 60 + minute;
+};
+
+const toTime = (minutes) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
+    minutes % 60
+  ).padStart(2, "0")}`;
+
+export const normalizeWorkingPeriods = ({
+  batDau,
+  ketThuc,
+  workingPeriods,
+} = {}) => {
+  const periods = workingPeriods?.length
+    ? workingPeriods
+    : batDau && ketThuc
+      ? [{ startTime: batDau, endTime: ketThuc }]
+      : DEFAULT_RECEPTION_WORKING_PERIODS;
+
+  const normalized = periods
+    .map(({ startTime, endTime }) => ({ startTime, endTime }))
+    .sort((left, right) => toMinutes(left.startTime) - toMinutes(right.startTime));
+
+  normalized.forEach((period, index) => {
+    const start = toMinutes(period.startTime);
+    const end = toMinutes(period.endTime);
+    if (start >= end) {
+      throw new BaseError(400, "Giờ bắt đầu phải nhỏ hơn giờ kết thúc");
+    }
+    if ((end - start) % 60 !== 0) {
+      throw new BaseError(400, "Khoảng làm việc phải chia hết thành các ca một tiếng");
+    }
+    if (index > 0 && start < toMinutes(normalized[index - 1].endTime)) {
+      throw new BaseError(400, "Các khoảng làm việc không được chồng nhau");
+    }
+  });
+
+  return normalized;
+};
+
+export const buildScheduleSlotRows = (periods, currentUser) => {
+  const timeSlots = periods.flatMap(({ startTime, endTime }) => {
+    const slots = [];
+    const end = toMinutes(endTime);
+    for (let current = toMinutes(startTime); current < end; current += 60) {
+      slots.push(`${toTime(current)} - ${toTime(current + 60)}`);
+    }
+    return slots;
+  });
+
+  return timeSlots.flatMap((khungGio) =>
+    RECEPTION_COUNTER_CODES.map((maQuay) => ({
+      khung_gio: khungGio,
+      ma_quay: maQuay,
+      suc_chua: DEFAULT_RECEPTION_COUNTER_CAPACITY,
+      nguoi_tao: currentUser,
+    }))
+  );
+};
+
+const mapCreatedSchedule = (schedule) => {
+  const slots = schedule.khung_gio_tiep_dan || [];
+  const groupedSlots = new Map();
+
+  slots.forEach((slot) => {
+    const current = groupedSlots.get(slot.khung_gio) || {
+      timeSlot: slot.khung_gio,
+      totalCapacity: 0,
+      counters: [],
+    };
+    current.totalCapacity += slot.suc_chua;
+    current.counters.push({
+      id: slot.id,
+      counterCode: slot.ma_quay,
+      capacity: slot.suc_chua,
+      isActive: slot.is_active,
+    });
+    groupedSlots.set(slot.khung_gio, current);
+  });
+
+  const { khung_gio_tiep_dan: _slots, ...scheduleData } = schedule;
+  return { ...scheduleData, slots: [...groupedSlots.values()] };
+};
 
 const excelDateToJSDate = (serial) => {
   const utc_days = Math.floor(serial - 25569);
@@ -214,7 +305,8 @@ const LichTiepDanService = {
     batDau,
     ketThuc,
     ghiChu,
-    currentUser
+    currentUser,
+    workingPeriods
   ) {
     const existing = await LichTiepDanRepository.findByCanBoAndNgay(
       tenCanBo,
@@ -226,16 +318,24 @@ const LichTiepDanService = {
         "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại"
       );
     }
-    let thoiGian = `${batDau} - ${ketThuc}`;
-    const data = await LichTiepDanRepository.create({
+    const normalizedPeriods = normalizeWorkingPeriods({
+      batDau,
+      ketThuc,
+      workingPeriods,
+    });
+    const thoiGian = normalizedPeriods
+      .map(({ startTime, endTime }) => `${startTime} - ${endTime}`)
+      .join(", ");
+    const slotRows = buildScheduleSlotRows(normalizedPeriods, currentUser);
+    const data = await LichTiepDanRepository.createWithSlots({
       ten_can_bo: tenCanBo,
       dia_diem: diaDiem,
       ngay_tiep_dan: ngayTiepDan,
       thoi_gian: thoiGian,
       ghi_chu: ghiChu,
       nguoi_tao: currentUser,
-    });
-    return data;
+    }, slotRows);
+    return mapCreatedSchedule(data);
   },
 
   async updateLichTiepDan(
