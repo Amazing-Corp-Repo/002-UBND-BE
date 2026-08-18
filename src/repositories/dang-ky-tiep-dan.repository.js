@@ -1,4 +1,5 @@
 import prisma from "../config/database.config.js";
+import { DEFAULT_RECEPTION_COUNTER_CAPACITY } from "../constants/reception-schedule.constant.js";
 
 const DangKyTiepDanRepository = {
   async findScheduleById(id) {
@@ -211,6 +212,59 @@ const DangKyTiepDanRepository = {
     });
     if (result.count === 0) return null;
     return DangKyTiepDanRepository.findDetailById(id);
+  },
+
+  async approvePendingWithCounterGuard(id, department, data) {
+    const outcome = await prisma.$transaction(async (tx) => {
+      const registration = await tx.dang_ky_tiep_dan.findFirst({
+        where: {
+          id,
+          loai: "COUNTER_RECEPTION",
+          trang_thai: "PENDING",
+          is_active: true,
+          is_delete: false,
+        },
+      });
+      if (!registration) return { conflict: "ALREADY_PROCESSED" };
+
+      const counterSlots = await tx.khung_gio_tiep_dan.findMany({
+        where: {
+          id_lich_tiep_dan: registration.id_lich_tiep_dan,
+          khung_gio: registration.slot,
+          ma_quay: department,
+          is_active: true,
+          is_delete: false,
+        },
+        select: { suc_chua: true },
+      });
+      const capacity = counterSlots.length > 0
+        ? counterSlots.reduce((total, slot) => total + slot.suc_chua, 0)
+        : DEFAULT_RECEPTION_COUNTER_CAPACITY;
+      const assignedCount = await tx.dang_ky_tiep_dan.count({
+        where: {
+          id_lich_tiep_dan: registration.id_lich_tiep_dan,
+          slot: registration.slot,
+          bo_phan: department,
+        },
+      });
+      if (assignedCount >= capacity) return { conflict: "COUNTER_FULL" };
+
+      const updated = await tx.dang_ky_tiep_dan.updateMany({
+        where: {
+          id,
+          trang_thai: "PENDING",
+          is_active: true,
+          is_delete: false,
+        },
+        data,
+      });
+      return updated.count === 1
+        ? { approved: true }
+        : { conflict: "ALREADY_PROCESSED" };
+    }, { isolationLevel: "Serializable" });
+
+    if (!outcome.approved) return outcome;
+    return { registration: await DangKyTiepDanRepository.findDetailById(id) };
   },
 
   async findForRatingByCode(receptionCode) {

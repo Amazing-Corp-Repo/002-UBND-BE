@@ -278,19 +278,36 @@ const DangKyTiepDanService = {
     }
     const approverTitle = approver.user_roles?.[0]?.roles?.name || null;
 
-    const approved = await DangKyTiepDanRepository.approvePending(id, {
-      bo_phan: department,
-      trang_thai: TIEP_DAN_STATUS.APPROVED,
-      ten_lanh_dao: approver.ho_va_ten || currentUser.username,
-      chuc_vu_lanh_dao: approverTitle,
-      nguoi_cap_nhat: currentUser.userId,
-      thoi_gian_cap_nhat: new Date().toISOString(),
-    });
-    if (!approved) {
+    let result;
+    for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt += 1) {
+      try {
+        result = await DangKyTiepDanRepository.approvePendingWithCounterGuard(
+          id,
+          department,
+          {
+            bo_phan: department,
+            trang_thai: TIEP_DAN_STATUS.APPROVED,
+            ten_lanh_dao: approver.ho_va_ten || currentUser.username,
+            chuc_vu_lanh_dao: approverTitle,
+            nguoi_cap_nhat: currentUser.userId,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+          }
+        );
+        break;
+      } catch (error) {
+        if (!isSerializableConflict(error) || attempt === MAX_CODE_RETRIES - 1) {
+          throw error;
+        }
+      }
+    }
+    if (result?.conflict === "COUNTER_FULL") {
+      throw new BaseError(409, "Quầy tiếp nhận đã đủ sức chứa trong ca này");
+    }
+    if (result?.conflict === "ALREADY_PROCESSED" || !result?.registration) {
       throw new BaseError(409, "Đăng ký đã được xử lý bởi người khác");
     }
 
-    return mapStaffRegistrationDetail(approved);
+    return mapStaffRegistrationDetail(result.registration);
   },
 
   async lookupForRating(receptionCode) {

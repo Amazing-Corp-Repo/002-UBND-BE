@@ -134,7 +134,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Phê duyệt đăng ký tiếp dân",
       description:
-        "Cán bộ phê duyệt yêu cầu gặp và gán đăng ký vào một trong tám quầy tiếp nhận. Hệ thống tự ghi nhận người duyệt và thời điểm duyệt.",
+        "Cán bộ phê duyệt yêu cầu gặp và gán đăng ký vào một trong tám quầy tiếp nhận. Backend kiểm tra sức chứa riêng của quầy trong đúng ca; nếu quầy đã đầy thì cán bộ phải chọn quầy khác. Hệ thống tự ghi nhận người duyệt và thời điểm duyệt.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -167,7 +167,7 @@ const DangKyTiepDanSwagger = {
         401: { description: "Thiếu hoặc sai access token" },
         403: { description: "Không có quyền RR_APPROVE" },
         404: { description: "Không tìm thấy đăng ký hoặc người phê duyệt" },
-        409: { description: "Đăng ký không ở trạng thái chờ duyệt hoặc đã được xử lý" },
+        409: { description: "Đăng ký không ở trạng thái chờ duyệt, đã được xử lý hoặc quầy được chọn đã đầy" },
       },
     },
   },

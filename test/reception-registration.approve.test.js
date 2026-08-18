@@ -8,11 +8,13 @@ import DangKyTiepDanRepository from "../src/repositories/dang-ky-tiep-dan.reposi
 import UserRepository from "../src/repositories/user.repository.js";
 import dangKyTiepDanRouter from "../src/routes/dang-ky-tiep-dan.route.js";
 import jwtUtils from "../src/utils/jwt.util.js";
+import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
 
 const registrationId = "123e4567-e89b-42d3-a456-426614174000";
 const originalMethods = {
   findActiveById: DangKyTiepDanRepository.findActiveById,
-  approvePending: DangKyTiepDanRepository.approvePending,
+  approvePendingWithCounterGuard:
+    DangKyTiepDanRepository.approvePendingWithCounterGuard,
   findUserById: UserRepository.findById,
   auditCreate: prisma.audit_logs.create,
 };
@@ -58,7 +60,9 @@ const createTestServer = () => {
 
 beforeEach(() => {
   DangKyTiepDanRepository.findActiveById = async () => pendingRegistration;
-  DangKyTiepDanRepository.approvePending = async () => approvedDetail;
+  DangKyTiepDanRepository.approvePendingWithCounterGuard = async () => ({
+    registration: approvedDetail,
+  });
   UserRepository.findById = async () => ({
     id: "223e4567-e89b-42d3-a456-426614174000",
     ho_va_ten: "Nguyễn Văn Lãnh đạo",
@@ -69,12 +73,21 @@ beforeEach(() => {
 
 afterEach(() => {
   DangKyTiepDanRepository.findActiveById = originalMethods.findActiveById;
-  DangKyTiepDanRepository.approvePending = originalMethods.approvePending;
+  DangKyTiepDanRepository.approvePendingWithCounterGuard =
+    originalMethods.approvePendingWithCounterGuard;
   UserRepository.findById = originalMethods.findUserById;
   prisma.audit_logs.create = originalMethods.auditCreate;
 });
 
 describe("PATCH /api/reception-registrations/:id/approve", () => {
+  it("documents counter-capacity validation in Swagger", () => {
+    const operation =
+      DangKyTiepDanSwagger["/api/reception-registrations/{id}/approve"].patch;
+
+    assert.ok(operation.description.includes("sức chứa riêng của quầy"));
+    assert.ok(operation.responses[409].description.includes("quầy"));
+  });
+
   it("approves a pending registration and assigns a counter", async () => {
     const server = createTestServer();
     const { port } = server.address();
@@ -120,6 +133,33 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
         }
       );
       assert.equal(response.status, 409);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 409 when the selected counter is full", async () => {
+    DangKyTiepDanRepository.approvePendingWithCounterGuard = async () => ({
+      conflict: "COUNTER_FULL",
+    });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.RR_APPROVE])}`,
+          },
+          body: JSON.stringify({ department: "QUAY_3" }),
+        }
+      );
+      const body = await response.json();
+
+      assert.equal(response.status, 409);
+      assert.ok(body.message.includes("đủ sức chứa"));
     } finally {
       server.close();
     }
