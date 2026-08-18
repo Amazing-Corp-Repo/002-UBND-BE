@@ -237,6 +237,7 @@ const LichTiepDanSwagger = {
         get: {
             tags: ['LichTiepDan'],
             summary: 'Lấy lịch tiếp dân theo ID',
+            description: 'Trả về chi tiết lịch, từng ca một tiếng, cấu hình 8 quầy, sức chứa, số đăng ký đã giữ chỗ và số chỗ còn lại. Mọi đăng ký đã tạo đều được tính giữ chỗ, kể cả đăng ký đã bị từ chối hoặc xoá mềm.',
             parameters: [
                 {
                     name: 'id',
@@ -249,7 +250,40 @@ const LichTiepDanSwagger = {
                     },
                 },
             ],
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Lấy chi tiết lịch tiếp dân thành công',
+                    content: {
+                        'application/json': {
+                            example: {
+                                success: true,
+                                data: {
+                                    id: '123e4567-e89b-12d3-a456-426614174000',
+                                    ten_can_bo: 'Nguyễn Văn An',
+                                    ngay_tiep_dan: '2026-08-26',
+                                    slots: [{
+                                        timeSlot: '07:30 - 08:30',
+                                        totalCapacity: 16,
+                                        heldCount: 3,
+                                        unassignedHeldCount: 1,
+                                        remainingCapacity: 13,
+                                        isFull: false,
+                                        counters: [{
+                                            counterCode: 'QUAY_1',
+                                            capacity: 2,
+                                            heldCount: 1,
+                                            remainingCapacity: 1,
+                                            isFull: false,
+                                        }],
+                                    }],
+                                },
+                            },
+                        },
+                    },
+                },
+                400: { description: 'ID lịch không hợp lệ hoặc bị thiếu' },
+                404: { description: 'Không tìm thấy lịch tiếp dân' },
+            }
         },
         put: {
             tags: ['LichTiepDan'],

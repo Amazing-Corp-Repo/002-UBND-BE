@@ -295,6 +295,24 @@ const LichTiepDanRepository = {
     });
   },
 
+  async findDetailById(id) {
+    return prisma.lich_tiep_dan.findFirst({
+      where: { id },
+      include: {
+        khung_gio_tiep_dan: {
+          where: { is_active: true, is_delete: false },
+          orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
+        },
+        dang_ky_tiep_dan: {
+          select: {
+            slot: true,
+            bo_phan: true,
+          },
+        },
+      },
+    });
+  },
+
   async findByCanBoAndNgayExcludeId(ten_can_bo, ngay_tiep_dan, excludeId) {
     return await prisma.lich_tiep_dan.findFirst({
       where: {

@@ -77,6 +77,7 @@ export const buildScheduleSlotRows = (periods, currentUser) => {
 
 const mapCreatedSchedule = (schedule) => {
   const slots = schedule.khung_gio_tiep_dan || [];
+  const registrations = schedule.dang_ky_tiep_dan || [];
   const groupedSlots = new Map();
 
   slots.forEach((slot) => {
@@ -90,12 +91,44 @@ const mapCreatedSchedule = (schedule) => {
       id: slot.id,
       counterCode: slot.ma_quay,
       capacity: slot.suc_chua,
+      heldCount: 0,
+      remainingCapacity: slot.suc_chua,
+      isFull: false,
       isActive: slot.is_active,
     });
     groupedSlots.set(slot.khung_gio, current);
   });
 
-  const { khung_gio_tiep_dan: _slots, ...scheduleData } = schedule;
+  registrations.forEach((registration) => {
+    const slot = groupedSlots.get(registration.slot);
+    if (!slot) return;
+
+    const counter = slot.counters.find(
+      (item) => item.counterCode === registration.bo_phan
+    );
+    if (counter) {
+      counter.heldCount += 1;
+      counter.remainingCapacity = Math.max(0, counter.capacity - counter.heldCount);
+      counter.isFull = counter.heldCount >= counter.capacity;
+    } else {
+      slot.unassignedHeldCount = (slot.unassignedHeldCount || 0) + 1;
+    }
+  });
+
+  groupedSlots.forEach((slot) => {
+    slot.unassignedHeldCount = slot.unassignedHeldCount || 0;
+    slot.heldCount =
+      slot.unassignedHeldCount +
+      slot.counters.reduce((total, counter) => total + counter.heldCount, 0);
+    slot.remainingCapacity = Math.max(0, slot.totalCapacity - slot.heldCount);
+    slot.isFull = slot.heldCount >= slot.totalCapacity;
+  });
+
+  const {
+    khung_gio_tiep_dan: _slots,
+    dang_ky_tiep_dan: _registrations,
+    ...scheduleData
+  } = schedule;
   return { ...scheduleData, slots: [...groupedSlots.values()] };
 };
 
@@ -291,11 +324,11 @@ const LichTiepDanService = {
     if (id === null || id === undefined) {
       throw new BaseError(400, "ID lịch tiếp dân không được để trống");
     }
-    const data = await LichTiepDanRepository.findById(id);
+    const data = await LichTiepDanRepository.findDetailById(id);
     if (!data || data.is_delete) {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại");
     }
-    return data;
+    return mapCreatedSchedule(data);
   },
 
   async createLichTiepDan(
