@@ -4,6 +4,11 @@ const DangKyTiepDanRepository = {
   async findScheduleById(id) {
     return prisma.lich_tiep_dan.findFirst({
       where: { id, is_active: true, is_delete: false },
+      include: {
+        khung_gio_tiep_dan: {
+          where: { is_active: true, is_delete: false },
+        },
+      },
     });
   },
 
@@ -21,6 +26,64 @@ const DangKyTiepDanRepository = {
 
   async create(data) {
     return prisma.dang_ky_tiep_dan.create({ data });
+  },
+
+  async createWithGuards({
+    scheduleId,
+    slot,
+    phoneNumber,
+    citizenId,
+    totalCapacity,
+    data,
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const schedule = await tx.lich_tiep_dan.findFirst({
+        where: { id: scheduleId, is_active: true, is_delete: false },
+      });
+      if (!schedule) return { conflict: "SCHEDULE_UNAVAILABLE" };
+
+      const [duplicate, heldCount, phoneDailyCount, citizenDailyCount] =
+        await Promise.all([
+          tx.dang_ky_tiep_dan.findFirst({
+            where: {
+              id_lich_tiep_dan: scheduleId,
+              slot,
+              sdt: phoneNumber,
+            },
+            select: { id: true },
+          }),
+          tx.dang_ky_tiep_dan.count({
+            where: { id_lich_tiep_dan: scheduleId, slot },
+          }),
+          tx.dang_ky_tiep_dan.count({
+            where: {
+              loai: "COUNTER_RECEPTION",
+              ngay: schedule.ngay_tiep_dan,
+              sdt: phoneNumber,
+            },
+          }),
+          tx.dang_ky_tiep_dan.count({
+            where: {
+              loai: "COUNTER_RECEPTION",
+              ngay: schedule.ngay_tiep_dan,
+              cccd: citizenId,
+            },
+          }),
+        ]);
+
+      if (duplicate) return { conflict: "DUPLICATE_SLOT_PHONE" };
+      if (phoneDailyCount >= 2) return { conflict: "PHONE_DAILY_LIMIT" };
+      if (citizenDailyCount >= 2) return { conflict: "CITIZEN_DAILY_LIMIT" };
+      if (heldCount >= totalCapacity) return { conflict: "SLOT_FULL" };
+
+      const registration = await tx.dang_ky_tiep_dan.create({
+        data: {
+          ...data,
+          ngay: schedule.ngay_tiep_dan,
+        },
+      });
+      return { registration };
+    }, { isolationLevel: "Serializable" });
   },
 
   async findForCitizenLookup({ receptionCode, phoneNumber }) {

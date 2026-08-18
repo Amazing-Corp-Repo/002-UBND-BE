@@ -49,7 +49,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Đăng ký lịch tiếp dân tại quầy từ Mobile",
       description:
-        "API công khai. BE kiểm tra lịch hoạt động, chống trùng theo lịch/khung giờ/số điện thoại và tự sinh mã tiếp dân ngắn, ví dụ A00123.",
+        "API công khai. BE kiểm tra slot thuộc lịch và còn chỗ trước khi lưu. Mọi đơn PENDING, APPROVED, COMPLETED, REJECTED hoặc đã xoá mềm đều giữ chỗ và không hoàn lại. Mỗi số điện thoại và mỗi CCCD được tạo tối đa 2 đơn trong cùng ngày tiếp dân. Giới hạn 30 request trong 10 phút cho mỗi IP. Hệ thống tự sinh mã tiếp dân ngắn, ví dụ A00123.",
       requestBody: {
         required: true,
         content: {
@@ -58,9 +58,10 @@ const DangKyTiepDanSwagger = {
       },
       responses: {
         200: { description: "Đăng ký thành công" },
-        400: { description: "Thiếu hoặc sai dữ liệu, hoặc lịch đã qua" },
+        400: { description: "Thiếu hoặc sai dữ liệu, lịch đã qua hoặc khung giờ không thuộc lịch" },
         404: { description: "Lịch tiếp dân không tồn tại hoặc đã ngừng hoạt động" },
-        409: { description: "Số điện thoại đã đăng ký cùng lịch và khung giờ" },
+        409: { description: "Khung giờ đã đầy, đăng ký trùng hoặc SĐT/CCCD đã đạt giới hạn 2 đơn trong ngày" },
+        429: { description: "Vượt quá 30 request đăng ký trong 10 phút từ cùng một IP" },
       },
     },
   },
