@@ -6,6 +6,7 @@ import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import DangKyTiepDanRepository from "../src/repositories/dang-ky-tiep-dan.repository.js";
 import dangKyTiepDanRouter from "../src/routes/dang-ky-tiep-dan.route.js";
 import jwtUtils from "../src/utils/jwt.util.js";
+import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
 
 const originalFindAllForStaff = DangKyTiepDanRepository.findAllForStaff;
 
@@ -57,6 +58,22 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-registrations", () => {
+  it("documents the supported approval statuses in Swagger", () => {
+    const operation =
+      DangKyTiepDanSwagger["/api/reception-registrations"].get;
+    const statusParameter = operation.parameters.find(
+      (parameter) => parameter.name === "approvalStatus"
+    );
+
+    assert.deepEqual(statusParameter.schema.enum, [
+      "PENDING",
+      "APPROVED",
+      "COMPLETED",
+      "REJECTED",
+    ]);
+    assert.ok(operation.responses[400]);
+  });
+
   it("returns a paginated staff list and derived rating status", async () => {
     const server = createTestServer();
     const { port } = server.address();
@@ -101,6 +118,47 @@ describe("GET /api/reception-registrations", () => {
         { headers: { authorization: `Bearer ${tokenWithPermissions([])}` } }
       );
       assert.equal(response.status, 403);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for an unsupported approval status", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations?approvalStatus=UNKNOWN`,
+        {
+          headers: {
+            authorization: `Bearer ${tokenWithPermissions([PERMISSION.RR_GET_ALL])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for timestamps and impossible reception dates", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      for (const receptionDate of [
+        "2099-08-20T00:00:00.000Z",
+        "2099-02-30",
+      ]) {
+        const response = await fetch(
+          `http://127.0.0.1:${port}/api/reception-registrations?receptionDate=${encodeURIComponent(receptionDate)}`,
+          {
+            headers: {
+              authorization: `Bearer ${tokenWithPermissions([PERMISSION.RR_GET_ALL])}`,
+            },
+          }
+        );
+        assert.equal(response.status, 400);
+      }
     } finally {
       server.close();
     }

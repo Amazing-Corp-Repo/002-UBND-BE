@@ -217,13 +217,13 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 05 — `GET /api/reception-registrations` — Cán bộ lấy danh sách đăng ký tiếp dân
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Authenticate, permission `RR_GET_ALL`, phân trang, tìm kiếm/lọc ngày-trạng thái-quầy-đánh giá, Swagger và test.
+- **Đã làm/hiện có:** Authenticate, permission `RR_GET_ALL`, phân trang, tìm kiếm/lọc ngày-trạng thái-quầy-đánh giá, Swagger và test. `receptionDate` chỉ nhận ngày thực có định dạng `YYYY-MM-DD`; `approvalStatus` chỉ nhận bốn trạng thái nghiệp vụ hợp lệ.
 - **Chưa làm:** Chưa giới hạn dữ liệu theo quầy/cơ quan của chính cán bộ; người có permission hiện có thể xem toàn bộ danh sách phù hợp bộ lọc.
 - **Cần bổ sung:** Chỉ cần bổ sung data-scope theo đơn vị/quầy nếu BA xác nhận cán bộ không được xem toàn bộ; permission chức năng hiện đã đủ.
 - **Dùng để làm gì:** Màn hình cán bộ lấy danh sách đơn tiếp dân có phân trang và bộ lọc.
 - **Role áp dụng:** cán bộ/lãnh đạo/quản trị có permission `RR_GET_ALL`.
 - **Trường hợp áp dụng:** Bảng quản lý đơn tại 8 quầy.
-- **Query đầu vào:** `page` (mặc định 1), `size` (mặc định 10, tối đa 100), `search`, `receptionDate`, `approvalStatus`, `ratingStatus` (`RATED`/`NOT_RATED`), `department` (`QUAY_1`–`QUAY_8`).
+- **Query đầu vào:** `page` (mặc định 1), `size` (mặc định 10, tối đa 100), `search`, `receptionDate` (`YYYY-MM-DD`), `approvalStatus` (`PENDING`/`APPROVED`/`COMPLETED`/`REJECTED`), `ratingStatus` (`RATED`/`NOT_RATED`), `department` (`QUAY_1`–`QUAY_8`).
 - **Đầu ra `data[]`:** `id`, `receptionCode`, `applicantName`, `phoneNumber`, `receptionDate`, `timeSlot`, `topic`, `workingContent`, `department`, `approvalStatus`, `ratingStatus`, `approverName`, `approvedAt`, `completedAt`, `rejectionReason`, `rejectedAt`.
 - **Đầu ra phân trang:** `pagination.currentPage`, `pageSize`, `totalPages`, `totalItems`.
 - **Chức năng chi tiết:**

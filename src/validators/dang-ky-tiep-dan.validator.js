@@ -4,6 +4,25 @@ const vietnameseNameRegex = /^[\p{L}\s'.-]+$/u;
 const vietnamesePhoneRegex = /^(03|05|07|08|09)\d{8}$/;
 const timeSlotRegex = /^([01]\d|2[0-3]):[0-5]\d\s*-\s*([01]\d|2[0-3]):[0-5]\d$/;
 
+const receptionDateSchema = Joi.string()
+  .pattern(/^\d{4}-\d{2}-\d{2}$/)
+  .custom((value, helpers) => {
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day
+    ) {
+      return helpers.error("date.invalid");
+    }
+    return value;
+  })
+  .messages({
+    "string.pattern.base": "Ngày tiếp dân phải có định dạng YYYY-MM-DD",
+    "date.invalid": "Ngày tiếp dân không tồn tại",
+  });
+
 export const CreateDangKyTiepDanRequest = Joi.object({
   idLichTiepDan: Joi.string().uuid().required().messages({
     "string.guid": "ID lịch tiếp dân không hợp lệ",
@@ -73,10 +92,13 @@ export const GetDangKyTiepDanQuery = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   size: Joi.number().integer().min(1).max(100).default(10),
   search: Joi.string().trim().max(100).allow("").optional(),
-  receptionDate: Joi.date().iso().optional().messages({
-    "date.format": "Ngày tiếp dân phải có định dạng YYYY-MM-DD",
-  }),
-  approvalStatus: Joi.string().trim().uppercase().max(30).optional(),
+  receptionDate: receptionDateSchema.optional(),
+  approvalStatus: Joi.string()
+    .trim()
+    .uppercase()
+    .valid("PENDING", "APPROVED", "COMPLETED", "REJECTED")
+    .optional()
+    .messages({ "any.only": "Trạng thái phê duyệt không hợp lệ" }),
   ratingStatus: Joi.string()
     .valid("RATED", "NOT_RATED")
     .optional()
