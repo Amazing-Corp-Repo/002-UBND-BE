@@ -1,4 +1,5 @@
 export const AUDIT_LOGS = {
+    READ: 'READ',
     UPDATE: 'UPDATE',
     CREATE: 'CREATE',
     DELETE: 'DELETE',

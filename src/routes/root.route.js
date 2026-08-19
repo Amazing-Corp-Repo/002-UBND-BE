@@ -24,6 +24,7 @@ import dangKyTiepDanRouter from './dang-ky-tiep-dan.route.js';
 import receptionScheduleRouter from './reception-schedule.route.js';
 import receptionScheduleManagementRouter from './reception-schedule-management.route.js';
 import receptionRatingRouter from './reception-rating.route.js';
+import receptionCounterRouter from './reception-counter.route.js';
 
 const rootRouter = express.Router();
 
@@ -53,6 +54,7 @@ rootRouter.use('/reception-registrations', dangKyTiepDanRouter);
 rootRouter.use('/reception-schedules/management', receptionScheduleManagementRouter);
 rootRouter.use('/reception-schedules', receptionScheduleRouter);
 rootRouter.use('/reception-ratings', receptionRatingRouter);
+rootRouter.use('/reception-counters', receptionCounterRouter);
 
 export default rootRouter;
 
