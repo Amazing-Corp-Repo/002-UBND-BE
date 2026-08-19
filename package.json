@@ -45,6 +45,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
+    "build": "npm run check && prisma generate",
     "test": "node --experimental-strip-types --test --test-concurrency=1",
     "check": "prisma validate",
     "generate:reception-template": "node scripts/generate-reception-schedule-template.js",

@@ -283,6 +283,7 @@ model nguoi_dung {
 
   // Reverse relations — Phân công quầy tiếp dân
   phan_cong_quay_tiep_dan phan_cong_quay_tiep_dan[] @relation("PhanCongQuay_CanBo")
+  dang_ky_tiep_dan_da_duyet dang_ky_tiep_dan[] @relation("DangKyTiepDan_NguoiDuyet")
 
   @@index([email], map: "idx_nguoi_dung_email")
   @@index([is_active], map: "idx_nguoi_dung_is_active")
@@ -715,12 +716,15 @@ model dang_ky_tiep_dan {
   quay_tiep_dan      quay_tiep_dan? @relation(fields: [id_quay], references: [id], onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_quay")
   ca_tiep_dan        ca_tiep_dan?   @relation(fields: [id_ca_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_ca")
   cau_hinh_quay      khung_gio_tiep_dan? @relation("DangKyTiepDan_CauHinhQuay", fields: [id_cau_hinh_quay], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_cau_hinh_quay")
+  nguoi_duyet        nguoi_dung? @relation("DangKyTiepDan_NguoiDuyet", fields: [nguoi_duyet_don], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_nguoi_duyet")
   danh_gia_tiep_dan  danh_gia_tiep_dan[]
 
   @@index([trang_thai], map: "idx_dang_ky_tiep_dan_trang_thai")
   @@index([loai], map: "idx_dang_ky_tiep_dan_loai")
   @@index([id_ca_tiep_dan], map: "idx_dang_ky_tiep_dan_id_ca")
   @@index([id_cau_hinh_quay], map: "idx_dang_ky_tiep_dan_id_cau_hinh_quay")
+  @@index([thoi_gian_hoan_thanh], map: "idx_dang_ky_tiep_dan_thoi_gian_hoan_thanh")
+  @@index([thoi_gian_tu_choi], map: "idx_dang_ky_tiep_dan_thoi_gian_tu_choi")
 }
 
 // Đánh giá sau buổi tiếp dân / gặp lãnh đạo
@@ -752,14 +756,14 @@ model lich_gap_lanh_dao {
   ngay               DateTime  @db.Date
   dia_diem           String?   @db.VarChar(255)
   ghi_chu            String?
-  is_active          Boolean   @default(true)
-  is_delete          Boolean   @default(false)
+  is_active          Boolean?  @default(true)
+  is_delete          Boolean?  @default(false)
   nguoi_tao          String?   @db.Uuid
   nguoi_cap_nhat     String?   @db.Uuid
-  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_tao      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 
-  lanh_dao               nguoi_dung                    @relation("LichGapLanhDao_LanhDao", fields: [id_lanh_dao], references: [id])
+  lanh_dao               nguoi_dung                    @relation("LichGapLanhDao_LanhDao", fields: [id_lanh_dao], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_lich_gap_lanh_dao_lanh_dao")
   khung_gio_gap_lanh_dao khung_gio_gap_lanh_dao[]
 
   @@unique([id_lanh_dao, ngay], map: "uq_lich_gap_lanh_dao_ngay")
@@ -774,15 +778,15 @@ model khung_gio_gap_lanh_dao {
   id_lich_gap       String    @db.Uuid
   gio_bat_dau       String    @db.VarChar(10)
   gio_ket_thuc      String    @db.VarChar(10)
-  suc_chua          Int       @default(1)
-  is_active         Boolean   @default(true)
-  is_delete         Boolean   @default(false)
+  suc_chua          Int?      @default(1)
+  is_active         Boolean?  @default(true)
+  is_delete         Boolean?  @default(false)
   nguoi_tao         String?   @db.Uuid
   nguoi_cap_nhat    String?   @db.Uuid
-  thoi_gian_tao     DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_tao     DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 
-  lich_gap_lanh_dao      lich_gap_lanh_dao @relation(fields: [id_lich_gap], references: [id])
+  lich_gap_lanh_dao      lich_gap_lanh_dao @relation(fields: [id_lich_gap], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_gap_lanh_dao_lich")
   dang_ky_gap_lanh_dao   dang_ky_gap_lanh_dao[]
 
   @@unique([id_lich_gap, gio_bat_dau, gio_ket_thuc], map: "uq_khung_gio_gap_lanh_dao")
@@ -793,7 +797,7 @@ model khung_gio_gap_lanh_dao {
 // Đăng ký gặp lãnh đạo
 model dang_ky_gap_lanh_dao {
   id                        String  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  ma_dang_ky                String  @unique @db.VarChar(50)
+  ma_dang_ky                String  @unique(map: "uq_dang_ky_gap_lanh_dao_ma") @db.VarChar(50)
   id_khung_gio_gap          String  @db.Uuid
   chu_de                    String? @db.VarChar(255)   // THÊM MỚI V2 — Chủ đề gặp lãnh đạo
   ho_ten                    String  @db.VarChar(150)
@@ -819,11 +823,11 @@ model dang_ky_gap_lanh_dao {
   thoi_gian_tao             DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat        DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 
-  khung_gio_gap_lanh_dao    khung_gio_gap_lanh_dao @relation(fields: [id_khung_gio_gap], references: [id])
+  khung_gio_gap_lanh_dao    khung_gio_gap_lanh_dao @relation(fields: [id_khung_gio_gap], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_dang_ky_gap_khung_gio")
 
-  nguoi_duyet               nguoi_dung? @relation("DangKyGapLanhDao_NguoiDuyet", fields: [nguoi_duyet_don], references: [id])
-  nguoi_hoan_thanh_ref      nguoi_dung? @relation("DangKyGapLanhDao_NguoiHoanThanh", fields: [nguoi_hoan_thanh], references: [id])
-  nguoi_tu_choi_ref         nguoi_dung? @relation("DangKyGapLanhDao_NguoiTuChoi", fields: [nguoi_tu_choi], references: [id])
+  nguoi_duyet               nguoi_dung? @relation("DangKyGapLanhDao_NguoiDuyet", fields: [nguoi_duyet_don], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_duyet")
+  nguoi_hoan_thanh_ref      nguoi_dung? @relation("DangKyGapLanhDao_NguoiHoanThanh", fields: [nguoi_hoan_thanh], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_hoan_thanh")
+  nguoi_tu_choi_ref         nguoi_dung? @relation("DangKyGapLanhDao_NguoiTuChoi", fields: [nguoi_tu_choi], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_tu_choi")
 
   dinh_kem_dang_ky_gap_lanh_dao dinh_kem_dang_ky_gap_lanh_dao[]
   danh_gia_gap_lanh_dao         danh_gia_gap_lanh_dao?
@@ -833,6 +837,8 @@ model dang_ky_gap_lanh_dao {
   @@index([cccd], map: "idx_dang_ky_gap_cccd")
   @@index([trang_thai], map: "idx_dang_ky_gap_trang_thai")
   @@index([thoi_gian_tao], map: "idx_dang_ky_gap_thoi_gian_tao")
+  @@unique([id_khung_gio_gap, sdt], map: "uq_leader_meeting_slot_phone")
+  @@unique([id_khung_gio_gap, cccd], map: "uq_leader_meeting_slot_citizen")
 }
 
 // Ảnh CCCD và tài liệu đính kèm đăng ký gặp lãnh đạo
@@ -844,9 +850,9 @@ model dinh_kem_dang_ky_gap_lanh_dao {
   duong_dan_file String
   mime_type     String?  @db.VarChar(100)
   kich_thuoc    Int?
-  thoi_gian_tao DateTime @default(now())
+  thoi_gian_tao DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 
-  dang_ky_gap_lanh_dao dang_ky_gap_lanh_dao @relation(fields: [id_dang_ky], references: [id], onDelete: Cascade)
+  dang_ky_gap_lanh_dao dang_ky_gap_lanh_dao @relation(fields: [id_dang_ky], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_dinh_kem_gap_dang_ky")
 
   @@index([id_dang_ky], map: "idx_dinh_kem_gap_id_dang_ky")
 }
@@ -854,7 +860,7 @@ model dinh_kem_dang_ky_gap_lanh_dao {
 // Đánh giá gặp lãnh đạo
 model danh_gia_gap_lanh_dao {
   id                      String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  id_dang_ky_gap_lanh_dao String   @unique @db.Uuid
+  id_dang_ky_gap_lanh_dao String   @unique(map: "uq_danh_gia_gap_lanh_dao_id_dang_ky") @db.Uuid
   diem_tong               Int
   tieu_chi                Json?
   ly_do                   Json?
@@ -884,13 +890,13 @@ model khung_gio_tiep_dan {
   thoi_gian_tao      DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   lich_tiep_dan      lich_tiep_dan @relation(fields: [id_lich_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_lich")
-  quay_tiep_dan      quay_tiep_dan? @relation(fields: [id_quay], references: [id], onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_quay")
+  quay_tiep_dan      quay_tiep_dan? @relation(fields: [id_quay], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_quay")
   ca_tiep_dan        ca_tiep_dan?  @relation(fields: [id_ca_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_ca")
   dang_ky_tiep_dan   dang_ky_tiep_dan[]
   dang_ky_tiep_dan_cau_hinh dang_ky_tiep_dan[] @relation("DangKyTiepDan_CauHinhQuay")
   phan_cong_quay_tiep_dan phan_cong_quay_tiep_dan[]
 
-  @@unique([id_lich_tiep_dan, khung_gio, ma_quay], map: "uq_khung_gio_tiep_dan_lich_slot_quay")
+  @@unique([id_lich_tiep_dan, khung_gio, id_quay], map: "uq_khung_gio_tiep_dan_lich_slot_quay")
   @@unique([id_ca_tiep_dan, id_quay], map: "uq_khung_gio_tiep_dan_ca_quay_v2")
   @@index([id_lich_tiep_dan, khung_gio], map: "idx_khung_gio_tiep_dan_lich_slot")
   @@index([ma_quay], map: "idx_khung_gio_tiep_dan_ma_quay")
@@ -933,7 +939,7 @@ model phan_cong_quay_tiep_dan {
   thoi_gian_cap_nhat    DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 
   cau_hinh_quay         khung_gio_tiep_dan @relation(fields: [id_cau_hinh_quay], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_phan_cong_quay_cau_hinh")
-  can_bo                nguoi_dung          @relation("PhanCongQuay_CanBo", fields: [id_can_bo], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  can_bo                nguoi_dung          @relation("PhanCongQuay_CanBo", fields: [id_can_bo], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_phan_cong_quay_can_bo")
 
   @@unique([id_cau_hinh_quay], map: "uq_phan_cong_quay_cau_hinh")
   @@index([id_can_bo], map: "idx_phan_cong_quay_id_can_bo")
@@ -943,17 +949,17 @@ model phan_cong_quay_tiep_dan {
 // Quầy tiếp dân — danh mục quầy
 model quay_tiep_dan {
   id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  ma_quay            String    @unique @db.VarChar(20)
+  ma_quay            String    @unique(map: "uq_quay_tiep_dan_ma_quay") @db.VarChar(20)
   ten_quay           String    @db.VarChar(100)
-  so_thu_tu          Int       @unique
+  so_thu_tu          Int       @unique(map: "uq_quay_tiep_dan_so_thu_tu")
   mo_ta              String?
-  suc_chua_mac_dinh  Int       @default(2)
+  suc_chua_mac_dinh  Int?      @default(2)
   vi_tri             String?   @db.VarChar(255)
-  is_active          Boolean   @default(true)
-  is_delete          Boolean   @default(false)
+  is_active          Boolean?  @default(true)
+  is_delete          Boolean?  @default(false)
   nguoi_tao          String?   @db.Uuid
   nguoi_cap_nhat     String?   @db.Uuid
-  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_tao      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
 
   khung_gio_tiep_dan khung_gio_tiep_dan[]
