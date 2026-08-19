@@ -1,5 +1,6 @@
 import prisma from "../config/database.config.js";
 import LichTiepDanRepository from "./lich-tiep-dan.repository.js";
+import { attachReceptionV2Relations } from "../mapper/reception-schedule-v2.mapper.js";
 
 const buildCaTiepDanData = (slotRows) => {
   // Extract distinct (khung_gio) from slot rows and build ca_tiep_dan entries
@@ -19,6 +20,22 @@ const buildCaTiepDanData = (slotRows) => {
         gio_ket_thuc: `${gioKetThuc}:00`,
       };
     });
+};
+
+const findActiveCounters = (tx) =>
+  tx.quay_tiep_dan.findMany({
+    where: { is_active: true, is_delete: false },
+    select: { id: true, ma_quay: true },
+  });
+
+const buildV2SlotRows = async (tx, slotRows, scheduleId, caEntries) => {
+  const counters = await findActiveCounters(tx);
+  return attachReceptionV2Relations({
+    slotRows,
+    scheduleId,
+    shiftEntries: caEntries,
+    counters,
+  });
 };
 
 const ReceptionScheduleManagementRepository = {
@@ -58,17 +75,7 @@ const ReceptionScheduleManagementRepository = {
         }
         // Create khung_gio_tiep_dan with id_ca_tiep_dan set
         await tx.khung_gio_tiep_dan.createMany({
-          data: record.slotRows.map((slot) => {
-            const caMatch = caEntries.find((ca) => {
-              const [sb, se] = slot.khung_gio.split("-").map((t) => `${t.trim()}:00`);
-              return ca.gio_bat_dau === sb && ca.gio_ket_thuc === se;
-            });
-            return {
-              ...slot,
-              id_lich_tiep_dan: schedule.id,
-              id_ca_tiep_dan: caMatch?.id || null,
-            };
-          }),
+          data: await buildV2SlotRows(tx, record.slotRows, schedule.id, caEntries),
         });
       }
     });
@@ -93,17 +100,7 @@ const ReceptionScheduleManagementRepository = {
       }
 
       await tx.khung_gio_tiep_dan.createMany({
-        data: slotRows.map((slot) => {
-          const caMatch = caEntries.find((ca) => {
-            const [sb, se] = slot.khung_gio.split("-").map((t) => `${t.trim()}:00`);
-            return ca.gio_bat_dau === sb && ca.gio_ket_thuc === se;
-          });
-          return {
-            ...slot,
-            id_lich_tiep_dan: schedule.id,
-            id_ca_tiep_dan: caMatch?.id || null,
-          };
-        }),
+        data: await buildV2SlotRows(tx, slotRows, schedule.id, caEntries),
       });
 
       return tx.lich_tiep_dan.findUnique({
@@ -192,6 +189,9 @@ const ReceptionScheduleManagementRepository = {
         await tx.khung_gio_tiep_dan.deleteMany({
           where: { id_lich_tiep_dan: id },
         });
+        await tx.ca_tiep_dan.deleteMany({
+          where: { id_lich_tiep_dan: id },
+        });
 
         // Create ca_tiep_dan entries from distinct slot times (V2)
         const caData = buildCaTiepDanData(slotRows);
@@ -208,17 +208,7 @@ const ReceptionScheduleManagementRepository = {
         }
 
         await tx.khung_gio_tiep_dan.createMany({
-          data: slotRows.map((slot) => {
-            const caMatch = caEntries.find((ca) => {
-              const [sb, se] = slot.khung_gio.split("-").map((t) => `${t.trim()}:00`);
-              return ca.gio_bat_dau === sb && ca.gio_ket_thuc === se;
-            });
-            return {
-              ...slot,
-              id_lich_tiep_dan: id,
-              id_ca_tiep_dan: caMatch?.id || null,
-            };
-          }),
+          data: await buildV2SlotRows(tx, slotRows, id, caEntries),
         });
       }
 
