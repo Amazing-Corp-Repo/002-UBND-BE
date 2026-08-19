@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import express from "express";
 import path from "node:path";
-import XLSX from "xlsx";
+import XLSX from "../src/utils/xlsx.util.js";
 import { PERMISSION } from "../src/constants/permission.constant.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import receptionScheduleManagementRouter from "../src/routes/reception-schedule-management.route.js";
