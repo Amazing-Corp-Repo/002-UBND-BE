@@ -17,6 +17,19 @@ export const PERMISSION = {
   LTD_DELETE: "LTD_DELETE",
   LTD_UPDATE_STATUS: "LTD_UPDATE_STATUS",
   LTD_GET_TEMPLATE: "LTD_GET_TEMPLATE",
+  LTD_GET_ALL: "LTD_GET_ALL",
+
+  // Đăng ký tiếp dân
+  RR_GET_ALL: "RR_GET_ALL",
+  RR_GET_DETAIL: "RR_GET_DETAIL",
+  RR_APPROVE: "RR_APPROVE",
+  RR_COMPLETE: "RR_COMPLETE",
+  RR_REJECT: "RR_REJECT",
+
+  // Đánh giá tiếp dân
+  RRT_GET_ALL: "RRT_GET_ALL",
+  RRT_GET_DETAIL: "RRT_GET_DETAIL",
+  RRT_GET_STATS: "RRT_GET_STATS",
 
   // Lĩnh vực phản ánh
   LVPA_CREATE: "LVPA_CREATE",
@@ -101,6 +114,17 @@ export const PERMISSION_DESC = {
   LTD_DELETE: "Xóa lịch tiếp dân",
   LTD_UPDATE_STATUS: "Cập nhật trạng thái lịch tiếp dân",
   LTD_GET_TEMPLATE: "Lấy mẫu lịch tiếp dân",
+  LTD_GET_ALL: "Xem danh sách lịch tiếp dân",
+
+  RR_GET_ALL: "Xem danh sách đăng ký tiếp dân",
+  RR_GET_DETAIL: "Xem chi tiết đăng ký tiếp dân",
+  RR_APPROVE: "Phê duyệt đăng ký tiếp dân",
+  RR_COMPLETE: "Hoàn thành buổi tiếp dân",
+  RR_REJECT: "Từ chối đăng ký tiếp dân",
+
+  RRT_GET_ALL: "Xem danh sách đánh giá tiếp dân",
+  RRT_GET_DETAIL: "Xem chi tiết đánh giá tiếp dân",
+  RRT_GET_STATS: "Xem thống kê đánh giá tiếp dân",
 
   LVPA_CREATE: "Tạo lĩnh vực phản ánh",
   LVPA_UPDATE: "Cập nhật lĩnh vực phản ánh",
@@ -162,6 +186,8 @@ export const PERMISSION_CATEGORIES = {
   CSV: "Cơ sở dịch vụ công",
   DMTT: "Danh mục tin tức",
   LTD: "Lịch tiếp dân",
+  RR: "Đăng ký tiếp dân",
+  RRT: "Đánh giá tiếp dân",
   LVPA: "Lĩnh vực phản ánh",
   LVTTHC: "Lĩnh vực thủ tục hành chính",
   MD: "Mẫu đơn",
@@ -185,6 +211,9 @@ export const PERMISSION_TYPE = {
   GET_TEMPLATE: "Lấy mẫu",
   GET_DETAIL: "Xem chi tiết",
   GET_ALL: "Xem tất cả",
+  APPROVE: "Phê duyệt",
+  COMPLETE: "Hoàn thành",
+  REJECT: "Từ chối",
   GET_EXCEL: "Xuất Excel",
   THUONG_TRUC: "Thường trực",
 };

@@ -1,0 +1,776 @@
+# Plan V2 — Chuẩn hóa đăng ký tiếp dân, quầy và đăng ký gặp lãnh đạo
+
+> Trạng thái: Bản đề xuất để kiểm tra trước khi code.
+>
+> Phạm vi hiện tại: Chỉ chốt thiết kế và kế hoạch migration. Chưa sửa Prisma schema, chưa tạo migration và chưa thay đổi database.
+
+## 1. Mục tiêu
+
+1. Giữ `dang_ky_tiep_dan` cho nghiệp vụ tiếp dân tại quầy.
+2. Tách nghiệp vụ gặp lãnh đạo sang hệ thống bảng riêng.
+3. Tạo danh mục tám quầy thay cho việc phụ thuộc hoàn toàn vào constant `QUAY_1` đến `QUAY_8`.
+4. Tách khái niệm ca tiếp dân khỏi cấu hình sức chứa của từng quầy.
+5. Giữ nguyên contract của API cũ và Mobile:
+   - Request/response vẫn dùng `department: "QUAY_3"`.
+   - Không bắt Mobile truyền UUID nội bộ của quầy.
+   - Không đổi tên route cũ.
+6. Thực hiện migration theo chiến lược:
+
+```text
+EXPAND -> BACKFILL -> DUAL READ/WRITE -> VERIFY -> CLEANUP
+```
+
+## 2. Các quyết định đã chốt
+
+| Nội dung | Quyết định |
+|---|---|
+| Số quầy | Tám quầy, mã `QUAY_1` đến `QUAY_8` |
+| Sức chứa mặc định | Hai người/quầy/ca |
+| Điều chỉnh sức chứa | Cán bộ được tăng hoặc giảm, nhưng không được thấp hơn số đơn đã giữ chỗ |
+| API cũ | Giữ nguyên route và contract |
+| Trường `department` | Tiếp tục sử dụng mã quầy, backend tự map UUID |
+| Địa chỉ người dân | Giữ `dia_chi` |
+| Audit | Giữ người tạo/cập nhật và thời gian tạo/cập nhật |
+| Mobile hủy đơn | Không hỗ trợ, không có trạng thái `CANCELLED` |
+| Đánh giá | Chỉ được đánh giá sau trạng thái `COMPLETED` |
+| Nhận xét | Tối đa 2.000 ký tự |
+| Chủ đề gặp lãnh đạo | Giữ nullable để có thể sử dụng về sau |
+| Khung giờ gặp lãnh đạo | Mặc định một người, có thể cấu hình sức chứa |
+
+## 3. Sửa điểm chưa đúng của plan cũ
+
+### 3.1. Không dùng một bản ghi quầy làm ID ca
+
+`khung_gio_tiep_dan` hiện có tám bản ghi cho cùng một ca, mỗi bản ghi tương ứng một quầy. Trong khi người dân chọn ca trước và chỉ được phân quầy khi cán bộ phê duyệt.
+
+Vì vậy không lưu `id_khung_gio_tiep_dan` đại diện ngẫu nhiên vào đơn ngay khi đăng ký. Thay vào đó tạo bảng `ca_tiep_dan`:
+
+```text
+lich_tiep_dan
+  └── ca_tiep_dan
+        └── khung_gio_tiep_dan (cấu hình quầy và sức chứa)
+```
+
+Đăng ký giữ `id_ca_tiep_dan`. Khi phê duyệt, backend lưu `id_cau_hinh_quay`, trỏ đến đúng cấu hình quầy của ca đó.
+
+### 3.2. Không tạo lại unique bằng tên đang tồn tại
+
+Unique cũ đang có tên:
+
+```text
+uq_khung_gio_tiep_dan_lich_slot_quay
+```
+
+Unique mới phải dùng tên khác:
+
+```text
+uq_khung_gio_tiep_dan_ca_quay_v2
+```
+
+### 3.3. Không xóa `loai` khi còn dữ liệu `LEADER_MEETING`
+
+Trước Phase 3 phải bảo đảm:
+
+- Toàn bộ đăng ký `LEADER_MEETING` đã được chuyển sang bảng mới.
+- Toàn bộ đánh giá liên quan đã được chuyển.
+- Có bảng mapping và báo cáo đối soát.
+- Không còn bản ghi `LEADER_MEETING` trong `dang_ky_tiep_dan`.
+
+## 4. Thiết kế database mục tiêu
+
+### 4.1. Bảng `quay_tiep_dan`
+
+```prisma
+model quay_tiep_dan {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ma_quay            String    @unique(map: "uq_quay_tiep_dan_ma_quay") @db.VarChar(20)
+  ten_quay           String    @db.VarChar(100)
+  so_thu_tu          Int       @unique(map: "uq_quay_tiep_dan_so_thu_tu")
+  mo_ta              String?
+  suc_chua_mac_dinh  Int       @default(2)
+  vi_tri             String?   @db.VarChar(255)
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  khung_gio_tiep_dan khung_gio_tiep_dan[]
+
+  @@index([is_active, is_delete], map: "idx_quay_tiep_dan_trang_thai")
+}
+```
+
+Ràng buộc SQL bổ sung:
+
+```sql
+CHECK ("suc_chua_mac_dinh" >= 1)
+CHECK ("ma_quay" ~ '^QUAY_[1-8]$')
+CHECK ("so_thu_tu" BETWEEN 1 AND 8)
+```
+
+### 4.2. Bảng `ca_tiep_dan`
+
+Một ca là khung thời gian người dân lựa chọn, không gắn sẵn với quầy.
+
+```prisma
+model ca_tiep_dan {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_lich_tiep_dan   String    @db.Uuid
+  gio_bat_dau        DateTime  @db.Time(0)
+  gio_ket_thuc       DateTime  @db.Time(0)
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  lich_tiep_dan      lich_tiep_dan          @relation(fields: [id_lich_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_ca_tiep_dan_lich")
+  cau_hinh_quay      khung_gio_tiep_dan[]
+  dang_ky_tiep_dan   dang_ky_tiep_dan[]
+
+  @@unique([id_lich_tiep_dan, gio_bat_dau, gio_ket_thuc], map: "uq_ca_tiep_dan_lich_thoi_gian")
+  @@index([id_lich_tiep_dan], map: "idx_ca_tiep_dan_id_lich")
+  @@index([is_active, is_delete], map: "idx_ca_tiep_dan_trang_thai")
+}
+```
+
+Ràng buộc SQL:
+
+```sql
+CHECK ("gio_bat_dau" < "gio_ket_thuc")
+```
+
+Service phải chặn các ca giao nhau trong cùng lịch.
+
+### 4.3. Bảng `khung_gio_tiep_dan`
+
+Giữ tên bảng hiện tại để giảm ảnh hưởng code, nhưng sau chuẩn hóa bảng này đóng vai trò cấu hình sức chứa từng quầy trong một ca.
+
+Model mục tiêu sau Phase 3:
+
+```prisma
+model khung_gio_tiep_dan {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_ca_tiep_dan     String    @db.Uuid
+  id_quay            String    @db.Uuid
+  suc_chua           Int       @default(2)
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  ca_tiep_dan        ca_tiep_dan   @relation(fields: [id_ca_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_ca")
+  quay_tiep_dan      quay_tiep_dan @relation(fields: [id_quay], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_quay")
+  dang_ky_duoc_phan  dang_ky_tiep_dan[]
+
+  @@unique([id_ca_tiep_dan, id_quay], map: "uq_khung_gio_tiep_dan_ca_quay_v2")
+  @@index([id_quay], map: "idx_khung_gio_tiep_dan_id_quay")
+  @@index([is_active, is_delete], map: "idx_khung_gio_tiep_dan_trang_thai_v2")
+}
+```
+
+Ràng buộc SQL:
+
+```sql
+CHECK ("suc_chua" >= 1)
+```
+
+Trong Phase 1 và Phase 2 vẫn giữ các cột cũ:
+
+```text
+id_lich_tiep_dan
+khung_gio
+ma_quay
+```
+
+### 4.4. Bảng `dang_ky_tiep_dan`
+
+Các cột mới:
+
+```prisma
+id_ca_tiep_dan      String? @db.Uuid
+id_cau_hinh_quay    String? @db.Uuid
+nguoi_duyet_don     String? @db.Uuid
+```
+
+Ý nghĩa:
+
+- `id_ca_tiep_dan`: ca người dân đã chọn, bắt buộc sau khi backfill hoàn tất.
+- `id_cau_hinh_quay`: null khi `PENDING`; được gán khi cán bộ phê duyệt và chọn quầy.
+- Quầy được xác định qua `id_cau_hinh_quay -> khung_gio_tiep_dan -> quay_tiep_dan`.
+
+Model mục tiêu sau Phase 3:
+
+```prisma
+model dang_ky_tiep_dan {
+  id                    String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ma_tiep_dan           String    @unique(map: "uq_dang_ky_tiep_dan_ma_tiep_dan") @db.VarChar(50)
+  id_lich_tiep_dan      String?   @db.Uuid
+  id_ca_tiep_dan        String    @db.Uuid
+  id_cau_hinh_quay      String?   @db.Uuid
+  ngay                  DateTime? @db.Date
+  slot                  String?   @db.VarChar(50)
+  chu_de                String?   @db.VarChar(255)
+  ly_do                 String?
+  ho_ten                String?   @db.VarChar(150)
+  sdt                   String?   @db.VarChar(20)
+  cccd                  String?   @db.VarChar(20)
+  dia_chi               String?
+  trang_thai            String    @default("PENDING") @db.VarChar(30)
+  thoi_gian_phe_duyet   DateTime? @db.Timestamp(6)
+  thoi_gian_hoan_thanh  DateTime? @db.Timestamp(6)
+  thoi_gian_tu_choi     DateTime? @db.Timestamp(6)
+  ly_do_tu_choi         String?
+  nguoi_duyet_don       String?   @db.Uuid
+  nguoi_hoan_thanh      String?   @db.Uuid
+  nguoi_tu_choi         String?   @db.Uuid
+  nguoi_tao             String?   @db.Uuid
+  nguoi_cap_nhat        String?   @db.Uuid
+  is_active             Boolean   @default(true)
+  is_delete             Boolean   @default(false)
+  thoi_gian_tao         DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat    DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  lich_tiep_dan         lich_tiep_dan?       @relation(fields: [id_lich_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_lich_tiep_dan")
+  ca_tiep_dan           ca_tiep_dan           @relation(fields: [id_ca_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_ca")
+  cau_hinh_quay         khung_gio_tiep_dan?   @relation(fields: [id_cau_hinh_quay], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_cau_hinh_quay")
+  danh_gia_tiep_dan     danh_gia_tiep_dan[]
+
+  @@index([trang_thai], map: "idx_dang_ky_tiep_dan_trang_thai")
+  @@index([id_ca_tiep_dan], map: "idx_dang_ky_tiep_dan_id_ca")
+  @@index([id_cau_hinh_quay], map: "idx_dang_ky_tiep_dan_id_cau_hinh_quay")
+}
+```
+
+Tiếp tục giữ `id_lich_tiep_dan`, `ngay` và `slot` làm snapshot để không phá API cũ.
+
+Ràng buộc SQL sau Phase 3:
+
+```sql
+CHECK ("trang_thai" IN ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED'))
+CHECK (
+  "trang_thai" NOT IN ('APPROVED', 'COMPLETED')
+  OR "id_cau_hinh_quay" IS NOT NULL
+)
+```
+
+Service phê duyệt phải kiểm tra `id_cau_hinh_quay` thuộc đúng `id_ca_tiep_dan` của đơn.
+
+### 4.5. Hệ thống gặp lãnh đạo
+
+#### `lich_gap_lanh_dao`
+
+```prisma
+model lich_gap_lanh_dao {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_lanh_dao        String    @db.Uuid
+  ngay               DateTime  @db.Date
+  dia_diem           String?   @db.VarChar(255)
+  ghi_chu            String?
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  lanh_dao            nguoi_dung                  @relation("LichGapLanhDao_LanhDao", fields: [id_lanh_dao], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  khung_gio            khung_gio_gap_lanh_dao[]
+
+  @@unique([id_lanh_dao, ngay], map: "uq_lich_gap_lanh_dao_ngay")
+  @@index([ngay], map: "idx_lich_gap_lanh_dao_ngay")
+  @@index([is_active, is_delete], map: "idx_lich_gap_lanh_dao_trang_thai")
+}
+```
+
+#### `khung_gio_gap_lanh_dao`
+
+```prisma
+model khung_gio_gap_lanh_dao {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_lich_gap        String    @db.Uuid
+  gio_bat_dau        DateTime  @db.Time(0)
+  gio_ket_thuc       DateTime  @db.Time(0)
+  suc_chua           Int       @default(1)
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  lich_gap_lanh_dao  lich_gap_lanh_dao       @relation(fields: [id_lich_gap], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  dang_ky             dang_ky_gap_lanh_dao[]
+
+  @@unique([id_lich_gap, gio_bat_dau, gio_ket_thuc], map: "uq_khung_gio_gap_lanh_dao")
+  @@index([id_lich_gap], map: "idx_khung_gio_gap_lanh_dao_id_lich")
+}
+```
+
+Ràng buộc:
+
+```sql
+CHECK ("suc_chua" >= 1)
+CHECK ("gio_bat_dau" < "gio_ket_thuc")
+```
+
+#### `dang_ky_gap_lanh_dao`
+
+```prisma
+model dang_ky_gap_lanh_dao {
+  id                   String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ma_dang_ky           String    @unique(map: "uq_dang_ky_gap_lanh_dao_ma") @db.VarChar(50)
+  id_khung_gio_gap     String    @db.Uuid
+  chu_de               String?   @db.VarChar(255)
+  ly_do                String
+  ho_ten               String    @db.VarChar(150)
+  sdt                  String    @db.VarChar(20)
+  cccd                 String    @db.VarChar(20)
+  ngay_cap_cccd        DateTime? @db.Date
+  noi_cap_cccd         String?   @db.VarChar(255)
+  dia_chi              String
+  ngay_lam_don         DateTime? @db.Date
+  trang_thai           String    @default("PENDING") @db.VarChar(30)
+  thoi_gian_phe_duyet  DateTime? @db.Timestamp(6)
+  thoi_gian_hoan_thanh DateTime? @db.Timestamp(6)
+  thoi_gian_tu_choi    DateTime? @db.Timestamp(6)
+  ly_do_tu_choi        String?
+  nguoi_duyet_don      String?   @db.Uuid
+  nguoi_hoan_thanh     String?   @db.Uuid
+  nguoi_tu_choi        String?   @db.Uuid
+  is_active            Boolean   @default(true)
+  is_delete            Boolean   @default(false)
+  nguoi_tao            String?   @db.Uuid
+  nguoi_cap_nhat       String?   @db.Uuid
+  thoi_gian_tao        DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat   DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  khung_gio            khung_gio_gap_lanh_dao @relation(fields: [id_khung_gio_gap], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  nguoi_duyet          nguoi_dung? @relation("DangKyGapLanhDao_NguoiDuyet", fields: [nguoi_duyet_don], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  nguoi_hoan_thanh_ref nguoi_dung? @relation("DangKyGapLanhDao_NguoiHoanThanh", fields: [nguoi_hoan_thanh], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  nguoi_tu_choi_ref    nguoi_dung? @relation("DangKyGapLanhDao_NguoiTuChoi", fields: [nguoi_tu_choi], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  dinh_kem             dinh_kem_dang_ky_gap_lanh_dao[]
+  danh_gia             danh_gia_gap_lanh_dao?
+
+  @@index([id_khung_gio_gap], map: "idx_dang_ky_gap_id_khung_gio")
+  @@index([sdt], map: "idx_dang_ky_gap_sdt")
+  @@index([cccd], map: "idx_dang_ky_gap_cccd")
+  @@index([trang_thai], map: "idx_dang_ky_gap_trang_thai")
+}
+```
+
+Ràng buộc trạng thái:
+
+```sql
+CHECK ("trang_thai" IN ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED'))
+```
+
+#### `dinh_kem_dang_ky_gap_lanh_dao`
+
+```prisma
+model dinh_kem_dang_ky_gap_lanh_dao {
+  id             String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_dang_ky     String   @db.Uuid
+  loai_dinh_kem  String   @db.VarChar(30)
+  ten_file_goc   String   @db.VarChar(255)
+  duong_dan_file String
+  mime_type      String?  @db.VarChar(100)
+  kich_thuoc     Int?
+  thoi_gian_tao  DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  dang_ky dang_ky_gap_lanh_dao @relation(fields: [id_dang_ky], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([id_dang_ky], map: "idx_dinh_kem_gap_id_dang_ky")
+}
+```
+
+Ràng buộc:
+
+```sql
+CHECK ("loai_dinh_kem" IN ('CCCD_FRONT', 'CCCD_BACK', 'SUPPORTING_DOCUMENT'))
+CHECK ("kich_thuoc" IS NULL OR "kich_thuoc" >= 0)
+```
+
+Một đơn chỉ được có một ảnh trước và một ảnh sau:
+
+```sql
+CREATE UNIQUE INDEX "uq_dinh_kem_gap_cccd_front"
+ON "dinh_kem_dang_ky_gap_lanh_dao" ("id_dang_ky")
+WHERE "loai_dinh_kem" = 'CCCD_FRONT';
+
+CREATE UNIQUE INDEX "uq_dinh_kem_gap_cccd_back"
+ON "dinh_kem_dang_ky_gap_lanh_dao" ("id_dang_ky")
+WHERE "loai_dinh_kem" = 'CCCD_BACK';
+```
+
+Giới hạn ba tài liệu hỗ trợ phải được kiểm tra trong transaction ở service.
+
+#### `danh_gia_gap_lanh_dao`
+
+```prisma
+model danh_gia_gap_lanh_dao {
+  id                      String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_dang_ky_gap_lanh_dao String    @unique(map: "uq_danh_gia_gap_lanh_dao_id_dang_ky") @db.Uuid
+  diem_tong               Int
+  tieu_chi                Json?
+  ly_do                   Json?
+  nhan_xet                String?
+  is_active               Boolean   @default(true)
+  is_delete               Boolean   @default(false)
+  thoi_gian_tao           DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  dang_ky dang_ky_gap_lanh_dao @relation(fields: [id_dang_ky_gap_lanh_dao], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([diem_tong], map: "idx_danh_gia_gap_lanh_dao_diem_tong")
+}
+```
+
+Ràng buộc:
+
+```sql
+CHECK ("diem_tong" BETWEEN 1 AND 5)
+CHECK ("nhan_xet" IS NULL OR char_length("nhan_xet") <= 2000)
+```
+
+### 4.6. Relation cần bổ sung vào `nguoi_dung`
+
+```prisma
+lich_gap_lanh_dao_phu_trach       lich_gap_lanh_dao[]     @relation("LichGapLanhDao_LanhDao")
+dang_ky_gap_lanh_dao_da_duyet     dang_ky_gap_lanh_dao[]  @relation("DangKyGapLanhDao_NguoiDuyet")
+dang_ky_gap_lanh_dao_da_hoan_thanh dang_ky_gap_lanh_dao[] @relation("DangKyGapLanhDao_NguoiHoanThanh")
+dang_ky_gap_lanh_dao_da_tu_choi   dang_ky_gap_lanh_dao[]  @relation("DangKyGapLanhDao_NguoiTuChoi")
+```
+
+Quan hệ người duyệt/hoàn thành/từ chối của tiếp dân quầy cũng cần được đặt tên riêng nếu bổ sung relation Prisma.
+
+## 5. Quy tắc sức chứa và chống gửi trùng
+
+### 5.1. Tiếp dân tại quầy
+
+- Khi tạo đơn, giữ chỗ ở cấp `ca_tiep_dan`, chưa gán quầy.
+- Mọi bản ghi đã tạo đều giữ chỗ, không trả lại chỗ.
+- Khi phê duyệt, cán bộ chọn quầy còn sức chứa trong ca.
+- Không được giảm sức chứa quầy thấp hơn số đăng ký đã được gán vào quầy.
+- Không được giảm tổng sức chứa ca thấp hơn tổng đăng ký đã giữ chỗ.
+- Giữ giới hạn hiện tại: một SĐT hoặc CCCD tối đa hai đơn trong một ngày.
+- Chống gửi trùng cùng ca bằng unique index:
+
+```sql
+CREATE UNIQUE INDEX "uq_counter_registration_ca_phone_v2"
+ON "dang_ky_tiep_dan" ("id_ca_tiep_dan", "sdt")
+WHERE "sdt" IS NOT NULL;
+
+CREATE UNIQUE INDEX "uq_counter_registration_ca_citizen_v2"
+ON "dang_ky_tiep_dan" ("id_ca_tiep_dan", "cccd")
+WHERE "cccd" IS NOT NULL;
+```
+
+### 5.2. Gặp lãnh đạo
+
+- Sức chứa mặc định một người/khung giờ, có thể cấu hình.
+- Tạo đơn và kiểm tra sức chứa trong transaction `Serializable`.
+- Chống cùng SĐT hoặc CCCD đăng ký trùng cùng khung giờ:
+
+```sql
+CREATE UNIQUE INDEX "uq_leader_meeting_slot_phone"
+ON "dang_ky_gap_lanh_dao" ("id_khung_gio_gap", "sdt");
+
+CREATE UNIQUE INDEX "uq_leader_meeting_slot_citizen"
+ON "dang_ky_gap_lanh_dao" ("id_khung_gio_gap", "cccd");
+```
+
+Nội dung còn cần xác nhận trước khi code API gặp lãnh đạo: đơn `REJECTED` có tiếp tục giữ chỗ hay trả lại chỗ. Đề xuất nhất quán với tiếp dân quầy: đã tạo đơn thì không trả chỗ.
+
+## 6. Migration theo ba phase
+
+### 6.1. Phase 0 — Chuẩn bị
+
+1. Tạo database local có quyền owner để sinh migration.
+2. Chạy `prisma migrate status` trên DEV dùng chung.
+3. Backup schema và dữ liệu DEV.
+4. Đếm dữ liệu theo `loai`.
+5. Đếm đánh giá liên quan `LEADER_MEETING`.
+6. Kiểm tra tất cả `bo_phan` và `ma_quay` có thuộc `QUAY_1` đến `QUAY_8`.
+7. Kiểm tra mọi chuỗi `slot` và `khung_gio` có định dạng hợp lệ.
+
+Không dùng `prisma migrate dev` trực tiếp trên DEV dùng chung.
+
+### 6.2. Phase 1 — Expand
+
+Chỉ thêm mới, không xóa hoặc rename cột cũ:
+
+1. Tạo `quay_tiep_dan` và seed tám quầy, tất cả mặc định hai người.
+2. Tạo `ca_tiep_dan`.
+3. Thêm `id_ca_tiep_dan`, `id_quay` vào `khung_gio_tiep_dan` dưới dạng nullable.
+4. Thêm `id_ca_tiep_dan`, `id_cau_hinh_quay`, `nguoi_duyet_don` vào `dang_ky_tiep_dan` dưới dạng nullable.
+5. Tạo năm bảng nghiệp vụ gặp lãnh đạo.
+6. Tạo FK, CHECK constraint và index mới bằng tên có hậu tố `_v2` nếu tên cũ đang tồn tại.
+7. Bổ sung relation Prisma phía `nguoi_dung`.
+
+Migration PostgreSQL phải có transaction:
+
+```sql
+BEGIN;
+-- DDL Phase 1
+COMMIT;
+```
+
+Quy trình lệnh:
+
+```text
+Local:  prisma migrate dev --create-only --name phase1_expand_reception_models
+Review migration.sql
+DEV:    prisma migrate deploy
+```
+
+### 6.3. Phase 2 — Backfill
+
+#### Bước 1: Backfill ca
+
+Tạo một `ca_tiep_dan` cho mỗi tổ hợp lịch và khung giờ đang có:
+
+```sql
+INSERT INTO "ca_tiep_dan" (
+  "id",
+  "id_lich_tiep_dan",
+  "gio_bat_dau",
+  "gio_ket_thuc"
+)
+SELECT
+  public.uuid_generate_v4(),
+  kg."id_lich_tiep_dan",
+  trim(split_part(kg."khung_gio", '-', 1))::time,
+  trim(split_part(kg."khung_gio", '-', 2))::time
+FROM "khung_gio_tiep_dan" kg
+GROUP BY
+  kg."id_lich_tiep_dan",
+  trim(split_part(kg."khung_gio", '-', 1))::time,
+  trim(split_part(kg."khung_gio", '-', 2))::time
+ON CONFLICT ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc") DO NOTHING;
+```
+
+#### Bước 2: Backfill cấu hình quầy
+
+```sql
+UPDATE "khung_gio_tiep_dan" kg
+SET
+  "id_ca_tiep_dan" = ca."id",
+  "id_quay" = q."id"
+FROM "ca_tiep_dan" ca, "quay_tiep_dan" q
+WHERE ca."id_lich_tiep_dan" = kg."id_lich_tiep_dan"
+  AND ca."gio_bat_dau" = trim(split_part(kg."khung_gio", '-', 1))::time
+  AND ca."gio_ket_thuc" = trim(split_part(kg."khung_gio", '-', 2))::time
+  AND q."ma_quay" = kg."ma_quay";
+```
+
+#### Bước 3: Backfill đăng ký quầy
+
+```sql
+UPDATE "dang_ky_tiep_dan" dk
+SET "id_ca_tiep_dan" = ca."id"
+FROM "ca_tiep_dan" ca
+WHERE dk."loai" = 'COUNTER_RECEPTION'
+  AND ca."id_lich_tiep_dan" = dk."id_lich_tiep_dan"
+  AND ca."gio_bat_dau" = trim(split_part(dk."slot", '-', 1))::time
+  AND ca."gio_ket_thuc" = trim(split_part(dk."slot", '-', 2))::time;
+```
+
+Đơn đã được phân quầy được backfill đúng cấu hình quầy:
+
+```sql
+UPDATE "dang_ky_tiep_dan" dk
+SET "id_cau_hinh_quay" = kg."id"
+FROM "khung_gio_tiep_dan" kg
+JOIN "quay_tiep_dan" q ON q."id" = kg."id_quay"
+WHERE dk."loai" = 'COUNTER_RECEPTION'
+  AND dk."id_ca_tiep_dan" = kg."id_ca_tiep_dan"
+  AND dk."bo_phan" = q."ma_quay";
+```
+
+#### Bước 4: Chuyển dữ liệu gặp lãnh đạo
+
+Tạo script `scripts/migrate-leader-meeting.js` với các yêu cầu:
+
+- Chỉ đọc bản ghi `LEADER_MEETING` chưa được map.
+- Mapping lãnh đạo bằng file cấu hình UUID đã được kiểm tra thủ công; không tự đoán chỉ dựa trên tên gần giống.
+- Tạo lịch, khung giờ, đăng ký và đánh giá trong transaction.
+- Giữ mã đăng ký, trạng thái, thời gian và audit cũ.
+- Ghi bảng mapping `migration_leader_meeting_map` gồm ID cũ, ID mới và thời gian migrate.
+- Có chế độ dry-run.
+- Chạy lại không tạo dữ liệu trùng.
+- Xuất báo cáo các bản ghi không ánh xạ được.
+
+#### Bước 5: Dual read/dual write
+
+- Tạo đăng ký mới ghi đồng thời `id_ca_tiep_dan` và các snapshot cũ.
+- Phê duyệt ghi đồng thời `id_cau_hinh_quay` và `bo_phan`.
+- API vẫn trả `department` và `departmentName`.
+- Trong thời gian chuyển tiếp, repository đọc trường mới trước và fallback trường cũ.
+- Giữ `TIEP_DAN_TYPE.COUNTER_RECEPTION` để response cũ vẫn có `receptionType`.
+
+#### Bước 6: Verify bắt buộc
+
+Các truy vấn dưới đây phải trả về `0`:
+
+```sql
+SELECT COUNT(*)
+FROM "khung_gio_tiep_dan"
+WHERE "id_ca_tiep_dan" IS NULL OR "id_quay" IS NULL;
+
+SELECT COUNT(*)
+FROM "dang_ky_tiep_dan"
+WHERE "loai" = 'COUNTER_RECEPTION'
+  AND "id_ca_tiep_dan" IS NULL;
+
+SELECT COUNT(*)
+FROM "dang_ky_tiep_dan"
+WHERE "loai" = 'COUNTER_RECEPTION'
+  AND "trang_thai" IN ('APPROVED', 'COMPLETED')
+  AND "id_cau_hinh_quay" IS NULL;
+
+SELECT COUNT(*)
+FROM "dang_ky_tiep_dan"
+WHERE "loai" = 'LEADER_MEETING'
+  AND "id" NOT IN (
+    SELECT "id_dang_ky_cu" FROM "migration_leader_meeting_map"
+  );
+```
+
+### 6.4. Phase 3 — Cleanup
+
+Chỉ thực hiện sau khi chạy ổn định và được xác nhận bằng văn bản:
+
+1. Backup lần cuối.
+2. Xác nhận mọi dữ liệu `LEADER_MEETING` đã có mapping.
+3. Chuyển/xóa đánh giá gặp lãnh đạo khỏi bảng cũ.
+4. Chuyển/xóa đăng ký `LEADER_MEETING` khỏi `dang_ky_tiep_dan`.
+5. Tạo unique chống trùng mới theo `id_ca_tiep_dan`.
+6. Xóa các unique cũ phụ thuộc `loai` bằng `DROP INDEX`, không dùng `DROP CONSTRAINT`.
+7. Xóa `bo_phan`, `loai`, `ten_lanh_dao`, `chuc_vu_lanh_dao`.
+8. Xóa `ma_quay`, `khung_gio` và `id_lich_tiep_dan` cũ khỏi bảng cấu hình quầy nếu code không còn dùng.
+9. Đặt `id_ca_tiep_dan` và `id_quay` của cấu hình quầy thành `NOT NULL`.
+10. Đặt `id_ca_tiep_dan` của đăng ký quầy thành `NOT NULL`.
+11. Không xóa `dia_chi`, `nguoi_tao` hoặc `nguoi_cap_nhat`.
+12. Có thể xóa `RECEPTION_COUNTER_CODES` sau khi mọi truy vấn đọc quầy từ DB.
+13. Không xóa `TIEP_DAN_TYPE` nếu API cũ vẫn trả `receptionType`.
+
+## 7. Rollback
+
+### 7.1. Phase 1
+
+Chỉ rollback tự động khi chưa có dữ liệu nghiệp vụ mới:
+
+1. Drop FK mới.
+2. Drop cột mới.
+3. Drop bảng mới theo thứ tự phụ thuộc.
+4. Không dùng `CASCADE` ngoài phạm vi đã kiểm tra.
+
+### 7.2. Phase 2
+
+Không cần xóa dữ liệu mới ngay. Có thể rollback ứng dụng về đọc trường cũ vì các cột cũ vẫn còn. Giữ mapping và dữ liệu đã backfill để điều tra.
+
+### 7.3. Phase 3
+
+Không coi việc thêm lại cột rỗng là rollback. Sau cleanup, rollback hợp lệ là:
+
+- Restore từ backup đã kiểm chứng; hoặc
+- Khôi phục từ bảng archive/mapping được giữ riêng.
+
+## 8. API contract được giữ nguyên
+
+### Phê duyệt và gán quầy
+
+Request vẫn là:
+
+```http
+PATCH /api/reception-registrations/{id}/approve
+```
+
+```json
+{
+  "department": "QUAY_3"
+}
+```
+
+Backend thực hiện:
+
+1. Lấy `id_ca_tiep_dan` của đơn.
+2. Tìm cấu hình quầy trong ca có `ma_quay = QUAY_3`.
+3. Kiểm tra sức chứa trong transaction.
+4. Lưu `id_cau_hinh_quay`.
+5. Trong giai đoạn dual-write vẫn lưu `bo_phan = QUAY_3`.
+
+Response tiếp tục trả:
+
+```json
+{
+  "department": "QUAY_3",
+  "departmentName": "Quầy số 3"
+}
+```
+
+## 9. Kiểm thử bắt buộc
+
+### Database/migration
+
+- Phase 1 chạy thành công trên bản sao database.
+- Không trùng tên index/constraint.
+- Backfill ca đúng số lượng distinct lịch/khung giờ.
+- Tám cấu hình quầy của mỗi ca được map đúng.
+- Không có đăng ký quầy thiếu `id_ca_tiep_dan`.
+- Đơn đã duyệt/hoàn thành không thiếu cấu hình quầy.
+- Số đăng ký và đánh giá gặp lãnh đạo trước/sau bằng nhau.
+- Migration chạy lại không tạo bản ghi trùng.
+
+### API
+
+- API cũ tiếp tục nhận `department`.
+- Tạo đơn mới giữ chỗ theo ca.
+- Phê duyệt gán đúng quầy.
+- Quầy đầy trả `409`.
+- Hai request đồng thời không vượt sức chứa.
+- Thiếu quyền trả `403`.
+- Chỉ `COMPLETED` mới được đánh giá.
+- Gửi đánh giá trùng trả `409`.
+
+### Regression
+
+- Chạy toàn bộ `npm test`.
+- Chạy `prisma validate`.
+- Chạy `prisma migrate status`.
+- Kiểm tra Swagger đủ ví dụ request/response.
+- Kiểm tra Mobile đăng ký, tra cứu và hiển thị trạng thái.
+
+## 10. Thứ tự thực hiện sau khi plan được duyệt
+
+```text
+1. Chốt quy tắc REJECTED của gặp lãnh đạo có giữ chỗ hay không.
+2. Tạo migration Phase 1 bằng --create-only trên local.
+3. Review SQL và chạy thử trên database clone.
+4. Chạy test và đối soát.
+5. Backup DEV.
+6. prisma migrate deploy lên DEV.
+7. Chạy backfill dry-run rồi backfill thật.
+8. Deploy code dual-read/dual-write.
+9. Chạy integration test và Mobile test.
+10. Theo dõi ổn định.
+11. Chỉ tạo Phase 3 sau khi có xác nhận riêng.
+```
+
+## 11. Điều kiện để được phép thay đổi DB
+
+Chỉ bắt đầu migration khi đồng thời đáp ứng:
+
+- Plan này được duyệt.
+- Quy tắc giữ chỗ của đơn gặp lãnh đạo bị từ chối đã được chốt.
+- Có backup hoặc database clone khôi phục được.
+- Có quyền owner cho migration.
+- Không còn Prisma drift chưa giải thích.
+- Có test migration và test regression.
+- Có kế hoạch dừng service hoặc bảo đảm dual-write trong thời gian backfill.
