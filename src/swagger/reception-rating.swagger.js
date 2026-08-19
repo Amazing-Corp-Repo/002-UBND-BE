@@ -64,7 +64,52 @@ const ReceptionRatingSwagger = {
       description:
         "Trả về thang điểm từ 1 đến 5 sao, giới hạn nhận xét 2000 ký tự và danh sách nội dung gợi ý tương ứng với từng mức sao.",
       responses: {
-        200: { description: "Lấy cấu hình đánh giá tiếp dân thành công" },
+        200: {
+          description: "Lấy cấu hình đánh giá tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      scale: {
+                        type: "object",
+                        properties: {
+                          min: { type: "integer", enum: [1] },
+                          max: { type: "integer", enum: [5] },
+                        },
+                      },
+                      comment: {
+                        type: "object",
+                        properties: {
+                          maxLength: { type: "integer", enum: [2000] },
+                        },
+                      },
+                      suggestionsByScore: {
+                        type: "object",
+                        required: ["1", "2", "3", "4", "5"],
+                        properties: {
+                          1: { type: "array", items: { type: "string" } },
+                          2: { type: "array", items: { type: "string" } },
+                          3: { type: "array", items: { type: "string" } },
+                          4: { type: "array", items: { type: "string" } },
+                          5: { type: "array", items: { type: "string" } },
+                        },
+                      },
+                    },
+                  },
+                  message: {
+                    type: "string",
+                    example: "Lấy cấu hình đánh giá tiếp dân thành công",
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     },
   },

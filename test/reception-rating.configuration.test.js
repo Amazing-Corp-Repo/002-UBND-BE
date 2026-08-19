@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import express from "express";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import receptionRatingRouter from "../src/routes/reception-rating.route.js";
+import ReceptionRatingSwagger from "../src/swagger/reception-rating.swagger.js";
 
 const createTestServer = () => {
   const app = express();
@@ -12,6 +13,27 @@ const createTestServer = () => {
 };
 
 describe("GET /api/reception-ratings/configuration", () => {
+  it("documents the full configuration response in Swagger", () => {
+    const operation =
+      ReceptionRatingSwagger["/api/reception-ratings/configuration"].get;
+    const dataSchema =
+      operation.responses[200].content["application/json"].schema.properties.data;
+
+    assert.deepEqual(dataSchema.properties.scale.properties.min.enum, [1]);
+    assert.deepEqual(dataSchema.properties.scale.properties.max.enum, [5]);
+    assert.deepEqual(
+      dataSchema.properties.comment.properties.maxLength.enum,
+      [2000]
+    );
+    assert.deepEqual(dataSchema.properties.suggestionsByScore.required, [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+    ]);
+  });
+
   it("returns the 1-5 scale, comment limit and suggestions for every score", async () => {
     const server = createTestServer();
     const { port } = server.address();

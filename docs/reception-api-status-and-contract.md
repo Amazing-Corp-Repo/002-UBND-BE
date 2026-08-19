@@ -333,7 +333,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 11 — `GET /api/reception-ratings/configuration` — Lấy cấu hình thang điểm và gợi ý đánh giá
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Trả thang 1–5 sao, giới hạn 2.000 ký tự và gợi ý theo từng mức sao; đã có Swagger/test contract.
+- **Đã làm/hiện có:** Trả thang 1–5 sao, giới hạn 2.000 ký tự và gợi ý theo từng mức sao; Swagger khai báo đầy đủ schema/giá trị cấu hình và đã có test contract.
 - **Chưa làm:** Chưa có bảng cấu hình, version cấu hình hoặc API quản trị nội dung gợi ý.
 - **Cần bổ sung:** Không cần nếu nội dung gợi ý do đội BE phát hành cùng code. Nếu lãnh đạo phải tự chỉnh thì cần thiết kế CRUD cấu hình và permission riêng.
 - **Dùng để làm gì:** iPad lấy thang điểm, giới hạn nhận xét và gợi ý theo số sao.
