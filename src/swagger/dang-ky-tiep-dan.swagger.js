@@ -299,7 +299,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Phê duyệt đăng ký tiếp dân",
       description:
-        "Cán bộ phê duyệt yêu cầu gặp và gán đăng ký vào một trong tám quầy tiếp nhận. Backend kiểm tra sức chứa riêng của quầy trong đúng ca; nếu quầy đã đầy thì cán bộ phải chọn quầy khác. Hệ thống tự ghi nhận người duyệt và thời điểm duyệt.",
+        "Cán bộ phê duyệt yêu cầu gặp tại quầy đã được phân công cho tài khoản trong đúng ca. Backend tự lấy quầy từ phân công, chỉ dùng department để đối chiếu, kiểm tra sức chứa rồi ghi nhận người duyệt và thời điểm duyệt. Không có phân công hoặc gửi mã quầy khác phân công sẽ bị từ chối.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -347,7 +347,7 @@ const DangKyTiepDanSwagger = {
         },
         400: { description: "ID đăng ký hoặc quầy tiếp nhận không hợp lệ" },
         401: { description: "Thiếu hoặc sai access token" },
-        403: { description: "Không có quyền RR_APPROVE" },
+        403: { description: "Không có quyền RR_APPROVE, chưa được phân công trong ca hoặc mã quầy không khớp phân công" },
         404: { description: "Không tìm thấy đăng ký hoặc người phê duyệt" },
         409: { description: "Đăng ký không ở trạng thái chờ duyệt, đã được xử lý hoặc quầy được chọn đã đầy" },
         503: { description: "Nhiều cán bộ đồng thời phê duyệt gây xung đột transaction; client có thể thử lại" },
@@ -652,7 +652,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
     parameters: { id: DEMO.registrations.approve.id },
     request: {
       validCounter: {
-        summary: "Demo hợp lệ - phê duyệt vào quầy 3",
+        summary: "Demo hợp lệ - xác nhận quầy 3 đúng phân công",
         value: { department: "QUAY_3" },
       },
       invalidCounter: {
@@ -669,6 +669,16 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
           approvedAt: "2026-08-25T08:00:00.000Z",
         },
       }),
+      403: {
+        noAssignment: errorDemo(
+          "Demo 403 - Cán bộ chưa được phân công trong ca",
+          "Cán bộ chưa được phân công quầy trong ca này"
+        ),
+        assignmentMismatch: errorDemo(
+          "Demo 403 - Mã quầy không khớp phân công",
+          "Cán bộ không được phân công tại quầy này trong ca này"
+        ),
+      },
       409: {
         counterIsFull: errorDemo(
           "Demo 409 - Quầy đã đầy",

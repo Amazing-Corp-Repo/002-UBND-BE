@@ -380,8 +380,8 @@ const DangKyTiepDanService = {
         result = await DangKyTiepDanRepository.approvePendingWithCounterGuard(
           id,
           department,
+          currentUser.userId,
           {
-            bo_phan: department,
             trang_thai: TIEP_DAN_STATUS.APPROVED,
             ten_lanh_dao: approver.ho_va_ten || currentUser.username,
             chuc_vu_lanh_dao: approverTitle,
@@ -406,6 +406,12 @@ const DangKyTiepDanService = {
     }
     if (result?.conflict === "COUNTER_FULL") {
       throw new BaseError(409, "Quầy tiếp nhận đã đủ sức chứa trong ca này");
+    }
+    if (result?.conflict === "ASSIGNMENT_NOT_FOUND") {
+      throw new BaseError(403, "Cán bộ chưa được phân công quầy trong ca này");
+    }
+    if (result?.conflict === "ASSIGNMENT_MISMATCH") {
+      throw new BaseError(403, "Cán bộ không được phân công tại quầy này trong ca này");
     }
     if (result?.conflict === "ALREADY_PROCESSED" || !result?.registration) {
       throw new BaseError(409, "Đăng ký đã được xử lý bởi người khác");

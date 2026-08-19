@@ -80,11 +80,13 @@ afterEach(() => {
 });
 
 describe("PATCH /api/reception-registrations/:id/approve", () => {
-  it("documents counter-capacity validation in Swagger", () => {
+  it("documents assignment and counter-capacity validation in Swagger", () => {
     const operation =
       DangKyTiepDanSwagger["/api/reception-registrations/{id}/approve"].patch;
 
-    assert.ok(operation.description.includes("sức chứa riêng của quầy"));
+    assert.ok(operation.description.includes("được phân công"));
+    assert.ok(operation.description.includes("sức chứa"));
+    assert.ok(operation.responses[403].description.includes("phân công"));
     assert.ok(operation.responses[409].description.includes("quầy"));
     assert.ok(operation.responses[503]);
     assert.ok(
@@ -98,9 +100,11 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
     DangKyTiepDanRepository.approvePendingWithCounterGuard = async (
       _id,
       _department,
+      approverId,
       data
     ) => {
       persistedApprovalData = data;
+      assert.equal(approverId, "223e4567-e89b-42d3-a456-426614174000");
       return { registration: approvedDetail };
     };
     const server = createTestServer();
@@ -181,6 +185,54 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
     } finally {
       server.close();
     }
+  });
+
+  it("returns 403 when the officer has no assignment in the shift", async () => {
+    DangKyTiepDanRepository.approvePendingWithCounterGuard = async () => ({
+      conflict: "ASSIGNMENT_NOT_FOUND",
+    });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.RR_APPROVE])}`,
+          },
+          body: JSON.stringify({ department: "QUAY_3" }),
+        }
+      );
+      const body = await response.json();
+      assert.equal(response.status, 403);
+      assert.match(body.message, /chưa được phân công/i);
+    } finally { server.close(); }
+  });
+
+  it("returns 403 when department differs from the assigned counter", async () => {
+    DangKyTiepDanRepository.approvePendingWithCounterGuard = async () => ({
+      conflict: "ASSIGNMENT_MISMATCH",
+    });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.RR_APPROVE])}`,
+          },
+          body: JSON.stringify({ department: "QUAY_3" }),
+        }
+      );
+      const body = await response.json();
+      assert.equal(response.status, 403);
+      assert.match(body.message, /không được phân công tại quầy/i);
+    } finally { server.close(); }
   });
 
   it("returns 403 without approve permission", async () => {
