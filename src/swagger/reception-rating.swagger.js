@@ -26,7 +26,7 @@ const ReceptionRatingSwagger = {
       tags: ["ReceptionRating"],
       summary: "Gửi đánh giá tiếp dân từ iPad",
       description:
-        "API công khai dành cho iPad. Chỉ đăng ký ở trạng thái COMPLETED mới được đánh giá và mỗi mã tiếp dân chỉ được đánh giá một lần. Nội dung gợi ý được chọn phải thuộc cấu hình của số sao đã gửi.",
+        "API công khai dành cho iPad. Chỉ đăng ký ở trạng thái COMPLETED mới được đánh giá và mỗi mã tiếp dân chỉ được đánh giá một lần. Nội dung gợi ý được chọn phải thuộc cấu hình của số sao đã gửi. Giới hạn 20 yêu cầu gửi đánh giá trong 10 phút cho mỗi IP.",
       requestBody: {
         required: true,
         content: {
@@ -50,10 +50,43 @@ const ReceptionRatingSwagger = {
         },
       },
       responses: {
-        200: { description: "Gửi đánh giá tiếp dân thành công" },
+        200: {
+          description: "Gửi đánh giá tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string", format: "uuid" },
+                      receptionCode: { type: "string", example: "A00123" },
+                      score: { type: "integer", minimum: 1, maximum: 5 },
+                      selectedSuggestions: {
+                        type: "array",
+                        maxItems: 5,
+                        uniqueItems: true,
+                        items: { type: "string" },
+                      },
+                      comment: { type: "string", maxLength: 2000 },
+                      createdAt: { type: "string", format: "date-time" },
+                    },
+                  },
+                  message: {
+                    type: "string",
+                    example: "Gửi đánh giá tiếp dân thành công",
+                  },
+                },
+              },
+            },
+          },
+        },
         400: { description: "Thiếu dữ liệu hoặc dữ liệu đánh giá không hợp lệ" },
         404: { description: "Không tìm thấy mã tiếp dân" },
         409: { description: "Buổi tiếp dân chưa hoàn thành hoặc mã đã được đánh giá" },
+        429: { description: "Vượt quá 20 yêu cầu gửi đánh giá trong 10 phút từ cùng một IP" },
       },
     },
   },

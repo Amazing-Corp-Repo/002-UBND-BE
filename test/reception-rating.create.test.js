@@ -6,6 +6,10 @@ import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionRatingRepository from "../src/repositories/reception-rating.repository.js";
 import receptionRatingRouter from "../src/routes/reception-rating.route.js";
 import ReceptionRatingSwagger from "../src/swagger/reception-rating.swagger.js";
+import {
+  createReceptionRatingSubmissionRateLimiter,
+  RECEPTION_RATING_SUBMISSION_RATE_LIMIT,
+} from "../src/middlewares/reception-rating-rate-limit.middleware.js";
 
 const originalMethods = {
   findRegistrationByCode: ReceptionRatingRepository.findRegistrationByCode,
@@ -60,6 +64,12 @@ describe("POST /api/reception-ratings", () => {
 
     assert.ok(operation.description.includes("COMPLETED"));
     assert.ok(operation.responses[409].description.includes("chưa hoàn thành"));
+    assert.ok(operation.description.includes("20 yêu cầu"));
+    assert.ok(operation.responses[429]);
+    assert.ok(
+      operation.responses[200].content["application/json"].schema.properties.data
+        .properties.selectedSuggestions
+    );
   });
 
   it("submits a valid rating", async () => {
@@ -186,6 +196,80 @@ describe("POST /api/reception-ratings", () => {
         }
       );
       assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("rejects a completed registration without an assigned counter", async () => {
+    ReceptionRatingRepository.findRegistrationByCode = async () => ({
+      ...eligibleRegistration,
+      bo_phan: null,
+    });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(validBody),
+        }
+      );
+      assert.equal(response.status, 409);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 404 when the reception code does not exist", async () => {
+    ReceptionRatingRepository.findRegistrationByCode = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(validBody),
+        }
+      );
+      assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("limits rating submissions to 20 requests per 10 minutes per IP", async () => {
+    const app = express();
+    app.use(express.json());
+    app.use(createReceptionRatingSubmissionRateLimiter());
+    app.post("/ratings", (_req, res) => res.json({ success: true }));
+    const server = app.listen(0);
+    const { port } = server.address();
+
+    try {
+      for (
+        let index = 0;
+        index < RECEPTION_RATING_SUBMISSION_RATE_LIMIT.limit;
+        index += 1
+      ) {
+        const response = await fetch(`http://127.0.0.1:${port}/ratings`, {
+          method: "POST",
+        });
+        assert.equal(response.status, 200);
+      }
+
+      const blockedResponse = await fetch(
+        `http://127.0.0.1:${port}/ratings`,
+        { method: "POST" }
+      );
+      const blockedBody = await blockedResponse.json();
+
+      assert.equal(blockedResponse.status, 429);
+      assert.match(blockedBody.message, /yêu cầu đánh giá/i);
     } finally {
       server.close();
     }

@@ -346,9 +346,9 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 12 — `POST /api/reception-ratings` — Người dân gửi đánh giá từ iPad
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Validate 1–5 sao/gợi ý/comment, chỉ nhận đơn `COMPLETED`, chống gửi trùng ở service và unique DB, audit, Swagger và test.
-- **Chưa làm:** Chưa có rate limit/CAPTCHA riêng cho endpoint public; chưa có cơ chế sửa hoặc xóa đánh giá sau khi gửi.
-- **Cần bổ sung:** Nên thêm rate limit chống spam. Không thêm sửa/xóa nếu nguyên tắc là đánh giá một lần; nếu có xử lý khiếu nại phải tách luồng quản trị và audit.
+- **Đã làm/hiện có:** Validate 1–5 sao/gợi ý/comment, chỉ nhận đơn `COMPLETED`, chống gửi trùng ở service và unique DB, rate limit riêng 20 yêu cầu/10 phút/IP, audit, Swagger có response schema và test `429`.
+- **Chưa làm:** Chưa có CAPTCHA; chưa có cơ chế sửa hoặc xóa đánh giá sau khi gửi.
+- **Cần bổ sung:** Chỉ bổ sung CAPTCHA nếu endpoint triển khai Internet công khai cần bảo vệ mạnh hơn. Không thêm sửa/xóa nếu nguyên tắc là đánh giá một lần; nếu có xử lý khiếu nại phải tách luồng quản trị và audit.
 - **Dùng để làm gì:** Lưu đánh giá 1–5 sao, gợi ý được chọn và nhận xét tự do từ iPad.
 - **Role áp dụng:** Public/iPad, không cần token.
 - **Trường hợp áp dụng:** Sau khi API 10 xác nhận mã đủ điều kiện và người dân hoàn tất nhập đánh giá.
@@ -375,6 +375,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
   - Lưu `score` vào `diem_tong`, gợi ý vào JSON `ly_do`, nhận xét vào `nhan_xet`; `tieu_chi` hiện là `null`.
   - Ghi audit.
 - **Lỗi chính:** `400`, `404`, `409`.
+- **Rate limit:** `429` khi một IP gửi quá 20 yêu cầu trong 10 phút.
 
 ### API 13 — `GET /api/reception-ratings` — Lãnh đạo lấy danh sách đánh giá
 

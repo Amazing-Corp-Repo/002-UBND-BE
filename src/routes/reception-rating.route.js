@@ -13,6 +13,7 @@ import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
+import receptionRatingSubmissionRateLimiter from "../middlewares/reception-rating-rate-limit.middleware.js";
 
 const receptionRatingRouter = express.Router();
 
@@ -47,6 +48,7 @@ receptionRatingRouter.get(
 
 receptionRatingRouter.post(
   "/",
+  receptionRatingSubmissionRateLimiter,
   validate(CreateReceptionRatingRequest),
   receptionAudit(AUDIT_LOGS.CREATE, { tableName: "danh_gia_tiep_dan" }),
   ReceptionRatingController.create
