@@ -76,6 +76,7 @@ receptionScheduleManagementRouter.delete(
 
 receptionScheduleManagementRouter.get(
   "/:id",
+  validateParams(ReceptionScheduleManagementIdParams),
   ReceptionScheduleManagementController.getLichTiepDanById
 );
 

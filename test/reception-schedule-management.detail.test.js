@@ -60,8 +60,27 @@ describe("GET /api/reception-schedules/management/:id", () => {
     const operation = ReceptionScheduleManagementSwagger["/api/reception-schedules/management/{id}"].get;
 
     assert.ok(operation.description.includes("số đăng ký đã giữ chỗ"));
-    assert.ok(operation.responses[200]);
+    assert.equal(operation.parameters[0].schema.format, "uuid");
+    assert.equal(
+      operation.responses[200].content["application/json"].schema.properties
+        .data.properties.slots.type,
+      "array"
+    );
     assert.ok(operation.responses[404]);
+  });
+
+  it("returns 400 for an invalid schedule UUID", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/not-a-uuid`
+      );
+
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
   });
 
   it("returns slot, counter and held-capacity details", async () => {

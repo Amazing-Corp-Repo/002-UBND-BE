@@ -484,7 +484,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 18 — `GET /api/reception-schedules/management/{id}` — Xem chi tiết lịch, ca và sức chứa từng quầy
 
 - **Trạng thái:** Đã tách sang API tiếng Anh; response slot/sức chứa đã hoàn thành.
-- **Đã làm/hiện có:** Trả chi tiết lịch, các ca, tổng sức chứa, số giữ chỗ/chưa gán quầy và chi tiết từng quầy; Swagger đã có ví dụ mới.
+- **Đã làm/hiện có:** Validate UUID; trả chi tiết lịch, các ca, tổng sức chứa, số giữ chỗ/chưa gán quầy và chi tiết từng quầy; Swagger có schema response và ví dụ; test đủ `200`, `400`, `404`.
 - **Chưa làm:** Route vẫn public, chưa có permission xem chi tiết quản lý; response vẫn pha trộn model cũ và field mở rộng.
 - **Cần bổ sung:** Thêm authenticate/permission đọc chi tiết nếu endpoint chỉ dùng nội bộ; chuẩn hóa schema response mà vẫn bảo đảm client cũ không bị phá.
 - **Dùng để làm gì:** Lấy chi tiết lịch cho màn hình quản lý, gồm sức chứa từng quầy.
