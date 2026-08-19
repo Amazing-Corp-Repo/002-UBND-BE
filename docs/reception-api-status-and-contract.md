@@ -69,10 +69,9 @@ Riêng migration hiện có đã gán `RR_COMPLETE` và `RR_REJECT` cho `CHUYEN_
 | --- | ---: | --- |
 | API tiếng Anh mới | 15 | Đã hoàn thành |
 | API quản lý lịch tiếng Anh | 10 | Đã sao chép route; 3 API có nghiệp vụ slot mới, 7 API chờ bổ sung |
-| API lịch tiếp dân cũ được bảo toàn | 10 | Đã khôi phục đúng contract cũ, không bổ sung nghiệp vụ mới |
 | API lịch lặp định kỳ | Chưa chốt | Chưa làm |
 
-Tổng số endpoint hiện đang tồn tại trong phạm vi rà soát là **35 API**: 15 API tiếng Anh đã có từ luồng Mobile/đánh giá, 10 API quản lý lịch tiếng Anh và 10 API `/api/lich-tiep-dan` cũ được giữ nguyên.
+Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15 API của luồng Mobile/đăng ký/đánh giá và 10 API quản lý lịch tiếng Anh.
 
 ---
 
@@ -596,108 +595,7 @@ Tổng số endpoint hiện đang tồn tại trong phạm vi rà soát là **35
 
 ---
 
-## 8. API `/api/lich-tiep-dan` cũ được giữ nguyên
-
-Các API 26–35 là contract cũ đã có trước phần bổ sung slot/sức chứa. Backend giữ nguyên tên route, request, response, permission và hành vi; mọi phát triển tiếp theo thực hiện trên API 16–25.
-
-### API 26 — `POST /api/lich-tiep-dan` — Tạo lịch theo contract cũ
-
-- **Trạng thái:** Đã khôi phục đúng phiên bản cũ.
-- **Đã làm/hiện có:** Authenticate, `LTD_CREATE`, audit; tạo một lịch với `tenCanBo`, `diaDiem`, `ngayTiepDan`, `batDau`, `ketThuc`, `ghiChu`.
-- **Chưa làm:** Không có `workingPeriods`, không tự sinh slot/quầy và không trả `slots`.
-- **Cần bổ sung:** Không bổ sung vào API này. Dùng API 16 cho nghiệp vụ mới.
-- **Đầu vào:** `batDau` và `ketThuc` tiếp tục là bắt buộc.
-- **Đầu ra:** Bản ghi lịch cũ với `thoi_gian = batDau - ketThuc`.
-- **Role áp dụng:** Tài khoản có `LTD_CREATE`.
-
-### API 27 — `PUT /api/lich-tiep-dan/{id}` — Cập nhật lịch theo contract cũ
-
-- **Trạng thái:** Đã khôi phục đúng phiên bản cũ.
-- **Đã làm/hiện có:** Authenticate, `LTD_UPDATE`, audit và cập nhật trực tiếp thông tin lịch.
-- **Chưa làm:** Không có `workingPeriods`, không kiểm tra/rebuild slot và không có quy tắc chặn đổi thời gian do slot giữ chỗ.
-- **Cần bổ sung:** Không bổ sung vào API này. Dùng API 17 cho cập nhật theo nghiệp vụ mới.
-- **Đầu vào:** ID và body cũ gồm đầy đủ tên cán bộ, địa điểm, ngày, giờ bắt đầu/kết thúc, ghi chú.
-- **Đầu ra:** Bản ghi lịch sau cập nhật, không có `slots`.
-- **Role áp dụng:** Tài khoản có `LTD_UPDATE`.
-
-### API 28 — `GET /api/lich-tiep-dan/{id}` — Xem chi tiết lịch theo response cũ
-
-- **Trạng thái:** Đã khôi phục đúng phiên bản cũ.
-- **Đã làm/hiện có:** Lấy bản ghi lịch bằng ID.
-- **Chưa làm:** Không trả sức chứa, số chỗ giữ, ca hoặc chi tiết 8 quầy.
-- **Cần bổ sung:** Không bổ sung vào API này. Dùng API 18 để lấy chi tiết slot/sức chứa.
-- **Đầu vào:** ID lịch.
-- **Đầu ra:** Model lịch cũ dạng raw database.
-- **Role áp dụng hiện tại:** Public như phiên bản cũ.
-
-### API 29 — `POST /api/lich-tiep-dan/import` — Import lịch bằng API cũ
-
-- **Trạng thái:** Giữ nguyên.
-- **Đã làm/hiện có:** Nhận Excel `.xlsx/.xls` tối đa 10 MB, `LTD_CREATE`, audit.
-- **Chưa làm:** Không bổ sung logic slot mới.
-- **Cần bổ sung:** Không sửa; các cải tiến import làm tại API 19.
-- **Đầu vào:** `multipart/form-data`, field `file`.
-- **Đầu ra:** Message kết quả import, `data = null`.
-- **Role áp dụng:** Tài khoản có `LTD_CREATE`.
-
-### API 30 — `GET /api/lich-tiep-dan` — Lấy danh sách lịch bằng API cũ
-
-- **Trạng thái:** Giữ nguyên.
-- **Đã làm/hiện có:** Bộ lọc `weekYear`, `monthYear`, `date`, `isActive`.
-- **Chưa làm:** Không thêm auth/permission hoặc schema Swagger mới.
-- **Cần bổ sung:** Không sửa; phần quản lý mới làm tại API 20.
-- **Đầu ra:** Danh sách model lịch cũ.
-- **Role áp dụng hiện tại:** Public như phiên bản cũ.
-
-### API 31 — `GET /api/lich-tiep-dan/pagination` — Danh sách lịch phân trang bằng API cũ
-
-- **Trạng thái:** Giữ nguyên.
-- **Đã làm/hiện có:** Bộ lọc cũ, `page`, `size` và response `pagination`.
-- **Chưa làm:** Không thêm validator/phân quyền/Swagger mới.
-- **Cần bổ sung:** Không sửa; phần mới làm tại API 21.
-- **Đầu ra:** `data[]` và `pagination`.
-- **Role áp dụng hiện tại:** Public như phiên bản cũ.
-
-### API 32 — `GET /api/lich-tiep-dan/count` — Đếm lịch bằng API cũ
-
-- **Trạng thái:** Giữ nguyên.
-- **Đã làm/hiện có:** Đếm theo tuần/tháng/ngày.
-- **Chưa làm:** Không thêm validator/phân quyền/Swagger mới.
-- **Cần bổ sung:** Không sửa; phần mới làm tại API 22.
-- **Đầu ra:** Dữ liệu số lượng lịch theo service cũ.
-- **Role áp dụng hiện tại:** Public như phiên bản cũ.
-
-### API 33 — `DELETE /api/lich-tiep-dan/{id}` — Xóa mềm lịch bằng API cũ
-
-- **Trạng thái:** Giữ nguyên.
-- **Đã làm/hiện có:** Authenticate, `LTD_DELETE`, xóa mềm và audit.
-- **Chưa làm:** Không thêm kiểm tra đăng ký giữ chỗ.
-- **Cần bổ sung:** Không sửa; quy tắc bảo vệ lịch làm tại API 23.
-- **Đầu vào:** ID lịch.
-- **Đầu ra:** `data = null`, message thành công.
-- **Role áp dụng:** Tài khoản có `LTD_DELETE`.
-
-### API 34 — `PUT /api/lich-tiep-dan/update-status/{id}` — Bật/tắt lịch bằng API cũ
-
-- **Trạng thái:** Giữ nguyên tên và hành vi cũ.
-- **Đã làm/hiện có:** Authenticate, `LTD_UPDATE_STATUS`, body `isActive`, audit.
-- **Chưa làm:** Không thêm quy tắc lịch đã có đăng ký.
-- **Cần bổ sung:** Không sửa; quy tắc mới làm tại API 24.
-- **Đầu ra:** Bản ghi lịch sau cập nhật trạng thái.
-- **Role áp dụng:** Tài khoản có `LTD_UPDATE_STATUS`.
-
-### API 35 — `GET /api/lich-tiep-dan/template` — Lấy template bằng API cũ
-
-- **Trạng thái:** Giữ nguyên.
-- **Đã làm/hiện có:** Authenticate, `LTD_GET_TEMPLATE`, trả `relative_url`.
-- **Chưa làm:** Không cập nhật Swagger/template theo mô hình mới tại route cũ.
-- **Cần bổ sung:** Không sửa; cải tiến template làm tại API 25.
-- **Đầu ra:** `{ "relative_url": "..." }` trong wrapper chung.
-- **Role áp dụng:** Tài khoản có `LTD_GET_TEMPLATE`.
-
----
-
-## 9. API/chức năng chưa làm
+## 8. API/chức năng chưa làm
 
 Các mục dưới đây chưa có contract cuối cùng, vì vậy **không được xem là API đã chốt tên**.
 
@@ -734,9 +632,9 @@ Các mục dưới đây chưa có contract cuối cùng, vì vậy **không đ�
 
 ---
 
-## 10. Các thay đổi không cần thêm endpoint nhưng vẫn còn thiếu
+## 9. Các thay đổi không cần thêm endpoint nhưng vẫn còn thiếu
 
-### 10.1. Chuẩn hóa quầy/bộ phận ở tầng database
+### 9.1. Chuẩn hóa quầy/bộ phận ở tầng database
 
 - API mới đã validate `QUAY_1`–`QUAY_8`.
 - Bảng slot đã dùng `ma_quay`; đăng ký dùng lại `bo_phan`.
@@ -744,29 +642,28 @@ Các mục dưới đây chưa có contract cuối cùng, vì vậy **không đ�
 - Chưa có `counterName`/`departmentName` thân thiện như “Quầy 1” trong mọi response.
 - `ten_can_bo` vẫn là chuỗi, chưa liên kết bắt buộc với `userId` và chưa hỗ trợ nhiều cán bộ trên cùng quầy/ca.
 
-### 10.2. Bảo vệ API quản lý lịch đã có đăng ký
+### 9.2. Bảo vệ API quản lý lịch đã có đăng ký
 
 - API 17 đã chặn đổi ngày/giờ khi có đăng ký.
 - API 23 chưa chặn xóa lịch đã có đăng ký.
 - API 24 chưa chốt quy tắc tắt lịch đã có đăng ký.
 
-### 10.3. Phân quyền API đọc lịch quản lý
+### 9.3. Phân quyền API đọc lịch quản lý
 
 - API 18, 20, 21 và 22 đang public.
 - Cần chốt permission đọc danh sách, chi tiết và thống kê lịch trước khi thêm middleware.
 - API public cho Mobile phải tiếp tục dùng riêng là API 01, chỉ trả dữ liệu cần thiết.
 
-### 10.4. Swagger của API quản lý tiếng Anh
+### 9.4. Swagger của API quản lý tiếng Anh
 
 - 15 API mới và 10 API quản lý lịch tiếng Anh đều đã xuất hiện trên Swagger với mô tả tiếng Việt.
 - 7 API quản lý tiếng Anh được sao chép từ contract cũ còn nhiều response chưa chi tiết.
-- Khi tiếp tục phát triển, chỉ bổ sung request, response, permission, lỗi và ví dụ trên API 19–25; không sửa Swagger/contract của API 29–35 cũ.
+- Khi tiếp tục phát triển, chỉ bổ sung request, response, permission, lỗi và ví dụ trên API 19–25; không sửa Swagger/contract của nhóm `/api/lich-tiep-dan` cũ.
 
-## 11. Kết luận
+## 10. Kết luận
 
 - Luồng chính hiện đã đủ API cho: tạo lịch và sức chứa → Mobile đăng ký/tra cứu → cán bộ xem, duyệt, từ chối, hoàn thành → iPad tra mã/gửi đánh giá → lãnh đạo xem danh sách, chi tiết và thống kê.
 - Có **15 API tiếng Anh của luồng Mobile/đăng ký/đánh giá** và **10 API quản lý lịch tiếng Anh**.
-- Có **10 API `/api/lich-tiep-dan` cũ đã được khôi phục và giữ nguyên**, không nhận thêm nghiệp vụ mới.
-- Trong nhóm quản lý tiếng Anh, API 16–18 đã có nghiệp vụ slot/sức chứa; API 19–25 còn cần bổ sung bảo vệ dữ liệu, phân quyền hoặc Swagger chi tiết.
+- Tài liệu chỉ theo dõi 25 API tiếng Anh. Các API `/api/lich-tiep-dan` cũ vẫn tồn tại trong code để tương thích nhưng không còn được liệt kê thành từng mục.
 - Phần lớn việc còn lại là hoàn thiện API quản lý tiếng Anh, constraint database, phân quyền đọc và Swagger mà không ảnh hưởng API cũ.
 - Nhóm API thực sự chưa có là lịch lặp định kỳ và các API quản trị tùy chọn; các contract này cần được chốt trước khi code.
