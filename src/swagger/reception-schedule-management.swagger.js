@@ -343,7 +343,7 @@ const ReceptionScheduleManagementSwagger = {
             tags: ['ReceptionScheduleManagement'],
             security: [{ bearerAuth: [] }],
             summary: 'Lấy lịch tiếp dân theo ID',
-            description: 'Dành cho cán bộ có quyền LTD_GET_ALL. Trả về chi tiết lịch, từng ca một tiếng, cấu hình 8 quầy, sức chứa, số đăng ký đã giữ chỗ và số chỗ còn lại. Mọi đăng ký đã tạo đều được tính giữ chỗ, kể cả đăng ký đã bị từ chối hoặc xoá mềm.',
+            description: 'Dành cho cán bộ có quyền LTD_GET_ALL. Trả về chi tiết lịch, shiftId của từng ca, counterId/cấu hình 8 quầy, sức chứa, số đăng ký đã giữ chỗ và số chỗ còn lại. Backend ghép đơn theo id_cau_hinh_quay và chỉ fallback bo_phan cho dữ liệu cũ. Mọi đăng ký đã tạo đều được tính giữ chỗ, kể cả đăng ký đã bị từ chối hoặc xoá mềm.',
             parameters: [
                 {
                     name: 'id',
@@ -377,7 +377,11 @@ const ReceptionScheduleManagementSwagger = {
                                         remainingCapacity: 13,
                                         isFull: false,
                                         counters: [{
+                                            id: '223e4567-e89b-42d3-a456-426614174001',
+                                            shiftId: '323e4567-e89b-42d3-a456-426614174001',
+                                            counterId: '423e4567-e89b-42d3-a456-426614174001',
                                             counterCode: 'QUAY_1',
+                                            counterName: 'Quầy số 1',
                                             capacity: 2,
                                             heldCount: 1,
                                             remainingCapacity: 1,

@@ -186,7 +186,10 @@ const mapCreatedSchedule = (schedule) => {
     current.totalCapacity += slot.suc_chua;
     current.counters.push({
       id: slot.id,
-      counterCode: slot.ma_quay,
+      shiftId: slot.id_ca_tiep_dan || null,
+      counterId: slot.quay_tiep_dan?.id || slot.id_quay || null,
+      counterCode: slot.quay_tiep_dan?.ma_quay || slot.ma_quay,
+      counterName: slot.quay_tiep_dan?.ten_quay || null,
       capacity: slot.suc_chua,
       heldCount: 0,
       remainingCapacity: slot.suc_chua,
@@ -200,9 +203,9 @@ const mapCreatedSchedule = (schedule) => {
     const slot = groupedSlots.get(registration.slot);
     if (!slot) return;
 
-    const counter = slot.counters.find(
-      (item) => item.counterCode === registration.bo_phan
-    );
+    const counter = registration.id_cau_hinh_quay
+      ? slot.counters.find((item) => item.id === registration.id_cau_hinh_quay)
+      : slot.counters.find((item) => item.counterCode === registration.bo_phan);
     if (counter) {
       counter.heldCount += 1;
       counter.remainingCapacity = Math.max(0, counter.capacity - counter.heldCount);
