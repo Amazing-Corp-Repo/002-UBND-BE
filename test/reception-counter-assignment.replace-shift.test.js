@@ -4,7 +4,9 @@ import express from "express";
 import { PERMISSION } from "../src/constants/permission.constant.js";
 import prisma from "../src/config/database.config.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
-import Repository from "../src/repositories/reception-counter-assignment.repository.js";
+import Repository, {
+  RECEPTION_ASSIGNMENT_TRANSACTION_OPTIONS,
+} from "../src/repositories/reception-counter-assignment.repository.js";
 import router from "../src/routes/reception-shift-assignment.route.js";
 import Swagger from "../src/swagger/reception-counter-assignment.swagger.js";
 import jwtUtils from "../src/utils/jwt.util.js";
@@ -77,6 +79,14 @@ afterEach(() => {
 });
 
 describe("PUT /api/reception-shifts/:shiftId/counter-assignments", () => {
+  it("allows enough transaction time for a remote database", () => {
+    assert.deepEqual(RECEPTION_ASSIGNMENT_TRANSACTION_OPTIONS, {
+      isolationLevel: "Serializable",
+      maxWait: 10000,
+      timeout: 120000,
+    });
+  });
+
   it("documents the Vietnamese bulk assignment contract", () => {
     const operation = Swagger["/api/reception-shifts/{shiftId}/counter-assignments"].put;
     assert.match(operation.description, /LTD_UPDATE/);

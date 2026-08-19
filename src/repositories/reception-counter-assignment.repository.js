@@ -1,5 +1,11 @@
 import prisma from "../config/database.config.js";
 
+export const RECEPTION_ASSIGNMENT_TRANSACTION_OPTIONS = Object.freeze({
+  isolationLevel: "Serializable",
+  maxWait: 10000,
+  timeout: 120000,
+});
+
 const assignmentInclude = {
   can_bo: { select: { id: true, ho_va_ten: true, ten_dang_nhap: true } },
   cau_hinh_quay: {
@@ -102,7 +108,7 @@ const ReceptionCounterAssignmentRepository = {
         }));
       }
       return created;
-    }, { isolationLevel: "Serializable" });
+    }, RECEPTION_ASSIGNMENT_TRANSACTION_OPTIONS);
   },
 
   async updateWithGuards(id, input, currentUserId) {
@@ -164,7 +170,7 @@ const ReceptionCounterAssignmentRepository = {
         include: assignmentInclude,
       });
       return { assignment: updated };
-    }, { isolationLevel: "Serializable" });
+    }, RECEPTION_ASSIGNMENT_TRANSACTION_OPTIONS);
   },
 
   async softDelete(id, currentUserId) {

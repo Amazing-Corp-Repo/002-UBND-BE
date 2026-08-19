@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, beforeEach, describe, it } from "node:test";
 import express from "express";
-import XLSX from "xlsx";
+import XLSX from "../src/utils/xlsx.util.js";
 import { PERMISSION } from "../src/constants/permission.constant.js";
 import prisma from "../src/config/database.config.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";

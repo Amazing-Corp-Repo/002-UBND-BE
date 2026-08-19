@@ -4,7 +4,7 @@ import ExcelJS from "exceljs";
 import { buildContentTxt, toSnakeCaseNonAccent, toVNDateFolder } from "../utils/string.util.js";
 import VideoProcessingService from "./video-processing.service.js";
 import archiver from "archiver";
-import XLSX from "xlsx";
+import XLSX from "../utils/xlsx.util.js";
 
 const PUBLIC_DIR = path.join(process.cwd(), "src", "public");
 
