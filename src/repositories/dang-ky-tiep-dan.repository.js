@@ -79,13 +79,29 @@ const DangKyTiepDanRepository = {
           )
         : totalCapacity;
 
-      const [duplicate, heldCount, phoneDailyCount, citizenDailyCount] =
+      const [
+        duplicatePhone,
+        duplicateCitizen,
+        heldCount,
+        phoneDailyCount,
+        citizenDailyCount,
+      ] =
         await Promise.all([
           tx.dang_ky_tiep_dan.findFirst({
             where: {
+              loai: "COUNTER_RECEPTION",
               id_lich_tiep_dan: scheduleId,
               slot: resolvedSlot,
               sdt: phoneNumber,
+            },
+            select: { id: true },
+          }),
+          tx.dang_ky_tiep_dan.findFirst({
+            where: {
+              loai: "COUNTER_RECEPTION",
+              id_lich_tiep_dan: scheduleId,
+              slot: resolvedSlot,
+              cccd: citizenId,
             },
             select: { id: true },
           }),
@@ -108,7 +124,8 @@ const DangKyTiepDanRepository = {
           }),
         ]);
 
-      if (duplicate) return { conflict: "DUPLICATE_SLOT_PHONE" };
+      if (duplicatePhone) return { conflict: "DUPLICATE_SLOT_PHONE" };
+      if (duplicateCitizen) return { conflict: "DUPLICATE_SLOT_CITIZEN" };
       if (phoneDailyCount >= 2) return { conflict: "PHONE_DAILY_LIMIT" };
       if (citizenDailyCount >= 2) return { conflict: "CITIZEN_DAILY_LIMIT" };
       if (heldCount >= effectiveCapacity) return { conflict: "SLOT_FULL" };

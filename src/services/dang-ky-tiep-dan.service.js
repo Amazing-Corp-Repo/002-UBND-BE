@@ -36,11 +36,39 @@ const getVietnamTime = () =>
 const isUniqueConstraintError = (error) => error?.code === "P2002";
 const isSerializableConflict = (error) => error?.code === "P2034";
 
+const getUniqueErrorText = (error) => {
+  try {
+    return `${error?.message || ""} ${JSON.stringify(error?.meta || {})}`.toLowerCase();
+  } catch {
+    return String(error?.message || "").toLowerCase();
+  }
+};
+
+const getRegistrationUniqueConflict = (error) => {
+  if (!isUniqueConstraintError(error)) return null;
+
+  const errorText = getUniqueErrorText(error);
+  if (
+    errorText.includes("uq_reception_registration_schedule_slot_citizen") ||
+    errorText.includes("cccd")
+  ) {
+    return "DUPLICATE_SLOT_CITIZEN";
+  }
+  if (
+    errorText.includes("uq_reception_registration_schedule_slot_phone") ||
+    errorText.includes("sdt")
+  ) {
+    return "DUPLICATE_SLOT_PHONE";
+  }
+  return null;
+};
+
 const REGISTRATION_CONFLICTS = {
   SCHEDULE_UNAVAILABLE: [404, "Lịch tiếp dân không tồn tại hoặc đã ngừng hoạt động"],
   SLOT_NOT_FOUND: [404, "Khung giờ tiếp dân không tồn tại hoặc không thuộc lịch đã chọn"],
   INVALID_SLOT: [400, "Khung giờ không thuộc lịch tiếp dân đã chọn"],
   DUPLICATE_SLOT_PHONE: [409, "Số điện thoại đã đăng ký khung giờ này"],
+  DUPLICATE_SLOT_CITIZEN: [409, "CCCD đã đăng ký khung giờ này"],
   PHONE_DAILY_LIMIT: [409, "Số điện thoại chỉ được đăng ký tối đa 2 đơn trong một ngày"],
   CITIZEN_DAILY_LIMIT: [409, "CCCD chỉ được đăng ký tối đa 2 đơn trong một ngày"],
   SLOT_FULL: [409, "Khung giờ tiếp dân đã đủ sức chứa"],
@@ -259,11 +287,27 @@ const DangKyTiepDanService = {
           slotId: resolvedSlotId,
         };
       } catch (error) {
-        const retryable =
-          isUniqueConstraintError(error) || isSerializableConflict(error);
-        if (!retryable || attempt === MAX_CODE_RETRIES - 1) {
-          throw error;
+        const uniqueConflict = getRegistrationUniqueConflict(error);
+        if (uniqueConflict) {
+          const [statusCode, message] = REGISTRATION_CONFLICTS[uniqueConflict];
+          throw new BaseError(statusCode, message);
         }
+        if (isSerializableConflict(error)) {
+          if (attempt === MAX_CODE_RETRIES - 1) {
+            throw new BaseError(
+              503,
+              "Hệ thống đang xử lý nhiều đăng ký cùng lúc, vui lòng thử lại"
+            );
+          }
+          continue;
+        }
+        if (isUniqueConstraintError(error)) {
+          if (attempt === MAX_CODE_RETRIES - 1) {
+            throw new BaseError(500, "Không thể tạo mã tiếp dân");
+          }
+          continue;
+        }
+        throw error;
       }
     }
 

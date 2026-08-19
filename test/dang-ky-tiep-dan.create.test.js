@@ -84,8 +84,10 @@ describe("POST /api/reception-registrations", () => {
     assert.ok(operation.description.includes("tối đa 2 đơn"));
     assert.ok(operation.responses[409]);
     assert.ok(operation.responses[429]);
+    assert.ok(operation.responses[503]);
     assert.ok(operation.requestBody.content["application/json"].schema.properties.slotId);
     assert.ok(operation.description.includes("tương thích phiên bản cũ"));
+    assert.ok(operation.description.includes("cả SĐT và CCCD"));
   });
 
   it("creates a valid counter reception registration", async () => {
@@ -173,6 +175,76 @@ describe("POST /api/reception-registrations", () => {
     );
   });
 
+  it("rejects a duplicate citizen ID in the same schedule and slot", async () => {
+    guardResult = { conflict: "DUPLICATE_SLOT_CITIZEN" };
+
+    await assert.rejects(
+      () => DangKyTiepDanService.createCounterReception(validBody),
+      (error) =>
+        error.statusCode === 409 && error.message.includes("CCCD")
+    );
+  });
+
+  it("maps database phone and citizen unique constraints to 409", async () => {
+    for (const [target, expectedMessage] of [
+      [["id_lich_tiep_dan", "slot", "sdt"], "Số điện thoại"],
+      [["id_lich_tiep_dan", "slot", "cccd"], "CCCD"],
+    ]) {
+      DangKyTiepDanRepository.createWithGuards = async () => {
+        const error = new Error("Unique constraint failed");
+        error.code = "P2002";
+        error.meta = { target };
+        throw error;
+      };
+
+      await assert.rejects(
+        () => DangKyTiepDanService.createCounterReception(validBody),
+        (error) =>
+          error.statusCode === 409 && error.message.includes(expectedMessage)
+      );
+    }
+  });
+
+  it("retries serialization conflicts and succeeds without duplicating", async () => {
+    let attempts = 0;
+    DangKyTiepDanRepository.createWithGuards = async (input) => {
+      attempts += 1;
+      if (attempts < 3) {
+        const error = new Error("Transaction conflict");
+        error.code = "P2034";
+        throw error;
+      }
+      return {
+        registration: {
+          id: "223e4567-e89b-42d3-a456-426614174000",
+          ...input.data,
+          ngay: futureSchedule.ngay_tiep_dan,
+        },
+      };
+    };
+
+    const result = await DangKyTiepDanService.createCounterReception(validBody);
+
+    assert.equal(attempts, 3);
+    assert.match(result.ma_tiep_dan, /^[A-Z]\d{5}$/);
+  });
+
+  it("returns 503 after serialization retries are exhausted", async () => {
+    let attempts = 0;
+    DangKyTiepDanRepository.createWithGuards = async () => {
+      attempts += 1;
+      const error = new Error("Transaction conflict");
+      error.code = "P2034";
+      throw error;
+    };
+
+    await assert.rejects(
+      () => DangKyTiepDanService.createCounterReception(validBody),
+      (error) => error.statusCode === 503
+    );
+    assert.equal(attempts, 10);
+  });
+
   it("rejects a full slot", async () => {
     guardResult = { conflict: "SLOT_FULL" };
 
@@ -222,6 +294,43 @@ describe("POST /api/reception-registrations", () => {
     assert.equal(createCalled, false);
     assert.equal("is_delete" in capacityWhere, false);
     assert.equal("trang_thai" in capacityWhere, false);
+  });
+
+  it("checks duplicate citizen ID inside the serializable transaction", async () => {
+    let createCalled = false;
+    const tx = {
+      lich_tiep_dan: {
+        findFirst: async () => futureSchedule,
+      },
+      khung_gio_tiep_dan: {
+        findMany: async () => futureSchedule.khung_gio_tiep_dan,
+      },
+      dang_ky_tiep_dan: {
+        findFirst: async ({ where }) =>
+          where.cccd === validBody.cccd ? { id: "duplicate-citizen" } : null,
+        count: async () => 0,
+        create: async () => {
+          createCalled = true;
+          return {};
+        },
+      },
+    };
+    prisma.$transaction = async (callback, options) => {
+      assert.equal(options.isolationLevel, "Serializable");
+      return callback(tx);
+    };
+
+    const result = await originalRepository.createWithGuards({
+      scheduleId: validBody.idLichTiepDan,
+      slot: validBody.slot,
+      phoneNumber: validBody.sdt,
+      citizenId: validBody.cccd,
+      totalCapacity: 16,
+      data: {},
+    });
+
+    assert.equal(result.conflict, "DUPLICATE_SLOT_CITIZEN");
+    assert.equal(createCalled, false);
   });
 
   it("rejects daily limits for phone number and citizen ID", async () => {

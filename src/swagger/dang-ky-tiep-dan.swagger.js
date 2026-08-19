@@ -54,7 +54,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Đăng ký lịch tiếp dân tại quầy từ Mobile",
       description:
-        "API công khai. Client mới gửi slotId lấy từ API danh sách lịch; trường slot dạng chuỗi vẫn được hỗ trợ để tương thích phiên bản cũ. Nếu gửi cả hai, chúng phải cùng chỉ một khung giờ. BE kiểm tra khung giờ thuộc đúng lịch và còn chỗ trong transaction trước khi lưu. Mọi đơn PENDING, APPROVED, COMPLETED, REJECTED hoặc đã xoá mềm đều giữ chỗ và không hoàn lại. Mỗi số điện thoại và mỗi CCCD được tạo tối đa 2 đơn trong cùng ngày tiếp dân. Giới hạn 30 request trong 10 phút cho mỗi IP. Hệ thống tự sinh mã tiếp dân ngắn, ví dụ A00123.",
+        "API công khai. Client mới gửi slotId lấy từ API danh sách lịch; trường slot dạng chuỗi vẫn được hỗ trợ để tương thích phiên bản cũ. Nếu gửi cả hai, chúng phải cùng chỉ một khung giờ. BE kiểm tra khung giờ, chống trùng theo cả SĐT và CCCD, kiểm tra giới hạn trong ngày và sức chứa trong transaction Serializable. Unique index tại DB ngăn hai request đồng thời tạo trùng. Mọi đơn PENDING, APPROVED, COMPLETED, REJECTED hoặc đã xoá mềm đều giữ chỗ và không hoàn lại. Mỗi số điện thoại và mỗi CCCD được tạo tối đa 2 đơn trong cùng ngày tiếp dân. Giới hạn 30 request trong 10 phút cho mỗi IP. Hệ thống tự sinh mã tiếp dân ngắn, ví dụ A00123.",
       requestBody: {
         required: true,
         content: {
@@ -65,8 +65,9 @@ const DangKyTiepDanSwagger = {
         200: { description: "Đăng ký thành công" },
         400: { description: "Thiếu hoặc sai dữ liệu, lịch đã qua, slot và slotId không khớp hoặc khung giờ không thuộc lịch" },
         404: { description: "Lịch hoặc ID khung giờ không tồn tại, đã ngừng hoạt động hoặc không thuộc lịch đã chọn" },
-        409: { description: "Khung giờ đã qua hoặc đã đầy, đăng ký trùng hoặc SĐT/CCCD đã đạt giới hạn 2 đơn trong ngày" },
+        409: { description: "Khung giờ đã qua hoặc đã đầy, SĐT/CCCD đã đăng ký ca này hoặc đã đạt giới hạn 2 đơn trong ngày" },
         429: { description: "Vượt quá 30 request đăng ký trong 10 phút từ cùng một IP" },
+        503: { description: "Nhiều request đồng thời gây xung đột transaction; client có thể thử lại" },
       },
     },
   },
