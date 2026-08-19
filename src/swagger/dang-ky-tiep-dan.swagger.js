@@ -76,6 +76,72 @@ const createdRegistrationSchema = {
   },
 };
 
+const staffRegistrationDetailSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    receptionCode: { type: "string", example: "A00123" },
+    receptionType: { type: "string", example: "COUNTER_RECEPTION" },
+    schedule: {
+      type: "object",
+      nullable: true,
+      properties: {
+        id: { type: "string", format: "uuid" },
+        officerName: { type: "string" },
+        location: { type: "string" },
+        receptionDate: { type: "string", format: "date-time" },
+        timeRange: { type: "string" },
+        note: { type: "string", nullable: true },
+      },
+    },
+    receptionDate: { type: "string", format: "date-time" },
+    timeSlot: { type: "string" },
+    topic: { type: "string" },
+    workingContent: { type: "string" },
+    applicant: {
+      type: "object",
+      description: "Thông tin định danh đầy đủ, chỉ dành cho API nội bộ có quyền",
+      properties: {
+        fullName: { type: "string" },
+        phoneNumber: { type: "string" },
+        citizenId: { type: "string" },
+        address: { type: "string" },
+      },
+    },
+    department: { type: "string", nullable: true },
+    approvalStatus: {
+      type: "string",
+      enum: ["PENDING", "APPROVED", "COMPLETED", "REJECTED"],
+    },
+    approver: {
+      type: "object",
+      nullable: true,
+      properties: {
+        name: { type: "string" },
+        title: { type: "string", nullable: true },
+        approvedAt: { type: "string", format: "date-time" },
+      },
+    },
+    ratingStatus: { type: "string", enum: ["RATED", "NOT_RATED"] },
+    completedAt: { type: "string", format: "date-time", nullable: true },
+    rejectionReason: { type: "string", nullable: true },
+    rejectedAt: { type: "string", format: "date-time", nullable: true },
+    rating: {
+      type: "object",
+      nullable: true,
+      properties: {
+        id: { type: "string", format: "uuid" },
+        score: { type: "integer", minimum: 1, maximum: 5 },
+        suggestions: { type: "array", items: { type: "string" } },
+        comment: { type: "string", nullable: true },
+        createdAt: { type: "string", format: "date-time" },
+      },
+    },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+  },
+};
+
 const DangKyTiepDanSwagger = {
   "/api/reception-registrations": {
     get: {
@@ -195,7 +261,25 @@ const DangKyTiepDanSwagger = {
         },
       ],
       responses: {
-        200: { description: "Lấy chi tiết đăng ký tiếp dân thành công" },
+        200: {
+          description: "Lấy chi tiết đăng ký tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: staffRegistrationDetailSchema,
+                  message: {
+                    type: "string",
+                    example: "Lấy chi tiết đăng ký tiếp dân thành công",
+                  },
+                  pagination: { nullable: true, example: null },
+                },
+              },
+            },
+          },
+        },
         400: { description: "ID đăng ký tiếp dân không hợp lệ" },
         401: { description: "Thiếu hoặc sai access token" },
         403: { description: "Không có quyền RR_GET_DETAIL" },

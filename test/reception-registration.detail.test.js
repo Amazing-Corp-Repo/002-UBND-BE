@@ -6,6 +6,7 @@ import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import DangKyTiepDanRepository from "../src/repositories/dang-ky-tiep-dan.repository.js";
 import dangKyTiepDanRouter from "../src/routes/dang-ky-tiep-dan.route.js";
 import jwtUtils from "../src/utils/jwt.util.js";
+import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
 
 const originalFindDetailById = DangKyTiepDanRepository.findDetailById;
 const registrationId = "123e4567-e89b-42d3-a456-426614174000";
@@ -67,6 +68,24 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-registrations/:id", () => {
+  it("documents the complete internal detail response in Swagger", () => {
+    const operation =
+      DangKyTiepDanSwagger["/api/reception-registrations/{id}"].get;
+    const dataSchema =
+      operation.responses[200].content["application/json"].schema.properties.data;
+
+    assert.ok(dataSchema.properties.schedule);
+    assert.ok(dataSchema.properties.applicant);
+    assert.ok(dataSchema.properties.approver);
+    assert.ok(dataSchema.properties.rating);
+    assert.deepEqual(dataSchema.properties.approvalStatus.enum, [
+      "PENDING",
+      "APPROVED",
+      "COMPLETED",
+      "REJECTED",
+    ]);
+  });
+
   it("returns all citizen-submitted details", async () => {
     const server = createTestServer();
     const { port } = server.address();
@@ -118,6 +137,37 @@ describe("GET /api/reception-registrations/:id", () => {
         { headers: { authorization: `Bearer ${createToken([])}` } }
       );
       assert.equal(response.status, 403);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}`
+      );
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for an invalid registration UUID", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:" + port + "/api/reception-registrations/not-a-uuid",
+        {
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RR_GET_DETAIL])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 400);
     } finally {
       server.close();
     }

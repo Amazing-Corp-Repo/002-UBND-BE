@@ -234,7 +234,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 06 — `GET /api/reception-registrations/{id}` — Cán bộ xem chi tiết đăng ký tiếp dân
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Authenticate, permission `RR_GET_DETAIL`, trả lịch gốc, thông tin người dân, trạng thái, người duyệt, hoàn thành/từ chối và đánh giá; đã có Swagger và test.
+- **Đã làm/hiện có:** Authenticate, permission `RR_GET_DETAIL`, validate UUID, trả lịch gốc, thông tin người dân, trạng thái, người duyệt, hoàn thành/từ chối và đánh giá. Swagger đã khai báo schema response chi tiết; test khóa các trường hợp `200`, `400`, `401`, `403`, `404`.
 - **Chưa làm:** Chưa có data-scope theo quầy/đơn vị; response nội bộ trả điện thoại và CCCD đầy đủ.
 - **Cần bổ sung:** Cần chốt quyền xem dữ liệu định danh theo đơn vị/quầy và quy tắc che dữ liệu nếu có yêu cầu bảo vệ thông tin cá nhân cao hơn.
 - **Dùng để làm gì:** Xem toàn bộ thông tin người dân đã nhập khi cán bộ bấm vào mã tiếp dân.
