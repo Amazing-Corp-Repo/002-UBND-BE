@@ -76,6 +76,7 @@ const buildScheduleAvailability = (schedule) => {
     const configuredSlot = groupedSlots.get(slot.khung_gio);
     groupedSlots.set(slot.khung_gio, {
       slotId: configuredSlot?.slotId || slot.id,
+      shiftId: configuredSlot?.shiftId || slot.id_ca_tiep_dan || null,
       totalCapacity: (configuredSlot?.totalCapacity || 0) + slot.suc_chua,
     });
   });
@@ -87,6 +88,7 @@ const buildScheduleAvailability = (schedule) => {
     legacySlots.forEach((timeSlot) => {
       groupedSlots.set(timeSlot, {
         slotId: null,
+        shiftId: null,
         totalCapacity:
           RECEPTION_COUNTER_CODES.length * DEFAULT_RECEPTION_COUNTER_CAPACITY,
       });
@@ -103,6 +105,7 @@ const buildScheduleAvailability = (schedule) => {
     const isFull = heldCount >= configuredSlot.totalCapacity;
     return {
       slotId: configuredSlot.slotId,
+      shiftId: configuredSlot.shiftId,
       startTime,
       endTime,
       timeSlot,

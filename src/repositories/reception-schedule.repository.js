@@ -30,6 +30,7 @@ const ReceptionScheduleRepository = {
             khung_gio: true,
             ma_quay: true,
             id_quay: true,
+            id_ca_tiep_dan: true,
             suc_chua: true,
             is_active: true,
           },
