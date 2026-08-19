@@ -255,7 +255,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 07 — `PATCH /api/reception-registrations/{id}/approve` — Phê duyệt đăng ký và phân quầy
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Permission `RR_APPROVE`, chỉ duyệt `PENDING`, gán `QUAY_1`–`QUAY_8`, kiểm tra sức chứa quầy trong transaction, lưu người/thời điểm duyệt, audit, Swagger và test.
+- **Đã làm/hiện có:** Permission `RR_APPROVE`, chỉ duyệt `PENDING`, gán `QUAY_1`–`QUAY_8`, kiểm tra sức chứa quầy trong transaction, lưu người/thời điểm duyệt, audit, Swagger và test. Transaction `Serializable` có retry; nếu tranh chấp đồng thời kéo dài thì trả `503` thay vì lộ lỗi Prisma thô.
 - **Chưa làm:** Chưa có API đổi quầy sau khi đã `APPROVED`; chưa có luồng thu hồi phê duyệt.
 - **Cần bổ sung:** Không bổ sung nếu quy trình không cho đổi sau duyệt. Nếu có ngoại lệ vận hành, phải chốt API chuyển quầy và cách kiểm tra sức chứa/audit trước khi code.
 - **Dùng để làm gì:** Phê duyệt cho người dân được gặp và gán đơn vào một trong 8 quầy.

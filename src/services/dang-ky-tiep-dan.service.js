@@ -388,8 +388,14 @@ const DangKyTiepDanService = {
         );
         break;
       } catch (error) {
-        if (!isSerializableConflict(error) || attempt === MAX_CODE_RETRIES - 1) {
+        if (!isSerializableConflict(error)) {
           throw error;
+        }
+        if (attempt === MAX_CODE_RETRIES - 1) {
+          throw new BaseError(
+            503,
+            "Hệ thống đang xử lý nhiều yêu cầu phê duyệt, vui lòng thử lại"
+          );
         }
       }
     }

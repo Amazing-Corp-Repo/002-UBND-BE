@@ -86,6 +86,11 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
 
     assert.ok(operation.description.includes("sức chứa riêng của quầy"));
     assert.ok(operation.responses[409].description.includes("quầy"));
+    assert.ok(operation.responses[503]);
+    assert.ok(
+      operation.responses[200].content["application/json"].schema.properties.data
+        .properties.approvalStatus
+    );
   });
 
   it("approves a pending registration and assigns a counter", async () => {
@@ -181,6 +186,35 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
         }
       );
       assert.equal(response.status, 403);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 503 after concurrent approval retries are exhausted", async () => {
+    DangKyTiepDanRepository.approvePendingWithCounterGuard = async () => {
+      const error = new Error("Serializable transaction conflict");
+      error.code = "P2034";
+      throw error;
+    };
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.RR_APPROVE])}`,
+          },
+          body: JSON.stringify({ department: "QUAY_3" }),
+        }
+      );
+      const body = await response.json();
+
+      assert.equal(response.status, 503);
+      assert.match(body.message, /nhiều yêu cầu phê duyệt/i);
     } finally {
       server.close();
     }
