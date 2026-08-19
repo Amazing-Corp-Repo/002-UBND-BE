@@ -27,6 +27,55 @@ const registrationRequestSchema = {
   },
 };
 
+const createdRegistrationSchema = {
+  type: "object",
+  description:
+    "Thông tin đăng ký với contract tiếng Anh. Các trường tiếng Việt/snake_case vẫn được trả tạm thời để tương thích Mobile cũ và được đánh dấu deprecated.",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    receptionCode: { type: "string", example: "A00123" },
+    receptionType: { type: "string", example: "COUNTER_RECEPTION" },
+    scheduleId: { type: "string", format: "uuid" },
+    slotId: { type: "string", format: "uuid", nullable: true },
+    receptionDate: { type: "string", format: "date-time" },
+    timeSlot: { type: "string", example: "08:00 - 09:00" },
+    topic: { type: "string", example: "Hướng dẫn thủ tục" },
+    description: { type: "string" },
+    fullName: { type: "string", example: "Nguyễn Văn An" },
+    phoneNumber: {
+      type: "string",
+      description: "Số điện thoại đã được che một phần",
+      example: "******5678",
+    },
+    citizenId: {
+      type: "string",
+      description: "CCCD đã được che một phần",
+      example: "********1234",
+    },
+    address: { type: "string" },
+    department: { type: "string", nullable: true },
+    leaderName: { type: "string", nullable: true },
+    leaderTitle: { type: "string", nullable: true },
+    status: { type: "string", example: "PENDING" },
+    rejectionReason: { type: "string", nullable: true },
+    rejectedAt: { type: "string", format: "date-time", nullable: true },
+    createdAt: { type: "string", format: "date-time", nullable: true },
+    updatedAt: { type: "string", format: "date-time", nullable: true },
+    ma_tiep_dan: { type: "string", deprecated: true },
+    loai: { type: "string", deprecated: true },
+    id_lich_tiep_dan: { type: "string", format: "uuid", deprecated: true },
+    ngay: { type: "string", format: "date-time", deprecated: true },
+    slot: { type: "string", deprecated: true },
+    chu_de: { type: "string", deprecated: true },
+    ly_do: { type: "string", deprecated: true },
+    ho_ten: { type: "string", deprecated: true },
+    sdt: { type: "string", deprecated: true },
+    cccd: { type: "string", deprecated: true },
+    dia_chi: { type: "string", deprecated: true },
+    trang_thai: { type: "string", deprecated: true },
+  },
+};
+
 const DangKyTiepDanSwagger = {
   "/api/reception-registrations": {
     get: {
@@ -62,7 +111,24 @@ const DangKyTiepDanSwagger = {
         },
       },
       responses: {
-        200: { description: "Đăng ký thành công" },
+        200: {
+          description: "Đăng ký thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  message: {
+                    type: "string",
+                    example: "Đăng ký lịch tiếp dân thành công",
+                  },
+                  data: createdRegistrationSchema,
+                },
+              },
+            },
+          },
+        },
         400: { description: "Thiếu hoặc sai dữ liệu, lịch đã qua, slot và slotId không khớp hoặc khung giờ không thuộc lịch" },
         404: { description: "Lịch hoặc ID khung giờ không tồn tại, đã ngừng hoạt động hoặc không thuộc lịch đã chọn" },
         409: { description: "Khung giờ đã qua hoặc đã đầy, SĐT/CCCD đã đăng ký ca này hoặc đã đạt giới hạn 2 đơn trong ngày" },

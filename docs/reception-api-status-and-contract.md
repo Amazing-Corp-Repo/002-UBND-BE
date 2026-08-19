@@ -140,9 +140,9 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 03 — `POST /api/reception-registrations` — Người dân đăng ký lịch tiếp dân
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Validate dữ liệu người dân, sinh mã ngắn, kiểm tra lịch/ca/sức chứa, chống trùng theo điện thoại và CCCD, giới hạn 2 đơn/ngày, rate limit, transaction đồng thời, audit, Swagger và test.
-- **Chưa làm:** Response tạo mới vẫn dùng phần lớn tên cột database tiếng Việt/snake_case; chưa đồng nhất với contract tiếng Anh của API tra cứu. Không có hủy đơn theo quyết định nghiệp vụ.
-- **Cần bổ sung:** Chuẩn hóa response create sang field tiếng Anh nhưng phải giữ tương thích với Mobile hiện tại hoặc version API; đây là phần nên làm trước khi khóa contract chính thức.
+- **Đã làm/hiện có:** Validate dữ liệu người dân, sinh mã ngắn, kiểm tra lịch/ca/sức chứa, chống trùng theo điện thoại và CCCD, giới hạn 2 đơn/ngày, rate limit, transaction đồng thời, audit, Swagger và test. Response đã có contract tiếng Anh; các field SĐT/CCCD tiếng Anh được che một phần. Field database cũ vẫn được giữ để Mobile hiện tại không hỏng và được đánh dấu `deprecated` trên Swagger.
+- **Chưa làm:** Chưa xóa các alias tiếng Việt/snake_case cũ vì Mobile vẫn có thể đang sử dụng. Không có hủy đơn theo quyết định nghiệp vụ.
+- **Cần bổ sung:** Sau khi toàn bộ client chuyển sang contract tiếng Anh, có thể xóa alias cũ trong một phiên bản API lớn tiếp theo; không xóa trong phiên bản hiện tại.
 - **Dùng để làm gì:** Mobile gửi đơn đăng ký lịch tiếp dân tại quầy.
 - **Role áp dụng:** Public/Mobile, không cần token.
 - **Trường hợp áp dụng:** Người dân chọn ngày/ca và nhập thông tin đăng ký.
@@ -172,7 +172,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
   - `sdt`: số điện thoại Việt Nam 10 chữ số với đầu số hợp lệ.
   - `cccd`: đúng 12 chữ số.
   - `diaChi`: bắt buộc, tối đa 500 ký tự.
-- **Đầu ra `data`:** hiện trả bản ghi đăng ký theo tên cột database và bổ sung `slotId`; các trường chính gồm `id`, `ma_tiep_dan`, `loai`, `id_lich_tiep_dan`, `ngay`, `slot`, `chu_de`, `ly_do`, `ho_ten`, `sdt`, `cccd`, `dia_chi`, `trang_thai`, các mốc tạo/cập nhật và `slotId`.
+- **Đầu ra `data`:** contract chính dùng `id`, `receptionCode`, `receptionType`, `scheduleId`, `slotId`, `receptionDate`, `timeSlot`, `topic`, `description`, `fullName`, `phoneNumber`, `citizenId`, `address`, `department`, `leaderName`, `leaderTitle`, `status`, `rejectionReason`, `rejectedAt`, `createdAt`, `updatedAt`. `phoneNumber` và `citizenId` được che một phần. Các alias cũ như `ma_tiep_dan`, `id_lich_tiep_dan`, `slot`, `chu_de`, `ho_ten`, `sdt`, `cccd`, `trang_thai` vẫn được trả tạm thời để tương thích và đã đánh dấu `deprecated` trên Swagger.
 - **Chức năng chi tiết:**
   - Backend sinh mã ngắn dạng 1 chữ cái + 5 chữ số, ví dụ `A00123`.
   - Tự đặt `loai = COUNTER_RECEPTION`, `trang_thai = PENDING`, ngày lấy từ lịch.
@@ -185,7 +185,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
   - Ghi audit nhưng che `sdt` và `cccd`.
   - Không có API hủy đơn Mobile; mọi đơn đã tạo không trả chỗ.
 - **Lỗi chính:** `400`, `404`, `409`; `503` khi tranh chấp đồng thời kéo dài.
-- **Lưu ý contract:** Response create hiện còn dùng tên trường database tiếng Việt/snake_case, chưa đồng nhất hoàn toàn với response tiếng Anh của các API đọc mới.
+- **Lưu ý contract:** Client mới chỉ nên đọc các field tiếng Anh. Alias tiếng Việt/snake_case là lớp tương thích tạm thời và chỉ được loại bỏ ở phiên bản API lớn tiếp theo.
 
 ### API 04 — `POST /api/reception-registrations/lookup` — Người dân tra cứu đơn đã đăng ký
 

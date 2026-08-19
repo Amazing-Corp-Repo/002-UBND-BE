@@ -88,6 +88,11 @@ describe("POST /api/reception-registrations", () => {
     assert.ok(operation.requestBody.content["application/json"].schema.properties.slotId);
     assert.ok(operation.description.includes("tương thích phiên bản cũ"));
     assert.ok(operation.description.includes("cả SĐT và CCCD"));
+    const responseSchema =
+      operation.responses[200].content["application/json"].schema.properties.data;
+    assert.ok(responseSchema.properties.receptionCode);
+    assert.ok(responseSchema.properties.scheduleId);
+    assert.equal(responseSchema.properties.ma_tiep_dan.deprecated, true);
   });
 
   it("creates a valid counter reception registration", async () => {
@@ -99,6 +104,17 @@ describe("POST /api/reception-registrations", () => {
     assert.equal(result.ngay, futureSchedule.ngay_tiep_dan);
     assert.equal(capturedGuardInput.totalCapacity, 16);
     assert.equal(result.slotId, futureSchedule.khung_gio_tiep_dan[0].id);
+    assert.equal(result.receptionCode, result.ma_tiep_dan);
+    assert.equal(result.receptionType, "COUNTER_RECEPTION");
+    assert.equal(result.scheduleId, validBody.idLichTiepDan);
+    assert.equal(result.receptionDate, futureSchedule.ngay_tiep_dan);
+    assert.equal(result.timeSlot, validBody.slot);
+    assert.equal(result.topic, validBody.chuDe);
+    assert.equal(result.description, validBody.lyDo);
+    assert.equal(result.fullName, validBody.hoTen);
+    assert.equal(result.phoneNumber, "******5678");
+    assert.equal(result.citizenId, "********1234");
+    assert.equal(result.status, "PENDING");
   });
 
   it("creates a registration from slotId without requiring the legacy slot string", async () => {

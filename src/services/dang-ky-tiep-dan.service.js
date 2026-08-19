@@ -102,6 +102,13 @@ const mapCitizenRegistration = (item) => ({
   updatedAt: item.thoi_gian_cap_nhat,
 });
 
+const mapCreatedRegistration = (item, slotId) => ({
+  ...item,
+  ...mapCitizenRegistration(item),
+  scheduleId: item.id_lich_tiep_dan,
+  slotId,
+});
+
 const mapStaffRegistration = (item) => ({
   id: item.id,
   receptionCode: item.ma_tiep_dan,
@@ -282,10 +289,7 @@ const DangKyTiepDanService = {
           const [statusCode, message] = REGISTRATION_CONFLICTS[result.conflict];
           throw new BaseError(statusCode, message);
         }
-        return {
-          ...result.registration,
-          slotId: resolvedSlotId,
-        };
+        return mapCreatedRegistration(result.registration, resolvedSlotId);
       } catch (error) {
         const uniqueConflict = getRegistrationUniqueConflict(error);
         if (uniqueConflict) {
