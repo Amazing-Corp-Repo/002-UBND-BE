@@ -58,7 +58,9 @@ const ReceptionScheduleManagementSwagger = {
     '/api/reception-schedules/management': {
         get: {
             tags: ['ReceptionScheduleManagement'],
+            security: [{ bearerAuth: [] }],
             summary: 'Lấy danh sách lịch tiếp dân với các bộ lọc',
+            description: 'Dành cho cán bộ có quyền LTD_GET_ALL. Có thể lọc theo trạng thái và tối đa một loại thời gian: tuần/năm, tháng/năm hoặc ngày cụ thể. Kết quả không gồm lịch đã xóa mềm và được sắp xếp tăng dần theo ngày, giờ tiếp dân.',
             parameters: [
                 {
                     name: 'weekYear',
@@ -100,7 +102,19 @@ const ReceptionScheduleManagementSwagger = {
                     },
                 },
             ],
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Lấy danh sách lịch tiếp dân thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.ScheduleListSuccessSchema,
+                        },
+                    },
+                },
+                400: { description: 'Bộ lọc sai định dạng hoặc truyền đồng thời nhiều bộ lọc thời gian' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_GET_ALL' },
+            }
         },
         post: {
             tags: ['ReceptionScheduleManagement'],

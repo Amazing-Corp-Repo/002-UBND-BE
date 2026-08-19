@@ -221,6 +221,26 @@ const mapCreatedSchedule = (schedule) => {
 const ReceptionScheduleManagementService = {
   ...LichTiepDanService,
 
+  async getLichTiepDan(filters) {
+    const { weekYear, monthYear, date, isActive } = filters;
+    const data = await ReceptionScheduleManagementRepository.findAll({
+      weekYear,
+      monthYear,
+      date,
+      isActive:
+        typeof isActive === "boolean" ? String(isActive) : isActive,
+    });
+    return data.sort((left, right) => {
+      const dateDifference =
+        new Date(left.ngay_tiep_dan).getTime() -
+        new Date(right.ngay_tiep_dan).getTime();
+      if (dateDifference !== 0) return dateDifference;
+      return String(left.thoi_gian || "").localeCompare(
+        String(right.thoi_gian || "")
+      );
+    });
+  },
+
   async handleImport(files = [], currentUser) {
     if (!files?.length) {
       throw new BaseError(400, "File không được để trống");

@@ -513,12 +513,12 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 20 — `GET /api/reception-schedules/management` — Lấy danh sách lịch theo bộ lọc
 
-- **Trạng thái:** Đã có bản sao tiếng Anh; còn thiếu phân quyền và Swagger response chi tiết.
-- **Đã làm/hiện có:** Route đọc danh sách và các bộ lọc tuần/tháng/ngày/trạng thái.
-- **Chưa làm:** Chưa authenticate/authorize, chưa middleware validate query và Swagger chưa có response/lỗi.
-- **Cần bổ sung:** Chốt permission xem danh sách lịch, thêm bảo vệ route/validate/Swagger; giữ API 01 riêng cho Mobile public.
+- **Trạng thái:** Đã hoàn thành API danh sách quản lý tiếng Anh.
+- **Đã làm/hiện có:** Authenticate, permission `LTD_GET_ALL`, validate query, chỉ cho tối đa một bộ lọc thời gian, lọc đúng boolean `isActive`, bỏ lịch xóa mềm, sắp xếp theo ngày/giờ, Swagger response/lỗi và test `200`, `400`, `401`, `403`.
+- **Chưa làm:** Response danh sách chưa tổng hợp sức chứa và số đơn giữ chỗ; thông tin này hiện có ở API chi tiết.
+- **Cần bổ sung:** Chỉ mở rộng số liệu tổng hợp trong danh sách nếu màn hình quản lý thực sự cần để tránh query nặng.
 - **Dùng để làm gì:** Lấy danh sách lịch theo bộ lọc.
-- **Role áp dụng hiện tại:** Public; nếu dùng cho quản lý nên yêu cầu permission xem danh sách.
+- **Role áp dụng:** tài khoản cán bộ/lãnh đạo được cấp permission `LTD_GET_ALL`.
 - **Query đầu vào:** `weekYear`, `monthYear`, `date`, `isActive`.
 - **Đầu ra:** Danh sách bản ghi lịch theo model cũ.
 

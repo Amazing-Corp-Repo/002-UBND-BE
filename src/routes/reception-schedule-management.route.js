@@ -8,12 +8,14 @@ import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
   CreateLichTiepDanRequest,
+  GetReceptionScheduleManagementQuery,
   ReceptionScheduleManagementIdParams,
   UpdateLichTiepDanRequest,
   UpdateLStatusLichTiepDanRequest,
 } from "../validators/reception-schedule-management.validator.js";
 import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
+import validateQuery from "../middlewares/validate-query.middleware.js";
 
 const receptionScheduleManagementRouter = express.Router();
 
@@ -37,6 +39,9 @@ receptionScheduleManagementRouter.post(
 
 receptionScheduleManagementRouter.get(
   "/",
+  authenticate,
+  authorize([PERMISSION.LTD_GET_ALL]),
+  validateQuery(GetReceptionScheduleManagementQuery),
   ReceptionScheduleManagementController.getLichTiepDan
 );
 

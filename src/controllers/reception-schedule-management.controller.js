@@ -10,7 +10,7 @@ const ReceptionScheduleManagementController = {
     },
 
     async getLichTiepDan(req, res) {
-        const filters = req.query;
+        const filters = req.validatedQuery;
         const data = await ReceptionScheduleManagementService.getLichTiepDan(filters);
         return successResponse(res, data, "Lấy danh sách lịch tiếp dân thành công");
     },

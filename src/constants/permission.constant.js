@@ -17,6 +17,7 @@ export const PERMISSION = {
   LTD_DELETE: "LTD_DELETE",
   LTD_UPDATE_STATUS: "LTD_UPDATE_STATUS",
   LTD_GET_TEMPLATE: "LTD_GET_TEMPLATE",
+  LTD_GET_ALL: "LTD_GET_ALL",
 
   // Đăng ký tiếp dân
   RR_GET_ALL: "RR_GET_ALL",
@@ -113,6 +114,7 @@ export const PERMISSION_DESC = {
   LTD_DELETE: "Xóa lịch tiếp dân",
   LTD_UPDATE_STATUS: "Cập nhật trạng thái lịch tiếp dân",
   LTD_GET_TEMPLATE: "Lấy mẫu lịch tiếp dân",
+  LTD_GET_ALL: "Xem danh sách lịch tiếp dân",
 
   RR_GET_ALL: "Xem danh sách đăng ký tiếp dân",
   RR_GET_DETAIL: "Xem chi tiết đăng ký tiếp dân",

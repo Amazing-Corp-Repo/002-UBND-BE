@@ -36,6 +36,28 @@ const WorkingPeriodSchema = Joi.object({
         'any.required': 'Giờ kết thúc của khoảng làm việc là bắt buộc',
     }),
 });
+
+export const GetReceptionScheduleManagementQuery = Joi.object({
+    weekYear: Joi.string()
+        .pattern(/^(?:[1-9]|[1-4]\d|5[0-3])\/\d{4}$/)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Tuần/năm phải có dạng tuần/năm, tuần từ 1 đến 53',
+        }),
+    monthYear: Joi.string()
+        .pattern(/^(?:[1-9]|1[0-2])\/\d{4}$/)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Tháng/năm phải có dạng tháng/năm, tháng từ 1 đến 12',
+        }),
+    date: calendarDateSchema('Ngày tiếp dân').optional(),
+    isActive: Joi.boolean().optional().messages({
+        'boolean.base': 'Trạng thái hoạt động phải là true hoặc false',
+    }),
+}).oxor('weekYear', 'monthYear', 'date').messages({
+    'object.oxor': 'Chỉ được dùng một trong các bộ lọc weekYear, monthYear hoặc date',
+});
+
 export const UpdateLStatusLichTiepDanRequest = Joi.object({
     isActive: Joi.boolean()
         .required()

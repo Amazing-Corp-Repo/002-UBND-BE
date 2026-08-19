@@ -82,10 +82,42 @@ const ScheduleWithSlotsSuccessSchema = {
   },
 };
 
+const ScheduleListItemSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    dia_diem: { type: "string", description: "Địa điểm tiếp dân" },
+    ten_can_bo: { type: "string", description: "Tên cán bộ tiếp dân" },
+    ngay_tiep_dan: { type: "string", format: "date-time" },
+    thoi_gian: { type: "string", description: "Các khoảng thời gian làm việc" },
+    ghi_chu: { type: "string", nullable: true },
+    is_active: { type: "boolean" },
+    is_delete: { type: "boolean" },
+    thoi_gian_tao: { type: "string", format: "date-time" },
+    thoi_gian_cap_nhat: { type: "string", format: "date-time", nullable: true },
+  },
+};
+
+const ScheduleListSuccessSchema = {
+  type: "object",
+  required: ["success", "data", "message"],
+  properties: {
+    success: { type: "boolean", example: true },
+    data: { type: "array", items: ScheduleListItemSchema },
+    message: {
+      type: "string",
+      example: "Lấy danh sách lịch tiếp dân thành công",
+    },
+    pagination: { nullable: true, example: null },
+  },
+};
+
 export const ReceptionScheduleManagementSchemas = {
   UpdateStatusSchema,
   CreateScheduleSchema,
   UpdateScheduleSchema,
   ScheduleWithSlotsSchema,
   ScheduleWithSlotsSuccessSchema,
+  ScheduleListItemSchema,
+  ScheduleListSuccessSchema,
 };
