@@ -190,9 +190,9 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 04 — `POST /api/reception-registrations/lookup` — Người dân tra cứu đơn đã đăng ký
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Tra cứu XOR bằng mã hoặc số điện thoại, chuẩn hóa mã viết hoa, che điện thoại/CCCD, trả trạng thái duyệt/từ chối; đã có Swagger và test.
-- **Chưa làm:** Chưa có rate limit hoặc CAPTCHA riêng cho API tra cứu public; chưa có xác minh OTP khi tra bằng số điện thoại.
-- **Cần bổ sung:** Nên bổ sung rate limit và cân nhắc OTP nếu triển khai Internet công khai để hạn chế dò số điện thoại; không cần API hủy đơn.
+- **Đã làm/hiện có:** Tra cứu XOR bằng mã hoặc số điện thoại, chuẩn hóa mã viết hoa, che điện thoại/CCCD, trả trạng thái duyệt/từ chối, rate limit riêng 60 lượt/10 phút/IP; đã có Swagger và test `429`.
+- **Chưa làm:** Chưa có CAPTCHA hoặc xác minh OTP khi tra bằng số điện thoại.
+- **Cần bổ sung:** Chỉ bổ sung CAPTCHA/OTP nếu BA chốt yêu cầu xác thực mạnh hơn khi triển khai Internet công khai; không cần API hủy đơn.
 - **Dùng để làm gì:** Người dân tra cứu đơn đã đăng ký bằng mã tiếp dân hoặc số điện thoại.
 - **Role áp dụng:** Public/Mobile, không cần token.
 - **Trường hợp áp dụng:** Xem lại lịch hẹn, trạng thái duyệt, quầy được phân hoặc lý do bị từ chối.
@@ -211,7 +211,8 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
   - Tra theo mã trả đơn tương ứng; tra theo điện thoại có thể trả nhiều đơn.
   - `phoneNumber` và `citizenId` được che, chỉ giữ 4 số cuối.
   - Không cho gửi đồng thời cả mã và số điện thoại.
-- **Lỗi chính:** `400` nếu payload sai; `404` nếu không có đăng ký.
+  - Giới hạn 60 lượt tra cứu trong 10 phút cho mỗi IP để hạn chế dò mã/SĐT.
+- **Lỗi chính:** `400` nếu payload sai; `404` nếu không có đăng ký; `429` nếu vượt rate limit.
 
 ### API 05 — `GET /api/reception-registrations` — Cán bộ lấy danh sách đăng ký tiếp dân
 

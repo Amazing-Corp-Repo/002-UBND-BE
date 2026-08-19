@@ -142,7 +142,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Tra cứu đăng ký tiếp dân của người dân",
       description:
-        "API công khai dành cho Mobile. Chỉ sử dụng một trong hai thông tin là mã tiếp dân hoặc số điện thoại. Các trường định danh nhạy cảm được che một phần trong kết quả.",
+        "API công khai dành cho Mobile. Chỉ sử dụng một trong hai thông tin là mã tiếp dân hoặc số điện thoại. Các trường định danh nhạy cảm được che một phần trong kết quả. Giới hạn 60 lượt tra cứu trong 10 phút cho mỗi IP để hạn chế dò mã và số điện thoại.",
       requestBody: {
         required: true,
         content: {
@@ -174,6 +174,7 @@ const DangKyTiepDanSwagger = {
         200: { description: "Tra cứu đăng ký tiếp dân thành công" },
         400: { description: "Thông tin tra cứu không hợp lệ" },
         404: { description: "Không tìm thấy đăng ký tiếp dân" },
+        429: { description: "Vượt quá 60 lượt tra cứu trong 10 phút từ cùng một IP" },
       },
     },
   },

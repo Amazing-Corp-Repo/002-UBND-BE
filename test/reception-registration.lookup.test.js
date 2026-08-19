@@ -4,6 +4,11 @@ import express from "express";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import DangKyTiepDanRepository from "../src/repositories/dang-ky-tiep-dan.repository.js";
 import dangKyTiepDanRouter from "../src/routes/dang-ky-tiep-dan.route.js";
+import {
+  createReceptionLookupRateLimiter,
+  RECEPTION_LOOKUP_RATE_LIMIT,
+} from "../src/middlewares/reception-registration-rate-limit.middleware.js";
+import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
 
 const originalFindForCitizenLookup =
   DangKyTiepDanRepository.findForCitizenLookup;
@@ -46,6 +51,14 @@ afterEach(() => {
 });
 
 describe("POST /api/reception-registrations/lookup", () => {
+  it("documents the public lookup rate limit in Swagger", () => {
+    const operation =
+      DangKyTiepDanSwagger["/api/reception-registrations/lookup"].post;
+
+    assert.ok(operation.description.includes("60 lượt"));
+    assert.ok(operation.responses[429]);
+  });
+
   it("looks up by code and masks sensitive fields", async () => {
     const server = createTestServer();
     const { port } = server.address();
@@ -101,6 +114,34 @@ describe("POST /api/reception-registrations/lookup", () => {
         }
       );
       assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("limits public lookup traffic to 60 requests per 10 minutes per IP", async () => {
+    const app = express();
+    app.use(createReceptionLookupRateLimiter());
+    app.post("/lookup", (_req, res) => res.json({ success: true }));
+    const server = app.listen(0);
+    const { port } = server.address();
+
+    try {
+      for (let index = 0; index < RECEPTION_LOOKUP_RATE_LIMIT.limit; index += 1) {
+        const response = await fetch(`http://127.0.0.1:${port}/lookup`, {
+          method: "POST",
+        });
+        assert.equal(response.status, 200);
+      }
+
+      const blockedResponse = await fetch(`http://127.0.0.1:${port}/lookup`, {
+        method: "POST",
+      });
+      const blockedBody = await blockedResponse.json();
+
+      assert.equal(blockedResponse.status, 429);
+      assert.equal(blockedBody.success, false);
+      assert.match(blockedBody.message, /tra cứu quá nhiều/i);
     } finally {
       server.close();
     }

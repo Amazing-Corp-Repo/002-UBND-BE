@@ -7,7 +7,9 @@ import validateQuery from "../middlewares/validate-query.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
-import receptionRegistrationRateLimiter from "../middlewares/reception-registration-rate-limit.middleware.js";
+import receptionRegistrationRateLimiter, {
+  receptionLookupRateLimiter,
+} from "../middlewares/reception-registration-rate-limit.middleware.js";
 import {
   CreateDangKyTiepDanRequest,
   ApproveReceptionRegistrationRequest,
@@ -65,6 +67,7 @@ dangKyTiepDanRouter.patch(
 
 dangKyTiepDanRouter.post(
   "/lookup",
+  receptionLookupRateLimiter,
   validate(LookupDangKyTiepDanRequest),
   DangKyTiepDanController.lookup
 );
