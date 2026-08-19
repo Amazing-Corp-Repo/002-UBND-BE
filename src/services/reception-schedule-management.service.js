@@ -266,6 +266,30 @@ const ReceptionScheduleManagementService = {
     return { data, pagination: createPagination(page, size, totalItems) };
   },
 
+  async countLichTiepDan(filters) {
+    const { weekYear, monthYear, date } = filters;
+    const [total, active, inactive] = await Promise.all([
+      ReceptionScheduleManagementRepository.countAll({
+        weekYear,
+        monthYear,
+        date,
+      }),
+      ReceptionScheduleManagementRepository.countAll({
+        weekYear,
+        monthYear,
+        date,
+        isActive: "true",
+      }),
+      ReceptionScheduleManagementRepository.countAll({
+        weekYear,
+        monthYear,
+        date,
+        isActive: "false",
+      }),
+    ]);
+    return { total, active, inactive };
+  },
+
   async handleImport(files = [], currentUser) {
     if (!files?.length) {
       throw new BaseError(400, "File không được để trống");

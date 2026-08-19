@@ -535,14 +535,14 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 22 — `GET /api/reception-schedules/management/count` — Đếm số lịch tiếp dân
 
-- **Trạng thái:** Đã có bản sao tiếng Anh; còn thiếu phân quyền và Swagger response chi tiết.
-- **Đã làm/hiện có:** Đếm lịch theo các bộ lọc tuần/tháng/ngày.
-- **Chưa làm:** Chưa authenticate/authorize, chưa validate query, Swagger chưa có schema response/lỗi.
-- **Cần bổ sung:** Chốt permission đọc/thống kê lịch rồi thêm middleware và Swagger.
+- **Trạng thái:** Đã hoàn thành API đếm lịch quản lý tiếng Anh.
+- **Đã làm/hiện có:** Authenticate, permission `LTD_GET_ALL`, validate tối đa một bộ lọc thời gian, đếm song song `total`, `active`, `inactive`, Swagger response/lỗi và test `200`, `400`, `401`, `403`.
+- **Chưa làm:** Chưa nhóm số lượng theo ngày, ca hoặc cán bộ.
+- **Cần bổ sung:** Dùng API thống kê riêng nếu sau này cần biểu đồ/phân nhóm thay vì mở rộng endpoint đếm cơ bản.
 - **Dùng để làm gì:** Đếm lịch theo tuần, tháng hoặc ngày.
-- **Role áp dụng hiện tại:** Public; nếu dùng cho dashboard quản lý nên có permission đọc/thống kê lịch.
+- **Role áp dụng:** tài khoản cán bộ/lãnh đạo được cấp permission `LTD_GET_ALL`.
 - **Query đầu vào:** `weekYear`, `monthYear`, `date`.
-- **Đầu ra:** Số lượng lịch theo service hiện hành trong `data`.
+- **Đầu ra:** `data.total`, `data.active`, `data.inactive`.
 
 ### API 23 — `DELETE /api/reception-schedules/management/{id}` — Xóa mềm lịch tiếp dân
 

@@ -257,7 +257,9 @@ const ReceptionScheduleManagementSwagger = {
     '/api/reception-schedules/management/count': {
         get: {
             tags: ['ReceptionScheduleManagement'],
+            security: [{ bearerAuth: [] }],
             summary: 'Đếm tổng số lịch tiếp dân (có thể áp dụng bộ lọc)',
+            description: 'Dành cho cán bộ có quyền LTD_GET_ALL. Đếm đồng thời tổng số lịch, số lịch đang hoạt động và số lịch ngừng hoạt động. Chỉ được truyền tối đa một bộ lọc thời gian: tuần/năm, tháng/năm hoặc ngày.',
             parameters: [
                 {
                     name: 'weekYear',
@@ -281,7 +283,19 @@ const ReceptionScheduleManagementSwagger = {
                     schema: { type: 'string', example: '2025-10-12' },
                 },
             ],
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Đếm lịch tiếp dân thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.ScheduleCountSuccessSchema,
+                        },
+                    },
+                },
+                400: { description: 'Bộ lọc sai định dạng hoặc truyền đồng thời nhiều bộ lọc thời gian' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_GET_ALL' },
+            }
         },
     },
     '/api/reception-schedules/management/{id}': {

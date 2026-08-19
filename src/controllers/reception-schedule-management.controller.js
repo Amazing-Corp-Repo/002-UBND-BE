@@ -22,7 +22,7 @@ const ReceptionScheduleManagementController = {
     },
 
     async countLichTiepDan(req, res) {
-        const filters = req.query;
+        const filters = req.validatedQuery;
         const counts = await ReceptionScheduleManagementService.countLichTiepDan(filters);
         return successResponse(res, counts, "Đếm lịch tiếp dân thành công");
     },

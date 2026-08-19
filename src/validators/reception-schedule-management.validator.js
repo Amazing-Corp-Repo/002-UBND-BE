@@ -73,6 +73,13 @@ export const GetReceptionScheduleManagementPaginationQuery =
         }),
     });
 
+export const GetReceptionScheduleManagementCountQuery =
+    GetReceptionScheduleManagementQuery.fork(['isActive'], (schema) =>
+        schema.forbidden().messages({
+            'any.unknown': 'API đếm không hỗ trợ bộ lọc isActive',
+        })
+    );
+
 export const UpdateLStatusLichTiepDanRequest = Joi.object({
     isActive: Joi.boolean()
         .required()

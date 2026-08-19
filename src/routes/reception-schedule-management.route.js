@@ -10,6 +10,7 @@ import {
   CreateLichTiepDanRequest,
   GetReceptionScheduleManagementQuery,
   GetReceptionScheduleManagementPaginationQuery,
+  GetReceptionScheduleManagementCountQuery,
   ReceptionScheduleManagementIdParams,
   UpdateLichTiepDanRequest,
   UpdateLStatusLichTiepDanRequest,
@@ -56,6 +57,9 @@ receptionScheduleManagementRouter.get(
 
 receptionScheduleManagementRouter.get(
   "/count",
+  authenticate,
+  authorize([PERMISSION.LTD_GET_ALL]),
+  validateQuery(GetReceptionScheduleManagementCountQuery),
   ReceptionScheduleManagementController.countLichTiepDan
 );
 
