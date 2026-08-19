@@ -23,6 +23,8 @@ import DangKyTiepDanSwagger from './dang-ky-tiep-dan.swagger.js';
 import ReceptionScheduleSwagger from './reception-schedule.swagger.js';
 import ReceptionScheduleManagementSwagger from './reception-schedule-management.swagger.js';
 import ReceptionRatingSwagger from './reception-rating.swagger.js';
+import ReceptionCounterSwagger from './reception-counter.swagger.js';
+import ReceptionCounterAssignmentSwagger from './reception-counter-assignment.swagger.js';
 
 const swaggerDocument = {
 
@@ -63,7 +65,9 @@ const swaggerDocument = {
         ...DangKyTiepDanSwagger,
         ...ReceptionScheduleSwagger,
         ...ReceptionScheduleManagementSwagger,
-        ...ReceptionRatingSwagger
+        ...ReceptionRatingSwagger,
+        ...ReceptionCounterSwagger,
+        ...ReceptionCounterAssignmentSwagger
     },
 
     components: {

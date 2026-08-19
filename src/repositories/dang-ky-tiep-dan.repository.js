@@ -1,5 +1,9 @@
 import prisma from "../config/database.config.js";
 import { DEFAULT_RECEPTION_COUNTER_CAPACITY } from "../constants/reception-schedule.constant.js";
+import {
+  buildReceptionDepartmentFilter,
+  receptionCounterRelation,
+} from "../mapper/reception-registration-v2.mapper.js";
 
 const DangKyTiepDanRepository = {
   async findScheduleById(id) {
@@ -180,6 +184,7 @@ const DangKyTiepDanRepository = {
         is_active: true,
         is_delete: false,
       },
+      include: { cau_hinh_quay: receptionCounterRelation },
       orderBy: { thoi_gian_tao: "desc" },
       take: 50,
     });
@@ -187,19 +192,24 @@ const DangKyTiepDanRepository = {
 
   async findAllForStaff(filters) {
     const skip = (filters.page - 1) * filters.size;
+    const andFilters = [];
+    if (filters.search) {
+      andFilters.push({
+        OR: [
+          { ma_tiep_dan: { contains: filters.search, mode: "insensitive" } },
+          { ho_ten: { contains: filters.search, mode: "insensitive" } },
+          { sdt: { contains: filters.search } },
+        ],
+      });
+    }
+    const departmentFilter = buildReceptionDepartmentFilter(filters.department);
+    if (departmentFilter) andFilters.push(departmentFilter);
+
     const where = {
       loai: "COUNTER_RECEPTION",
       is_active: true,
       is_delete: false,
-      ...(filters.search
-        ? {
-            OR: [
-              { ma_tiep_dan: { contains: filters.search, mode: "insensitive" } },
-              { ho_ten: { contains: filters.search, mode: "insensitive" } },
-              { sdt: { contains: filters.search } },
-            ],
-          }
-        : {}),
+      ...(andFilters.length > 0 ? { AND: andFilters } : {}),
       ...(filters.receptionDate
         ? {
             ngay: {
@@ -211,7 +221,6 @@ const DangKyTiepDanRepository = {
       ...(filters.approvalStatus
         ? { trang_thai: filters.approvalStatus }
         : {}),
-      ...(filters.department ? { bo_phan: filters.department } : {}),
       ...(filters.ratingStatus === "RATED"
         ? { danh_gia_tiep_dan: { some: { is_delete: false } } }
         : {}),
@@ -224,6 +233,7 @@ const DangKyTiepDanRepository = {
       prisma.dang_ky_tiep_dan.findMany({
         where,
         include: {
+          cau_hinh_quay: receptionCounterRelation,
           danh_gia_tiep_dan: {
             where: { is_delete: false },
             select: { id: true },
@@ -272,6 +282,8 @@ const DangKyTiepDanRepository = {
             ma_quay: true,
             khung_gio: true,
             suc_chua: true,
+            id_ca_tiep_dan: true,
+            quay_tiep_dan: receptionCounterRelation.select.quay_tiep_dan,
           },
         },
         danh_gia_tiep_dan: {
@@ -297,6 +309,7 @@ const DangKyTiepDanRepository = {
         is_active: true,
         is_delete: false,
       },
+      include: { cau_hinh_quay: receptionCounterRelation },
     });
   },
 
@@ -416,6 +429,7 @@ const DangKyTiepDanRepository = {
         is_delete: false,
       },
       include: {
+        cau_hinh_quay: receptionCounterRelation,
         danh_gia_tiep_dan: {
           where: { is_delete: false },
           select: { id: true },

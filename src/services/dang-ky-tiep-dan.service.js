@@ -9,6 +9,10 @@ import {
   RECEPTION_COUNTER_CODES,
 } from "../constants/reception-schedule.constant.js";
 import UserRepository from "../repositories/user.repository.js";
+import {
+  hasAssignedReceptionCounter,
+  resolveReceptionDepartment,
+} from "../mapper/reception-registration-v2.mapper.js";
 
 const MAX_CODE_RETRIES = 10;
 
@@ -92,7 +96,7 @@ const mapCitizenRegistration = (item) => ({
   phoneNumber: maskValue(item.sdt, 4),
   citizenId: maskValue(item.cccd, 4),
   address: item.dia_chi,
-  department: item.bo_phan,
+  department: resolveReceptionDepartment(item),
   leaderName: item.ten_lanh_dao,
   leaderTitle: item.chuc_vu_lanh_dao,
   status: item.trang_thai,
@@ -118,7 +122,7 @@ const mapStaffRegistration = (item) => ({
   timeSlot: item.slot,
   topic: item.chu_de,
   workingContent: item.ly_do,
-  department: item.bo_phan,
+  department: resolveReceptionDepartment(item),
   approvalStatus: item.trang_thai,
   ratingStatus:
     item.danh_gia_tiep_dan?.length > 0 ? "RATED" : "NOT_RATED",
@@ -159,7 +163,7 @@ const mapStaffRegistrationDetail = (item) => {
       citizenId: item.cccd,
       address: item.dia_chi,
     },
-    department: item.bo_phan,
+    department: resolveReceptionDepartment(item),
     approvalStatus: item.trang_thai,
     approver: item.ten_lanh_dao
       ? {
@@ -199,7 +203,7 @@ const mapRatingLookup = (item) => ({
     citizenId: maskValue(item.cccd, 4),
     address: item.dia_chi,
   },
-  department: item.bo_phan,
+  department: resolveReceptionDepartment(item),
   approvalStatus: item.trang_thai,
   ratingStatus: "NOT_RATED",
 });
@@ -381,6 +385,7 @@ const DangKyTiepDanService = {
             trang_thai: TIEP_DAN_STATUS.APPROVED,
             ten_lanh_dao: approver.ho_va_ten || currentUser.username,
             chuc_vu_lanh_dao: approverTitle,
+            nguoi_duyet_don: currentUser.userId,
             nguoi_cap_nhat: currentUser.userId,
             thoi_gian_cap_nhat: new Date().toISOString(),
             thoi_gian_phe_duyet: new Date().toISOString(),
@@ -417,7 +422,7 @@ const DangKyTiepDanService = {
     if (registration.trang_thai !== TIEP_DAN_STATUS.APPROVED) {
       throw new BaseError(409, "Chỉ đăng ký đã phê duyệt mới được hoàn thành");
     }
-    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
+    if (!hasAssignedReceptionCounter(registration)) {
       throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
     }
 
@@ -469,7 +474,7 @@ const DangKyTiepDanService = {
     if (registration.trang_thai !== TIEP_DAN_STATUS.COMPLETED) {
       throw new BaseError(409, "Buổi tiếp dân chưa hoàn thành để đánh giá");
     }
-    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
+    if (!hasAssignedReceptionCounter(registration)) {
       throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
     }
     if (registration.danh_gia_tiep_dan?.length > 0) {

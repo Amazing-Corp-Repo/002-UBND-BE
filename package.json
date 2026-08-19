@@ -45,8 +45,10 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
+    "build": "npm run check && prisma generate",
     "test": "node --experimental-strip-types --test --test-concurrency=1",
     "check": "prisma validate",
+    "backfill:reception-v2": "node --experimental-strip-types scripts/backfill-reception-v2.js",
     "generate:reception-template": "node scripts/generate-reception-schedule-template.js",
     "seed:reception-swagger-demo": "node --experimental-strip-types scripts/seed-reception-swagger-demo.js",
     "dev": "node --watch --experimental-strip-types src/app.js",
