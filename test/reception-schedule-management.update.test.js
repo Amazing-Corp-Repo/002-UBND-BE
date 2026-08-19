@@ -4,19 +4,19 @@ import express from "express";
 import { PERMISSION } from "../src/constants/permission.constant.js";
 import prisma from "../src/config/database.config.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
-import LichTiepDanRepository from "../src/repositories/lich-tiep-dan.repository.js";
-import lichTiepDanRouter from "../src/routes/lich-tiep-dan.route.js";
-import LichTiepDanService from "../src/services/lich-tiep-dan.service.js";
-import LichTiepDanSwagger from "../src/swagger/lich-tiep-dan.swagger.js";
+import ReceptionScheduleManagementRepository from "../src/repositories/reception-schedule-management.repository.js";
+import receptionScheduleManagementRouter from "../src/routes/reception-schedule-management.route.js";
+import ReceptionScheduleManagementService from "../src/services/reception-schedule-management.service.js";
+import ReceptionScheduleManagementSwagger from "../src/swagger/reception-schedule-management.swagger.js";
 import jwtUtils from "../src/utils/jwt.util.js";
 
 const updaterId = "123e4567-e89b-42d3-a456-426614174000";
 const scheduleId = "223e4567-e89b-42d3-a456-426614174000";
 const originalMethods = {
-  findById: LichTiepDanRepository.findById,
-  findDuplicate: LichTiepDanRepository.findByCanBoAndNgayExcludeId,
-  countRegistrations: LichTiepDanRepository.countRegistrations,
-  updateWithSlots: LichTiepDanRepository.updateWithSlots,
+  findById: ReceptionScheduleManagementRepository.findById,
+  findDuplicate: ReceptionScheduleManagementRepository.findByCanBoAndNgayExcludeId,
+  countRegistrations: ReceptionScheduleManagementRepository.countRegistrations,
+  updateWithSlots: ReceptionScheduleManagementRepository.updateWithSlots,
   auditCreate: prisma.audit_logs.create,
 };
 
@@ -55,7 +55,7 @@ const createToken = (permissions) =>
 const createTestServer = () => {
   const app = express();
   app.use(express.json());
-  app.use("/api/lich-tiep-dan", lichTiepDanRouter);
+  app.use("/api/reception-schedules/management", receptionScheduleManagementRouter);
   app.use(errorHandler);
   return app.listen(0);
 };
@@ -64,10 +64,10 @@ beforeEach(() => {
   registrationCount = 0;
   capturedSlotRows = [];
   replaceSlots = false;
-  LichTiepDanRepository.findById = async () => ({ ...existingSchedule });
-  LichTiepDanRepository.findByCanBoAndNgayExcludeId = async () => null;
-  LichTiepDanRepository.countRegistrations = async () => registrationCount;
-  LichTiepDanRepository.updateWithSlots = async (
+  ReceptionScheduleManagementRepository.findById = async () => ({ ...existingSchedule });
+  ReceptionScheduleManagementRepository.findByCanBoAndNgayExcludeId = async () => null;
+  ReceptionScheduleManagementRepository.countRegistrations = async () => registrationCount;
+  ReceptionScheduleManagementRepository.updateWithSlots = async (
     id,
     scheduleData,
     slotRows,
@@ -88,18 +88,17 @@ beforeEach(() => {
   };
   prisma.audit_logs.create = async () => ({});
 });
-
 afterEach(() => {
-  LichTiepDanRepository.findById = originalMethods.findById;
-  LichTiepDanRepository.findByCanBoAndNgayExcludeId = originalMethods.findDuplicate;
-  LichTiepDanRepository.countRegistrations = originalMethods.countRegistrations;
-  LichTiepDanRepository.updateWithSlots = originalMethods.updateWithSlots;
+  ReceptionScheduleManagementRepository.findById = originalMethods.findById;
+  ReceptionScheduleManagementRepository.findByCanBoAndNgayExcludeId = originalMethods.findDuplicate;
+  ReceptionScheduleManagementRepository.countRegistrations = originalMethods.countRegistrations;
+  ReceptionScheduleManagementRepository.updateWithSlots = originalMethods.updateWithSlots;
   prisma.audit_logs.create = originalMethods.auditCreate;
 });
 
-describe("PUT /api/lich-tiep-dan/:id", () => {
+describe("PUT /api/reception-schedules/management/:id", () => {
   it("documents the update rules in Swagger", () => {
-    const operation = LichTiepDanSwagger["/api/lich-tiep-dan/{id}"].put;
+    const operation = ReceptionScheduleManagementSwagger["/api/reception-schedules/management/{id}"].put;
 
     assert.ok(operation.description.includes("Không được đổi ngày hoặc giờ"));
     assert.ok(operation.requestBody.content["application/json"].example.workingPeriods);
@@ -109,7 +108,7 @@ describe("PUT /api/lich-tiep-dan/:id", () => {
   });
 
   it("updates metadata without rebuilding existing slots", async () => {
-    const result = await LichTiepDanService.updateLichTiepDan(
+    const result = await ReceptionScheduleManagementService.updateLichTiepDan(
       scheduleId,
       validBody.tenCanBo,
       validBody.diaDiem,
@@ -131,7 +130,7 @@ describe("PUT /api/lich-tiep-dan/:id", () => {
       { startTime: "08:00", endTime: "11:00" },
       { startTime: "13:00", endTime: "16:00" },
     ];
-    const result = await LichTiepDanService.updateLichTiepDan(
+    const result = await ReceptionScheduleManagementService.updateLichTiepDan(
       scheduleId,
       validBody.tenCanBo,
       validBody.diaDiem,
@@ -154,7 +153,7 @@ describe("PUT /api/lich-tiep-dan/:id", () => {
 
     await assert.rejects(
       () =>
-        LichTiepDanService.updateLichTiepDan(
+        ReceptionScheduleManagementService.updateLichTiepDan(
           scheduleId,
           validBody.tenCanBo,
           validBody.diaDiem,
@@ -174,7 +173,7 @@ describe("PUT /api/lich-tiep-dan/:id", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/lich-tiep-dan/${scheduleId}`,
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
         {
           method: "PUT",
           headers: {
@@ -197,7 +196,7 @@ describe("PUT /api/lich-tiep-dan/:id", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/lich-tiep-dan/${scheduleId}`,
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
         {
           method: "PUT",
           headers: {
@@ -219,7 +218,7 @@ describe("PUT /api/lich-tiep-dan/:id", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/lich-tiep-dan/${scheduleId}`,
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
         {
           method: "PUT",
           headers: {

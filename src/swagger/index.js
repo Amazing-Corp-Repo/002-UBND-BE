@@ -21,6 +21,7 @@ import ExportSwagger from './export.swagger.js';
 import AddressVote from './address-vote.swagger.js';
 import DangKyTiepDanSwagger from './dang-ky-tiep-dan.swagger.js';
 import ReceptionScheduleSwagger from './reception-schedule.swagger.js';
+import ReceptionScheduleManagementSwagger from './reception-schedule-management.swagger.js';
 import ReceptionRatingSwagger from './reception-rating.swagger.js';
 
 const swaggerDocument = {
@@ -61,6 +62,7 @@ const swaggerDocument = {
         ...AddressVote,
         ...DangKyTiepDanSwagger,
         ...ReceptionScheduleSwagger,
+        ...ReceptionScheduleManagementSwagger,
         ...ReceptionRatingSwagger
     },
 

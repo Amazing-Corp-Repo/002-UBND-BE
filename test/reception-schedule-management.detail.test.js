@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import express from "express";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
-import LichTiepDanRepository from "../src/repositories/lich-tiep-dan.repository.js";
-import lichTiepDanRouter from "../src/routes/lich-tiep-dan.route.js";
-import LichTiepDanService from "../src/services/lich-tiep-dan.service.js";
-import LichTiepDanSwagger from "../src/swagger/lich-tiep-dan.swagger.js";
+import ReceptionScheduleManagementRepository from "../src/repositories/reception-schedule-management.repository.js";
+import receptionScheduleManagementRouter from "../src/routes/reception-schedule-management.route.js";
+import ReceptionScheduleManagementService from "../src/services/reception-schedule-management.service.js";
+import ReceptionScheduleManagementSwagger from "../src/swagger/reception-schedule-management.swagger.js";
 
 const scheduleId = "223e4567-e89b-42d3-a456-426614174000";
-const originalFindDetailById = LichTiepDanRepository.findDetailById;
+const originalFindDetailById = ReceptionScheduleManagementRepository.findDetailById;
 
 const scheduleDetail = {
   id: scheduleId,
@@ -35,13 +35,13 @@ const scheduleDetail = {
 const createTestServer = () => {
   const app = express();
   app.use(express.json());
-  app.use("/api/lich-tiep-dan", lichTiepDanRouter);
+  app.use("/api/reception-schedules/management", receptionScheduleManagementRouter);
   app.use(errorHandler);
   return app.listen(0);
 };
 
 beforeEach(() => {
-  LichTiepDanRepository.findDetailById = async () => ({
+  ReceptionScheduleManagementRepository.findDetailById = async () => ({
     ...scheduleDetail,
     khung_gio_tiep_dan: scheduleDetail.khung_gio_tiep_dan.map((slot) => ({
       ...slot,
@@ -51,14 +51,13 @@ beforeEach(() => {
     })),
   });
 });
-
 afterEach(() => {
-  LichTiepDanRepository.findDetailById = originalFindDetailById;
+  ReceptionScheduleManagementRepository.findDetailById = originalFindDetailById;
 });
 
-describe("GET /api/lich-tiep-dan/:id", () => {
+describe("GET /api/reception-schedules/management/:id", () => {
   it("documents slot occupancy in Swagger", () => {
-    const operation = LichTiepDanSwagger["/api/lich-tiep-dan/{id}"].get;
+    const operation = ReceptionScheduleManagementSwagger["/api/reception-schedules/management/{id}"].get;
 
     assert.ok(operation.description.includes("số đăng ký đã giữ chỗ"));
     assert.ok(operation.responses[200]);
@@ -66,7 +65,7 @@ describe("GET /api/lich-tiep-dan/:id", () => {
   });
 
   it("returns slot, counter and held-capacity details", async () => {
-    const result = await LichTiepDanService.getLichTiepDanById(scheduleId);
+    const result = await ReceptionScheduleManagementService.getLichTiepDanById(scheduleId);
     const slot = result.slots[0];
     const firstCounter = slot.counters[0];
 
@@ -87,7 +86,7 @@ describe("GET /api/lich-tiep-dan/:id", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/lich-tiep-dan/${scheduleId}`
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`
       );
       const body = await response.json();
 
@@ -100,12 +99,12 @@ describe("GET /api/lich-tiep-dan/:id", () => {
   });
 
   it("returns 404 when the schedule does not exist", async () => {
-    LichTiepDanRepository.findDetailById = async () => null;
+    ReceptionScheduleManagementRepository.findDetailById = async () => null;
     const server = createTestServer();
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/lich-tiep-dan/${scheduleId}`
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`
       );
 
       assert.equal(response.status, 404);

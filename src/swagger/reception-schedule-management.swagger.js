@@ -1,9 +1,9 @@
-import { LichTiepDanSchemas } from "../schemas/lich-tiep-dan.schema.js";
+import { ReceptionScheduleManagementSchemas } from "../schemas/reception-schedule-management.schema.js";
 
-const LichTiepDanSwagger = {
-    '/api/lich-tiep-dan/import': {
+const ReceptionScheduleManagementSwagger = {
+    '/api/reception-schedules/management/import': {
         post: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Import lịch tiếp dân từ file Excel',
             security: [{ bearerAuth: [] }],
             requestBody: {
@@ -26,9 +26,9 @@ const LichTiepDanSwagger = {
             responses: {}
         },
     },
-    '/api/lich-tiep-dan': {
+    '/api/reception-schedules/management': {
         get: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Lấy danh sách lịch tiếp dân với các bộ lọc',
             parameters: [
                 {
@@ -74,24 +74,52 @@ const LichTiepDanSwagger = {
             responses: {}
         },
         post: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             security: [{ bearerAuth: [] }],
             summary: 'Tạo mới lịch tiếp dân',
-            description: 'Tạo mới một lịch tiếp dân với các thông tin chi tiết liên quan.',
+            description: 'Tạo lịch tiếp dân và tự sinh cấu hình slot cho 8 quầy, mặc định 2 người/quầy/ca. Nếu không truyền giờ, hệ thống dùng 07:30-11:30 và 13:30-16:30. Request cũ dùng batDau/ketThuc vẫn được hỗ trợ.',
             requestBody: {
                 required: true,
                 content: {
                     'application/json': {
-                        schema: LichTiepDanSchemas.CreateLichTiepDanRequestSchemaSwagger,
+                        schema: ReceptionScheduleManagementSchemas.CreateScheduleSchema,
+                        examples: {
+                            defaultWorkingHours: {
+                                summary: 'Dùng thời gian làm việc mặc định',
+                                value: {
+                                    tenCanBo: 'Nguyễn Văn An',
+                                    diaDiem: 'Bộ phận tiếp công dân',
+                                    ngayTiepDan: '2026-08-25',
+                                    ghiChu: 'Tiếp công dân định kỳ',
+                                },
+                            },
+                            customWorkingHours: {
+                                summary: 'Lãnh đạo cấu hình hai khoảng làm việc',
+                                value: {
+                                    tenCanBo: 'Nguyễn Văn An',
+                                    diaDiem: 'Bộ phận tiếp công dân',
+                                    ngayTiepDan: '2026-08-25',
+                                    workingPeriods: [
+                                        { startTime: '08:00', endTime: '11:00' },
+                                        { startTime: '13:00', endTime: '16:00' },
+                                    ],
+                                },
+                            },
+                        },
                     },
                 },
             },
-            responses: {}
+            responses: {
+                200: { description: 'Tạo lịch và các slot theo quầy thành công' },
+                400: { description: 'Dữ liệu hoặc khoảng thời gian không hợp lệ, hoặc lịch đã tồn tại' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_CREATE' },
+            }
         },
     },
-    '/api/lich-tiep-dan/pagination': {
+    '/api/reception-schedules/management/pagination': {
         get: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Lấy danh sách lịch tiếp dân với các bộ lọc',
             parameters: [
                 {
@@ -157,9 +185,9 @@ const LichTiepDanSwagger = {
             responses: {}
         },
     },
-    '/api/lich-tiep-dan/count': {
+    '/api/reception-schedules/management/count': {
         get: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Đếm tổng số lịch tiếp dân (có thể áp dụng bộ lọc)',
             parameters: [
                 {
@@ -187,9 +215,9 @@ const LichTiepDanSwagger = {
             responses: {}
         },
     },
-    '/api/lich-tiep-dan/{id}': {
+    '/api/reception-schedules/management/{id}': {
         delete: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Xoá lịch tiếp dân theo ID',
             security: [{ bearerAuth: [] }],
             parameters: [
@@ -207,8 +235,9 @@ const LichTiepDanSwagger = {
             responses: {}
         },
         get: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Lấy lịch tiếp dân theo ID',
+            description: 'Trả về chi tiết lịch, từng ca một tiếng, cấu hình 8 quầy, sức chứa, số đăng ký đã giữ chỗ và số chỗ còn lại. Mọi đăng ký đã tạo đều được tính giữ chỗ, kể cả đăng ký đã bị từ chối hoặc xoá mềm.',
             parameters: [
                 {
                     name: 'id',
@@ -221,11 +250,45 @@ const LichTiepDanSwagger = {
                     },
                 },
             ],
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Lấy chi tiết lịch tiếp dân thành công',
+                    content: {
+                        'application/json': {
+                            example: {
+                                success: true,
+                                data: {
+                                    id: '123e4567-e89b-12d3-a456-426614174000',
+                                    ten_can_bo: 'Nguyễn Văn An',
+                                    ngay_tiep_dan: '2026-08-26',
+                                    slots: [{
+                                        timeSlot: '07:30 - 08:30',
+                                        totalCapacity: 16,
+                                        heldCount: 3,
+                                        unassignedHeldCount: 1,
+                                        remainingCapacity: 13,
+                                        isFull: false,
+                                        counters: [{
+                                            counterCode: 'QUAY_1',
+                                            capacity: 2,
+                                            heldCount: 1,
+                                            remainingCapacity: 1,
+                                            isFull: false,
+                                        }],
+                                    }],
+                                },
+                            },
+                        },
+                    },
+                },
+                400: { description: 'ID lịch không hợp lệ hoặc bị thiếu' },
+                404: { description: 'Không tìm thấy lịch tiếp dân' },
+            }
         },
         put: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Cập nhật lịch tiếp dân theo ID',
+            description: 'Cập nhật thông tin lịch. Có thể truyền workingPeriods để cấu hình tối đa hai khoảng làm việc trong ngày; hệ thống tự sinh lại các ca một tiếng cho 8 quầy. Không được đổi ngày hoặc giờ khi lịch đã có bất kỳ đăng ký giữ chỗ nào.',
             security: [{ bearerAuth: [] }],
             parameters: [
                 {
@@ -243,16 +306,32 @@ const LichTiepDanSwagger = {
                 required: true,
                 content: {
                     "application/json": {
-                        schema: LichTiepDanSchemas.UpdateLichTiepDanRequestSchemaSwagger,
+                        schema: ReceptionScheduleManagementSchemas.UpdateScheduleSchema,
+                        example: {
+                            tenCanBo: 'Nguyễn Văn An',
+                            diaDiem: 'Bộ phận tiếp công dân',
+                            ngayTiepDan: '2026-08-26',
+                            workingPeriods: [
+                                { startTime: '07:30', endTime: '11:30' },
+                                { startTime: '13:30', endTime: '16:30' },
+                            ],
+                            ghiChu: 'Lịch đã được lãnh đạo điều chỉnh',
+                        },
                     },
                 },
             },
-            responses: {}
+            responses: {
+                200: { description: 'Cập nhật lịch thành công' },
+                400: { description: 'Dữ liệu không hợp lệ, lịch trùng hoặc lịch đã có đăng ký giữ chỗ nên không thể đổi ngày/giờ' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_UPDATE' },
+                404: { description: 'Không tìm thấy lịch tiếp dân' },
+            }
         },
     },
-    '/api/lich-tiep-dan/update-status/{id}': {
+    '/api/reception-schedules/management/{id}/status': {
         put: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             summary: 'Cập nhật trạng thái hoạt động của lịch tiếp dân',
             security: [{ bearerAuth: [] }],
             parameters: [
@@ -271,16 +350,16 @@ const LichTiepDanSwagger = {
                 required: true,
                 content: {
                     "application/json": {
-                        schema: LichTiepDanSchemas.UpdateLStatusLichTiepDanSchemaSwagger,
+                        schema: ReceptionScheduleManagementSchemas.UpdateStatusSchema,
                     },
                 },
             },
             responses: {}
         },
     },
-    '/api/lich-tiep-dan/template': {
+    '/api/reception-schedules/management/template': {
         get: {
-            tags: ['LichTiepDan'],
+            tags: ['ReceptionScheduleManagement'],
             security: [{ bearerAuth: [] }],
             summary: 'Lấy template lịch tiếp dân',
             responses: {}
@@ -288,4 +367,4 @@ const LichTiepDanSwagger = {
     },
 }
 
-export default LichTiepDanSwagger;
+export default ReceptionScheduleManagementSwagger;

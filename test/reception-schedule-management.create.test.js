@@ -4,17 +4,17 @@ import express from "express";
 import { PERMISSION } from "../src/constants/permission.constant.js";
 import prisma from "../src/config/database.config.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
-import LichTiepDanRepository from "../src/repositories/lich-tiep-dan.repository.js";
-import lichTiepDanRouter from "../src/routes/lich-tiep-dan.route.js";
-import LichTiepDanService from "../src/services/lich-tiep-dan.service.js";
-import LichTiepDanSwagger from "../src/swagger/lich-tiep-dan.swagger.js";
+import ReceptionScheduleManagementRepository from "../src/repositories/reception-schedule-management.repository.js";
+import receptionScheduleManagementRouter from "../src/routes/reception-schedule-management.route.js";
+import ReceptionScheduleManagementService from "../src/services/reception-schedule-management.service.js";
+import ReceptionScheduleManagementSwagger from "../src/swagger/reception-schedule-management.swagger.js";
 import jwtUtils from "../src/utils/jwt.util.js";
 
 const creatorId = "123e4567-e89b-42d3-a456-426614174000";
 const scheduleId = "223e4567-e89b-42d3-a456-426614174000";
 const originalMethods = {
-  findByCanBoAndNgay: LichTiepDanRepository.findByCanBoAndNgay,
-  createWithSlots: LichTiepDanRepository.createWithSlots,
+  findByCanBoAndNgay: ReceptionScheduleManagementRepository.findByCanBoAndNgay,
+  createWithSlots: ReceptionScheduleManagementRepository.createWithSlots,
   auditCreate: prisma.audit_logs.create,
 };
 
@@ -42,15 +42,15 @@ const createToken = (permissions) =>
 const createTestServer = () => {
   const app = express();
   app.use(express.json());
-  app.use("/api/lich-tiep-dan", lichTiepDanRouter);
+  app.use("/api/reception-schedules/management", receptionScheduleManagementRouter);
   app.use(errorHandler);
   return app.listen(0);
 };
 
 beforeEach(() => {
   capturedSlotRows = [];
-  LichTiepDanRepository.findByCanBoAndNgay = async () => null;
-  LichTiepDanRepository.createWithSlots = async (scheduleData, slotRows) => {
+  ReceptionScheduleManagementRepository.findByCanBoAndNgay = async () => null;
+  ReceptionScheduleManagementRepository.createWithSlots = async (scheduleData, slotRows) => {
     capturedSlotRows = slotRows;
     return {
       id: scheduleId,
@@ -65,16 +65,15 @@ beforeEach(() => {
   };
   prisma.audit_logs.create = async () => ({});
 });
-
 afterEach(() => {
-  LichTiepDanRepository.findByCanBoAndNgay = originalMethods.findByCanBoAndNgay;
-  LichTiepDanRepository.createWithSlots = originalMethods.createWithSlots;
+  ReceptionScheduleManagementRepository.findByCanBoAndNgay = originalMethods.findByCanBoAndNgay;
+  ReceptionScheduleManagementRepository.createWithSlots = originalMethods.createWithSlots;
   prisma.audit_logs.create = originalMethods.auditCreate;
 });
 
-describe("POST /api/lich-tiep-dan", () => {
+describe("POST /api/reception-schedules/management", () => {
   it("documents the API contract in Swagger", () => {
-    const operation = LichTiepDanSwagger["/api/lich-tiep-dan"].post;
+    const operation = ReceptionScheduleManagementSwagger["/api/reception-schedules/management"].post;
 
     assert.equal(operation.summary, "Tạo mới lịch tiếp dân");
     assert.ok(operation.description.includes("tự sinh cấu hình slot cho 8 quầy"));
@@ -85,7 +84,7 @@ describe("POST /api/lich-tiep-dan", () => {
   });
 
   it("creates seven default hourly slots for all eight counters", async () => {
-    const result = await LichTiepDanService.createLichTiepDan(
+    const result = await ReceptionScheduleManagementService.createLichTiepDan(
       validBody.tenCanBo,
       validBody.diaDiem,
       validBody.ngayTiepDan,
@@ -104,7 +103,7 @@ describe("POST /api/lich-tiep-dan", () => {
   });
 
   it("keeps the legacy batDau and ketThuc request contract", async () => {
-    const result = await LichTiepDanService.createLichTiepDan(
+    const result = await ReceptionScheduleManagementService.createLichTiepDan(
       validBody.tenCanBo,
       validBody.diaDiem,
       validBody.ngayTiepDan,
@@ -123,7 +122,7 @@ describe("POST /api/lich-tiep-dan", () => {
     const server = createTestServer();
     const { port } = server.address();
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/api/lich-tiep-dan`, {
+      const response = await fetch(`http://127.0.0.1:${port}/api/reception-schedules/management`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -146,7 +145,7 @@ describe("POST /api/lich-tiep-dan", () => {
     const server = createTestServer();
     const { port } = server.address();
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/api/lich-tiep-dan`, {
+      const response = await fetch(`http://127.0.0.1:${port}/api/reception-schedules/management`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -165,7 +164,7 @@ describe("POST /api/lich-tiep-dan", () => {
     const server = createTestServer();
     const { port } = server.address();
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/api/lich-tiep-dan`, {
+      const response = await fetch(`http://127.0.0.1:${port}/api/reception-schedules/management`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -183,7 +182,7 @@ describe("POST /api/lich-tiep-dan", () => {
   it("rejects overlapping working periods", async () => {
     await assert.rejects(
       () =>
-        LichTiepDanService.createLichTiepDan(
+        ReceptionScheduleManagementService.createLichTiepDan(
           validBody.tenCanBo,
           validBody.diaDiem,
           validBody.ngayTiepDan,

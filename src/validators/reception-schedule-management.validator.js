@@ -1,6 +1,16 @@
 import Joi from "joi";
 
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const WorkingPeriodSchema = Joi.object({
+    startTime: Joi.string().pattern(timeRegex).required().messages({
+        'string.pattern.base': 'Giờ bắt đầu phải có dạng HH:mm',
+        'any.required': 'Giờ bắt đầu của khoảng làm việc là bắt buộc',
+    }),
+    endTime: Joi.string().pattern(timeRegex).required().messages({
+        'string.pattern.base': 'Giờ kết thúc phải có dạng HH:mm',
+        'any.required': 'Giờ kết thúc của khoảng làm việc là bắt buộc',
+    }),
+});
 export const UpdateLStatusLichTiepDanRequest = Joi.object({
     isActive: Joi.boolean()
         .required()
@@ -8,7 +18,6 @@ export const UpdateLStatusLichTiepDanRequest = Joi.object({
             'any.required': 'Trạng thái hoạt động là bắt buộc',
         }),
 });
-
 export const CreateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()
         .trim()
@@ -28,18 +37,25 @@ export const CreateLichTiepDanRequest = Joi.object({
         }),
     batDau: Joi.string()
         .pattern(timeRegex)
-        .required()
+        .optional()
         .messages({
             'string.pattern.base': 'Thời gian bắt đầu phải có dạng HH:mm (vd: 08:30)',
-            'any.required': 'Thời gian bắt đầu là bắt buộc',
         }),
 
     ketThuc: Joi.string()
         .pattern(timeRegex)
-        .required()
+        .optional()
         .messages({
             'string.pattern.base': 'Thời gian kết thúc phải có dạng HH:mm (vd: 17:00)',
-            'any.required': 'Thời gian kết thúc là bắt buộc',
+        }),
+    workingPeriods: Joi.array()
+        .items(WorkingPeriodSchema)
+        .min(1)
+        .max(2)
+        .optional()
+        .messages({
+            'array.min': 'Phải có ít nhất một khoảng làm việc',
+            'array.max': 'Chỉ hỗ trợ tối đa hai khoảng làm việc trong ngày',
         }),
     ngayTiepDan: Joi.date()
         .required()
@@ -56,8 +72,9 @@ export const CreateLichTiepDanRequest = Joi.object({
             'string.base': 'Ghi chú phải là chuỗi ký tự',
             'string.max': 'Ghi chú không được vượt quá 255 ký tự',
         }),
+}).and('batDau', 'ketThuc').messages({
+    'object.and': 'Thời gian bắt đầu và kết thúc phải được truyền cùng nhau',
 });
-
 export const UpdateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()
         .trim()
@@ -77,17 +94,24 @@ export const UpdateLichTiepDanRequest = Joi.object({
         }),
     batDau: Joi.string()
         .pattern(timeRegex)
-        .required()
+        .optional()
         .messages({
             'string.pattern.base': 'Thời gian bắt đầu phải có dạng HH:mm (vd: 08:30)',
-            'any.required': 'Thời gian bắt đầu là bắt buộc',
         }),
     ketThuc: Joi.string()
         .pattern(timeRegex)
-        .required()
+        .optional()
         .messages({
             'string.pattern.base': 'Thời gian kết thúc phải có dạng HH:mm (vd: 17:00)',
-            'any.required': 'Thời gian kết thúc là bắt buộc',
+        }),
+    workingPeriods: Joi.array()
+        .items(WorkingPeriodSchema)
+        .min(1)
+        .max(2)
+        .optional()
+        .messages({
+            'array.min': 'Phải có ít nhất một khoảng làm việc',
+            'array.max': 'Chỉ hỗ trợ tối đa hai khoảng làm việc trong ngày',
         }),
     ngayTiepDan: Joi.date()
         .required()
@@ -104,4 +128,6 @@ export const UpdateLichTiepDanRequest = Joi.object({
             'string.base': 'Ghi chú phải là chuỗi ký tự',
             'string.max': 'Ghi chú không được vượt quá 255 ký tự',
         }),
+}).and('batDau', 'ketThuc').messages({
+    'object.and': 'Thời gian bắt đầu và kết thúc phải được truyền cùng nhau',
 });
