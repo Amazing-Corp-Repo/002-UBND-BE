@@ -74,8 +74,9 @@ receptionScheduleManagementRouter.put(
   "/:id/status",
   authenticate,
   authorize([PERMISSION.LTD_UPDATE_STATUS]),
-  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.LTD_UPDATE_STATUS),
+  validateParams(ReceptionScheduleManagementIdParams),
   validate(UpdateLStatusLichTiepDanRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.LTD_UPDATE_STATUS),
   ReceptionScheduleManagementController.updateStatusLichTiepDan
 );
 

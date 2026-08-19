@@ -322,6 +322,28 @@ const ReceptionScheduleManagementService = {
     }
   },
 
+  async updateStatusLichTiepDan(id, isActive, currentUser) {
+    const result =
+      await ReceptionScheduleManagementRepository.updateStatusIfAllowed(
+        id,
+        isActive,
+        {
+          nguoi_cap_nhat: currentUser,
+          thoi_gian_cap_nhat: new Date(),
+        }
+      );
+    if (result.status === "NOT_FOUND") {
+      throw new BaseError(404, "Lịch tiếp dân không tồn tại");
+    }
+    if (result.status === "HAS_REGISTRATIONS") {
+      throw new BaseError(
+        409,
+        "Không thể ngừng lịch tiếp dân đã có đăng ký giữ chỗ"
+      );
+    }
+    return result.data;
+  },
+
   async handleImport(files = [], currentUser) {
     if (!files?.length) {
       throw new BaseError(400, "File không được để trống");

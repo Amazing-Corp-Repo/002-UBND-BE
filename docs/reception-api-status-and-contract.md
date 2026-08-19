@@ -558,16 +558,16 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 24 — `PUT /api/reception-schedules/management/{id}/status` — Bật hoặc tắt lịch tiếp dân
 
-- **Trạng thái:** Đã có bản sao tiếng Anh; chưa bổ sung quy tắc cho lịch đã có đăng ký.
-- **Đã làm/hiện có:** Authenticate, `LTD_UPDATE_STATUS`, validate `isActive`, cập nhật trạng thái và audit.
-- **Chưa làm:** Chưa có quy tắc tắt lịch khi đã có đăng ký; chưa xử lý/giải thích ảnh hưởng tới các đơn giữ chỗ; Swagger response/lỗi còn trống.
-- **Cần bổ sung:** Chốt và triển khai một quy tắc rõ ràng: cấm tắt khi có đăng ký, hoặc ngừng lịch kèm quy trình xử lý đăng ký; bổ sung test và Swagger.
+- **Trạng thái:** Đã hoàn thành API bật/tắt lịch quản lý tiếng Anh.
+- **Đã làm/hiện có:** Authenticate, `LTD_UPDATE_STATUS`, validate UUID và `isActive`, cho phép bật lịch, chặn tắt lịch đã có đăng ký, kiểm tra/cập nhật trong transaction `Serializable`, audit, Swagger và test `200`, `400`, `401`, `403`, `404`, `409`.
+- **Chưa làm:** Chưa có quy trình hủy lịch và chuyển đăng ký sang lịch thay thế.
+- **Cần bổ sung:** Không bắt buộc theo quy tắc hiện tại; chỉ thiết kế lịch thay thế nếu BA cho phép ngừng lịch đã có người đăng ký.
 - **Dùng để làm gì:** Bật/tắt trạng thái hoạt động của lịch.
 - **Role áp dụng:** tài khoản có permission `LTD_UPDATE_STATUS`.
 - **Path đầu vào:** `id` — ID lịch.
 - **Body đầu vào:** `{ "isActive": true }`.
 - **Đầu ra:** Bản ghi lịch sau cập nhật.
-- **Chức năng hiện có:** cập nhật `is_active`, ghi người cập nhật và audit.
+- **Chức năng hiện có:** cập nhật `is_active`, `nguoi_cap_nhat`, `thoi_gian_cap_nhat` và ghi audit; không thay đổi các đăng ký hiện có.
 
 ### API 25 — `GET /api/reception-schedules/management/template` — Lấy file Excel mẫu để import lịch
 

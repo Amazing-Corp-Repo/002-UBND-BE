@@ -442,6 +442,7 @@ const ReceptionScheduleManagementSwagger = {
         put: {
             tags: ['ReceptionScheduleManagement'],
             summary: 'Cập nhật trạng thái hoạt động của lịch tiếp dân',
+            description: 'Dành cho tài khoản có quyền LTD_UPDATE_STATUS. Có thể bật lại lịch hợp lệ. Khi tắt lịch, backend từ chối nếu đã có bất kỳ đăng ký giữ chỗ nào; việc kiểm tra và cập nhật được thực hiện trong cùng transaction.',
             security: [{ bearerAuth: [] }],
             parameters: [
                 {
@@ -451,6 +452,7 @@ const ReceptionScheduleManagementSwagger = {
                     required: true,
                     schema: {
                         type: 'string',
+                        format: 'uuid',
                         example: '123e4567-e89b-12d3-a456-426614174000',
                     },
                 },
@@ -463,7 +465,21 @@ const ReceptionScheduleManagementSwagger = {
                     },
                 },
             },
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Cập nhật trạng thái lịch tiếp dân thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.ScheduleItemSuccessSchema,
+                        },
+                    },
+                },
+                400: { description: 'ID hoặc body trạng thái không hợp lệ' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_UPDATE_STATUS' },
+                404: { description: 'Lịch tiếp dân không tồn tại hoặc đã bị xóa' },
+                409: { description: 'Không thể ngừng lịch đã có đăng ký giữ chỗ' },
+            }
         },
     },
     '/api/reception-schedules/management/template': {
