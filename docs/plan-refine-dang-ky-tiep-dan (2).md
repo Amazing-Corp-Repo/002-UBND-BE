@@ -1,8 +1,8 @@
 # Plan V2 — Chuẩn hóa đăng ký tiếp dân, quầy và đăng ký gặp lãnh đạo
 
-> Trạng thái: Bản đề xuất để kiểm tra trước khi code.
+> Trạng thái: Đang triển khai theo từng phần trên nhánh `jun`.
 >
-> Phạm vi hiện tại: Chỉ chốt thiết kế Backend, API, database và kế hoạch migration. Chưa sửa source code, Prisma schema, chưa tạo migration và chưa thay đổi database.
+> Phạm vi hiện tại: Backend, API, database và migration. Prisma schema đã được đồng bộ với DB DEV; các bước backfill, dual-read/dual-write và API tiếp tục được triển khai theo thứ tự trong tài liệu này.
 >
 > Ngoài phạm vi: Chưa chỉnh sửa Frontend. Backend chỉ duy trì contract tương thích và trả lỗi nghiệp vụ rõ ràng để Frontend tích hợp sau.
 
@@ -301,6 +301,26 @@ CHECK (
 ```
 
 Service phê duyệt phải kiểm tra `id_cau_hinh_quay` thuộc đúng `id_ca_tiep_dan` của đơn.
+
+### 4.4.1. Quy ước field chuẩn trong giai đoạn chuyển tiếp
+
+| Bảng | Field | Vai trò | Quy tắc ghi mới |
+|---|---|---|---|
+| `dang_ky_tiep_dan` | `id_ca_tiep_dan` | Field V2 chuẩn xác định ca người dân đăng ký | Luôn ghi khi tạo đơn tiếp dân mới |
+| `dang_ky_tiep_dan` | `id_cau_hinh_quay` | Field V2 chuẩn xác định quầy được phân | Để null khi `PENDING`; chỉ ghi khi phê duyệt |
+| `dang_ky_tiep_dan` | `id_quay` | Field V1 dư thừa | Không ghi trong code mới; chỉ giữ để đọc tương thích cho đến Phase 3 cleanup |
+| `dang_ky_tiep_dan` | `id_khung_gio_tiep_dan` | Field V1 dư thừa | Không ghi trong code mới; không dùng thay thế `id_ca_tiep_dan` |
+| `khung_gio_tiep_dan` | `id_ca_tiep_dan` | Field V2 chuẩn liên kết cấu hình quầy với ca | Luôn ghi khi tạo/import/cập nhật lịch |
+| `khung_gio_tiep_dan` | `id_quay` | Field V2 chuẩn liên kết danh mục quầy | Luôn ghi khi tạo/import/cập nhật lịch |
+
+Các snapshot `id_lich_tiep_dan`, `ngay`, `slot`, `bo_phan` vẫn được giữ và dual-write trong giai đoạn chuyển tiếp để không phá response cũ. Riêng `id_quay` trên `khung_gio_tiep_dan` là field V2 chuẩn, không được nhầm với `dang_ky_tiep_dan.id_quay` V1.
+
+Thứ tự đọc trong repository:
+
+1. Đọc `id_ca_tiep_dan` và `id_cau_hinh_quay` cùng relation V2 trước.
+2. Chỉ fallback snapshot V1 cho bản ghi cũ chưa backfill.
+3. Không suy luận ca bằng cách coi `id_khung_gio_tiep_dan` là `id_ca_tiep_dan`.
+4. Không xóa cột V1 trước khi các truy vấn verify bắt buộc trả về `0` và Phase 3 được duyệt riêng.
 
 ### 4.5. Hệ thống gặp lãnh đạo
 

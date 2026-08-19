@@ -682,10 +682,10 @@ model dang_ky_tiep_dan {
   loai               String?       @db.VarChar(30) // COUNTER_RECEPTION | LEADER_MEETING
   ma_tiep_dan        String        @unique(map: "uq_dang_ky_tiep_dan_ma_tiep_dan") @db.VarChar(50) // Mã ngắn, ví dụ A001
   id_lich_tiep_dan   String?       @db.Uuid
-  id_khung_gio_tiep_dan String?    @db.Uuid           // THÊM MỚI V1 — Liên kết trực tiếp khung giờ
-  id_quay            String?       @db.Uuid            // THÊM MỚI V1 — FK đến quay_tiep_dan
-  id_ca_tiep_dan     String?       @db.Uuid            // THÊM MỚI V2 — FK đến ca_tiep_dan
-  id_cau_hinh_quay   String?       @db.Uuid            // THÊM MỚI V2 — FK đến khung_gio_tiep_dan (cấu hình quầy)
+  id_khung_gio_tiep_dan String?    @db.Uuid           // V1 legacy — chỉ đọc fallback, không ghi mới
+  id_quay            String?       @db.Uuid            // V1 legacy — chỉ đọc fallback, không ghi mới
+  id_ca_tiep_dan     String?       @db.Uuid            // V2 canonical — ca người dân đăng ký
+  id_cau_hinh_quay   String?       @db.Uuid            // V2 canonical — cấu hình quầy được gán khi phê duyệt
   ngay               DateTime?     @db.Date
   slot               String?       @db.VarChar(50)
   chu_de             String?       @db.VarChar(255)
@@ -880,8 +880,8 @@ model khung_gio_tiep_dan {
   id_lich_tiep_dan   String        @db.Uuid
   khung_gio          String        @db.VarChar(50)
   ma_quay            String        @db.VarChar(20)
-  id_quay            String?       @db.Uuid
-  id_ca_tiep_dan     String?       @db.Uuid                      // THÊM MỚI V2 — FK đến ca_tiep_dan
+  id_quay            String?       @db.Uuid                      // V2 canonical — danh mục quầy
+  id_ca_tiep_dan     String?       @db.Uuid                      // V2 canonical — ca chứa cấu hình quầy
   suc_chua           Int           @default(2)
   is_active          Boolean?      @default(true)
   is_delete          Boolean?      @default(false)
