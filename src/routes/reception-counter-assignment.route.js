@@ -7,9 +7,11 @@ import validateParams from "../middlewares/validate-params.middleware.js";
 import {
   GetReceptionCounterAssignmentsQuery,
   ReceptionCounterAssignmentParams,
+  UpdateReceptionCounterAssignmentRequest,
 } from "../validators/reception-counter-assignment.validator.js";
 import { receptionAudit } from "../middlewares/reception-audit.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
+import validate from "../middlewares/validate.middleware.js";
 
 const router = express.Router();
 router.get(
@@ -28,6 +30,16 @@ router.get(
   validateParams(ReceptionCounterAssignmentParams),
   receptionAudit(AUDIT_LOGS.READ, { tableName: "phan_cong_quay_tiep_dan" }),
   ReceptionCounterAssignmentController.getById
+);
+
+router.patch(
+  "/:id",
+  authenticate,
+  authorize([PERMISSION.LTD_UPDATE]),
+  validateParams(ReceptionCounterAssignmentParams),
+  validate(UpdateReceptionCounterAssignmentRequest),
+  receptionAudit(AUDIT_LOGS.UPDATE, { tableName: "phan_cong_quay_tiep_dan" }),
+  ReceptionCounterAssignmentController.update
 );
 
 export default router;

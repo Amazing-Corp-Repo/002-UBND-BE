@@ -38,3 +38,14 @@ export const ReplaceReceptionCounterAssignmentsRequest = Joi.object({
     "any.required": "Danh sách phân công là bắt buộc",
   }),
 });
+
+export const UpdateReceptionCounterAssignmentRequest = Joi.object({
+  officerId: Joi.string().uuid().optional().messages({
+    "string.guid": "ID cán bộ không hợp lệ",
+  }),
+  isActive: Joi.boolean().optional().messages({
+    "boolean.base": "Trạng thái hoạt động phải là true hoặc false",
+  }),
+})
+  .min(1)
+  .messages({ "object.min": "Phải cung cấp ít nhất một trường cần cập nhật" });

@@ -20,6 +20,15 @@ const ReceptionCounterAssignmentController = {
     );
     return successResponse(res, data, "Cập nhật phân công quầy theo ca thành công");
   },
+
+  async update(req, res) {
+    const data = await ReceptionCounterAssignmentService.update(
+      req.validatedParams.id,
+      req.body,
+      req.payload.userId
+    );
+    return successResponse(res, data, "Cập nhật phân công quầy thành công");
+  },
 };
 
 export default ReceptionCounterAssignmentController;

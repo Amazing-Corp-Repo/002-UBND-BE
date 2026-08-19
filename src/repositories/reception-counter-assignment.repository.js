@@ -104,6 +104,68 @@ const ReceptionCounterAssignmentRepository = {
       return created;
     }, { isolationLevel: "Serializable" });
   },
+
+  async updateWithGuards(id, input, currentUserId) {
+    return prisma.$transaction(async (tx) => {
+      const assignment = await tx.phan_cong_quay_tiep_dan.findFirst({
+        where: { id, is_delete: false },
+        include: {
+          cau_hinh_quay: { select: { id_ca_tiep_dan: true } },
+        },
+      });
+      if (!assignment) return { conflict: "NOT_FOUND" };
+
+      const officerId = input.officerId || assignment.id_can_bo;
+      if (input.officerId) {
+        const officer = await tx.nguoi_dung.findFirst({
+          where: { id: input.officerId, is_active: true, is_delete: false },
+          select: { id: true },
+        });
+        if (!officer) return { conflict: "OFFICER_NOT_FOUND" };
+      }
+
+      const isActive = input.isActive ?? assignment.is_active;
+      if (isActive) {
+        const activeAssignments = await tx.phan_cong_quay_tiep_dan.findMany({
+          where: {
+            id: { not: id },
+            is_active: true,
+            is_delete: false,
+            OR: [
+              { id_cau_hinh_quay: assignment.id_cau_hinh_quay },
+              {
+                id_can_bo: officerId,
+                cau_hinh_quay: {
+                  id_ca_tiep_dan: assignment.cau_hinh_quay.id_ca_tiep_dan,
+                },
+              },
+            ],
+          },
+          select: { id_cau_hinh_quay: true, id_can_bo: true },
+        });
+        if (activeAssignments.some(
+          (item) => item.id_cau_hinh_quay === assignment.id_cau_hinh_quay
+        )) {
+          return { conflict: "COUNTER_ALREADY_ASSIGNED" };
+        }
+        if (activeAssignments.some((item) => item.id_can_bo === officerId)) {
+          return { conflict: "OFFICER_ALREADY_ASSIGNED" };
+        }
+      }
+
+      const updated = await tx.phan_cong_quay_tiep_dan.update({
+        where: { id },
+        data: {
+          ...(input.officerId ? { id_can_bo: input.officerId } : {}),
+          ...(input.isActive !== undefined ? { is_active: input.isActive } : {}),
+          nguoi_cap_nhat: currentUserId,
+          thoi_gian_cap_nhat: new Date().toISOString(),
+        },
+        include: assignmentInclude,
+      });
+      return { assignment: updated };
+    }, { isolationLevel: "Serializable" });
+  },
 };
 
 export default ReceptionCounterAssignmentRepository;
