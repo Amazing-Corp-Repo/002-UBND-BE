@@ -1,4 +1,5 @@
 import ReceptionCounterAssignmentRepository from "../repositories/reception-counter-assignment.repository.js";
+import { BaseError } from "../utils/base-error.util.js";
 
 const mapAssignment = (item) => ({
   id: item.id,
@@ -26,6 +27,14 @@ const ReceptionCounterAssignmentService = {
   async getAll(filters) {
     const assignments = await ReceptionCounterAssignmentRepository.findAll(filters);
     return assignments.map(mapAssignment);
+  },
+
+  async getById(id) {
+    const assignment = await ReceptionCounterAssignmentRepository.findById(id);
+    if (!assignment) {
+      throw new BaseError(404, "Phân công quầy tiếp dân không tồn tại");
+    }
+    return mapAssignment(assignment);
   },
 };
 

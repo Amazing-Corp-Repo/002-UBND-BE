@@ -28,6 +28,25 @@ const ReceptionCounterAssignmentRepository = {
       orderBy: [{ thoi_gian_tao: "desc" }],
     });
   },
+
+  async findById(id) {
+    return prisma.phan_cong_quay_tiep_dan.findFirst({
+      where: { id, is_delete: false },
+      include: {
+        can_bo: { select: { id: true, ho_va_ten: true, ten_dang_nhap: true } },
+        cau_hinh_quay: {
+          include: {
+            quay_tiep_dan: { select: { id: true, ma_quay: true, ten_quay: true } },
+            ca_tiep_dan: {
+              include: {
+                lich_tiep_dan: { select: { id: true, ngay_tiep_dan: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+  },
 };
 
 export default ReceptionCounterAssignmentRepository;

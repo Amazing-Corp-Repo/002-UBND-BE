@@ -6,3 +6,10 @@ export const GetReceptionCounterAssignmentsQuery = Joi.object({
   officerId: Joi.string().uuid().optional().messages({ "string.guid": "ID cán bộ không hợp lệ" }),
   isActive: Joi.boolean().optional(),
 });
+
+export const ReceptionCounterAssignmentParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID phân công quầy không hợp lệ",
+    "any.required": "ID phân công quầy là bắt buộc",
+  }),
+});

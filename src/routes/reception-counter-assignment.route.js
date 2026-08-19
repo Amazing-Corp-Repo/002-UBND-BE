@@ -3,7 +3,11 @@ import ReceptionCounterAssignmentController from "../controllers/reception-count
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
-import { GetReceptionCounterAssignmentsQuery } from "../validators/reception-counter-assignment.validator.js";
+import validateParams from "../middlewares/validate-params.middleware.js";
+import {
+  GetReceptionCounterAssignmentsQuery,
+  ReceptionCounterAssignmentParams,
+} from "../validators/reception-counter-assignment.validator.js";
 import { receptionAudit } from "../middlewares/reception-audit.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 
@@ -15,6 +19,15 @@ router.get(
   validateQuery(GetReceptionCounterAssignmentsQuery),
   receptionAudit(AUDIT_LOGS.READ, { tableName: "phan_cong_quay_tiep_dan" }),
   ReceptionCounterAssignmentController.getAll
+);
+
+router.get(
+  "/:id",
+  authenticate,
+  authorize([PERMISSION.LTD_GET_ALL]),
+  validateParams(ReceptionCounterAssignmentParams),
+  receptionAudit(AUDIT_LOGS.READ, { tableName: "phan_cong_quay_tiep_dan" }),
+  ReceptionCounterAssignmentController.getById
 );
 
 export default router;
