@@ -137,7 +137,7 @@ export const createUploader = ({
         return next(err);
       }
 
-      req.files = req.files.map((f) => {
+      req.files = (req.files || []).map((f) => {
         const sizeMB = +(f.size / (1024 * 1024)).toFixed(2);
         if (isPublic) {
           const publicDir = path.join(process.cwd(), "src", "public");

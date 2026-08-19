@@ -20,6 +20,10 @@ import roleRouter from './role.route.js';
 import auditLogRouter from './audit-log.route.js';
 import exportRouter from './export.route.js';
 import addressVoteRoute from './address-vote.route.js';
+import dangKyTiepDanRouter from './dang-ky-tiep-dan.route.js';
+import receptionScheduleRouter from './reception-schedule.route.js';
+import receptionScheduleManagementRouter from './reception-schedule-management.route.js';
+import receptionRatingRouter from './reception-rating.route.js';
 
 const rootRouter = express.Router();
 
@@ -45,6 +49,10 @@ rootRouter.use('/notifications', notificationRouter);
 rootRouter.use('/audit-logs', auditLogRouter);
 rootRouter.use('/export', exportRouter);
 rootRouter.use('/address-vote', addressVoteRoute);
+rootRouter.use('/reception-registrations', dangKyTiepDanRouter);
+rootRouter.use('/reception-schedules/management', receptionScheduleManagementRouter);
+rootRouter.use('/reception-schedules', receptionScheduleRouter);
+rootRouter.use('/reception-ratings', receptionRatingRouter);
 
 export default rootRouter;
 
