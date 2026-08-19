@@ -327,12 +327,93 @@ const ReceptionRatingSwagger = {
         "Thống kê tổng lượt đánh giá, điểm trung bình, tỷ lệ hài lòng, phân bố số sao và kết quả theo từng quầy tiếp nhận.",
       security: [{ bearerAuth: [] }],
       parameters: [
-        { name: "department", in: "query", schema: { type: "string", example: "QUAY_1" } },
+        {
+          name: "department",
+          in: "query",
+          schema: {
+            type: "string",
+            enum: [
+              "QUAY_1",
+              "QUAY_2",
+              "QUAY_3",
+              "QUAY_4",
+              "QUAY_5",
+              "QUAY_6",
+              "QUAY_7",
+              "QUAY_8",
+            ],
+          },
+        },
         { name: "fromDate", in: "query", schema: { type: "string", format: "date" } },
         { name: "toDate", in: "query", schema: { type: "string", format: "date" } },
       ],
       responses: {
-        200: { description: "Lấy thống kê đánh giá tiếp dân thành công" },
+        200: {
+          description: "Lấy thống kê đánh giá tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["success", "data", "message"],
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      totalRatings: { type: "integer", minimum: 0 },
+                      averageScore: {
+                        type: "number",
+                        format: "double",
+                        minimum: 0,
+                        maximum: 5,
+                      },
+                      satisfactionRate: {
+                        type: "number",
+                        format: "double",
+                        minimum: 0,
+                        maximum: 100,
+                        description: "Tỷ lệ phần trăm đánh giá từ 4 đến 5 sao",
+                      },
+                      scoreDistribution: {
+                        type: "array",
+                        minItems: 5,
+                        maxItems: 5,
+                        items: {
+                          type: "object",
+                          properties: {
+                            score: { type: "integer", minimum: 1, maximum: 5 },
+                            count: { type: "integer", minimum: 0 },
+                          },
+                        },
+                      },
+                      byDepartment: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            department: { type: "string", example: "QUAY_1" },
+                            totalRatings: { type: "integer", minimum: 0 },
+                            averageScore: {
+                              type: "number",
+                              format: "double",
+                              minimum: 0,
+                              maximum: 5,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  message: {
+                    type: "string",
+                    example: "Lấy thống kê đánh giá tiếp dân thành công",
+                  },
+                  pagination: { nullable: true, example: null },
+                },
+              },
+            },
+          },
+        },
         400: { description: "Bộ lọc không hợp lệ" },
         401: { description: "Thiếu hoặc sai access token" },
         403: { description: "Không có quyền RRT_GET_STATS" },

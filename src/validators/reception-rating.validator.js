@@ -81,6 +81,6 @@ export const GetReceptionRatingStatisticsQuery = Joi.object({
     .pattern(/^QUAY_[1-8]$/)
     .optional()
     .messages({ "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8" }),
-  fromDate: Joi.date().iso().optional(),
-  toDate: Joi.date().iso().optional(),
+  fromDate: receptionDateSchema("Ngày bắt đầu").optional(),
+  toDate: receptionDateSchema("Ngày kết thúc").optional(),
 });

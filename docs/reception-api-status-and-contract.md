@@ -408,13 +408,13 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 15 — `GET /api/reception-ratings/statistics` — Lấy thống kê mức độ hài lòng
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Authenticate, `RRT_GET_STATS`, lọc quầy/khoảng ngày, tổng lượt, trung bình, tỷ lệ hài lòng, phân bố sao và thống kê theo quầy; Swagger và test.
+- **Đã làm/hiện có:** Authenticate, `RRT_GET_STATS`, lọc quầy/khoảng ngày có thật theo `YYYY-MM-DD`, tổng lượt, trung bình, tỷ lệ hài lòng, phân bố đủ 5 mức sao và thống kê theo quầy; Swagger có schema response và test đủ `200`, `400`, `401`, `403`, kể cả dữ liệu rỗng.
 - **Chưa làm:** Chưa có so sánh kỳ, xu hướng theo ngày/tháng hoặc export báo cáo.
 - **Cần bổ sung:** Không bắt buộc cho thống kê cơ bản; bổ sung khi BA chốt mẫu dashboard/báo cáo nâng cao.
 - **Dùng để làm gì:** Lãnh đạo xem thống kê cơ bản về mức độ hài lòng.
 - **Role áp dụng:** lãnh đạo/quản trị hoặc tài khoản có permission `RRT_GET_STATS`.
 - **Trường hợp áp dụng:** Dashboard/báo cáo đánh giá theo thời gian hoặc quầy.
-- **Query đầu vào:** `department`, `fromDate`, `toDate`.
+- **Query đầu vào:** `department` (`QUAY_1`–`QUAY_8`), `fromDate` và `toDate` (ngày có thật theo `YYYY-MM-DD`).
 - **Đầu ra `data`:**
   - `totalRatings`: tổng lượt.
   - `averageScore`: điểm trung bình làm tròn 2 chữ số.

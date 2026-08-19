@@ -5,6 +5,7 @@ import { PERMISSION } from "../src/constants/permission.constant.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionRatingRepository from "../src/repositories/reception-rating.repository.js";
 import receptionRatingRouter from "../src/routes/reception-rating.route.js";
+import ReceptionRatingSwagger from "../src/swagger/reception-rating.swagger.js";
 import jwtUtils from "../src/utils/jwt.util.js";
 
 const originalGetStatistics = ReceptionRatingRepository.getStatistics;
@@ -51,6 +52,19 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-ratings/statistics", () => {
+  it("documents the basic statistics response in Swagger", () => {
+    const operation =
+      ReceptionRatingSwagger["/api/reception-ratings/statistics"].get;
+    const dataSchema =
+      operation.responses[200].content["application/json"].schema.properties
+        .data;
+
+    assert.equal(dataSchema.properties.averageScore.maximum, 5);
+    assert.equal(dataSchema.properties.satisfactionRate.maximum, 100);
+    assert.equal(dataSchema.properties.scoreDistribution.minItems, 5);
+    assert.equal(operation.responses[403].description.includes("RRT_GET_STATS"), true);
+  });
+
   it("returns score distribution and satisfaction rate", async () => {
     const server = createTestServer();
     const { port } = server.address();
@@ -76,6 +90,73 @@ describe("GET /api/reception-ratings/statistics", () => {
         1,
         2,
       ]);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings/statistics`
+      );
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for an invalid counter", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings/statistics?department=QUAY_9`,
+        {
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RRT_GET_STATS])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for an inverted date range", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings/statistics?fromDate=2099-09-01&toDate=2099-08-01`,
+        {
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RRT_GET_STATS])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for a date that does not exist", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings/statistics?fromDate=2099-02-30`,
+        {
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RRT_GET_STATS])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 400);
     } finally {
       server.close();
     }
