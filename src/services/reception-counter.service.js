@@ -27,6 +27,27 @@ const ReceptionCounterService = {
     }
     return mapCounter(counter);
   },
+
+  async update(id, input, currentUserId) {
+    const counter = await ReceptionCounterRepository.findById(id);
+    if (!counter) {
+      throw new BaseError(404, "Quầy tiếp dân không tồn tại");
+    }
+
+    const updated = await ReceptionCounterRepository.update(id, {
+      ...(input.counterName !== undefined ? { ten_quay: input.counterName } : {}),
+      ...(input.description !== undefined ? { mo_ta: input.description || null } : {}),
+      ...(input.defaultCapacity !== undefined
+        ? { suc_chua_mac_dinh: input.defaultCapacity }
+        : {}),
+      ...(input.location !== undefined ? { vi_tri: input.location || null } : {}),
+      ...(input.isActive !== undefined ? { is_active: input.isActive } : {}),
+      nguoi_cap_nhat: currentUserId,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    });
+
+    return mapCounter(updated);
+  },
 };
 
 export default ReceptionCounterService;
