@@ -101,6 +101,7 @@ describe("PUT /api/reception-schedules/management/:id", () => {
     const operation = ReceptionScheduleManagementSwagger["/api/reception-schedules/management/{id}"].put;
 
     assert.ok(operation.description.includes("Không được đổi ngày hoặc giờ"));
+    assert.equal(operation.parameters[0].schema.format, "uuid");
     assert.ok(operation.requestBody.content["application/json"].example.workingPeriods);
     assert.equal(
       operation.responses[200].content["application/json"].schema.properties
