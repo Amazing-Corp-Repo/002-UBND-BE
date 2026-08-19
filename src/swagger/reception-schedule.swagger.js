@@ -49,7 +49,10 @@ const ReceptionScheduleSwagger = {
             },
           },
         },
-        400: { description: "Khoảng ngày không hợp lệ" },
+        400: {
+          description:
+            "Ngày không đúng định dạng YYYY-MM-DD, ngày không tồn tại hoặc ngày bắt đầu sau ngày kết thúc",
+        },
       },
     },
   },

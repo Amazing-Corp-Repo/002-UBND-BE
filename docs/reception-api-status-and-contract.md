@@ -80,7 +80,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 01 — `GET /api/reception-schedules` — Lấy lịch tiếp dân khả dụng cho Mobile
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Route public, validate khoảng ngày, lọc lịch/ca đã qua, tính tổng sức chứa, số chỗ giữ, số chỗ còn lại và trạng thái `AVAILABLE`/`FULL`; đã có Swagger và test.
+- **Đã làm/hiện có:** Route public, validate ngày đúng `YYYY-MM-DD` và ngày có thật, kiểm tra khoảng ngày, lọc lịch/ca đã qua, tính tổng sức chứa, số chỗ giữ, số chỗ còn lại và trạng thái `AVAILABLE`/`FULL`; đã có Swagger và test.
 - **Chưa làm:** Chưa có phân trang vì API hiện lấy lịch trong một khoảng ngày; chưa có bộ lọc theo cán bộ/quầy.
 - **Cần bổ sung:** Không bắt buộc cho luồng Mobile đã chốt. Chỉ bổ sung phân trang hoặc bộ lọc khi số lượng lịch thực tế đủ lớn và có yêu cầu cụ thể.
 - **Dùng để làm gì:** Mobile lấy lịch tiếp dân đang hoạt động và tình trạng chỗ của từng ca để người dân chọn lịch.

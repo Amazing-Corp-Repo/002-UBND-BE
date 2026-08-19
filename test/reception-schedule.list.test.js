@@ -178,4 +178,22 @@ describe("GET /api/reception-schedules", () => {
       server.close();
     }
   });
+
+  it("rejects dates that are not real YYYY-MM-DD calendar dates", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const invalidFormat = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules?fromDate=2099-08-01T00:00:00.000Z`
+      );
+      const invalidCalendarDate = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules?fromDate=2099-02-30`
+      );
+
+      assert.equal(invalidFormat.status, 400);
+      assert.equal(invalidCalendarDate.status, 400);
+    } finally {
+      server.close();
+    }
+  });
 });
