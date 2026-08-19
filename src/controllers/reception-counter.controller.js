@@ -6,6 +6,11 @@ const ReceptionCounterController = {
     const data = await ReceptionCounterService.getAll();
     return successResponse(res, data, "Lấy danh sách quầy tiếp dân thành công");
   },
+
+  async getById(req, res) {
+    const data = await ReceptionCounterService.getById(req.validatedParams.id);
+    return successResponse(res, data, "Lấy chi tiết quầy tiếp dân thành công");
+  },
 };
 
 export default ReceptionCounterController;

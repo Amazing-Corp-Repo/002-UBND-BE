@@ -1,4 +1,5 @@
 import ReceptionCounterRepository from "../repositories/reception-counter.repository.js";
+import { BaseError } from "../utils/base-error.util.js";
 
 const mapCounter = (counter) => ({
   id: counter.id,
@@ -17,6 +18,14 @@ const ReceptionCounterService = {
   async getAll() {
     const counters = await ReceptionCounterRepository.findAllActive();
     return counters.map(mapCounter);
+  },
+
+  async getById(id) {
+    const counter = await ReceptionCounterRepository.findActiveById(id);
+    if (!counter) {
+      throw new BaseError(404, "Quầy tiếp dân không tồn tại");
+    }
+    return mapCounter(counter);
   },
 };
 
