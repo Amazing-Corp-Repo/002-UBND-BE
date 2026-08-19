@@ -312,9 +312,9 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 10 — `GET /api/reception-registrations/rating-lookup/{receptionCode}` — iPad tra mã trước khi đánh giá
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Validate mã, chỉ cho đơn `COMPLETED` đã gán quầy và chưa đánh giá, che dữ liệu nhạy cảm, Swagger và test.
-- **Chưa làm:** Chưa có rate limit cho việc dò mã public; chưa ràng buộc thiết bị iPad với đúng quầy bằng token/thiết bị.
-- **Cần bổ sung:** Nên thêm rate limit. Chỉ cần định danh iPad/quầy nếu sau này có yêu cầu ngăn iPad quầy khác tra hoặc đánh giá hộ.
+- **Đã làm/hiện có:** Validate mã, chỉ cho đơn `COMPLETED` đã gán quầy và chưa đánh giá, che dữ liệu nhạy cảm, rate limit riêng 60 lượt/10 phút/IP, Swagger có response schema và test `429`.
+- **Chưa làm:** Chưa ràng buộc thiết bị iPad với đúng quầy bằng token/thiết bị.
+- **Cần bổ sung:** Chỉ cần định danh iPad/quầy nếu sau này có yêu cầu ngăn iPad quầy khác tra hoặc đánh giá hộ.
 - **Dùng để làm gì:** iPad tra mã tiếp dân và hiển thị yêu cầu gốc cho người dân xác nhận trước khi đánh giá.
 - **Role áp dụng:** Public/iPad, không cần token.
 - **Trường hợp áp dụng:** Cán bộ nhập thủ công mã tiếp dân trên iPad tại quầy tương ứng.

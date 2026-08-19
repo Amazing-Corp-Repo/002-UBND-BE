@@ -9,6 +9,7 @@ import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import receptionRegistrationRateLimiter, {
   receptionLookupRateLimiter,
+  receptionRatingLookupRateLimiter,
 } from "../middlewares/reception-registration-rate-limit.middleware.js";
 import {
   CreateDangKyTiepDanRequest,
@@ -74,6 +75,7 @@ dangKyTiepDanRouter.post(
 
 dangKyTiepDanRouter.get(
   "/rating-lookup/:receptionCode",
+  receptionRatingLookupRateLimiter,
   validateParams(ReceptionCodeParams),
   DangKyTiepDanController.lookupForRating
 );

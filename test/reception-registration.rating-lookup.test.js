@@ -5,6 +5,10 @@ import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import DangKyTiepDanRepository from "../src/repositories/dang-ky-tiep-dan.repository.js";
 import dangKyTiepDanRouter from "../src/routes/dang-ky-tiep-dan.route.js";
 import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
+import {
+  createReceptionRatingLookupRateLimiter,
+  RECEPTION_RATING_LOOKUP_RATE_LIMIT,
+} from "../src/middlewares/reception-registration-rate-limit.middleware.js";
 
 const originalFindForRatingByCode =
   DangKyTiepDanRepository.findForRatingByCode;
@@ -51,6 +55,12 @@ describe("GET /api/reception-registrations/rating-lookup/:receptionCode", () => 
 
     assert.ok(operation.description.includes("COMPLETED"));
     assert.ok(operation.description.includes("APPROVED chưa đủ điều kiện"));
+    assert.ok(operation.description.includes("60 lượt"));
+    assert.ok(operation.responses[429]);
+    assert.ok(
+      operation.responses[200].content["application/json"].schema.properties.data
+        .properties.applicant
+    );
   });
 
   it("returns completed unrated registration details", async () => {
@@ -100,6 +110,83 @@ describe("GET /api/reception-registrations/rating-lookup/:receptionCode", () => 
         `http://127.0.0.1:${port}/api/reception-registrations/rating-lookup/A00123`
       );
       assert.equal(response.status, 409);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 409 when a completed registration has no assigned counter", async () => {
+    DangKyTiepDanRepository.findForRatingByCode = async () => ({
+      ...completedRegistration,
+      bo_phan: null,
+    });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/rating-lookup/A00123`
+      );
+      assert.equal(response.status, 409);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 404 when the reception code does not exist", async () => {
+    DangKyTiepDanRepository.findForRatingByCode = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/rating-lookup/A00123`
+      );
+      assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for an invalid reception code", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/rating-lookup/***`
+      );
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("limits public rating lookup traffic to 60 requests per 10 minutes per IP", async () => {
+    const app = express();
+    app.use(createReceptionRatingLookupRateLimiter());
+    app.get("/rating-lookup/A00123", (_req, res) =>
+      res.json({ success: true })
+    );
+    const server = app.listen(0);
+    const { port } = server.address();
+
+    try {
+      for (
+        let index = 0;
+        index < RECEPTION_RATING_LOOKUP_RATE_LIMIT.limit;
+        index += 1
+      ) {
+        const response = await fetch(
+          `http://127.0.0.1:${port}/rating-lookup/A00123`
+        );
+        assert.equal(response.status, 200);
+      }
+
+      const blockedResponse = await fetch(
+        `http://127.0.0.1:${port}/rating-lookup/A00123`
+      );
+      const blockedBody = await blockedResponse.json();
+
+      assert.equal(blockedResponse.status, 429);
+      assert.match(blockedBody.message, /mã đánh giá quá nhiều/i);
     } finally {
       server.close();
     }

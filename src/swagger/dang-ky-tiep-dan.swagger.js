@@ -451,7 +451,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Tra cứu đăng ký đã hoàn thành để đánh giá trên iPad",
       description:
-        "API công khai dành cho iPad. Chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá.",
+        "API công khai dành cho iPad. Chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá. Giới hạn riêng 60 lượt tra mã trong 10 phút cho mỗi IP.",
       parameters: [
         {
           name: "receptionCode",
@@ -461,10 +461,47 @@ const DangKyTiepDanSwagger = {
         },
       ],
       responses: {
-        200: { description: "Lấy thông tin để người dân xác nhận thành công" },
+        200: {
+          description: "Lấy thông tin để người dân xác nhận thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      registrationId: { type: "string", format: "uuid" },
+                      receptionCode: { type: "string", example: "A00123" },
+                      receptionDate: { type: "string", format: "date-time" },
+                      timeSlot: { type: "string" },
+                      topic: { type: "string" },
+                      workingContent: { type: "string" },
+                      applicant: {
+                        type: "object",
+                        properties: {
+                          fullName: { type: "string" },
+                          phoneNumber: { type: "string", example: "******5678" },
+                          citizenId: { type: "string", example: "********1234" },
+                          address: { type: "string" },
+                        },
+                      },
+                      department: { type: "string", enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"] },
+                      approvalStatus: { type: "string", enum: ["COMPLETED"] },
+                      ratingStatus: { type: "string", enum: ["NOT_RATED"] },
+                    },
+                  },
+                  message: { type: "string" },
+                },
+              },
+            },
+          },
+        },
         400: { description: "Mã tiếp dân không hợp lệ" },
         404: { description: "Không tìm thấy mã tiếp dân" },
         409: { description: "Buổi tiếp chưa hoàn thành, chưa gán quầy hoặc đã được đánh giá" },
+        429: { description: "Vượt quá 60 lượt tra mã đánh giá trong 10 phút từ cùng một IP" },
       },
     },
   },

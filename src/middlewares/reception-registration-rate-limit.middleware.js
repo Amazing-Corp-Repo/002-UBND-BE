@@ -11,6 +11,11 @@ export const RECEPTION_LOOKUP_RATE_LIMIT = {
   limit: 60,
 };
 
+export const RECEPTION_RATING_LOOKUP_RATE_LIMIT = {
+  windowMs: 10 * 60 * 1000,
+  limit: 60,
+};
+
 export const createReceptionRegistrationRateLimiter = () =>
   rateLimit({
     ...RECEPTION_REGISTRATION_RATE_LIMIT,
@@ -37,10 +42,26 @@ export const createReceptionLookupRateLimiter = () =>
       ),
   });
 
+export const createReceptionRatingLookupRateLimiter = () =>
+  rateLimit({
+    ...RECEPTION_RATING_LOOKUP_RATE_LIMIT,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (_req, res) =>
+      errorResponse(
+        res,
+        { message: "Bạn đã tra cứu mã đánh giá quá nhiều lần, vui lòng thử lại sau" },
+        429
+      ),
+  });
+
 const receptionRegistrationRateLimiter =
   createReceptionRegistrationRateLimiter();
 
 export const receptionLookupRateLimiter =
   createReceptionLookupRateLimiter();
+
+export const receptionRatingLookupRateLimiter =
+  createReceptionRatingLookupRateLimiter();
 
 export default receptionRegistrationRateLimiter;
