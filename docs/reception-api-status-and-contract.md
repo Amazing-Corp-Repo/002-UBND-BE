@@ -571,10 +571,10 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 25 — `GET /api/reception-schedules/management/template` — Lấy file Excel mẫu để import lịch
 
-- **Trạng thái:** Đã có bản sao tiếng Anh; chức năng cơ bản đã có nhưng Swagger response chưa đầy đủ.
-- **Đã làm/hiện có:** Authenticate, `LTD_GET_TEMPLATE`, trả đường dẫn tương đối tới file Excel mẫu.
-- **Chưa làm:** Swagger response/lỗi còn trống; chưa xác nhận template phản ánh đầy đủ giờ làm việc/sức chứa theo mô hình mới.
-- **Cần bổ sung:** Cập nhật hoặc xác nhận cột template, thêm test tải template và hoàn thiện Swagger.
+- **Trạng thái:** Đã hoàn thành API và file Excel mẫu.
+- **Đã làm/hiện có:** Authenticate, `LTD_GET_TEMPLATE`, kiểm tra file tồn tại, trả đường dẫn tương đối; workbook có sheet `LichTiepDan` đứng đầu với đúng 6 cột import và sheet `Hướng dẫn` mô tả ca một tiếng, 8 quầy, sức chứa mặc định 2, quy tắc trùng; có script tái tạo file, Swagger và test `200`, `401`, `403` cùng kiểm tra nội dung workbook.
+- **Chưa làm:** Template chưa biểu diễn hai khoảng sáng/chiều cho cùng cán bộ/ngày vì API import hiện chỉ hỗ trợ một khoảng trên mỗi bản ghi.
+- **Cần bổ sung:** Chỉ mở rộng template sau khi API 19 hỗ trợ nhiều khoảng làm việc trong cùng bản ghi.
 - **Dùng để làm gì:** Lấy đường dẫn file Excel mẫu để import lịch.
 - **Role áp dụng:** tài khoản có permission `LTD_GET_TEMPLATE`.
 - **Đầu vào:** Không có.

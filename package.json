@@ -47,6 +47,7 @@
   "scripts": {
     "test": "node --experimental-strip-types --test --test-concurrency=1",
     "check": "prisma validate",
+    "generate:reception-template": "node scripts/generate-reception-schedule-template.js",
     "dev": "node --watch --experimental-strip-types src/app.js",
     "start": "node --experimental-strip-types src/app.js",
     "postinstall": "prisma generate"

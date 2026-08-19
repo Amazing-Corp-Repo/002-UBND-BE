@@ -176,6 +176,29 @@ const ScheduleItemSuccessSchema = {
   },
 };
 
+const TemplateSuccessSchema = {
+  type: "object",
+  required: ["success", "data", "message"],
+  properties: {
+    success: { type: "boolean", example: true },
+    data: {
+      type: "object",
+      required: ["relative_url"],
+      properties: {
+        relative_url: {
+          type: "string",
+          example: "/static/template-lich-tiep-dan.xlsx",
+        },
+      },
+    },
+    message: {
+      type: "string",
+      example: "Lấy template lịch tiếp dân thành công",
+    },
+    pagination: { nullable: true, example: null },
+  },
+};
+
 export const ReceptionScheduleManagementSchemas = {
   UpdateStatusSchema,
   CreateScheduleSchema,
@@ -188,4 +211,5 @@ export const ReceptionScheduleManagementSchemas = {
   ScheduleCountSuccessSchema,
   EmptySuccessSchema,
   ScheduleItemSuccessSchema,
+  TemplateSuccessSchema,
 };

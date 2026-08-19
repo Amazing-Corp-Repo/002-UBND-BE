@@ -487,7 +487,20 @@ const ReceptionScheduleManagementSwagger = {
             tags: ['ReceptionScheduleManagement'],
             security: [{ bearerAuth: [] }],
             summary: 'Lấy template lịch tiếp dân',
-            responses: {}
+            description: 'Dành cho tài khoản có quyền LTD_GET_TEMPLATE. Trả đường dẫn tương đối tới file Excel mẫu. Sheet LichTiepDan đứng đầu và gồm 6 cột: Địa điểm, Tên cán bộ, Ngày tiếp dân, Ghi chú, Từ, Đến; sheet Hướng dẫn mô tả quy tắc ca một tiếng, 8 quầy và sức chứa mặc định 2.',
+            responses: {
+                200: {
+                    description: 'Lấy đường dẫn file Excel mẫu thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.TemplateSuccessSchema,
+                        },
+                    },
+                },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_GET_TEMPLATE' },
+                500: { description: 'File Excel mẫu không tồn tại trên máy chủ' },
+            }
         },
     },
 }

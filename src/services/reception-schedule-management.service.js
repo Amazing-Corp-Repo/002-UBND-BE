@@ -13,6 +13,13 @@ import {
   toSnakeCaseNonAccent,
 } from "../utils/string.util.js";
 import { createPagination } from "../utils/response.util.js";
+import { access } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+
+const RECEPTION_TEMPLATE_URL = "/static/template-lich-tiep-dan.xlsx";
+const RECEPTION_TEMPLATE_PATH = fileURLToPath(
+  new URL("../public/static/template-lich-tiep-dan.xlsx", import.meta.url)
+);
 
 const toMinutes = (value) => {
   const [hour, minute] = value.split(":").map(Number);
@@ -342,6 +349,15 @@ const ReceptionScheduleManagementService = {
       );
     }
     return result.data;
+  },
+
+  async getTemplateLichTiepDan() {
+    try {
+      await access(RECEPTION_TEMPLATE_PATH);
+    } catch {
+      throw new BaseError(500, "File mẫu import lịch tiếp dân không tồn tại");
+    }
+    return RECEPTION_TEMPLATE_URL;
   },
 
   async handleImport(files = [], currentUser) {
