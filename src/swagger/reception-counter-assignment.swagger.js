@@ -97,6 +97,64 @@ const ReceptionCounterAssignmentSwagger = {
       },
     },
   },
+  "/api/reception-shifts/{shiftId}/counter-assignments": {
+    put: {
+      tags: ["ReceptionCounterAssignment"],
+      summary: "Thiết lập phân công cán bộ - quầy cho một ca",
+      description:
+        "Thay thế toàn bộ phân công đang hoạt động của ca bằng danh sách mới. Một quầy chỉ có một cán bộ chính và một cán bộ chỉ trực một quầy trong cùng ca. Gửi mảng rỗng để ngừng toàn bộ phân công của ca. Yêu cầu quyền LTD_UPDATE.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "shiftId",
+        in: "path",
+        required: true,
+        description: "ID ca tiếp dân",
+        schema: {
+          type: "string",
+          format: "uuid",
+          example: "323e4567-e89b-42d3-a456-426614174001",
+        },
+      }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["assignments"],
+              properties: {
+                assignments: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    required: ["counterConfigurationId", "officerId"],
+                    properties: {
+                      counterConfigurationId: { type: "string", format: "uuid" },
+                      officerId: { type: "string", format: "uuid" },
+                    },
+                  },
+                },
+              },
+            },
+            example: {
+              assignments: [{
+                counterConfigurationId: "223e4567-e89b-42d3-a456-426614174001",
+                officerId: "523e4567-e89b-42d3-a456-426614174001",
+              }],
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Cập nhật phân công quầy theo ca thành công" },
+        400: { description: "Dữ liệu sai hoặc quầy/cán bộ không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LTD_UPDATE" },
+        404: { description: "Ca tiếp dân không tồn tại hoặc đã ngừng hoạt động" },
+        409: { description: "Trùng quầy, trùng cán bộ hoặc xung đột cập nhật đồng thời" },
+      },
+    },
+  },
 };
 
 export default ReceptionCounterAssignmentSwagger;

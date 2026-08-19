@@ -36,6 +36,50 @@ const ReceptionCounterAssignmentService = {
     }
     return mapAssignment(assignment);
   },
+
+  async replaceForShift(shiftId, assignments, currentUserId) {
+    const shift = await ReceptionCounterAssignmentRepository.findActiveShiftById(shiftId);
+    if (!shift) {
+      throw new BaseError(404, "Ca tiếp dân không tồn tại hoặc đã ngừng hoạt động");
+    }
+
+    const configurationIds = assignments.map((item) => item.counterConfigurationId);
+    const officerIds = assignments.map((item) => item.officerId);
+    if (new Set(configurationIds).size !== configurationIds.length) {
+      throw new BaseError(409, "Một quầy không thể có nhiều cán bộ chính trong cùng ca");
+    }
+    if (new Set(officerIds).size !== officerIds.length) {
+      throw new BaseError(409, "Một cán bộ không thể trực nhiều quầy trong cùng ca");
+    }
+
+    const [configurations, officers] = await Promise.all([
+      ReceptionCounterAssignmentRepository.findActiveConfigurationsByIds(
+        shiftId,
+        configurationIds
+      ),
+      ReceptionCounterAssignmentRepository.findActiveOfficersByIds(officerIds),
+    ]);
+    if (configurations.length !== configurationIds.length) {
+      throw new BaseError(400, "Có cấu hình quầy không tồn tại, ngừng hoạt động hoặc không thuộc ca");
+    }
+    if (officers.length !== officerIds.length) {
+      throw new BaseError(400, "Có cán bộ không tồn tại hoặc đã ngừng hoạt động");
+    }
+
+    try {
+      const result = await ReceptionCounterAssignmentRepository.replaceForShift(
+        shiftId,
+        assignments,
+        currentUserId
+      );
+      return result.map(mapAssignment);
+    } catch (error) {
+      if (error?.code === "P2002" || error?.code === "P2034") {
+        throw new BaseError(409, "Phân công đã thay đổi đồng thời, vui lòng tải lại và thử lại");
+      }
+      throw error;
+    }
+  },
 };
 
 export default ReceptionCounterAssignmentService;
