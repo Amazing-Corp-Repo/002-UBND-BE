@@ -170,7 +170,9 @@ const ReceptionScheduleManagementSwagger = {
     '/api/reception-schedules/management/pagination': {
         get: {
             tags: ['ReceptionScheduleManagement'],
-            summary: 'Lấy danh sách lịch tiếp dân với các bộ lọc',
+            security: [{ bearerAuth: [] }],
+            summary: 'Lấy danh sách lịch tiếp dân có phân trang',
+            description: 'Dành cho cán bộ có quyền LTD_GET_ALL. Hỗ trợ tối đa một bộ lọc thời gian, lọc trạng thái, phân trang mặc định trang 1 với 10 bản ghi và giới hạn tối đa 100 bản ghi mỗi trang.',
             parameters: [
                 {
                     name: 'weekYear',
@@ -215,9 +217,11 @@ const ReceptionScheduleManagementSwagger = {
                     name: 'page',
                     in: 'query',
                     description: 'Số trang hiện tại',
-                    required: true,
+                    required: false,
                     schema: {
                         type: 'integer',
+                        minimum: 1,
+                        default: 1,
                         example: 1,
                     },
                 },
@@ -225,14 +229,29 @@ const ReceptionScheduleManagementSwagger = {
                     name: 'size',
                     in: 'query',
                     description: 'Số mục trên mỗi trang',
-                    required: true,
+                    required: false,
                     schema: {
                         type: 'integer',
+                        minimum: 1,
+                        maximum: 100,
+                        default: 10,
                         example: 10,
                     },
                 },
             ],
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Lấy danh sách lịch tiếp dân có phân trang thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.SchedulePaginationSuccessSchema,
+                        },
+                    },
+                },
+                400: { description: 'Bộ lọc, số trang hoặc kích thước trang không hợp lệ' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_GET_ALL' },
+            }
         },
     },
     '/api/reception-schedules/management/count': {

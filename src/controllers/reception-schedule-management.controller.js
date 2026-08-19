@@ -16,7 +16,7 @@ const ReceptionScheduleManagementController = {
     },
 
     async getLichTiepDanWithPagination(req, res) {
-        const filters = req.query;
+        const filters = req.validatedQuery;
         const data = await ReceptionScheduleManagementService.getLichTiepDanWithPagination(filters);
         return successResponse(res, data.data, "Lấy danh sách lịch tiếp dân thành công", data.pagination);
     },

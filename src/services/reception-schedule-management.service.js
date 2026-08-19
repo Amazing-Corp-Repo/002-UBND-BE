@@ -9,6 +9,7 @@ import ReceptionScheduleManagementRepository from "../repositories/reception-sch
 import LichTiepDanService from "./lich-tiep-dan.service.js";
 import FileService from "./file.service.js";
 import { toSnakeCaseNonAccent } from "../utils/string.util.js";
+import { createPagination } from "../utils/response.util.js";
 
 const toMinutes = (value) => {
   const [hour, minute] = value.split(":").map(Number);
@@ -239,6 +240,30 @@ const ReceptionScheduleManagementService = {
         String(right.thoi_gian || "")
       );
     });
+  },
+
+  async getLichTiepDanWithPagination(filters) {
+    const { weekYear, monthYear, date, isActive, page, size } = filters;
+    const { data, totalItems } =
+      await ReceptionScheduleManagementRepository.findAllWithPagination({
+        weekYear,
+        monthYear,
+        date,
+        isActive:
+          typeof isActive === "boolean" ? String(isActive) : isActive,
+        page,
+        size,
+      });
+    data.sort((left, right) => {
+      const dateDifference =
+        new Date(left.ngay_tiep_dan).getTime() -
+        new Date(right.ngay_tiep_dan).getTime();
+      if (dateDifference !== 0) return dateDifference;
+      return String(left.thoi_gian || "").localeCompare(
+        String(right.thoi_gian || "")
+      );
+    });
+    return { data, pagination: createPagination(page, size, totalItems) };
   },
 
   async handleImport(files = [], currentUser) {

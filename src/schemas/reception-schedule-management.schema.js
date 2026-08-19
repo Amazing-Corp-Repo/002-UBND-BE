@@ -112,6 +112,29 @@ const ScheduleListSuccessSchema = {
   },
 };
 
+const SchedulePaginationSuccessSchema = {
+  type: "object",
+  required: ["success", "data", "message", "pagination"],
+  properties: {
+    success: { type: "boolean", example: true },
+    data: { type: "array", items: ScheduleListItemSchema },
+    message: {
+      type: "string",
+      example: "Lấy danh sách lịch tiếp dân thành công",
+    },
+    pagination: {
+      type: "object",
+      required: ["currentPage", "pageSize", "totalPages", "totalItems"],
+      properties: {
+        currentPage: { type: "integer", minimum: 1, example: 1 },
+        pageSize: { type: "integer", minimum: 1, maximum: 100, example: 10 },
+        totalPages: { type: "integer", minimum: 0, example: 3 },
+        totalItems: { type: "integer", minimum: 0, example: 25 },
+      },
+    },
+  },
+};
+
 export const ReceptionScheduleManagementSchemas = {
   UpdateStatusSchema,
   CreateScheduleSchema,
@@ -120,4 +143,5 @@ export const ReceptionScheduleManagementSchemas = {
   ScheduleWithSlotsSuccessSchema,
   ScheduleListItemSchema,
   ScheduleListSuccessSchema,
+  SchedulePaginationSuccessSchema,
 };

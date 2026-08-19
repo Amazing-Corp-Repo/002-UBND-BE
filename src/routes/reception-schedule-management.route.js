@@ -9,6 +9,7 @@ import validate from "../middlewares/validate.middleware.js";
 import {
   CreateLichTiepDanRequest,
   GetReceptionScheduleManagementQuery,
+  GetReceptionScheduleManagementPaginationQuery,
   ReceptionScheduleManagementIdParams,
   UpdateLichTiepDanRequest,
   UpdateLStatusLichTiepDanRequest,
@@ -47,6 +48,9 @@ receptionScheduleManagementRouter.get(
 
 receptionScheduleManagementRouter.get(
   "/pagination",
+  authenticate,
+  authorize([PERMISSION.LTD_GET_ALL]),
+  validateQuery(GetReceptionScheduleManagementPaginationQuery),
   ReceptionScheduleManagementController.getLichTiepDanWithPagination
 );
 

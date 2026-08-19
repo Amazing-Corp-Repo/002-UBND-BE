@@ -58,6 +58,21 @@ export const GetReceptionScheduleManagementQuery = Joi.object({
     'object.oxor': 'Chỉ được dùng một trong các bộ lọc weekYear, monthYear hoặc date',
 });
 
+export const GetReceptionScheduleManagementPaginationQuery =
+    GetReceptionScheduleManagementQuery.keys({
+        page: Joi.number().integer().min(1).default(1).messages({
+            'number.base': 'Trang phải là số nguyên',
+            'number.integer': 'Trang phải là số nguyên',
+            'number.min': 'Trang phải từ 1 trở lên',
+        }),
+        size: Joi.number().integer().min(1).max(100).default(10).messages({
+            'number.base': 'Kích thước trang phải là số nguyên',
+            'number.integer': 'Kích thước trang phải là số nguyên',
+            'number.min': 'Kích thước trang phải từ 1 trở lên',
+            'number.max': 'Kích thước trang không được vượt quá 100',
+        }),
+    });
+
 export const UpdateLStatusLichTiepDanRequest = Joi.object({
     isActive: Joi.boolean()
         .required()

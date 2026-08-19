@@ -524,12 +524,12 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 21 — `GET /api/reception-schedules/management/pagination` — Lấy danh sách lịch có phân trang
 
-- **Trạng thái:** Đã có bản sao tiếng Anh; còn thiếu phân quyền và Swagger response chi tiết.
-- **Đã làm/hiện có:** Route lấy danh sách có `page`, `size`, bộ lọc và response wrapper có `pagination`.
-- **Chưa làm:** Chưa authenticate/authorize, chưa validate/giới hạn `page` và `size`, Swagger chưa mô tả response/lỗi.
-- **Cần bổ sung:** Permission xem danh sách, validator query với giới hạn kích thước trang và Swagger đầy đủ.
+- **Trạng thái:** Đã hoàn thành API danh sách quản lý có phân trang.
+- **Đã làm/hiện có:** Authenticate, permission `LTD_GET_ALL`, validate bộ lọc, mặc định `page=1`, `size=10`, giới hạn `size<=100`, lọc đúng boolean `isActive`, response `pagination`, Swagger và test `200`, `400`, `401`, `403`.
+- **Chưa làm:** Response từng dòng chưa tổng hợp sức chứa và số đăng ký giữ chỗ.
+- **Cần bổ sung:** Chỉ thêm số liệu tổng hợp nếu màn hình danh sách cần hiển thị trực tiếp.
 - **Dùng để làm gì:** Lấy danh sách lịch có phân trang.
-- **Role áp dụng hiện tại:** Public; nếu dùng cho quản lý nên yêu cầu permission xem danh sách.
+- **Role áp dụng:** tài khoản cán bộ/lãnh đạo được cấp permission `LTD_GET_ALL`.
 - **Query đầu vào:** `weekYear`, `monthYear`, `date`, `isActive`, `page`, `size`.
 - **Đầu ra:** `data[]` và `pagination` theo wrapper chung.
 
