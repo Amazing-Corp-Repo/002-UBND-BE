@@ -6,6 +6,10 @@ const DangKyTiepDanRepository = {
     return prisma.lich_tiep_dan.findFirst({
       where: { id, is_active: true, is_delete: false },
       include: {
+        ca_tiep_dan: {
+          where: { is_active: true, is_delete: false },
+          orderBy: [{ gio_bat_dau: "asc" }],
+        },
         khung_gio_tiep_dan: {
           where: { is_active: true, is_delete: false },
           orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
@@ -14,11 +18,12 @@ const DangKyTiepDanRepository = {
     });
   },
 
-  async findDuplicate({ idLichTiepDan, slot, sdt }) {
+  async findDuplicate({ idLichTiepDan, idCaTiepDan, slot, sdt }) {
     return prisma.dang_ky_tiep_dan.findFirst({
       where: {
-        id_lich_tiep_dan: idLichTiepDan,
-        slot,
+        ...(idCaTiepDan
+          ? { id_ca_tiep_dan: idCaTiepDan }
+          : { id_lich_tiep_dan: idLichTiepDan, slot }),
         sdt,
         is_active: true,
         is_delete: false,
@@ -51,7 +56,7 @@ const DangKyTiepDanRepository = {
           is_active: true,
           is_delete: false,
         },
-        select: { id: true, khung_gio: true, suc_chua: true },
+        select: { id: true, khung_gio: true, suc_chua: true, id_ca_tiep_dan: true },
       });
       const selectedSlot = slotId
         ? configuredSlots.find((configuredSlot) => configuredSlot.id === slotId)
@@ -79,6 +84,9 @@ const DangKyTiepDanRepository = {
           )
         : totalCapacity;
 
+      // Resolve ca_tiep_dan from the first matching slot (V2)
+      const caTiepDanId = matchingSlots[0]?.id_ca_tiep_dan || null;
+
       const [
         duplicatePhone,
         duplicateCitizen,
@@ -87,27 +95,49 @@ const DangKyTiepDanRepository = {
         citizenDailyCount,
       ] =
         await Promise.all([
-          tx.dang_ky_tiep_dan.findFirst({
-            where: {
-              loai: "COUNTER_RECEPTION",
-              id_lich_tiep_dan: scheduleId,
-              slot: resolvedSlot,
-              sdt: phoneNumber,
-            },
-            select: { id: true },
-          }),
-          tx.dang_ky_tiep_dan.findFirst({
-            where: {
-              loai: "COUNTER_RECEPTION",
-              id_lich_tiep_dan: scheduleId,
-              slot: resolvedSlot,
-              cccd: citizenId,
-            },
-            select: { id: true },
-          }),
-          tx.dang_ky_tiep_dan.count({
-            where: { id_lich_tiep_dan: scheduleId, slot: resolvedSlot },
-          }),
+          caTiepDanId
+            ? tx.dang_ky_tiep_dan.findFirst({
+                where: {
+                  loai: "COUNTER_RECEPTION",
+                  id_ca_tiep_dan: caTiepDanId,
+                  sdt: phoneNumber,
+                },
+                select: { id: true },
+              })
+            : tx.dang_ky_tiep_dan.findFirst({
+                where: {
+                  loai: "COUNTER_RECEPTION",
+                  id_lich_tiep_dan: scheduleId,
+                  slot: resolvedSlot,
+                  sdt: phoneNumber,
+                },
+                select: { id: true },
+              }),
+          caTiepDanId
+            ? tx.dang_ky_tiep_dan.findFirst({
+                where: {
+                  loai: "COUNTER_RECEPTION",
+                  id_ca_tiep_dan: caTiepDanId,
+                  cccd: citizenId,
+                },
+                select: { id: true },
+              })
+            : tx.dang_ky_tiep_dan.findFirst({
+                where: {
+                  loai: "COUNTER_RECEPTION",
+                  id_lich_tiep_dan: scheduleId,
+                  slot: resolvedSlot,
+                  cccd: citizenId,
+                },
+                select: { id: true },
+              }),
+          caTiepDanId
+            ? tx.dang_ky_tiep_dan.count({
+                where: { id_ca_tiep_dan: caTiepDanId },
+              })
+            : tx.dang_ky_tiep_dan.count({
+                where: { id_lich_tiep_dan: scheduleId, slot: resolvedSlot },
+              }),
           tx.dang_ky_tiep_dan.count({
             where: {
               loai: "COUNTER_RECEPTION",
@@ -135,6 +165,7 @@ const DangKyTiepDanRepository = {
           ...data,
           ngay: schedule.ngay_tiep_dan,
           slot: resolvedSlot,
+          id_ca_tiep_dan: caTiepDanId,
         },
       });
       return { registration };
@@ -228,6 +259,21 @@ const DangKyTiepDanRepository = {
             ghi_chu: true,
           },
         },
+        ca_tiep_dan: {
+          select: {
+            id: true,
+            gio_bat_dau: true,
+            gio_ket_thuc: true,
+          },
+        },
+        cau_hinh_quay: {
+          select: {
+            id: true,
+            ma_quay: true,
+            khung_gio: true,
+            suc_chua: true,
+          },
+        },
         danh_gia_tiep_dan: {
           where: { is_delete: false },
           select: {
@@ -289,7 +335,7 @@ const DangKyTiepDanRepository = {
           is_active: true,
           is_delete: false,
         },
-        select: { suc_chua: true },
+        select: { id: true, suc_chua: true, id_ca_tiep_dan: true },
       });
       const capacity = counterSlots.length > 0
         ? counterSlots.reduce((total, slot) => total + slot.suc_chua, 0)
@@ -303,6 +349,16 @@ const DangKyTiepDanRepository = {
       });
       if (assignedCount >= capacity) return { conflict: "COUNTER_FULL" };
 
+      // Resolve id_cau_hinh_quay and id_ca_tiep_dan from the first matching counter slot (V2)
+      const firstCounterSlot = counterSlots[0];
+      const updateData = {
+        ...data,
+        ...(firstCounterSlot?.id ? { id_cau_hinh_quay: firstCounterSlot.id } : {}),
+        ...(firstCounterSlot?.id_ca_tiep_dan && !registration.id_ca_tiep_dan
+          ? { id_ca_tiep_dan: firstCounterSlot.id_ca_tiep_dan }
+          : {}),
+      };
+
       const updated = await tx.dang_ky_tiep_dan.updateMany({
         where: {
           id,
@@ -310,7 +366,7 @@ const DangKyTiepDanRepository = {
           is_active: true,
           is_delete: false,
         },
-        data,
+        data: updateData,
       });
       return updated.count === 1
         ? { approved: true }

@@ -140,6 +140,7 @@ model lich_tiep_dan {
   nguoi_dung_lich_tiep_dan_nguoi_taoTonguoi_dung      nguoi_dung? @relation("lich_tiep_dan_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [id], onUpdate: NoAction, map: "fk_lich_tiep_dan_nguoi_tao")
   dang_ky_tiep_dan                                     dang_ky_tiep_dan[]
   khung_gio_tiep_dan                                   khung_gio_tiep_dan[]
+  ca_tiep_dan                                          ca_tiep_dan[]
 
   @@index([is_active], map: "idx_lich_tiep_dan_is_active")
   @@index([is_delete], map: "idx_lich_tiep_dan_is_delete")
@@ -273,6 +274,15 @@ model nguoi_dung {
   user_session_logs                                                                         user_session_logs[]
   uy_ban_uy_ban_nguoi_cap_nhatTonguoi_dung                                                  uy_ban[]                          @relation("uy_ban_nguoi_cap_nhatTonguoi_dung")
   uy_ban_uy_ban_nguoi_taoTonguoi_dung                                                       uy_ban[]                          @relation("uy_ban_nguoi_taoTonguoi_dung")
+
+  // Reverse relations — Lịch gặp lãnh đạo
+  lich_gap_lanh_dao_lich_gap_lanh_dao_lanh_daoTonguoi_dung                                   lich_gap_lanh_dao[]               @relation("LichGapLanhDao_LanhDao")
+  dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_duyetTonguoi_dung                          dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiDuyet")
+  dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_hoan_thanh_refTonguoi_dung                 dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiHoanThanh")
+  dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_tu_choi_refTonguoi_dung                    dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiTuChoi")
+
+  // Reverse relations — Phân công quầy tiếp dân
+  phan_cong_quay_tiep_dan phan_cong_quay_tiep_dan[] @relation("PhanCongQuay_CanBo")
 
   @@index([email], map: "idx_nguoi_dung_email")
   @@index([is_active], map: "idx_nguoi_dung_is_active")
@@ -671,6 +681,10 @@ model dang_ky_tiep_dan {
   loai               String?       @db.VarChar(30) // COUNTER_RECEPTION | LEADER_MEETING
   ma_tiep_dan        String        @unique(map: "uq_dang_ky_tiep_dan_ma_tiep_dan") @db.VarChar(50) // Mã ngắn, ví dụ A001
   id_lich_tiep_dan   String?       @db.Uuid
+  id_khung_gio_tiep_dan String?    @db.Uuid           // THÊM MỚI V1 — Liên kết trực tiếp khung giờ
+  id_quay            String?       @db.Uuid            // THÊM MỚI V1 — FK đến quay_tiep_dan
+  id_ca_tiep_dan     String?       @db.Uuid            // THÊM MỚI V2 — FK đến ca_tiep_dan
+  id_cau_hinh_quay   String?       @db.Uuid            // THÊM MỚI V2 — FK đến khung_gio_tiep_dan (cấu hình quầy)
   ngay               DateTime?     @db.Date
   slot               String?       @db.VarChar(50)
   chu_de             String?       @db.VarChar(255)
@@ -689,6 +703,7 @@ model dang_ky_tiep_dan {
   ly_do_tu_choi      String?
   thoi_gian_tu_choi  DateTime?     @db.Timestamp(6)
   nguoi_tu_choi      String?       @db.Uuid
+  nguoi_duyet_don    String?       @db.Uuid            // THÊM MỚI V1 — Người duyệt đơn
   is_active          Boolean?      @default(true)
   is_delete          Boolean?      @default(false)
   nguoi_tao          String?       @db.Uuid
@@ -696,10 +711,16 @@ model dang_ky_tiep_dan {
   thoi_gian_tao      DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   lich_tiep_dan      lich_tiep_dan? @relation(fields: [id_lich_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_lich_tiep_dan")
+  khung_gio_tiep_dan khung_gio_tiep_dan? @relation(fields: [id_khung_gio_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_khung_gio")
+  quay_tiep_dan      quay_tiep_dan? @relation(fields: [id_quay], references: [id], onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_quay")
+  ca_tiep_dan        ca_tiep_dan?   @relation(fields: [id_ca_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_ca")
+  cau_hinh_quay      khung_gio_tiep_dan? @relation("DangKyTiepDan_CauHinhQuay", fields: [id_cau_hinh_quay], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_tiep_dan_cau_hinh_quay")
   danh_gia_tiep_dan  danh_gia_tiep_dan[]
 
   @@index([trang_thai], map: "idx_dang_ky_tiep_dan_trang_thai")
   @@index([loai], map: "idx_dang_ky_tiep_dan_loai")
+  @@index([id_ca_tiep_dan], map: "idx_dang_ky_tiep_dan_id_ca")
+  @@index([id_cau_hinh_quay], map: "idx_dang_ky_tiep_dan_id_cau_hinh_quay")
 }
 
 // Đánh giá sau buổi tiếp dân / gặp lãnh đạo
@@ -722,11 +743,139 @@ model danh_gia_tiep_dan {
   @@index([diem_tong], map: "idx_danh_gia_tiep_dan_diem_tong")
 }
 
+// ══════════════ HỆ THỐNG ĐĂNG KÝ GẶP LÃNH ĐẠO (MỚI) ══════════════
+
+// Lịch gặp lãnh đạo
+model lich_gap_lanh_dao {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_lanh_dao        String    @db.Uuid
+  ngay               DateTime  @db.Date
+  dia_diem           String?   @db.VarChar(255)
+  ghi_chu            String?
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  lanh_dao               nguoi_dung                    @relation("LichGapLanhDao_LanhDao", fields: [id_lanh_dao], references: [id])
+  khung_gio_gap_lanh_dao khung_gio_gap_lanh_dao[]
+
+  @@unique([id_lanh_dao, ngay], map: "uq_lich_gap_lanh_dao_ngay")
+  @@index([id_lanh_dao], map: "idx_lich_gap_lanh_dao_id_lanh_dao")
+  @@index([ngay], map: "idx_lich_gap_lanh_dao_ngay")
+  @@index([is_active, is_delete], map: "idx_lich_gap_lanh_dao_trang_thai")
+}
+
+// Khung giờ gặp lãnh đạo
+model khung_gio_gap_lanh_dao {
+  id                String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_lich_gap       String    @db.Uuid
+  gio_bat_dau       String    @db.VarChar(10)
+  gio_ket_thuc      String    @db.VarChar(10)
+  suc_chua          Int       @default(1)
+  is_active         Boolean   @default(true)
+  is_delete         Boolean   @default(false)
+  nguoi_tao         String?   @db.Uuid
+  nguoi_cap_nhat    String?   @db.Uuid
+  thoi_gian_tao     DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  lich_gap_lanh_dao      lich_gap_lanh_dao @relation(fields: [id_lich_gap], references: [id])
+  dang_ky_gap_lanh_dao   dang_ky_gap_lanh_dao[]
+
+  @@unique([id_lich_gap, gio_bat_dau, gio_ket_thuc], map: "uq_khung_gio_gap_lanh_dao")
+  @@index([id_lich_gap], map: "idx_khung_gio_gap_lanh_dao_id_lich")
+  @@index([is_active, is_delete], map: "idx_khung_gio_gap_lanh_dao_trang_thai")
+}
+
+// Đăng ký gặp lãnh đạo
+model dang_ky_gap_lanh_dao {
+  id                        String  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ma_dang_ky                String  @unique @db.VarChar(50)
+  id_khung_gio_gap          String  @db.Uuid
+  chu_de                    String? @db.VarChar(255)   // THÊM MỚI V2 — Chủ đề gặp lãnh đạo
+  ho_ten                    String  @db.VarChar(150)
+  sdt                       String  @db.VarChar(20)
+  cccd                      String  @db.VarChar(20)
+  ngay_cap_cccd             DateTime? @db.Date
+  noi_cap_cccd              String? @db.VarChar(255)
+  dia_chi                   String
+  ngay_lam_don              DateTime? @db.Date
+  ly_do                     String
+  trang_thai                String  @default("PENDING") @db.VarChar(30)
+  thoi_gian_phe_duyet       DateTime? @db.Timestamp(6)
+  thoi_gian_hoan_thanh      DateTime? @db.Timestamp(6)
+  thoi_gian_tu_choi         DateTime? @db.Timestamp(6)
+  ly_do_tu_choi             String?
+  nguoi_duyet_don           String? @db.Uuid
+  nguoi_hoan_thanh          String? @db.Uuid
+  nguoi_tu_choi             String? @db.Uuid
+  is_active                 Boolean @default(true)
+  is_delete                 Boolean @default(false)
+  nguoi_tao                 String? @db.Uuid
+  nguoi_cap_nhat            String? @db.Uuid
+  thoi_gian_tao             DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat        DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  khung_gio_gap_lanh_dao    khung_gio_gap_lanh_dao @relation(fields: [id_khung_gio_gap], references: [id])
+
+  nguoi_duyet               nguoi_dung? @relation("DangKyGapLanhDao_NguoiDuyet", fields: [nguoi_duyet_don], references: [id])
+  nguoi_hoan_thanh_ref      nguoi_dung? @relation("DangKyGapLanhDao_NguoiHoanThanh", fields: [nguoi_hoan_thanh], references: [id])
+  nguoi_tu_choi_ref         nguoi_dung? @relation("DangKyGapLanhDao_NguoiTuChoi", fields: [nguoi_tu_choi], references: [id])
+
+  dinh_kem_dang_ky_gap_lanh_dao dinh_kem_dang_ky_gap_lanh_dao[]
+  danh_gia_gap_lanh_dao         danh_gia_gap_lanh_dao?
+
+  @@index([id_khung_gio_gap], map: "idx_dang_ky_gap_id_khung_gio")
+  @@index([sdt], map: "idx_dang_ky_gap_sdt")
+  @@index([cccd], map: "idx_dang_ky_gap_cccd")
+  @@index([trang_thai], map: "idx_dang_ky_gap_trang_thai")
+  @@index([thoi_gian_tao], map: "idx_dang_ky_gap_thoi_gian_tao")
+}
+
+// Ảnh CCCD và tài liệu đính kèm đăng ký gặp lãnh đạo
+model dinh_kem_dang_ky_gap_lanh_dao {
+  id            String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_dang_ky    String   @db.Uuid
+  loai_dinh_kem String   @db.VarChar(30)    // CCCD_FRONT | CCCD_BACK | SUPPORTING_DOCUMENT
+  ten_file_goc  String   @db.VarChar(255)
+  duong_dan_file String
+  mime_type     String?  @db.VarChar(100)
+  kich_thuoc    Int?
+  thoi_gian_tao DateTime @default(now())
+
+  dang_ky_gap_lanh_dao dang_ky_gap_lanh_dao @relation(fields: [id_dang_ky], references: [id], onDelete: Cascade)
+
+  @@index([id_dang_ky], map: "idx_dinh_kem_gap_id_dang_ky")
+}
+
+// Đánh giá gặp lãnh đạo
+model danh_gia_gap_lanh_dao {
+  id                      String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_dang_ky_gap_lanh_dao String   @unique @db.Uuid
+  diem_tong               Int
+  tieu_chi                Json?
+  ly_do                   Json?
+  nhan_xet                String?
+  is_active               Boolean  @default(true)
+  is_delete               Boolean  @default(false)
+  thoi_gian_tao           DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat      DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  dang_ky_gap_lanh_dao dang_ky_gap_lanh_dao @relation(fields: [id_dang_ky_gap_lanh_dao], references: [id], onUpdate: NoAction, map: "fk_danh_gia_gap_lanh_dao_dang_ky")
+
+  @@index([diem_tong], map: "idx_danh_gia_gap_lanh_dao_diem_tong")
+}
+
 model khung_gio_tiep_dan {
   id                 String        @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   id_lich_tiep_dan   String        @db.Uuid
   khung_gio          String        @db.VarChar(50)
   ma_quay            String        @db.VarChar(20)
+  id_quay            String?       @db.Uuid
+  id_ca_tiep_dan     String?       @db.Uuid                      // THÊM MỚI V2 — FK đến ca_tiep_dan
   suc_chua           Int           @default(2)
   is_active          Boolean?      @default(true)
   is_delete          Boolean?      @default(false)
@@ -735,11 +884,83 @@ model khung_gio_tiep_dan {
   thoi_gian_tao      DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   thoi_gian_cap_nhat DateTime?     @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
   lich_tiep_dan      lich_tiep_dan @relation(fields: [id_lich_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_lich")
+  quay_tiep_dan      quay_tiep_dan? @relation(fields: [id_quay], references: [id], onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_quay")
+  ca_tiep_dan        ca_tiep_dan?  @relation(fields: [id_ca_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_khung_gio_tiep_dan_ca")
+  dang_ky_tiep_dan   dang_ky_tiep_dan[]
+  dang_ky_tiep_dan_cau_hinh dang_ky_tiep_dan[] @relation("DangKyTiepDan_CauHinhQuay")
+  phan_cong_quay_tiep_dan phan_cong_quay_tiep_dan[]
 
   @@unique([id_lich_tiep_dan, khung_gio, ma_quay], map: "uq_khung_gio_tiep_dan_lich_slot_quay")
+  @@unique([id_ca_tiep_dan, id_quay], map: "uq_khung_gio_tiep_dan_ca_quay_v2")
   @@index([id_lich_tiep_dan, khung_gio], map: "idx_khung_gio_tiep_dan_lich_slot")
   @@index([ma_quay], map: "idx_khung_gio_tiep_dan_ma_quay")
-  @@index([is_active, is_delete], map: "idx_khung_gio_tiep_dan_trang_thai")
+  @@index([id_quay], map: "idx_khung_gio_tiep_dan_id_quay")
+  @@index([is_active, is_delete], map: "idx_khung_gio_tiep_dan_trang_thai_v2")
+}
+
+// Ca tiếp dân — khung thời gian trong lịch, không gắn sẵn quầy
+model ca_tiep_dan {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_lich_tiep_dan   String    @db.Uuid
+  gio_bat_dau        DateTime  @db.Time(0)
+  gio_ket_thuc       DateTime  @db.Time(0)
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  lich_tiep_dan      lich_tiep_dan          @relation(fields: [id_lich_tiep_dan], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_ca_tiep_dan_lich")
+  cau_hinh_quay      khung_gio_tiep_dan[]
+  dang_ky_tiep_dan   dang_ky_tiep_dan[]
+
+  @@unique([id_lich_tiep_dan, gio_bat_dau, gio_ket_thuc], map: "uq_ca_tiep_dan_lich_thoi_gian")
+  @@index([id_lich_tiep_dan], map: "idx_ca_tiep_dan_id_lich")
+  @@index([is_active, is_delete], map: "idx_ca_tiep_dan_trang_thai")
+}
+
+// Phân công cán bộ trực quầy theo ca
+model phan_cong_quay_tiep_dan {
+  id                    String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_cau_hinh_quay      String    @db.Uuid
+  id_can_bo             String    @db.Uuid
+  is_active             Boolean   @default(true)
+  is_delete             Boolean   @default(false)
+  nguoi_tao             String?   @db.Uuid
+  nguoi_cap_nhat        String?   @db.Uuid
+  thoi_gian_tao         DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat    DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  cau_hinh_quay         khung_gio_tiep_dan @relation(fields: [id_cau_hinh_quay], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_phan_cong_quay_cau_hinh")
+  can_bo                nguoi_dung          @relation("PhanCongQuay_CanBo", fields: [id_can_bo], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([id_cau_hinh_quay], map: "uq_phan_cong_quay_cau_hinh")
+  @@index([id_can_bo], map: "idx_phan_cong_quay_id_can_bo")
+  @@index([is_active, is_delete], map: "idx_phan_cong_quay_trang_thai")
+}
+
+// Quầy tiếp dân — danh mục quầy
+model quay_tiep_dan {
+  id                 String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ma_quay            String    @unique @db.VarChar(20)
+  ten_quay           String    @db.VarChar(100)
+  so_thu_tu          Int       @unique
+  mo_ta              String?
+  suc_chua_mac_dinh  Int       @default(2)
+  vi_tri             String?   @db.VarChar(255)
+  is_active          Boolean   @default(true)
+  is_delete          Boolean   @default(false)
+  nguoi_tao          String?   @db.Uuid
+  nguoi_cap_nhat     String?   @db.Uuid
+  thoi_gian_tao      DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  khung_gio_tiep_dan khung_gio_tiep_dan[]
+  dang_ky_tiep_dan   dang_ky_tiep_dan[]
+
+  @@index([is_active, is_delete], map: "idx_quay_tiep_dan_trang_thai")
+  @@index([so_thu_tu], map: "idx_quay_tiep_dan_so_thu_tu")
 }
 
 // Danh mục Thư viện số

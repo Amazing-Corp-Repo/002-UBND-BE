@@ -89,6 +89,8 @@ async function main() {
     });
   }
 
+  // ---------- quay_tiep_dan đã được seed trong migration SQL ----------
+
   for (const [id, ma, tieuDe, lv, mucDo, status] of [
     [IDS.pa1, 'PA-2026-0001', 'Cống nghẹt gây ngập đường', IDS.lvVeSinh, 'Khẩn cấp', 'Đã giải quyết'],
     [IDS.pa2, 'PA-2026-0002', 'Đèn chiếu sáng hư hỏng khu 4', IDS.lvGiaoThong, 'Thông thường', 'Đang xử lý'],
@@ -375,6 +377,7 @@ async function main() {
   const counts = {
     roles: await prisma.roles.count(),
     lich_tiep_dan: await prisma.lich_tiep_dan.count(),
+    quay_tiep_dan: await prisma.quay_tiep_dan.count(),
     phan_anh: await prisma.phan_anh.count(),
     danh_gia_phan_anh: await prisma.danh_gia_phan_anh.count(),
     dang_ky_tiep_dan: await prisma.dang_ky_tiep_dan.count(),
