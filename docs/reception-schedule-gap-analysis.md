@@ -2,50 +2,6 @@
 
 > Trạng thái: tài liệu phân tích và đề xuất, chưa triển khai code hoặc database.
 
-## 2. Xác nhận khung giờ đăng ký thuộc lịch
-
-Backend hiện chỉ kiểm tra `slot` đúng định dạng `HH:mm - HH:mm`, nhưng chưa xác nhận khung giờ gửi lên có thuộc lịch đã chọn hay không.
-
-Ví dụ lịch `07:30 - 11:30` có các khung giờ hợp lệ:
-
-```text
-07:30 - 08:30
-08:30 - 09:30
-09:30 - 10:30
-10:30 - 11:30
-```
-
-Request không hợp lệ:
-
-```json
-{
-  "idLichTiepDan": "uuid-cua-lich",
-  "slot": "20:00 - 21:00"
-}
-```
-
-Backend cần:
-
-1. Tìm lịch bằng `idLichTiepDan`.
-2. Kiểm tra lịch đang hoạt động và chưa bị xóa.
-3. Sinh danh sách khung giờ hợp lệ từ lịch.
-4. Kiểm tra `slot` có thuộc danh sách đó không.
-5. Từ chối nếu khung giờ không hợp lệ.
-
-Response dự kiến:
-
-```http
-400 Bad Request
-```
-
-```json
-{
-  "success": false,
-  "code": "INVALID_RECEPTION_SLOT",
-  "message": "Khung giờ đăng ký không thuộc lịch tiếp dân"
-}
-```
-
 ## 3. Chống đăng ký trùng và không để vượt sức chứa khi có request đồng thời
 
 Hiện tại backend kiểm tra bản ghi tồn tại rồi mới tạo. Hai hoặc nhiều request đồng thời vẫn có thể cùng vượt qua bước kiểm tra, dẫn đến đăng ký trùng hoặc số người giữ chỗ vượt quá sức chứa.
