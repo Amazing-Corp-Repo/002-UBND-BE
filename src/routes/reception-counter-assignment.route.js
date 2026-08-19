@@ -42,4 +42,13 @@ router.patch(
   ReceptionCounterAssignmentController.update
 );
 
+router.delete(
+  "/:id",
+  authenticate,
+  authorize([PERMISSION.LTD_UPDATE]),
+  validateParams(ReceptionCounterAssignmentParams),
+  receptionAudit(AUDIT_LOGS.DELETE, { tableName: "phan_cong_quay_tiep_dan" }),
+  ReceptionCounterAssignmentController.delete
+);
+
 export default router;

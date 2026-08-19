@@ -166,6 +166,19 @@ const ReceptionCounterAssignmentRepository = {
       return { assignment: updated };
     }, { isolationLevel: "Serializable" });
   },
+
+  async softDelete(id, currentUserId) {
+    const result = await prisma.phan_cong_quay_tiep_dan.updateMany({
+      where: { id, is_delete: false },
+      data: {
+        is_active: false,
+        is_delete: true,
+        nguoi_cap_nhat: currentUserId,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+    });
+    return result.count === 1;
+  },
 };
 
 export default ReceptionCounterAssignmentRepository;

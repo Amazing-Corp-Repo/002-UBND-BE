@@ -29,6 +29,14 @@ const ReceptionCounterAssignmentController = {
     );
     return successResponse(res, data, "Cập nhật phân công quầy thành công");
   },
+
+  async delete(req, res) {
+    await ReceptionCounterAssignmentService.delete(
+      req.validatedParams.id,
+      req.payload.userId
+    );
+    return successResponse(res, null, "Xóa phân công quầy thành công");
+  },
 };
 
 export default ReceptionCounterAssignmentController;

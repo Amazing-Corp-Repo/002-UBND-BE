@@ -147,6 +147,31 @@ const ReceptionCounterAssignmentSwagger = {
         409: { description: "Trùng cán bộ, trùng quầy hoặc xung đột cập nhật đồng thời" },
       },
     },
+    delete: {
+      tags: ["ReceptionCounterAssignment"],
+      summary: "Xóa mềm một phân công cán bộ - quầy",
+      description:
+        "Ngừng hoạt động và đánh dấu xóa logic phân công để vẫn giữ lịch sử dữ liệu. Yêu cầu quyền LTD_UPDATE.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        description: "ID phân công quầy tiếp dân",
+        schema: {
+          type: "string",
+          format: "uuid",
+          example: "423e4567-e89b-42d3-a456-426614174001",
+        },
+      }],
+      responses: {
+        200: { description: "Xóa phân công quầy thành công" },
+        400: { description: "ID phân công không đúng định dạng UUID" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LTD_UPDATE" },
+        404: { description: "Phân công quầy tiếp dân không tồn tại" },
+      },
+    },
   },
   "/api/reception-shifts/{shiftId}/counter-assignments": {
     put: {

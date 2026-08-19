@@ -111,6 +111,16 @@ const ReceptionCounterAssignmentService = {
       throw error;
     }
   },
+
+  async delete(id, currentUserId) {
+    const deleted = await ReceptionCounterAssignmentRepository.softDelete(
+      id,
+      currentUserId
+    );
+    if (!deleted) {
+      throw new BaseError(404, "Phân công quầy tiếp dân không tồn tại");
+    }
+  },
 };
 
 export default ReceptionCounterAssignmentService;
