@@ -1,14 +1,33 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import express from "express";
+import { PERMISSION } from "../src/constants/permission.constant.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionScheduleManagementRepository from "../src/repositories/reception-schedule-management.repository.js";
 import receptionScheduleManagementRouter from "../src/routes/reception-schedule-management.route.js";
 import ReceptionScheduleManagementService from "../src/services/reception-schedule-management.service.js";
 import ReceptionScheduleManagementSwagger from "../src/swagger/reception-schedule-management.swagger.js";
+import jwtUtils from "../src/utils/jwt.util.js";
 
+const userId = "123e4567-e89b-42d3-a456-426614174000";
 const scheduleId = "223e4567-e89b-42d3-a456-426614174000";
 const originalFindDetailById = ReceptionScheduleManagementRepository.findDetailById;
+
+const createToken = (permissions) =>
+  jwtUtils.signAccessToken(
+    {
+      id: userId,
+      ten_dang_nhap: "leader",
+      permissions,
+      cate: null,
+      roles: ["LEADER"],
+    },
+    "127.0.0.1"
+  );
+
+const authHeaders = (permissions = [PERMISSION.LTD_GET_ALL]) => ({
+  authorization: `Bearer ${createToken(permissions)}`,
+});
 
 const scheduleDetail = {
   id: scheduleId,
@@ -56,9 +75,11 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-schedules/management/:id", () => {
-  it("documents slot occupancy in Swagger", () => {
+  it("documents authorization and slot occupancy in Swagger", () => {
     const operation = ReceptionScheduleManagementSwagger["/api/reception-schedules/management/{id}"].get;
 
+    assert.deepEqual(operation.security, [{ bearerAuth: [] }]);
+    assert.ok(operation.description.includes("LTD_GET_ALL"));
     assert.ok(operation.description.includes("số đăng ký đã giữ chỗ"));
     assert.equal(operation.parameters[0].schema.format, "uuid");
     assert.equal(
@@ -66,6 +87,8 @@ describe("GET /api/reception-schedules/management/:id", () => {
         .data.properties.slots.type,
       "array"
     );
+    assert.ok(operation.responses[401]);
+    assert.ok(operation.responses[403]);
     assert.ok(operation.responses[404]);
   });
 
@@ -74,7 +97,8 @@ describe("GET /api/reception-schedules/management/:id", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/reception-schedules/management/not-a-uuid`
+        `http://127.0.0.1:${port}/api/reception-schedules/management/not-a-uuid`,
+        { headers: authHeaders() }
       );
 
       assert.equal(response.status, 400);
@@ -100,12 +124,13 @@ describe("GET /api/reception-schedules/management/:id", () => {
     assert.equal("dang_ky_tiep_dan" in result, false);
   });
 
-  it("integrates the public detail route with the service", async () => {
+  it("integrates the secured management detail route with the service", async () => {
     const server = createTestServer();
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        { headers: authHeaders() }
       );
       const body = await response.json();
 
@@ -123,10 +148,40 @@ describe("GET /api/reception-schedules/management/:id", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        { headers: authHeaders() }
       );
 
       assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`
+      );
+
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 403 without LTD_GET_ALL permission", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        { headers: authHeaders([]) }
+      );
+
+      assert.equal(response.status, 403);
     } finally {
       server.close();
     }

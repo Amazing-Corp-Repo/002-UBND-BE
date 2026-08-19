@@ -483,12 +483,12 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 18 — `GET /api/reception-schedules/management/{id}` — Xem chi tiết lịch, ca và sức chứa từng quầy
 
-- **Trạng thái:** Đã tách sang API tiếng Anh; response slot/sức chứa đã hoàn thành.
-- **Đã làm/hiện có:** Validate UUID; trả chi tiết lịch, các ca, tổng sức chứa, số giữ chỗ/chưa gán quầy và chi tiết từng quầy; Swagger có schema response và ví dụ; test đủ `200`, `400`, `404`.
-- **Chưa làm:** Route vẫn public, chưa có permission xem chi tiết quản lý; response vẫn pha trộn model cũ và field mở rộng.
-- **Cần bổ sung:** Thêm authenticate/permission đọc chi tiết nếu endpoint chỉ dùng nội bộ; chuẩn hóa schema response mà vẫn bảo đảm client cũ không bị phá.
+- **Trạng thái:** Đã hoàn thành API chi tiết lịch quản lý tiếng Anh.
+- **Đã làm/hiện có:** Authenticate, permission `LTD_GET_ALL`, validate UUID; trả chi tiết lịch, các ca, tổng sức chứa, số giữ chỗ/chưa gán quầy và chi tiết từng quầy; Swagger có schema response/ví dụ và test `200`, `400`, `401`, `403`, `404`.
+- **Chưa làm:** Response vẫn dùng tên trường DB snake_case cho thông tin lịch và camelCase cho phần slot mở rộng.
+- **Cần bổ sung:** Chỉ chuẩn hóa toàn bộ response trong phiên bản API mới nếu client chấp nhận thay đổi contract.
 - **Dùng để làm gì:** Lấy chi tiết lịch cho màn hình quản lý, gồm sức chứa từng quầy.
-- **Role áp dụng hiện tại:** Public, chưa có authenticate/permission.
+- **Role áp dụng:** tài khoản cán bộ/lãnh đạo được cấp permission `LTD_GET_ALL`.
 - **Trường hợp áp dụng:** Xem chi tiết một lịch trong màn hình quản lý.
 - **Path đầu vào:** `id` — ID lịch.
 - **Đầu ra:** Bản ghi lịch cũ và `slots[]`; mỗi slot có `timeSlot`, `totalCapacity`, `heldCount`, `unassignedHeldCount`, `remainingCapacity`, `isFull`, `counters[]`. Mỗi quầy có `id`, `counterCode`, `capacity`, `heldCount`, `remainingCapacity`, `isFull`, `isActive`.

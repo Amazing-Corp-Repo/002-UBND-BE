@@ -335,8 +335,9 @@ const ReceptionScheduleManagementSwagger = {
         },
         get: {
             tags: ['ReceptionScheduleManagement'],
+            security: [{ bearerAuth: [] }],
             summary: 'Lấy lịch tiếp dân theo ID',
-            description: 'Trả về chi tiết lịch, từng ca một tiếng, cấu hình 8 quầy, sức chứa, số đăng ký đã giữ chỗ và số chỗ còn lại. Mọi đăng ký đã tạo đều được tính giữ chỗ, kể cả đăng ký đã bị từ chối hoặc xoá mềm.',
+            description: 'Dành cho cán bộ có quyền LTD_GET_ALL. Trả về chi tiết lịch, từng ca một tiếng, cấu hình 8 quầy, sức chứa, số đăng ký đã giữ chỗ và số chỗ còn lại. Mọi đăng ký đã tạo đều được tính giữ chỗ, kể cả đăng ký đã bị từ chối hoặc xoá mềm.',
             parameters: [
                 {
                     name: 'id',
@@ -383,6 +384,8 @@ const ReceptionScheduleManagementSwagger = {
                     },
                 },
                 400: { description: 'ID lịch không hợp lệ hoặc bị thiếu' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_GET_ALL' },
                 404: { description: 'Không tìm thấy lịch tiếp dân' },
             }
         },

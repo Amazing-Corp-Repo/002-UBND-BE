@@ -91,6 +91,8 @@ receptionScheduleManagementRouter.delete(
 
 receptionScheduleManagementRouter.get(
   "/:id",
+  authenticate,
+  authorize([PERMISSION.LTD_GET_ALL]),
   validateParams(ReceptionScheduleManagementIdParams),
   ReceptionScheduleManagementController.getLichTiepDanById
 );
