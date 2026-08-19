@@ -68,7 +68,7 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Cập nhật sức chứa của một quầy trong ca tiếp dân",
       description:
-        "Cán bộ có quyền LTD_UPDATE được đặt sức chứa là số nguyên từ 1 trở lên và không giới hạn tối đa. Không được giảm thấp hơn số đơn đã gán vào quầy hoặc làm tổng sức chứa của ca thấp hơn tổng số đơn đã giữ chỗ.",
+        "Cán bộ có quyền LTD_UPDATE được đặt sức chứa là số nguyên từ 1 trở lên và không giới hạn tối đa. Backend đếm đơn theo quan hệ id_cau_hinh_quay, đồng thời hỗ trợ dữ liệu cũ bằng bo_phan. Không được giảm thấp hơn số đơn đã gán vào quầy hoặc làm tổng sức chứa của ca thấp hơn tổng số đơn đã giữ chỗ.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "scheduleId", in: "path", required: true, schema: { type: "string", format: "uuid" } },

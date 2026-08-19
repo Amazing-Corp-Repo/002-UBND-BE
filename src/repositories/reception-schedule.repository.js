@@ -35,6 +35,7 @@ const ReceptionScheduleRepository = {
           },
         },
         dang_ky_tiep_dan: {
+          where: { loai: "COUNTER_RECEPTION" },
           select: { slot: true },
         },
       },
@@ -64,13 +65,24 @@ const ReceptionScheduleRepository = {
           select: { suc_chua: true },
         }),
         tx.dang_ky_tiep_dan.count({
-          where: { id_lich_tiep_dan: scheduleId, slot: slot.khung_gio },
+          where: {
+            loai: "COUNTER_RECEPTION",
+            id_lich_tiep_dan: scheduleId,
+            slot: slot.khung_gio,
+          },
         }),
         tx.dang_ky_tiep_dan.count({
           where: {
-            id_lich_tiep_dan: scheduleId,
-            slot: slot.khung_gio,
-            bo_phan: slot.ma_quay,
+            loai: "COUNTER_RECEPTION",
+            OR: [
+              { id_cau_hinh_quay: slot.id },
+              {
+                id_cau_hinh_quay: null,
+                id_lich_tiep_dan: scheduleId,
+                slot: slot.khung_gio,
+                bo_phan: slot.ma_quay,
+              },
+            ],
           },
         }),
       ]);
