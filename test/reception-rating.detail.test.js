@@ -5,6 +5,7 @@ import { PERMISSION } from "../src/constants/permission.constant.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionRatingRepository from "../src/repositories/reception-rating.repository.js";
 import receptionRatingRouter from "../src/routes/reception-rating.route.js";
+import ReceptionRatingSwagger from "../src/swagger/reception-rating.swagger.js";
 import jwtUtils from "../src/utils/jwt.util.js";
 
 const ratingId = "123e4567-e89b-42d3-a456-426614174000";
@@ -28,7 +29,7 @@ const rating = {
     cccd: "042204001234",
     dia_chi: "Thành phố Hà Tĩnh",
     bo_phan: "QUAY_1",
-    trang_thai: "APPROVED",
+    trang_thai: "COMPLETED",
     ten_lanh_dao: "Lãnh đạo A",
     chuc_vu_lanh_dao: "LEADER",
     thoi_gian_cap_nhat: new Date(),
@@ -64,6 +65,24 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-ratings/:id", () => {
+  it("documents rating, applicant and schedule details in Swagger", () => {
+    const operation = ReceptionRatingSwagger["/api/reception-ratings/{id}"].get;
+    const dataSchema =
+      operation.responses[200].content["application/json"].schema.properties
+        .data;
+
+    assert.equal(operation.security[0].bearerAuth.length, 0);
+    assert.equal(dataSchema.properties.score.maximum, 5);
+    assert.equal(
+      dataSchema.properties.registration.properties.applicant.type,
+      "object"
+    );
+    assert.equal(
+      dataSchema.properties.registration.properties.schedule.nullable,
+      true
+    );
+  });
+
   it("returns rating and original registration details", async () => {
     const server = createTestServer();
     const { port } = server.address();
@@ -87,8 +106,64 @@ describe("GET /api/reception-ratings/:id", () => {
     }
   });
 
+  it("returns 400 for an invalid rating UUID", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings/not-a-uuid`,
+        {
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RRT_GET_DETAIL])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings/${ratingId}`
+      );
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
+  });
+
   it("returns 404 when rating does not exist", async () => {
     ReceptionRatingRepository.findDetailById = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-ratings/${ratingId}`,
+        {
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RRT_GET_DETAIL])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 404 when the rating is not for counter reception", async () => {
+    ReceptionRatingRepository.findDetailById = async () => ({
+      ...rating,
+      dang_ky_tiep_dan: {
+        ...rating.dang_ky_tiep_dan,
+        loai: "LEADER_MEETING",
+      },
+    });
     const server = createTestServer();
     const { port } = server.address();
     try {

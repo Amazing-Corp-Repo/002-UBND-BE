@@ -394,7 +394,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 14 — `GET /api/reception-ratings/{id}` — Lãnh đạo xem chi tiết đánh giá
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Authenticate, `RRT_GET_DETAIL`, trả đánh giá và đăng ký/lịch gốc, Swagger và test.
+- **Đã làm/hiện có:** Authenticate, `RRT_GET_DETAIL`, validate UUID, chỉ lấy đánh giá thuộc loại tiếp dân tại quầy, trả đánh giá và đăng ký/lịch gốc; Swagger có schema response và test đủ `200`, `400`, `401`, `403`, `404`.
 - **Chưa làm:** Chưa có data-scope theo đơn vị; thông tin người dân được trả đầy đủ cho người có permission.
 - **Cần bổ sung:** Chốt phạm vi xem dữ liệu cá nhân theo role/đơn vị; nếu cần thì che trường hoặc thêm permission dữ liệu nhạy cảm.
 - **Dùng để làm gì:** Lãnh đạo xem một đánh giá cùng toàn bộ đơn tiếp dân gốc.

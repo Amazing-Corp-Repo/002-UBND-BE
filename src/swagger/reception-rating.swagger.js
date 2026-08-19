@@ -222,7 +222,96 @@ const ReceptionRatingSwagger = {
         },
       ],
       responses: {
-        200: { description: "Lấy chi tiết đánh giá tiếp dân thành công" },
+        200: {
+          description: "Lấy chi tiết đánh giá tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["success", "data", "message"],
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string", format: "uuid" },
+                      score: { type: "integer", minimum: 1, maximum: 5 },
+                      selectedSuggestions: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      comment: { type: "string", maxLength: 2000 },
+                      ratedAt: { type: "string", format: "date-time" },
+                      registration: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", format: "uuid" },
+                          receptionCode: { type: "string", example: "A00123" },
+                          receptionDate: { type: "string", format: "date-time" },
+                          timeSlot: { type: "string", example: "08:00 - 09:00" },
+                          topic: { type: "string", example: "Hướng dẫn thủ tục" },
+                          workingContent: { type: "string" },
+                          applicant: {
+                            type: "object",
+                            properties: {
+                              fullName: { type: "string" },
+                              phoneNumber: { type: "string" },
+                              citizenId: { type: "string" },
+                              address: { type: "string" },
+                            },
+                          },
+                          department: {
+                            type: "string",
+                            enum: [
+                              "QUAY_1",
+                              "QUAY_2",
+                              "QUAY_3",
+                              "QUAY_4",
+                              "QUAY_5",
+                              "QUAY_6",
+                              "QUAY_7",
+                              "QUAY_8",
+                            ],
+                          },
+                          approvalStatus: {
+                            type: "string",
+                            enum: ["PENDING", "APPROVED", "COMPLETED", "REJECTED"],
+                          },
+                          approver: {
+                            type: "object",
+                            nullable: true,
+                            properties: {
+                              name: { type: "string" },
+                              title: { type: "string", nullable: true },
+                              approvedAt: { type: "string", format: "date-time" },
+                            },
+                          },
+                          schedule: {
+                            type: "object",
+                            nullable: true,
+                            properties: {
+                              id: { type: "string", format: "uuid" },
+                              officerName: { type: "string" },
+                              location: { type: "string" },
+                              receptionDate: { type: "string", format: "date-time" },
+                              timeRange: { type: "string" },
+                              note: { type: "string", nullable: true },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  message: {
+                    type: "string",
+                    example: "Lấy chi tiết đánh giá tiếp dân thành công",
+                  },
+                  pagination: { nullable: true, example: null },
+                },
+              },
+            },
+          },
+        },
         400: { description: "ID đánh giá không hợp lệ" },
         401: { description: "Thiếu hoặc sai access token" },
         403: { description: "Không có quyền RRT_GET_DETAIL" },
