@@ -94,6 +94,15 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
   });
 
   it("approves a pending registration and assigns a counter", async () => {
+    let persistedApprovalData;
+    DangKyTiepDanRepository.approvePendingWithCounterGuard = async (
+      _id,
+      _department,
+      data
+    ) => {
+      persistedApprovalData = data;
+      return { registration: approvedDetail };
+    };
     const server = createTestServer();
     const { port } = server.address();
     try {
@@ -113,6 +122,10 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
       assert.equal(response.status, 200);
       assert.equal(body.data.department, "QUAY_3");
       assert.equal(body.data.approver.name, "Nguyễn Văn Lãnh đạo");
+      assert.equal(
+        persistedApprovalData.nguoi_duyet_don,
+        "223e4567-e89b-42d3-a456-426614174000"
+      );
     } finally {
       server.close();
     }
