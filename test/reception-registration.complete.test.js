@@ -73,6 +73,10 @@ describe("PATCH /api/reception-registrations/:id/complete", () => {
     assert.ok(operation.description.includes("APPROVED sang COMPLETED"));
     assert.ok(operation.description.includes("mới được đánh giá"));
     assert.ok(operation.responses[403]);
+    assert.ok(
+      operation.responses[200].content["application/json"].schema.properties.data
+        .properties.completedAt
+    );
   });
 
   it("completes an approved registration with RR_COMPLETE permission", async () => {
@@ -159,6 +163,79 @@ describe("PATCH /api/reception-registrations/:id/complete", () => {
       );
 
       assert.equal(response.status, 403);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 404 when the registration does not exist", async () => {
+    DangKyTiepDanRepository.findActiveById = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/complete`,
+        {
+          method: "PATCH",
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RR_COMPLETE])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 409 when another request completed the registration first", async () => {
+    DangKyTiepDanRepository.completeApproved = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/complete`,
+        {
+          method: "PATCH",
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RR_COMPLETE])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 409);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/complete`,
+        { method: "PATCH" }
+      );
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for an invalid registration UUID", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/not-a-uuid/complete`,
+        {
+          method: "PATCH",
+          headers: {
+            authorization: `Bearer ${createToken([PERMISSION.RR_COMPLETE])}`,
+          },
+        }
+      );
+      assert.equal(response.status, 400);
     } finally {
       server.close();
     }

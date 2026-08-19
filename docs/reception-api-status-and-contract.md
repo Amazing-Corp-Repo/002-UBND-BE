@@ -275,7 +275,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 08 — `PATCH /api/reception-registrations/{id}/complete` — Xác nhận hoàn thành buổi tiếp dân
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Permission `RR_COMPLETE`, chỉ chuyển `APPROVED → COMPLETED`, bắt buộc đã phân quầy, lưu người/thời điểm hoàn thành, chống xử lý lặp, audit, Swagger và test.
+- **Đã làm/hiện có:** Permission `RR_COMPLETE`, chỉ chuyển `APPROVED → COMPLETED`, bắt buộc đã phân quầy, lưu người/thời điểm hoàn thành, chống xử lý lặp/đồng thời, audit và Swagger có schema response chi tiết. Test phủ `200`, `400`, `401`, `403`, `404`, `409`.
 - **Chưa làm:** Chưa có API mở lại đơn đã `COMPLETED`.
 - **Cần bổ sung:** Không cần mở lại theo luồng đã chốt; nếu cho phép sửa sai phải thiết kế permission riêng và audit bắt buộc.
 - **Dùng để làm gì:** Xác nhận buổi tiếp dân đã thực sự kết thúc.

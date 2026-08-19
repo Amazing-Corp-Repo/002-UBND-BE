@@ -363,7 +363,24 @@ const DangKyTiepDanSwagger = {
         },
       ],
       responses: {
-        200: { description: "Hoàn thành buổi tiếp dân thành công" },
+        200: {
+          description: "Hoàn thành buổi tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: staffRegistrationDetailSchema,
+                  message: {
+                    type: "string",
+                    example: "Hoàn thành buổi tiếp dân thành công",
+                  },
+                },
+              },
+            },
+          },
+        },
         400: { description: "ID đăng ký không hợp lệ" },
         401: { description: "Thiếu hoặc sai access token" },
         403: { description: "Không có quyền RR_COMPLETE" },
