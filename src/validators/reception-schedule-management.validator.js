@@ -43,6 +43,14 @@ export const UpdateLStatusLichTiepDanRequest = Joi.object({
             'any.required': 'Trạng thái hoạt động là bắt buộc',
         }),
 });
+
+export const ReceptionScheduleManagementIdParams = Joi.object({
+    id: Joi.string().uuid().required().messages({
+        'string.guid': 'ID lịch tiếp dân không hợp lệ',
+        'any.required': 'ID lịch tiếp dân là bắt buộc',
+    }),
+});
+
 export const CreateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()
         .trim()
@@ -138,10 +146,9 @@ export const UpdateLichTiepDanRequest = Joi.object({
             'array.min': 'Phải có ít nhất một khoảng làm việc',
             'array.max': 'Chỉ hỗ trợ tối đa hai khoảng làm việc trong ngày',
         }),
-    ngayTiepDan: Joi.date()
+    ngayTiepDan: calendarDateSchema('Ngày tiếp dân')
         .required()
         .messages({
-            'date.base': 'Ngày tiếp dân không hợp lệ',
             'any.required': 'Ngày tiếp dân là bắt buộc',
         }),
     ghiChu: Joi.string()
@@ -153,6 +160,7 @@ export const UpdateLichTiepDanRequest = Joi.object({
             'string.base': 'Ghi chú phải là chuỗi ký tự',
             'string.max': 'Ghi chú không được vượt quá 255 ký tự',
         }),
-}).and('batDau', 'ketThuc').messages({
+}).and('batDau', 'ketThuc').custom(rejectMixedTimeConfiguration).messages({
     'object.and': 'Thời gian bắt đầu và kết thúc phải được truyền cùng nhau',
+    'object.timeConfigurationConflict': 'Chỉ được dùng workingPeriods hoặc cặp batDau/ketThuc',
 });

@@ -102,9 +102,54 @@ describe("PUT /api/reception-schedules/management/:id", () => {
 
     assert.ok(operation.description.includes("Không được đổi ngày hoặc giờ"));
     assert.ok(operation.requestBody.content["application/json"].example.workingPeriods);
-    assert.ok(operation.responses[200]);
+    assert.equal(
+      operation.responses[200].content["application/json"].schema.properties
+        .data.properties.slots.type,
+      "array"
+    );
     assert.ok(operation.responses[400]);
     assert.ok(operation.responses[403]);
+  });
+
+  it("returns 400 for an invalid schedule UUID", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/not-a-uuid`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.LTD_UPDATE])}`,
+          },
+          body: JSON.stringify(validBody),
+        }
+      );
+
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(validBody),
+        }
+      );
+
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
   });
 
   it("updates metadata without rebuilding existing slots", async () => {
@@ -230,6 +275,102 @@ describe("PUT /api/reception-schedules/management/:id", () => {
       );
 
       assert.equal(response.status, 403);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 404 when the schedule does not exist", async () => {
+    ReceptionScheduleManagementRepository.findById = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.LTD_UPDATE])}`,
+          },
+          body: JSON.stringify(validBody),
+        }
+      );
+
+      assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 when the updated officer and date duplicate another schedule", async () => {
+    ReceptionScheduleManagementRepository.findByCanBoAndNgayExcludeId =
+      async () => ({ id: "323e4567-e89b-42d3-a456-426614174000" });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.LTD_UPDATE])}`,
+          },
+          body: JSON.stringify(validBody),
+        }
+      );
+
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for a reception date that does not exist", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.LTD_UPDATE])}`,
+          },
+          body: JSON.stringify({ ...validBody, ngayTiepDan: "2099-02-30" }),
+        }
+      );
+
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 when both time configuration modes are sent", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management/${scheduleId}`,
+        {
+          method: "PUT",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.LTD_UPDATE])}`,
+          },
+          body: JSON.stringify({
+            ...validBody,
+            batDau: "07:30",
+            ketThuc: "11:30",
+            workingPeriods: [{ startTime: "13:30", endTime: "16:30" }],
+          }),
+        }
+      );
+
+      assert.equal(response.status, 400);
     } finally {
       server.close();
     }

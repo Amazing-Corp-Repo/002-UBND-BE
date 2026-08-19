@@ -8,10 +8,12 @@ import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
   CreateLichTiepDanRequest,
+  ReceptionScheduleManagementIdParams,
   UpdateLichTiepDanRequest,
   UpdateLStatusLichTiepDanRequest,
 } from "../validators/reception-schedule-management.validator.js";
 import { PERMISSION, PERMISSION_DESC } from "../constants/permission.constant.js";
+import validateParams from "../middlewares/validate-params.middleware.js";
 
 const receptionScheduleManagementRouter = express.Router();
 
@@ -90,6 +92,7 @@ receptionScheduleManagementRouter.put(
   "/:id",
   authenticate,
   authorize([PERMISSION.LTD_UPDATE]),
+  validateParams(ReceptionScheduleManagementIdParams),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.LTD_UPDATE),
   validate(UpdateLichTiepDanRequest),
   ReceptionScheduleManagementController.updateLichTiepDan

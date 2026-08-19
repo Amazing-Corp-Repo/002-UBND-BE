@@ -235,6 +235,7 @@ const ReceptionScheduleManagementSwagger = {
                     required: true,
                     schema: {
                         type: 'string',
+                        format: 'uuid',
                         example: '123e4567-e89b-12d3-a456-426614174000',
                     },
                 },
@@ -328,7 +329,14 @@ const ReceptionScheduleManagementSwagger = {
                 },
             },
             responses: {
-                200: { description: 'Cập nhật lịch thành công' },
+                200: {
+                    description: 'Cập nhật lịch thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.ScheduleWithSlotsSuccessSchema,
+                        },
+                    },
+                },
                 400: { description: 'Dữ liệu không hợp lệ, lịch trùng hoặc lịch đã có đăng ký giữ chỗ nên không thể đổi ngày/giờ' },
                 401: { description: 'Thiếu hoặc sai access token' },
                 403: { description: 'Không có quyền LTD_UPDATE' },

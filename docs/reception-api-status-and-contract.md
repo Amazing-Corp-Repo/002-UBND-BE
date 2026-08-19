@@ -464,7 +464,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 17 — `PUT /api/reception-schedules/management/{id}` — Cập nhật thông tin và thời gian lịch tiếp dân
 
 - **Trạng thái:** Đã tách sang API tiếng Anh; nghiệp vụ cập nhật an toàn đã hoàn thành.
-- **Đã làm/hiện có:** Authenticate, `LTD_UPDATE`, cập nhật metadata/working periods, chặn đổi ngày/giờ khi có đăng ký giữ chỗ, giữ cấu hình sức chứa khi chỉ đổi metadata, rebuild slot khi được phép, audit và Swagger.
+- **Đã làm/hiện có:** Authenticate, `LTD_UPDATE`, validate UUID và ngày có thật theo `YYYY-MM-DD`, chỉ nhận một cách cấu hình giờ, cập nhật metadata/working periods, chặn đổi ngày/giờ khi có đăng ký giữ chỗ, giữ cấu hình sức chứa khi chỉ đổi metadata, rebuild slot khi được phép, chống trùng cán bộ/ngày, audit; Swagger có schema response và test đủ `200`, `400`, `401`, `403`, `404`.
 - **Chưa làm:** Chưa có quy tắc chuyển lịch thay thế khi buộc phải đổi giờ; cán bộ vẫn là chuỗi; chưa chuẩn hóa toàn bộ lỗi thành `409` cho xung đột nghiệp vụ.
 - **Cần bổ sung:** Chỉ cần thiết kế lịch thay thế nếu nghiệp vụ cho đổi lịch đã có người đăng ký; tiếp tục giữ quy tắc hiện tại nếu không cho đổi.
 - **Dùng để làm gì:** Sửa thông tin hoặc thời gian của lịch tiếp dân.
