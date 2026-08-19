@@ -1,5 +1,33 @@
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
 
+const PARAMETER_TEST_VALUES = {
+  id: "123e4567-e89b-42d3-a456-426614174000",
+  scheduleId: "123e4567-e89b-42d3-a456-426614174000",
+  slotId: "223e4567-e89b-42d3-a456-426614174000",
+  receptionCode: "A00123",
+  fromDate: "2099-08-25",
+  toDate: "2099-08-31",
+  receptionDate: "2099-08-25",
+  date: "2099-08-25",
+  weekYear: "35/2099",
+  monthYear: "8/2099",
+  isActive: true,
+  page: 1,
+  size: 10,
+  search: "Nguyễn Văn An",
+  score: 5,
+  department: "QUAY_3",
+  approvalStatus: "PENDING",
+  ratingStatus: "NOT_RATED",
+};
+
+const PARAMETER_NOTES = {
+  id: "Giá trị trên chỉ là UUID mẫu; khi chạy thử cần thay bằng ID bản ghi thật trong database.",
+  scheduleId: "Khi chạy thử cần thay bằng ID lịch thật lấy từ API danh sách lịch tiếp dân.",
+  slotId: "Khi chạy thử cần thay bằng slotId thật thuộc đúng lịch đã chọn.",
+  receptionCode: "Khi chạy thử cần thay bằng mã tiếp dân thật; luồng đánh giá yêu cầu đơn đã COMPLETED.",
+};
+
 const DEFAULT_ERROR_EXAMPLES = {
   400: {
     summary: "Demo 400 - Dữ liệu không hợp lệ",
@@ -84,6 +112,19 @@ export const applyReceptionDemoExamples = (swagger, demos = {}) => {
       if (!operation) continue;
 
       const demo = demos[`${method.toUpperCase()} ${path}`] || {};
+      for (const parameter of operation.parameters || []) {
+        if (!(parameter.name in PARAMETER_TEST_VALUES)) continue;
+        parameter.example = PARAMETER_TEST_VALUES[parameter.name];
+        if (PARAMETER_NOTES[parameter.name]) {
+          const note = PARAMETER_NOTES[parameter.name];
+          if (!parameter.description?.includes(note)) {
+            parameter.description = parameter.description
+              ? `${parameter.description} ${note}`
+              : note;
+          }
+        }
+      }
+
       const requestExamples = asNamedExamples(demo.request, "validRequest");
       if (requestExamples && operation.requestBody?.content) {
         const contentType = demo.requestContentType || "application/json";

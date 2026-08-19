@@ -44,6 +44,21 @@ describe("Reception Swagger demo examples", () => {
     }
   });
 
+  it("prefills every path and query parameter with a test value", () => {
+    for (const { path, method, operation } of operations) {
+      for (const parameter of operation.parameters || []) {
+        assert.notEqual(
+          parameter.example,
+          undefined,
+          `${method.toUpperCase()} ${path} thiếu giá trị test cho ${parameter.name}`
+        );
+        if (["id", "scheduleId", "slotId"].includes(parameter.name)) {
+          assert.ok(parameter.description.includes("thay bằng"));
+        }
+      }
+    }
+  });
+
   it("provides selectable valid and invalid request demos for main write flows", () => {
     const registrationExamples =
       DangKyTiepDanSwagger["/api/reception-registrations"].post.requestBody
