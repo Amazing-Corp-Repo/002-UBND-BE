@@ -1,3 +1,9 @@
+import {
+  applyReceptionDemoExamples,
+  errorDemo,
+  successDemo,
+} from "./reception-demo-example.util.js";
+
 const ReceptionScheduleSwagger = {
   "/api/reception-schedules": {
     get: {
@@ -90,5 +96,47 @@ const ReceptionScheduleSwagger = {
     },
   },
 };
+
+applyReceptionDemoExamples(ReceptionScheduleSwagger, {
+  "GET /api/reception-schedules": {
+    responses: {
+      400: errorDemo(
+        "Demo 400 - Khoảng ngày không hợp lệ",
+        "Ngày bắt đầu không được sau ngày kết thúc"
+      ),
+    },
+  },
+  "PATCH /api/reception-schedules/{scheduleId}/slots/{slotId}/capacity": {
+    request: {
+      validCapacity: {
+        summary: "Demo hợp lệ - tăng sức chứa quầy lên 3",
+        value: { capacity: 3 },
+      },
+      invalidCapacity: {
+        summary: "Demo lỗi 400 - sức chứa nhỏ hơn 1",
+        value: { capacity: 0 },
+      },
+    },
+    responses: {
+      200: successDemo("Cập nhật sức chứa quầy thành công", {
+        counterCode: "QUAY_1",
+        capacity: 3,
+        heldCount: 1,
+        remainingCapacity: 2,
+        slotTotalCapacity: 17,
+      }),
+      409: {
+        belowCounterHeldCount: errorDemo(
+          "Demo 409 - Thấp hơn số đơn của quầy",
+          "Không được giảm sức chứa quầy thấp hơn số đăng ký đã gán"
+        ),
+        belowSlotHeldCount: errorDemo(
+          "Demo 409 - Thấp hơn tổng số đơn của ca",
+          "Không được giảm tổng sức chứa ca thấp hơn số đăng ký đã giữ chỗ"
+        ),
+      },
+    },
+  },
+});
 
 export default ReceptionScheduleSwagger;

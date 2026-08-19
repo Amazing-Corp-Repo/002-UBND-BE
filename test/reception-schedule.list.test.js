@@ -45,17 +45,17 @@ describe("GET /api/reception-schedules", () => {
     assert.ok(operation.description.includes("số chỗ đã giữ"));
     assert.ok(operation.responses[200]);
     assert.equal(
-      operation.responses[200].content["application/json"].example.data[0]
+      operation.responses[200].content["application/json"].examples.success.value.data[0]
         .slots[0].isFull,
       false
     );
     assert.equal(
-      operation.responses[200].content["application/json"].example.data[0]
+      operation.responses[200].content["application/json"].examples.success.value.data[0]
         .slots[0].status,
       "AVAILABLE"
     );
     assert.ok(
-      operation.responses[200].content["application/json"].example.data[0]
+      operation.responses[200].content["application/json"].examples.success.value.data[0]
         .slots[0].slotId
     );
   });

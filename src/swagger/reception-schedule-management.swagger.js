@@ -1,4 +1,9 @@
 import { ReceptionScheduleManagementSchemas } from "../schemas/reception-schedule-management.schema.js";
+import {
+    applyReceptionDemoExamples,
+    errorDemo,
+    successDemo,
+} from "./reception-demo-example.util.js";
 
 const ReceptionScheduleManagementSwagger = {
     '/api/reception-schedules/management/import': {
@@ -507,5 +512,199 @@ const ReceptionScheduleManagementSwagger = {
         },
     },
 }
+
+const managementScheduleDemo = {
+    id: '123e4567-e89b-42d3-a456-426614174000',
+    ten_can_bo: 'Nguyễn Văn An',
+    dia_diem: 'Bộ phận tiếp công dân',
+    ngay_tiep_dan: '2026-08-26T00:00:00.000Z',
+    thoi_gian: '07:30 - 16:30',
+    ghi_chu: 'Tiếp công dân định kỳ',
+    is_active: true,
+    is_delete: false,
+};
+
+const managementScheduleWithSlotsDemo = {
+    ...managementScheduleDemo,
+    slots: [{
+        timeSlot: '07:30 - 08:30',
+        totalCapacity: 16,
+        heldCount: 3,
+        unassignedHeldCount: 1,
+        remainingCapacity: 13,
+        isFull: false,
+        counters: [{
+            id: '223e4567-e89b-42d3-a456-426614174000',
+            counterCode: 'QUAY_1',
+            capacity: 2,
+            heldCount: 1,
+            remainingCapacity: 1,
+            isFull: false,
+            isActive: true,
+        }],
+    }],
+};
+
+applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
+    'POST /api/reception-schedules/management/import': {
+        responses: {
+            200: successDemo('Import lịch tiếp dân thành công', {
+                importedCount: 2,
+                totalCounterSlots: 112,
+            }),
+            400: errorDemo(
+                'Demo 400 - File có dòng không hợp lệ',
+                'Dữ liệu trong file không hợp lệ',
+                [{ field: 'row 3', message: 'Thời gian kết thúc phải sau thời gian bắt đầu' }]
+            ),
+            409: errorDemo(
+                'Demo 409 - Lịch trong file bị trùng',
+                'Lịch tiếp dân của cán bộ vào ngày này đã tồn tại'
+            ),
+        },
+    },
+    'GET /api/reception-schedules/management': {
+        responses: {
+            200: successDemo('Lấy danh sách lịch tiếp dân thành công', [managementScheduleDemo]),
+            400: errorDemo(
+                'Demo 400 - Dùng nhiều bộ lọc thời gian',
+                'Dữ liệu không hợp lệ',
+                [{ field: '', message: 'Chỉ được dùng một trong các bộ lọc weekYear, monthYear hoặc date' }]
+            ),
+        },
+    },
+    'POST /api/reception-schedules/management': {
+        responses: {
+            200: successDemo('Tạo lịch tiếp dân thành công', managementScheduleWithSlotsDemo),
+            400: {
+                invalidTime: errorDemo(
+                    'Demo 400 - Khoảng thời gian không hợp lệ',
+                    'Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc'
+                ),
+                duplicateSchedule: errorDemo(
+                    'Demo 400 - Lịch cán bộ bị trùng',
+                    'Lịch tiếp dân của cán bộ vào ngày này đã tồn tại'
+                ),
+            },
+        },
+    },
+    'GET /api/reception-schedules/management/pagination': {
+        responses: {
+            200: successDemo(
+                'Lấy danh sách lịch tiếp dân có phân trang thành công',
+                [managementScheduleDemo],
+                { currentPage: 1, pageSize: 10, totalPages: 1, totalItems: 1 }
+            ),
+            400: errorDemo(
+                'Demo 400 - Kích thước trang vượt giới hạn',
+                'Dữ liệu không hợp lệ',
+                [{ field: 'size', message: 'Kích thước trang không được vượt quá 100' }]
+            ),
+        },
+    },
+    'GET /api/reception-schedules/management/count': {
+        responses: {
+            200: successDemo('Đếm lịch tiếp dân thành công', {
+                total: 12,
+                active: 9,
+                inactive: 3,
+            }),
+        },
+    },
+    'DELETE /api/reception-schedules/management/{id}': {
+        responses: {
+            200: successDemo('Xóa lịch tiếp dân thành công', null),
+            409: {
+                activeSchedule: errorDemo(
+                    'Demo 409 - Lịch vẫn đang hoạt động',
+                    'Chỉ được xóa lịch đã ngừng hoạt động'
+                ),
+                heldRegistration: errorDemo(
+                    'Demo 409 - Lịch đã có người giữ chỗ',
+                    'Không thể xóa lịch tiếp dân đã có đăng ký giữ chỗ'
+                ),
+            },
+        },
+    },
+    'GET /api/reception-schedules/management/{id}': {
+        responses: {
+            200: successDemo('Lấy chi tiết lịch tiếp dân thành công', managementScheduleWithSlotsDemo),
+            404: errorDemo(
+                'Demo 404 - ID lịch không tồn tại',
+                'Lịch tiếp dân không tồn tại'
+            ),
+        },
+    },
+    'PUT /api/reception-schedules/management/{id}': {
+        request: {
+            updateMetadata: {
+                summary: 'Demo hợp lệ - chỉ cập nhật thông tin mô tả',
+                value: {
+                    tenCanBo: 'Nguyễn Văn An',
+                    diaDiem: 'Bộ phận tiếp công dân',
+                    ghiChu: 'Lịch đã được lãnh đạo điều chỉnh',
+                },
+            },
+            updateWorkingPeriods: {
+                summary: 'Demo hợp lệ - cập nhật hai khoảng làm việc',
+                value: {
+                    ngayTiepDan: '2026-08-26',
+                    workingPeriods: [
+                        { startTime: '07:30', endTime: '11:30' },
+                        { startTime: '13:30', endTime: '16:30' },
+                    ],
+                },
+            },
+            invalidSingleBoundary: {
+                summary: 'Demo lỗi 400 - chỉ gửi một mốc thời gian',
+                value: { batDau: '07:30' },
+            },
+        },
+        responses: {
+            200: successDemo('Cập nhật lịch tiếp dân thành công', managementScheduleWithSlotsDemo),
+            400: errorDemo(
+                'Demo 400 - Lịch đã có đăng ký giữ chỗ',
+                'Không được thay đổi ngày hoặc thời gian khi lịch đã có đăng ký giữ chỗ'
+            ),
+        },
+    },
+    'PUT /api/reception-schedules/management/{id}/status': {
+        request: {
+            activateSchedule: {
+                summary: 'Demo hợp lệ - bật lịch',
+                value: { isActive: true },
+            },
+            deactivateSchedule: {
+                summary: 'Demo hợp lệ - ngừng lịch chưa có đăng ký',
+                value: { isActive: false },
+            },
+            missingStatus: {
+                summary: 'Demo lỗi 400 - thiếu trạng thái',
+                value: {},
+            },
+        },
+        responses: {
+            200: successDemo('Cập nhật trạng thái lịch tiếp dân thành công', {
+                ...managementScheduleDemo,
+                is_active: false,
+            }),
+            409: errorDemo(
+                'Demo 409 - Lịch đã có người giữ chỗ',
+                'Không thể ngừng lịch tiếp dân đã có đăng ký giữ chỗ'
+            ),
+        },
+    },
+    'GET /api/reception-schedules/management/template': {
+        responses: {
+            200: successDemo('Lấy template lịch tiếp dân thành công', {
+                relative_url: '/static/template-lich-tiep-dan.xlsx',
+            }),
+            500: errorDemo(
+                'Demo 500 - File mẫu không tồn tại',
+                'File Excel mẫu không tồn tại trên máy chủ'
+            ),
+        },
+    },
+});
 
 export default ReceptionScheduleManagementSwagger;

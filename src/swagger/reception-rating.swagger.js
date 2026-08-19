@@ -1,3 +1,9 @@
+import {
+  applyReceptionDemoExamples,
+  errorDemo,
+  successDemo,
+} from "./reception-demo-example.util.js";
+
 const ReceptionRatingSwagger = {
   "/api/reception-ratings": {
     get: {
@@ -421,5 +427,167 @@ const ReceptionRatingSwagger = {
     },
   },
 };
+
+const ratingDemo = {
+  id: "423e4567-e89b-42d3-a456-426614174000",
+  receptionCode: "A00123",
+  applicantName: "Nguyễn Văn An",
+  department: "QUAY_3",
+  receptionDate: "2026-08-26T00:00:00.000Z",
+  timeSlot: "07:30 - 08:30",
+  topic: "Hướng dẫn thủ tục hành chính",
+  score: 5,
+  selectedSuggestions: [
+    "Cán bộ rất tận tình và chuyên nghiệp",
+    "Yêu cầu được giải thích đầy đủ, rõ ràng",
+  ],
+  comment: "Tôi hài lòng với quá trình tiếp dân.",
+  ratedAt: "2026-08-26T08:35:00.000Z",
+};
+
+applyReceptionDemoExamples(ReceptionRatingSwagger, {
+  "GET /api/reception-ratings": {
+    responses: {
+      200: successDemo(
+        "Lấy danh sách đánh giá tiếp dân thành công",
+        [ratingDemo],
+        { currentPage: 1, pageSize: 10, totalPages: 1, totalItems: 1 }
+      ),
+      400: errorDemo(
+        "Demo 400 - Khoảng ngày không hợp lệ",
+        "Ngày bắt đầu không được sau ngày kết thúc"
+      ),
+    },
+  },
+  "POST /api/reception-ratings": {
+    request: {
+      validFiveStarRating: {
+        summary: "Demo hợp lệ - đánh giá 5 sao",
+        value: {
+          receptionCode: "A00123",
+          score: 5,
+          selectedSuggestions: [
+            "Cán bộ rất tận tình và chuyên nghiệp",
+            "Yêu cầu được giải thích đầy đủ, rõ ràng",
+          ],
+          comment: "Tôi hài lòng với quá trình tiếp dân.",
+        },
+      },
+      missingScore: {
+        summary: "Demo lỗi 400 - thiếu số sao",
+        value: { receptionCode: "A00123" },
+      },
+      suggestionDoesNotMatchScore: {
+        summary: "Demo lỗi 400 - gợi ý không đúng số sao",
+        value: {
+          receptionCode: "A00123",
+          score: 1,
+          selectedSuggestions: ["Cán bộ rất tận tình và chuyên nghiệp"],
+        },
+      },
+    },
+    responses: {
+      200: successDemo("Gửi đánh giá tiếp dân thành công", {
+        id: ratingDemo.id,
+        receptionCode: ratingDemo.receptionCode,
+        score: ratingDemo.score,
+        selectedSuggestions: ratingDemo.selectedSuggestions,
+        comment: ratingDemo.comment,
+        createdAt: ratingDemo.ratedAt,
+      }),
+      400: {
+        missingData: errorDemo(
+          "Demo 400 - Thiếu dữ liệu bắt buộc",
+          "Dữ liệu không hợp lệ",
+          [{ field: "score", message: "Điểm đánh giá là bắt buộc" }]
+        ),
+        invalidSuggestion: errorDemo(
+          "Demo 400 - Gợi ý không đúng số sao",
+          "Gợi ý đã chọn không phù hợp với số sao đánh giá"
+        ),
+      },
+      404: errorDemo(
+        "Demo 404 - Mã tiếp dân không tồn tại",
+        "Không tìm thấy mã tiếp dân"
+      ),
+      409: {
+        notCompleted: errorDemo(
+          "Demo 409 - Buổi tiếp chưa hoàn thành",
+          "Buổi tiếp dân chưa hoàn thành để đánh giá"
+        ),
+        duplicateRating: errorDemo(
+          "Demo 409 - Đã đánh giá trước đó",
+          "Mã tiếp dân đã được đánh giá"
+        ),
+      },
+    },
+  },
+  "GET /api/reception-ratings/configuration": {
+    responses: {
+      200: successDemo("Lấy cấu hình đánh giá tiếp dân thành công", {
+        scale: { min: 1, max: 5 },
+        comment: { maxLength: 2000 },
+        suggestionsByScore: {
+          1: ["Cán bộ đã tiếp nhận ý kiến của tôi"],
+          2: ["Cán bộ có lắng nghe ý kiến"],
+          3: ["Cán bộ giao tiếp lịch sự"],
+          4: ["Cán bộ nhiệt tình và tôn trọng"],
+          5: ["Cán bộ rất tận tình và chuyên nghiệp"],
+        },
+      }),
+    },
+  },
+  "GET /api/reception-ratings/{id}": {
+    responses: {
+      200: successDemo("Lấy chi tiết đánh giá tiếp dân thành công", {
+        id: ratingDemo.id,
+        score: ratingDemo.score,
+        selectedSuggestions: ratingDemo.selectedSuggestions,
+        comment: ratingDemo.comment,
+        ratedAt: ratingDemo.ratedAt,
+        registration: {
+          receptionCode: ratingDemo.receptionCode,
+          receptionDate: ratingDemo.receptionDate,
+          timeSlot: ratingDemo.timeSlot,
+          topic: ratingDemo.topic,
+          department: ratingDemo.department,
+          approvalStatus: "COMPLETED",
+          applicant: {
+            fullName: "Nguyễn Văn An",
+            phoneNumber: "0912345678",
+            citizenId: "042204001234",
+            address: "Phường Thành Sen, tỉnh Hà Tĩnh",
+          },
+        },
+      }),
+      404: errorDemo(
+        "Demo 404 - Không tìm thấy đánh giá",
+        "Đánh giá tiếp dân không tồn tại"
+      ),
+    },
+  },
+  "GET /api/reception-ratings/statistics": {
+    responses: {
+      200: successDemo("Lấy thống kê đánh giá tiếp dân thành công", {
+        totalRatings: 4,
+        averageScore: 4.25,
+        satisfactionRate: 75,
+        scoreDistribution: [
+          { score: 1, count: 0 },
+          { score: 2, count: 0 },
+          { score: 3, count: 1 },
+          { score: 4, count: 1 },
+          { score: 5, count: 2 },
+        ],
+        byDepartment: [{ department: "QUAY_3", totalRatings: 4, averageScore: 4.25 }],
+      }),
+      400: errorDemo(
+        "Demo 400 - Quầy không hợp lệ",
+        "Dữ liệu không hợp lệ",
+        [{ field: "department", message: "Bộ phận phải từ QUAY_1 đến QUAY_8" }]
+      ),
+    },
+  },
+});
 
 export default ReceptionRatingSwagger;

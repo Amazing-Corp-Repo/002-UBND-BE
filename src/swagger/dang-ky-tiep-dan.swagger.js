@@ -1,3 +1,9 @@
+import {
+  applyReceptionDemoExamples,
+  errorDemo,
+  successDemo,
+} from "./reception-demo-example.util.js";
+
 const registrationRequestSchema = {
   type: "object",
   required: [
@@ -506,5 +512,223 @@ const DangKyTiepDanSwagger = {
     },
   },
 };
+
+const registrationDemo = {
+  id: "323e4567-e89b-42d3-a456-426614174000",
+  receptionCode: "A00123",
+  receptionType: "COUNTER_RECEPTION",
+  receptionDate: "2026-08-26T00:00:00.000Z",
+  timeSlot: "07:30 - 08:30",
+  topic: "Hướng dẫn thủ tục hành chính",
+  workingContent: "Đề nghị hướng dẫn hồ sơ xác nhận thông tin cư trú",
+  applicant: {
+    fullName: "Nguyễn Văn An",
+    phoneNumber: "0912345678",
+    citizenId: "042204001234",
+    address: "Phường Thành Sen, tỉnh Hà Tĩnh",
+  },
+  department: "QUAY_3",
+  approvalStatus: "APPROVED",
+  ratingStatus: "NOT_RATED",
+};
+
+applyReceptionDemoExamples(DangKyTiepDanSwagger, {
+  "GET /api/reception-registrations": {
+    responses: {
+      200: successDemo(
+        "Lấy danh sách đăng ký tiếp dân thành công",
+        [registrationDemo],
+        { currentPage: 1, pageSize: 10, totalPages: 1, totalItems: 1 }
+      ),
+      400: errorDemo(
+        "Demo 400 - Bộ lọc trạng thái không hợp lệ",
+        "Dữ liệu không hợp lệ",
+        [{ field: "approvalStatus", message: "Trạng thái phê duyệt không hợp lệ" }]
+      ),
+    },
+  },
+  "POST /api/reception-registrations": {
+    request: {
+      validRegistration: {
+        summary: "Demo hợp lệ - đăng ký bằng slotId",
+        value: {
+          idLichTiepDan: "123e4567-e89b-42d3-a456-426614174000",
+          slotId: "223e4567-e89b-42d3-a456-426614174000",
+          chuDe: "Hướng dẫn thủ tục hành chính",
+          lyDo: "Đề nghị hướng dẫn hồ sơ xác nhận thông tin cư trú",
+          hoTen: "Nguyễn Văn An",
+          sdt: "0912345678",
+          cccd: "042204001234",
+          diaChi: "Phường Thành Sen, tỉnh Hà Tĩnh",
+        },
+      },
+      missingRequiredFields: {
+        summary: "Demo lỗi 400 - thiếu dữ liệu bắt buộc",
+        value: { hoTen: "Nguyễn Văn An" },
+      },
+    },
+    responses: {
+      200: successDemo("Đăng ký lịch tiếp dân thành công", {
+        ...registrationDemo,
+        scheduleId: "123e4567-e89b-42d3-a456-426614174000",
+        slotId: "223e4567-e89b-42d3-a456-426614174000",
+        phoneNumber: "******5678",
+        citizenId: "********1234",
+        status: "PENDING",
+      }),
+      400: errorDemo(
+        "Demo 400 - Thiếu dữ liệu bắt buộc",
+        "Dữ liệu không hợp lệ",
+        [
+          { field: "idLichTiepDan", message: "ID lịch tiếp dân là bắt buộc" },
+          { field: "chuDe", message: "Chủ đề là bắt buộc" },
+          { field: "slotId", message: "Phải cung cấp ID khung giờ hoặc chuỗi khung giờ" },
+        ]
+      ),
+      409: {
+        duplicateRegistration: errorDemo(
+          "Demo 409 - Đăng ký trùng",
+          "Số điện thoại đã đăng ký trong khung giờ này"
+        ),
+        fullSlot: errorDemo(
+          "Demo 409 - Ca đã đầy",
+          "Khung giờ tiếp dân đã đủ sức chứa"
+        ),
+      },
+      503: errorDemo(
+        "Demo 503 - Xung đột giao dịch đồng thời",
+        "Hệ thống đang bận xử lý đăng ký, vui lòng thử lại"
+      ),
+    },
+  },
+  "POST /api/reception-registrations/lookup": {
+    request: {
+      lookupByCode: {
+        summary: "Demo tra cứu bằng mã tiếp dân",
+        value: { receptionCode: "A00123" },
+      },
+      lookupByPhone: {
+        summary: "Demo tra cứu bằng số điện thoại",
+        value: { phoneNumber: "0912345678" },
+      },
+      invalidLookup: {
+        summary: "Demo lỗi 400 - gửi đồng thời hai điều kiện",
+        value: { receptionCode: "A00123", phoneNumber: "0912345678" },
+      },
+    },
+    responses: {
+      200: successDemo("Tra cứu đăng ký tiếp dân thành công", [{
+        ...registrationDemo,
+        phoneNumber: "******5678",
+        citizenId: "********1234",
+      }]),
+      404: errorDemo(
+        "Demo 404 - Không tìm thấy đơn",
+        "Không tìm thấy đăng ký tiếp dân"
+      ),
+    },
+  },
+  "GET /api/reception-registrations/{id}": {
+    responses: {
+      200: successDemo("Lấy chi tiết đăng ký tiếp dân thành công", registrationDemo),
+      404: errorDemo(
+        "Demo 404 - ID không tồn tại",
+        "Không tìm thấy đăng ký tiếp dân"
+      ),
+    },
+  },
+  "PATCH /api/reception-registrations/{id}/approve": {
+    request: {
+      validCounter: {
+        summary: "Demo hợp lệ - phê duyệt vào quầy 3",
+        value: { department: "QUAY_3" },
+      },
+      invalidCounter: {
+        summary: "Demo lỗi 400 - quầy ngoài phạm vi 1 đến 8",
+        value: { department: "QUAY_9" },
+      },
+    },
+    responses: {
+      200: successDemo("Phê duyệt đăng ký tiếp dân thành công", {
+        ...registrationDemo,
+        approver: {
+          name: "Nguyễn Văn Lãnh đạo",
+          title: "Lãnh đạo UBND",
+          approvedAt: "2026-08-25T08:00:00.000Z",
+        },
+      }),
+      409: {
+        counterIsFull: errorDemo(
+          "Demo 409 - Quầy đã đầy",
+          "Quầy tiếp nhận đã đủ sức chứa trong ca này"
+        ),
+        invalidState: errorDemo(
+          "Demo 409 - Đơn đã được xử lý",
+          "Chỉ đăng ký đang chờ mới được phê duyệt"
+        ),
+      },
+    },
+  },
+  "PATCH /api/reception-registrations/{id}/complete": {
+    responses: {
+      200: successDemo("Hoàn thành buổi tiếp dân thành công", {
+        ...registrationDemo,
+        approvalStatus: "COMPLETED",
+        completedAt: "2026-08-26T08:30:00.000Z",
+      }),
+      409: errorDemo(
+        "Demo 409 - Đơn chưa đủ điều kiện hoàn thành",
+        "Chỉ đăng ký đã phê duyệt mới được hoàn thành"
+      ),
+    },
+  },
+  "PATCH /api/reception-registrations/{id}/reject": {
+    request: {
+      validReason: {
+        summary: "Demo hợp lệ - từ chối có lý do",
+        value: { reason: "Nội dung đăng ký không thuộc phạm vi tiếp nhận" },
+      },
+      reasonTooShort: {
+        summary: "Demo lỗi 400 - lý do quá ngắn",
+        value: { reason: "Sai" },
+      },
+    },
+    responses: {
+      200: successDemo("Từ chối đăng ký tiếp dân thành công", {
+        ...registrationDemo,
+        approvalStatus: "REJECTED",
+        rejectionReason: "Nội dung đăng ký không thuộc phạm vi tiếp nhận",
+        rejectedAt: "2026-08-25T08:00:00.000Z",
+      }),
+      409: errorDemo(
+        "Demo 409 - Đơn không còn chờ xử lý",
+        "Chỉ đăng ký đang chờ mới được từ chối"
+      ),
+    },
+  },
+  "GET /api/reception-registrations/rating-lookup/{receptionCode}": {
+    responses: {
+      200: successDemo("Lấy thông tin để người dân xác nhận thành công", {
+        ...registrationDemo,
+        applicant: {
+          ...registrationDemo.applicant,
+          phoneNumber: "******5678",
+          citizenId: "********1234",
+        },
+        approvalStatus: "COMPLETED",
+      }),
+      409: {
+        notCompleted: errorDemo(
+          "Demo 409 - Buổi tiếp chưa hoàn thành",
+          "Buổi tiếp dân chưa hoàn thành để đánh giá"
+        ),
+        alreadyRated: errorDemo(
+          "Demo 409 - Mã đã được đánh giá",
+          "Mã tiếp dân đã được đánh giá"
+        ),
+      },
+    },
+  },
+});
 
 export default DangKyTiepDanSwagger;
