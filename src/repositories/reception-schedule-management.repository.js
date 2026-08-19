@@ -239,11 +239,18 @@ const ReceptionScheduleManagementRepository = {
         khung_gio_tiep_dan: {
           where: { is_active: true, is_delete: false },
           orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
+          include: {
+            quay_tiep_dan: {
+              select: { id: true, ma_quay: true, ten_quay: true },
+            },
+          },
         },
         dang_ky_tiep_dan: {
+          where: { loai: "COUNTER_RECEPTION" },
           select: {
             slot: true,
             bo_phan: true,
+            id_cau_hinh_quay: true,
           },
         },
       },

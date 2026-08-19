@@ -6,6 +6,37 @@ const ReceptionCounterAssignmentController = {
     const data = await ReceptionCounterAssignmentService.getAll(req.validatedQuery);
     return successResponse(res, data, "Lấy danh sách phân công quầy thành công");
   },
+
+  async getById(req, res) {
+    const data = await ReceptionCounterAssignmentService.getById(req.validatedParams.id);
+    return successResponse(res, data, "Lấy chi tiết phân công quầy thành công");
+  },
+
+  async replaceForShift(req, res) {
+    const data = await ReceptionCounterAssignmentService.replaceForShift(
+      req.validatedParams.shiftId,
+      req.body.assignments,
+      req.payload.userId
+    );
+    return successResponse(res, data, "Cập nhật phân công quầy theo ca thành công");
+  },
+
+  async update(req, res) {
+    const data = await ReceptionCounterAssignmentService.update(
+      req.validatedParams.id,
+      req.body,
+      req.payload.userId
+    );
+    return successResponse(res, data, "Cập nhật phân công quầy thành công");
+  },
+
+  async delete(req, res) {
+    await ReceptionCounterAssignmentService.delete(
+      req.validatedParams.id,
+      req.payload.userId
+    );
+    return successResponse(res, null, "Xóa phân công quầy thành công");
+  },
 };
 
 export default ReceptionCounterAssignmentController;

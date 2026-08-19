@@ -37,17 +37,28 @@ const scheduleDetail = {
   thoi_gian: "07:30 - 08:30",
   is_delete: false,
   khung_gio_tiep_dan: Array.from({ length: 8 }, (_, index) => ({
-    id: `slot-${index + 1}`,
+    id: `${index + 1}23e4567-e89b-42d3-a456-426614174001`,
+    id_ca_tiep_dan: "923e4567-e89b-42d3-a456-426614174001",
+    id_quay: `${index + 1}23e4567-e89b-42d3-a456-426614174002`,
     khung_gio: "07:30 - 08:30",
     ma_quay: `QUAY_${index + 1}`,
     suc_chua: 2,
     is_active: true,
     is_delete: false,
+    quay_tiep_dan: {
+      id: `${index + 1}23e4567-e89b-42d3-a456-426614174002`,
+      ma_quay: `QUAY_${index + 1}`,
+      ten_quay: `Quầy số ${index + 1}`,
+    },
   })),
   dang_ky_tiep_dan: [
-    { slot: "07:30 - 08:30", bo_phan: null },
-    { slot: "07:30 - 08:30", bo_phan: "QUAY_1" },
-    { slot: "07:30 - 08:30", bo_phan: "QUAY_1" },
+    { slot: "07:30 - 08:30", bo_phan: null, id_cau_hinh_quay: null },
+    {
+      slot: "07:30 - 08:30",
+      bo_phan: "QUAY_8",
+      id_cau_hinh_quay: "123e4567-e89b-42d3-a456-426614174001",
+    },
+    { slot: "07:30 - 08:30", bo_phan: "QUAY_1", id_cau_hinh_quay: null },
   ],
 };
 
@@ -118,6 +129,9 @@ describe("GET /api/reception-schedules/management/:id", () => {
     assert.equal(slot.remainingCapacity, 13);
     assert.equal(slot.isFull, false);
     assert.equal(firstCounter.counterCode, "QUAY_1");
+    assert.equal(firstCounter.shiftId, "923e4567-e89b-42d3-a456-426614174001");
+    assert.equal(firstCounter.counterId, "123e4567-e89b-42d3-a456-426614174002");
+    assert.equal(firstCounter.counterName, "Quầy số 1");
     assert.equal(firstCounter.heldCount, 2);
     assert.equal(firstCounter.remainingCapacity, 0);
     assert.equal(firstCounter.isFull, true);

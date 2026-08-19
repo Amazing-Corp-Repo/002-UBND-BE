@@ -11,7 +11,7 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Lấy lịch tiếp dân đang hoạt động dành cho Mobile",
       description:
-        "Trả về các lịch tiếp dân đang hoạt động, chưa bị xóa và còn ít nhất một khung giờ chưa qua. Khung giờ đã bắt đầu trong ngày hiện tại không được trả về. Mỗi ca có slotId đại diện, giờ bắt đầu, giờ kết thúc, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ nguyên để tương thích API cũ; client mới nên gửi slotId khi đăng ký.",
+        "Trả về các lịch tiếp dân đang hoạt động, chưa bị xóa và còn ít nhất một khung giờ chưa qua. Khung giờ đã bắt đầu trong ngày hiện tại không được trả về. Mỗi ca có shiftId chuẩn, slotId tương thích, giờ bắt đầu, giờ kết thúc, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ nguyên để tương thích API cũ; client hiện tại vẫn có thể gửi slotId khi đăng ký.",
       parameters: [
         {
           name: "fromDate",
@@ -42,6 +42,7 @@ const ReceptionScheduleSwagger = {
                   openSlots: ["07:30 - 08:30"],
                   slots: [{
                     slotId: "223e4567-e89b-12d3-a456-426614174000",
+                    shiftId: "323e4567-e89b-12d3-a456-426614174000",
                     startTime: "07:30",
                     endTime: "08:30",
                     timeSlot: "07:30 - 08:30",
@@ -68,7 +69,7 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Cập nhật sức chứa của một quầy trong ca tiếp dân",
       description:
-        "Cán bộ có quyền LTD_UPDATE được đặt sức chứa là số nguyên từ 1 trở lên và không giới hạn tối đa. Không được giảm thấp hơn số đơn đã gán vào quầy hoặc làm tổng sức chứa của ca thấp hơn tổng số đơn đã giữ chỗ.",
+        "Cán bộ có quyền LTD_UPDATE được đặt sức chứa là số nguyên từ 1 trở lên và không giới hạn tối đa. Backend đếm đơn theo quan hệ id_cau_hinh_quay, đồng thời hỗ trợ dữ liệu cũ bằng bo_phan. Không được giảm thấp hơn số đơn đã gán vào quầy hoặc làm tổng sức chứa của ca thấp hơn tổng số đơn đã giữ chỗ.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "scheduleId", in: "path", required: true, schema: { type: "string", format: "uuid" } },

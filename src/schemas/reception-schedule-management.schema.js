@@ -43,7 +43,9 @@ const ScheduleWithSlotsSchema = {
             items: {
               type: "object",
               properties: {
-                id: { type: "string" },
+                id: { type: "string", format: "uuid", description: "ID cấu hình quầy trong ca" },
+                shiftId: { type: "string", format: "uuid", nullable: true },
+                counterId: { type: "string", format: "uuid", nullable: true },
                 counterCode: {
                   type: "string",
                   enum: [
@@ -57,6 +59,7 @@ const ScheduleWithSlotsSchema = {
                     "QUAY_8",
                   ],
                 },
+                counterName: { type: "string", nullable: true },
                 capacity: { type: "integer", minimum: 1, example: 2 },
                 heldCount: { type: "integer", minimum: 0 },
                 remainingCapacity: { type: "integer", minimum: 0 },
