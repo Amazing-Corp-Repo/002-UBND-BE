@@ -16,7 +16,67 @@ const ReceptionRatingSwagger = {
         { name: "toDate", in: "query", schema: { type: "string", format: "date" } },
       ],
       responses: {
-        200: { description: "Lấy danh sách đánh giá tiếp dân thành công" },
+        200: {
+          description: "Lấy danh sách đánh giá tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["success", "data", "message", "pagination"],
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        receptionCode: { type: "string", example: "A00123" },
+                        applicantName: { type: "string", example: "Nguyễn Văn An" },
+                        department: {
+                          type: "string",
+                          enum: [
+                            "QUAY_1",
+                            "QUAY_2",
+                            "QUAY_3",
+                            "QUAY_4",
+                            "QUAY_5",
+                            "QUAY_6",
+                            "QUAY_7",
+                            "QUAY_8",
+                          ],
+                        },
+                        receptionDate: { type: "string", format: "date-time" },
+                        timeSlot: { type: "string", example: "08:00 - 09:00" },
+                        topic: { type: "string", example: "Hướng dẫn thủ tục" },
+                        score: { type: "integer", minimum: 1, maximum: 5 },
+                        selectedSuggestions: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                        comment: { type: "string", maxLength: 2000 },
+                        ratedAt: { type: "string", format: "date-time" },
+                      },
+                    },
+                  },
+                  message: {
+                    type: "string",
+                    example: "Lấy danh sách đánh giá tiếp dân thành công",
+                  },
+                  pagination: {
+                    type: "object",
+                    properties: {
+                      currentPage: { type: "integer", minimum: 1 },
+                      pageSize: { type: "integer", minimum: 1, maximum: 100 },
+                      totalPages: { type: "integer", minimum: 0 },
+                      totalItems: { type: "integer", minimum: 0 },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         400: { description: "Bộ lọc không hợp lệ" },
         401: { description: "Thiếu hoặc sai access token" },
         403: { description: "Không có quyền RRT_GET_ALL" },

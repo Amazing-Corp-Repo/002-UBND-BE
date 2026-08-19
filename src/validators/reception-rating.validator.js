@@ -1,6 +1,27 @@
 import Joi from "joi";
 import { RECEPTION_RATING_COMMENT_MAX_LENGTH } from "../constants/reception-rating.constant.js";
 
+const receptionDateSchema = (fieldLabel) =>
+  Joi.string()
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
+    .custom((value, helpers) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return value;
+      }
+      const date = new Date(`${value}T00:00:00.000Z`);
+      if (
+        Number.isNaN(date.getTime()) ||
+        date.toISOString().slice(0, 10) !== value
+      ) {
+        return helpers.error("date.invalid");
+      }
+      return value;
+    })
+    .messages({
+      "string.pattern.base": `${fieldLabel} phải có định dạng YYYY-MM-DD`,
+      "date.invalid": `${fieldLabel} không tồn tại`,
+    });
+
 export const CreateReceptionRatingRequest = Joi.object({
   receptionCode: Joi.string()
     .trim()
@@ -44,8 +65,8 @@ export const GetReceptionRatingsQuery = Joi.object({
     .pattern(/^QUAY_[1-8]$/)
     .optional()
     .messages({ "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8" }),
-  fromDate: Joi.date().iso().optional(),
-  toDate: Joi.date().iso().optional(),
+  fromDate: receptionDateSchema("Ngày bắt đầu").optional(),
+  toDate: receptionDateSchema("Ngày kết thúc").optional(),
 });
 
 export const ReceptionRatingIdParams = Joi.object({

@@ -380,13 +380,13 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 13 — `GET /api/reception-ratings` — Lãnh đạo lấy danh sách đánh giá
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Authenticate, `RRT_GET_ALL`, phân trang, tìm kiếm/lọc điểm-quầy-ngày, Swagger và test.
+- **Đã làm/hiện có:** Authenticate, `RRT_GET_ALL`, phân trang, tìm kiếm/lọc điểm-quầy-ngày; kiểm tra ngày lịch có thật theo đúng `YYYY-MM-DD`; Swagger có schema response và test đủ `200`, `400`, `401`, `403`.
 - **Chưa làm:** Chưa có export Excel/PDF và chưa giới hạn data-scope theo cơ quan nếu hệ thống có nhiều đơn vị.
 - **Cần bổ sung:** Chỉ thêm export hoặc data-scope khi có yêu cầu báo cáo/phân cấp cụ thể.
 - **Dùng để làm gì:** Lãnh đạo lấy danh sách đánh giá có tìm kiếm, lọc và phân trang.
 - **Role áp dụng:** lãnh đạo/quản trị hoặc tài khoản có permission `RRT_GET_ALL`.
 - **Trường hợp áp dụng:** Màn hình quản lý đánh giá hài lòng.
-- **Query đầu vào:** `page`, `size`, `search`, `score`, `department`, `fromDate`, `toDate`.
+- **Query đầu vào:** `page` (số nguyên từ 1), `size` (1–100), `search` (tối đa 100 ký tự), `score` (1–5), `department` (`QUAY_1`–`QUAY_8`), `fromDate` và `toDate` (ngày có thật theo `YYYY-MM-DD`).
 - **Đầu ra `data[]`:** `id`, `receptionCode`, `applicantName`, `department`, `receptionDate`, `timeSlot`, `topic`, `score`, `selectedSuggestions`, `comment`, `ratedAt`; kèm `pagination`.
 - **Chức năng chi tiết:** Lọc điểm 1–5, quầy `QUAY_1`–`QUAY_8`, khoảng ngày; từ ngày không được sau đến ngày.
 - **Lỗi chính:** `400`, `401`, `403`.
