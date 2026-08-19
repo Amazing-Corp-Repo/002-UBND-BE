@@ -1,4 +1,8 @@
 import prisma from "../config/database.config.js";
+import {
+  buildReceptionDepartmentFilter,
+  receptionCounterRelation,
+} from "../mapper/reception-registration-v2.mapper.js";
 
 const ReceptionRatingRepository = {
   async findRegistrationByCode(receptionCode) {
@@ -10,6 +14,7 @@ const ReceptionRatingRepository = {
         is_delete: false,
       },
       include: {
+        cau_hinh_quay: receptionCounterRelation,
         danh_gia_tiep_dan: {
           where: { is_delete: false },
           select: { id: true },
@@ -24,11 +29,12 @@ const ReceptionRatingRepository = {
   },
 
   async findAllForLeader(filters) {
+    const departmentFilter = buildReceptionDepartmentFilter(filters.department);
     const registrationWhere = {
       loai: "COUNTER_RECEPTION",
       is_active: true,
       is_delete: false,
-      ...(filters.department ? { bo_phan: filters.department } : {}),
+      ...(departmentFilter || {}),
     };
     const where = {
       is_active: true,
@@ -79,6 +85,8 @@ const ReceptionRatingRepository = {
               ngay: true,
               slot: true,
               chu_de: true,
+              id_cau_hinh_quay: true,
+              cau_hinh_quay: receptionCounterRelation,
             },
           },
         },
@@ -98,6 +106,7 @@ const ReceptionRatingRepository = {
       include: {
         dang_ky_tiep_dan: {
           include: {
+            cau_hinh_quay: receptionCounterRelation,
             lich_tiep_dan: {
               select: {
                 id: true,
@@ -115,6 +124,7 @@ const ReceptionRatingRepository = {
   },
 
   async getStatistics(filters) {
+    const departmentFilter = buildReceptionDepartmentFilter(filters.department);
     const createdAtFilter =
       filters.fromDate || filters.toDate
         ? {
@@ -136,7 +146,7 @@ const ReceptionRatingRepository = {
         loai: "COUNTER_RECEPTION",
         is_active: true,
         is_delete: false,
-        ...(filters.department ? { bo_phan: filters.department } : {}),
+        ...(departmentFilter || {}),
       },
     };
     const departments = filters.department
@@ -161,7 +171,7 @@ const ReceptionRatingRepository = {
             ...baseWhere,
             dang_ky_tiep_dan: {
               ...baseWhere.dang_ky_tiep_dan,
-              bo_phan: department,
+              ...buildReceptionDepartmentFilter(department),
             },
           },
           _count: { _all: true },

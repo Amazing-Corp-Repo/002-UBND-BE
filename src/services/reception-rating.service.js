@@ -7,6 +7,10 @@ import ReceptionRatingRepository from "../repositories/reception-rating.reposito
 import { BaseError } from "../utils/base-error.util.js";
 import { TIEP_DAN_STATUS } from "../constants/tiep-dan.constant.js";
 import { createPagination } from "../utils/response.util.js";
+import {
+  hasAssignedReceptionCounter,
+  resolveReceptionDepartment,
+} from "../mapper/reception-registration-v2.mapper.js";
 
 const isUniqueConstraintError = (error) => error?.code === "P2002";
 
@@ -23,7 +27,7 @@ const mapRatingListItem = (rating) => ({
   id: rating.id,
   receptionCode: rating.dang_ky_tiep_dan.ma_tiep_dan,
   applicantName: rating.dang_ky_tiep_dan.ho_ten,
-  department: rating.dang_ky_tiep_dan.bo_phan,
+  department: resolveReceptionDepartment(rating.dang_ky_tiep_dan),
   receptionDate: rating.dang_ky_tiep_dan.ngay,
   timeSlot: rating.dang_ky_tiep_dan.slot,
   topic: rating.dang_ky_tiep_dan.chu_de,
@@ -54,7 +58,7 @@ const mapRatingDetail = (rating) => {
         citizenId: registration.cccd,
         address: registration.dia_chi,
       },
-      department: registration.bo_phan,
+      department: resolveReceptionDepartment(registration),
       approvalStatus: registration.trang_thai,
       approver: registration.ten_lanh_dao
         ? {
@@ -123,7 +127,7 @@ const ReceptionRatingService = {
     if (registration.trang_thai !== TIEP_DAN_STATUS.COMPLETED) {
       throw new BaseError(409, "Buổi tiếp dân chưa hoàn thành để đánh giá");
     }
-    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
+    if (!hasAssignedReceptionCounter(registration)) {
       throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
     }
     if (registration.danh_gia_tiep_dan?.length > 0) {
