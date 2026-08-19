@@ -294,7 +294,7 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 09 — `PATCH /api/reception-registrations/{id}/reject` — Từ chối đăng ký tiếp dân
 
 - **Trạng thái:** Đã hoàn thành.
-- **Đã làm/hiện có:** Permission `RR_REJECT`, chỉ từ chối `PENDING`, validate lý do, lưu người/thời điểm từ chối, không trả chỗ, audit, Swagger và test.
+- **Đã làm/hiện có:** Permission `RR_REJECT`, chỉ từ chối `PENDING`, validate lý do, lưu người/thời điểm từ chối, không trả chỗ, chống xử lý lặp/đồng thời và audit. Swagger có schema response chi tiết; test phủ `200`, `400`, `401`, `403`, `404`, `409`.
 - **Chưa làm:** Chưa có API khôi phục đơn `REJECTED` hoặc sửa lý do sau khi từ chối.
 - **Cần bổ sung:** Không cần theo luồng hiện tại. Nếu BA cho phép phục hồi thì phải chốt rõ việc đơn vẫn giữ chỗ và quyền thao tác.
 - **Dùng để làm gì:** Cán bộ từ chối một đơn đang chờ và ghi rõ lý do.

@@ -72,6 +72,10 @@ describe("PATCH /api/reception-registrations/:id/reject", () => {
     assert.ok(operation.description.includes("RR_REJECT"));
     assert.ok(operation.description.includes("không hoàn lại sức chứa"));
     assert.ok(operation.requestBody.content["application/json"].schema.required.includes("reason"));
+    assert.ok(
+      operation.responses[200].content["application/json"].schema.properties.data
+        .properties.rejectionReason
+    );
   });
 
   it("rejects a pending registration with a required reason", async () => {
@@ -170,6 +174,89 @@ describe("PATCH /api/reception-registrations/:id/reject", () => {
       );
 
       assert.equal(response.status, 403);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 404 when the registration does not exist", async () => {
+    DangKyTiepDanRepository.findActiveById = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/reject`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.RR_REJECT])}`,
+          },
+          body: JSON.stringify({ reason: "Không tìm thấy đơn cần xử lý" }),
+        }
+      );
+      assert.equal(response.status, 404);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 409 when another request processed the registration first", async () => {
+    DangKyTiepDanRepository.rejectPending = async () => null;
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/reject`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.RR_REJECT])}`,
+          },
+          body: JSON.stringify({ reason: "Đơn không đủ điều kiện tiếp nhận" }),
+        }
+      );
+      assert.equal(response.status, 409);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/${registrationId}/reject`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ reason: "Đơn không đủ điều kiện tiếp nhận" }),
+        }
+      );
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 for an invalid registration UUID", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations/not-a-uuid/reject`,
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.RR_REJECT])}`,
+          },
+          body: JSON.stringify({ reason: "Đơn không đủ điều kiện tiếp nhận" }),
+        }
+      );
+      assert.equal(response.status, 400);
     } finally {
       server.close();
     }
