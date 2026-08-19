@@ -1,6 +1,31 @@
 import Joi from "joi";
 
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const calendarDateSchema = (fieldLabel) =>
+    Joi.string()
+        .pattern(/^\d{4}-\d{2}-\d{2}$/)
+        .custom((value, helpers) => {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                return value;
+            }
+            const date = new Date(`${value}T00:00:00.000Z`);
+            if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+                return helpers.error('date.invalid');
+            }
+            return value;
+        })
+        .messages({
+            'string.pattern.base': `${fieldLabel} phải có định dạng YYYY-MM-DD`,
+            'date.invalid': `${fieldLabel} không tồn tại`,
+        });
+
+const rejectMixedTimeConfiguration = (value, helpers) => {
+    if (value.workingPeriods && (value.batDau || value.ketThuc)) {
+        return helpers.error('object.timeConfigurationConflict');
+    }
+    return value;
+};
+
 const WorkingPeriodSchema = Joi.object({
     startTime: Joi.string().pattern(timeRegex).required().messages({
         'string.pattern.base': 'Giờ bắt đầu phải có dạng HH:mm',
@@ -57,10 +82,9 @@ export const CreateLichTiepDanRequest = Joi.object({
             'array.min': 'Phải có ít nhất một khoảng làm việc',
             'array.max': 'Chỉ hỗ trợ tối đa hai khoảng làm việc trong ngày',
         }),
-    ngayTiepDan: Joi.date()
+    ngayTiepDan: calendarDateSchema('Ngày tiếp dân')
         .required()
         .messages({
-            'date.base': 'Ngày tiếp dân không hợp lệ',
             'any.required': 'Ngày tiếp dân là bắt buộc',
         }),
     ghiChu: Joi.string()
@@ -72,8 +96,9 @@ export const CreateLichTiepDanRequest = Joi.object({
             'string.base': 'Ghi chú phải là chuỗi ký tự',
             'string.max': 'Ghi chú không được vượt quá 255 ký tự',
         }),
-}).and('batDau', 'ketThuc').messages({
+}).and('batDau', 'ketThuc').custom(rejectMixedTimeConfiguration).messages({
     'object.and': 'Thời gian bắt đầu và kết thúc phải được truyền cùng nhau',
+    'object.timeConfigurationConflict': 'Chỉ được dùng workingPeriods hoặc cặp batDau/ketThuc',
 });
 export const UpdateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()

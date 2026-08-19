@@ -110,7 +110,14 @@ const ReceptionScheduleManagementSwagger = {
                 },
             },
             responses: {
-                200: { description: 'Tạo lịch và các slot theo quầy thành công' },
+                200: {
+                    description: 'Tạo lịch và các slot theo quầy thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.ScheduleWithSlotsSuccessSchema,
+                        },
+                    },
+                },
                 400: { description: 'Dữ liệu hoặc khoảng thời gian không hợp lệ, hoặc lịch đã tồn tại' },
                 401: { description: 'Thiếu hoặc sai access token' },
                 403: { description: 'Không có quyền LTD_CREATE' },

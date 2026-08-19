@@ -430,13 +430,13 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 ### API 16 — `POST /api/reception-schedules/management` — Tạo lịch tiếp dân thủ công
 
 - **Trạng thái:** Đã tách sang API tiếng Anh; nghiệp vụ slot/sức chứa đã hoàn thành.
-- **Đã làm/hiện có:** Authenticate, `LTD_CREATE`, validate thông tin lịch, hỗ trợ giờ mặc định hoặc tối đa hai khoảng làm việc, tự sinh ca một tiếng và 8 quầy sức chứa mặc định 2, audit và Swagger đã được mở rộng.
+- **Đã làm/hiện có:** Authenticate, `LTD_CREATE`, validate ngày lịch có thật theo `YYYY-MM-DD`, hỗ trợ giờ mặc định hoặc một trong hai cách cấu hình giờ, tự sinh ca một tiếng và 8 quầy sức chứa mặc định 2, chống trùng lịch cùng cán bộ/ngày, audit; Swagger có schema response và test đủ `200`, `400`, `401`, `403`.
 - **Chưa làm:** `tenCanBo` vẫn là chuỗi tự do, chưa gắn `userId`; chưa có kiểm tra xung đột cán bộ/quầy một cách chuẩn hóa; validation “không tạo lịch trong quá khứ” cần được xác nhận lại ở service/test đầy đủ.
 - **Cần bổ sung:** Chuẩn hóa cán bộ/quầy và bổ sung kiểm tra lịch quá khứ/xung đột nếu BA xác nhận quy tắc. API `/api/lich-tiep-dan` cũ không bị sửa.
 - **Dùng để làm gì:** Cán bộ/lãnh đạo tạo một ngày lịch tiếp dân và backend tự sinh ca một tiếng cho 8 quầy.
 - **Role áp dụng:** tài khoản có permission `LTD_CREATE`.
 - **Trường hợp áp dụng:** Thêm lịch thủ công thay vì import Excel.
-- **Body đầu vào:** `diaDiem`, `tenCanBo`, `ngayTiepDan` bắt buộc; `ghiChu`; có thể dùng cặp cũ `batDau`/`ketThuc` hoặc `workingPeriods` tối đa 2 khoảng.
+- **Body đầu vào:** `diaDiem`, `tenCanBo`, `ngayTiepDan` (ngày có thật theo `YYYY-MM-DD`) bắt buộc; `ghiChu`; chỉ dùng một trong hai cách là cặp cũ `batDau`/`ketThuc` hoặc `workingPeriods` tối đa 2 khoảng.
 - **Mẫu mới:**
 
 ```json

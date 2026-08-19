@@ -78,9 +78,32 @@ describe("POST /api/reception-schedules/management", () => {
     assert.equal(operation.summary, "Tạo mới lịch tiếp dân");
     assert.ok(operation.description.includes("tự sinh cấu hình slot cho 8 quầy"));
     assert.ok(operation.requestBody.content["application/json"].examples.defaultWorkingHours);
-    assert.ok(operation.responses[200]);
+    assert.equal(
+      operation.responses[200].content["application/json"].schema.properties
+        .data.properties.slots.items.properties.counters.minItems,
+      8
+    );
     assert.ok(operation.responses[400]);
     assert.ok(operation.responses[403]);
+  });
+
+  it("returns 401 without an access token", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(validBody),
+        }
+      );
+
+      assert.equal(response.status, 401);
+    } finally {
+      server.close();
+    }
   });
 
   it("creates seven default hourly slots for all eight counters", async () => {
@@ -174,6 +197,82 @@ describe("POST /api/reception-schedules/management", () => {
       });
 
       assert.equal(response.status, 403);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 when the officer already has a schedule that day", async () => {
+    ReceptionScheduleManagementRepository.findByCanBoAndNgay = async () => ({
+      id: scheduleId,
+    });
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.LTD_CREATE])}`,
+          },
+          body: JSON.stringify(validBody),
+        }
+      );
+
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
+  for (const invalidDate of ["2099-02-30", "2099-08-25T00:00:00.000Z"]) {
+    it(`returns 400 for invalid reception date ${invalidDate}`, async () => {
+      const server = createTestServer();
+      const { port } = server.address();
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:${port}/api/reception-schedules/management`,
+          {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              authorization: `Bearer ${createToken([PERMISSION.LTD_CREATE])}`,
+            },
+            body: JSON.stringify({ ...validBody, ngayTiepDan: invalidDate }),
+          }
+        );
+
+        assert.equal(response.status, 400);
+      } finally {
+        server.close();
+      }
+    });
+  }
+
+  it("returns 400 when both time configuration modes are sent", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules/management`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${createToken([PERMISSION.LTD_CREATE])}`,
+          },
+          body: JSON.stringify({
+            ...validBody,
+            batDau: "07:30",
+            ketThuc: "11:30",
+            workingPeriods: [{ startTime: "13:30", endTime: "16:30" }],
+          }),
+        }
+      );
+
+      assert.equal(response.status, 400);
     } finally {
       server.close();
     }
