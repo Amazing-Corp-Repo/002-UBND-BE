@@ -154,6 +154,17 @@ const ScheduleCountSuccessSchema = {
   },
 };
 
+const EmptySuccessSchema = {
+  type: "object",
+  required: ["success", "data", "message"],
+  properties: {
+    success: { type: "boolean", example: true },
+    data: { nullable: true, example: null },
+    message: { type: "string", example: "Xóa lịch tiếp dân thành công" },
+    pagination: { nullable: true, example: null },
+  },
+};
+
 export const ReceptionScheduleManagementSchemas = {
   UpdateStatusSchema,
   CreateScheduleSchema,
@@ -164,4 +175,5 @@ export const ReceptionScheduleManagementSchemas = {
   ScheduleListSuccessSchema,
   SchedulePaginationSuccessSchema,
   ScheduleCountSuccessSchema,
+  EmptySuccessSchema,
 };

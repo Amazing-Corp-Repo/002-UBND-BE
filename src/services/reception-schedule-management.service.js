@@ -8,7 +8,10 @@ import {
 import ReceptionScheduleManagementRepository from "../repositories/reception-schedule-management.repository.js";
 import LichTiepDanService from "./lich-tiep-dan.service.js";
 import FileService from "./file.service.js";
-import { toSnakeCaseNonAccent } from "../utils/string.util.js";
+import {
+  appendDeleteSuffixc,
+  toSnakeCaseNonAccent,
+} from "../utils/string.util.js";
 import { createPagination } from "../utils/response.util.js";
 
 const toMinutes = (value) => {
@@ -288,6 +291,35 @@ const ReceptionScheduleManagementService = {
       }),
     ]);
     return { total, active, inactive };
+  },
+
+  async deleteLichTiepDan(id, currentUser) {
+    const result =
+      await ReceptionScheduleManagementRepository.softDeleteIfNoRegistrations(
+        id,
+        (schedule) => ({
+          ten_can_bo: appendDeleteSuffixc(schedule.ten_can_bo),
+          is_delete: true,
+          nguoi_cap_nhat: currentUser,
+          thoi_gian_cap_nhat: new Date(),
+        })
+      );
+
+    if (result.status === "NOT_FOUND") {
+      throw new BaseError(404, "Lịch tiếp dân không tồn tại");
+    }
+    if (result.status === "ACTIVE") {
+      throw new BaseError(
+        409,
+        "Không thể xóa lịch tiếp dân đang ở trạng thái hoạt động"
+      );
+    }
+    if (result.status === "HAS_REGISTRATIONS") {
+      throw new BaseError(
+        409,
+        "Không thể xóa lịch tiếp dân đã có đăng ký giữ chỗ"
+      );
+    }
   },
 
   async handleImport(files = [], currentUser) {

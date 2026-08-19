@@ -83,6 +83,7 @@ receptionScheduleManagementRouter.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.LTD_DELETE]),
+  validateParams(ReceptionScheduleManagementIdParams),
   audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.LTD_DELETE),
   ReceptionScheduleManagementController.deleteLichTiepDan
 );

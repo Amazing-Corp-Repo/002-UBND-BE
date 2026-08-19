@@ -62,6 +62,32 @@ const ReceptionScheduleManagementRepository = {
     });
   },
 
+  async softDeleteIfNoRegistrations(id, buildUpdateData) {
+    return prisma.$transaction(
+      async (tx) => {
+        const schedule = await tx.lich_tiep_dan.findFirst({
+          where: { id, is_delete: false },
+        });
+        if (!schedule) return { status: "NOT_FOUND" };
+        if (schedule.is_active) return { status: "ACTIVE" };
+
+        const registrationCount = await tx.dang_ky_tiep_dan.count({
+          where: { id_lich_tiep_dan: id },
+        });
+        if (registrationCount > 0) {
+          return { status: "HAS_REGISTRATIONS", registrationCount };
+        }
+
+        const data = await tx.lich_tiep_dan.update({
+          where: { id },
+          data: buildUpdateData(schedule),
+        });
+        return { status: "DELETED", data };
+      },
+      { isolationLevel: "Serializable" }
+    );
+  },
+
   async updateWithSlots(id, scheduleData, slotRows, replaceSlots) {
     return prisma.$transaction(async (tx) => {
       await tx.lich_tiep_dan.update({

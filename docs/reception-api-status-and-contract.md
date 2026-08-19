@@ -546,15 +546,15 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 23 — `DELETE /api/reception-schedules/management/{id}` — Xóa mềm lịch tiếp dân
 
-- **Trạng thái:** Đã có bản sao tiếng Anh; chưa bổ sung quy tắc bảo vệ lịch đã có đăng ký.
-- **Đã làm/hiện có:** Authenticate, `LTD_DELETE`, xóa mềm lịch và audit.
-- **Chưa làm:** Chưa chặn xóa lịch có đăng ký giữ chỗ; Swagger chưa mô tả response/lỗi đầy đủ.
-- **Cần bổ sung:** Kiểm tra số đăng ký trong transaction và từ chối xóa khi đã có người giữ chỗ, hoặc phải chốt quy trình lịch thay thế trước khi cho xóa.
+- **Trạng thái:** Đã hoàn thành API xóa mềm quản lý tiếng Anh.
+- **Đã làm/hiện có:** Authenticate, `LTD_DELETE`, validate UUID, chỉ cho xóa lịch đã ngừng hoạt động và chưa có đăng ký, kiểm tra và xóa mềm trong transaction `Serializable`, audit, Swagger và test `200`, `400`, `401`, `403`, `404`, `409`.
+- **Chưa làm:** Chưa có quy trình tạo lịch thay thế/chuyển đăng ký vì nghiệp vụ hiện không cho xóa lịch đã có người giữ chỗ.
+- **Cần bổ sung:** Không bắt buộc theo quy tắc hiện tại; chỉ thiết kế lịch thay thế nếu BA cho phép hủy lịch đã có đăng ký.
 - **Dùng để làm gì:** Xóa mềm lịch tiếp dân.
 - **Role áp dụng:** tài khoản có permission `LTD_DELETE`.
 - **Path đầu vào:** `id` — ID lịch.
 - **Đầu ra:** `data = null`, message xóa thành công.
-- **Chức năng hiện có:** xóa lịch và ghi audit.
+- **Chức năng hiện có:** đổi `is_delete=true`, thêm hậu tố tránh xung đột tên cán bộ/ngày, ghi người cập nhật và audit; không xóa vật lý dữ liệu.
 
 ### API 24 — `PUT /api/reception-schedules/management/{id}/status` — Bật hoặc tắt lịch tiếp dân
 

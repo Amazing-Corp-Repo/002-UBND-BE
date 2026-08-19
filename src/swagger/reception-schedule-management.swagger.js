@@ -302,6 +302,7 @@ const ReceptionScheduleManagementSwagger = {
         delete: {
             tags: ['ReceptionScheduleManagement'],
             summary: 'Xoá lịch tiếp dân theo ID',
+            description: 'Dành cho tài khoản có quyền LTD_DELETE. Chỉ được xóa mềm lịch đã ngừng hoạt động và chưa có bất kỳ đăng ký giữ chỗ nào. Việc kiểm tra đăng ký và cập nhật xóa mềm được thực hiện trong cùng transaction.',
             security: [{ bearerAuth: [] }],
             parameters: [
                 {
@@ -316,7 +317,21 @@ const ReceptionScheduleManagementSwagger = {
                     },
                 },
             ],
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Xóa mềm lịch tiếp dân thành công',
+                    content: {
+                        'application/json': {
+                            schema: ReceptionScheduleManagementSchemas.EmptySuccessSchema,
+                        },
+                    },
+                },
+                400: { description: 'ID lịch tiếp dân không đúng định dạng UUID' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_DELETE' },
+                404: { description: 'Lịch tiếp dân không tồn tại hoặc đã bị xóa' },
+                409: { description: 'Lịch đang hoạt động hoặc đã có đăng ký giữ chỗ' },
+            }
         },
         get: {
             tags: ['ReceptionScheduleManagement'],
