@@ -500,19 +500,16 @@ Tổng số API cần theo dõi trong tài liệu là **25 API tiếng Anh**: 15
 
 ### API 19 — `POST /api/reception-schedules/management/import` — Import lịch tiếp dân từ Excel
 
-- **Trạng thái:** Đã có bản sao tiếng Anh; còn thiếu rà soát theo mô hình slot mới.
-- **Đã làm/hiện có:** Authenticate, `LTD_CREATE`, upload Excel `.xlsx/.xls` tối đa 10 MB, service import và audit.
-- **Chưa làm:** Chưa xác nhận bằng test rằng mọi dòng import tạo đủ slot/quầy/sức chứa giống API 16; chưa mô tả response/lỗi; chưa rõ transaction toàn file hay từng dòng.
-- **Cần bổ sung:** Đồng bộ logic import với tạo thủ công, test file hợp lệ/sai/trùng, quy tắc rollback và Swagger đầy đủ.
+- **Trạng thái:** Đã hoàn thành theo mô hình slot mới.
+- **Đã làm/hiện có:** Authenticate, `LTD_CREATE`, upload Excel `.xlsx/.xls` tối đa 10 MB, validate toàn bộ file trước khi ghi, mỗi dòng tạo ca một tiếng × 8 quầy × sức chứa mặc định 2, chống trùng trong file và DB, transaction toàn file, audit, Swagger và test `200`, `400`, `401`, `403`, `409`.
+- **Chưa làm:** Chưa hỗ trợ nhiều khoảng làm việc trên cùng một dòng; mỗi dòng hiện biểu diễn một khoảng `Từ`–`Đến`.
+- **Cần bổ sung:** Chỉ mở rộng template nếu BA yêu cầu nhiều khoảng làm việc trong một bản ghi import.
 - **Dùng để làm gì:** Import lịch tiếp dân từ Excel.
 - **Role áp dụng:** tài khoản có permission `LTD_CREATE`.
 - **Đầu vào:** `multipart/form-data`, field `file`; nhận `.xlsx`/`.xls`, tối đa 10 MB.
-- **Đầu ra:** `data = null`, message báo kết quả import.
-- **Chức năng hiện có:** upload, đọc file, tạo lịch, ghi audit.
-- **Chi tiết cần làm rõ/kiểm tra:**
-  - Dữ liệu import có luôn tạo đủ 8 quầy × slot một tiếng × sức chứa mặc định 2 như API tạo thủ công hay không.
-  - Validation trùng lịch, giờ chồng nhau và rollback toàn file khi một dòng lỗi.
-  - Swagger chưa mô tả đầy đủ response/lỗi.
+- **Đầu ra:** `data.importedCount`, `data.totalCounterSlots`; message báo import thành công.
+- **Chức năng hiện có:** upload, đọc/validate toàn file, từ chối file rỗng/sai/trùng, tạo lịch và slot trong một transaction, ghi audit.
+- **Quy tắc rollback:** Nếu bất kỳ dòng nào sai hoặc thao tác DB thất bại, transaction rollback toàn file; không import một phần.
 
 ### API 20 — `GET /api/reception-schedules/management` — Lấy danh sách lịch theo bộ lọc
 

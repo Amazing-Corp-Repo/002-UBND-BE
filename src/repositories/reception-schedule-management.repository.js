@@ -4,6 +4,35 @@ import LichTiepDanRepository from "./lich-tiep-dan.repository.js";
 const ReceptionScheduleManagementRepository = {
   ...LichTiepDanRepository,
 
+  async findImportConflicts(records) {
+    return prisma.lich_tiep_dan.findMany({
+      where: {
+        is_delete: false,
+        OR: records.map((record) => ({
+          ten_can_bo: record.officerName,
+          ngay_tiep_dan: record.scheduleData.ngay_tiep_dan,
+        })),
+      },
+      select: { id: true, ten_can_bo: true, ngay_tiep_dan: true },
+    });
+  },
+
+  async createManyWithSlots(records) {
+    return prisma.$transaction(async (tx) => {
+      for (const record of records) {
+        const schedule = await tx.lich_tiep_dan.create({
+          data: record.scheduleData,
+        });
+        await tx.khung_gio_tiep_dan.createMany({
+          data: record.slotRows.map((slot) => ({
+            ...slot,
+            id_lich_tiep_dan: schedule.id,
+          })),
+        });
+      }
+    });
+  },
+
   async createWithSlots(scheduleData, slotRows) {
     return prisma.$transaction(async (tx) => {
       const schedule = await tx.lich_tiep_dan.create({ data: scheduleData });

@@ -5,6 +5,7 @@ const ReceptionScheduleManagementSwagger = {
         post: {
             tags: ['ReceptionScheduleManagement'],
             summary: 'Import lịch tiếp dân từ file Excel',
+            description: 'Đọc và kiểm tra toàn bộ file trước khi ghi dữ liệu. Mỗi dòng tạo lịch cùng các ca một tiếng, 8 quầy và sức chứa mặc định 2 người/quầy/ca. File được xử lý trong một transaction; nếu có dòng sai hoặc trùng thì không lưu dòng nào.',
             security: [{ bearerAuth: [] }],
             requestBody: {
                 required: true,
@@ -12,6 +13,7 @@ const ReceptionScheduleManagementSwagger = {
                     'multipart/form-data': {
                         schema: {
                             type: 'object',
+                            required: ['file'],
                             properties: {
                                 file: {
                                     type: 'string',
@@ -23,7 +25,34 @@ const ReceptionScheduleManagementSwagger = {
                     },
                 },
             },
-            responses: {}
+            responses: {
+                200: {
+                    description: 'Import lịch tiếp dân và cấu hình slot thành công',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    success: { type: 'boolean', example: true },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            importedCount: { type: 'integer', minimum: 1 },
+                                            totalCounterSlots: { type: 'integer', minimum: 8 },
+                                        },
+                                    },
+                                    message: { type: 'string', example: 'Import lịch tiếp dân thành công' },
+                                    pagination: { nullable: true, example: null },
+                                },
+                            },
+                        },
+                    },
+                },
+                400: { description: 'Thiếu file, sai định dạng, file rỗng hoặc dữ liệu một dòng không hợp lệ' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Không có quyền LTD_CREATE' },
+                409: { description: 'Trùng cán bộ và ngày tiếp dân trong file hoặc trong dữ liệu hiện có' },
+            }
         },
     },
     '/api/reception-schedules/management': {

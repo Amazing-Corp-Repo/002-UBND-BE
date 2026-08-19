@@ -6,7 +6,7 @@ const ReceptionScheduleManagementController = {
         const file = req.files;
         const currentUser = req.payload.userId;
         const data = await ReceptionScheduleManagementService.handleImport(file, currentUser);
-        return successResponse(res, null, data.message);
+        return successResponse(res, data, "Import lịch tiếp dân thành công");
     },
 
     async getLichTiepDan(req, res) {

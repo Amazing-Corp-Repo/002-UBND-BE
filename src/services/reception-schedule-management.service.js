@@ -7,6 +7,8 @@ import {
 } from "../constants/reception-schedule.constant.js";
 import ReceptionScheduleManagementRepository from "../repositories/reception-schedule-management.repository.js";
 import LichTiepDanService from "./lich-tiep-dan.service.js";
+import FileService from "./file.service.js";
+import { toSnakeCaseNonAccent } from "../utils/string.util.js";
 
 const toMinutes = (value) => {
   const [hour, minute] = value.split(":").map(Number);
@@ -17,6 +19,95 @@ const toTime = (minutes) =>
   `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
     minutes % 60
   ).padStart(2, "0")}`;
+
+const isRealCalendarDate = (value) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return (
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  );
+};
+
+const parseImportDate = (value) => {
+  if (typeof value === "number") {
+    const date = new Date(Date.UTC(1899, 11, 30) + Math.floor(value) * 86400000);
+    return date.toISOString().slice(0, 10);
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value !== "string") return null;
+
+  const normalized = value.trim();
+  if (isRealCalendarDate(normalized)) return normalized;
+  const vietnameseDate = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(normalized);
+  if (!vietnameseDate) return null;
+  const [, day, month, year] = vietnameseDate;
+  const result = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  return isRealCalendarDate(result) ? result : null;
+};
+
+const parseImportTime = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return `${String(value.getUTCHours()).padStart(2, "0")}:${String(
+      value.getUTCMinutes()
+    ).padStart(2, "0")}`;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const minutes = Math.round((value - Math.floor(value)) * 1440) % 1440;
+    return toTime(minutes);
+  }
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(normalized)) return normalized;
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parseImportTime(parsed);
+};
+
+const normalizeImportRow = (item, index, currentUser) => {
+  const row = Object.fromEntries(
+    Object.entries(item).map(([key, value]) => [toSnakeCaseNonAccent(key), value])
+  );
+  const rowNumber = index + 2;
+  const officerName = String(row.ten_can_bo || "").trim();
+  const location = String(row.dia_diem || "").trim();
+  const receptionDate = parseImportDate(row.ngay_tiep_dan);
+  const startTime = parseImportTime(row.tu);
+  const endTime = parseImportTime(row.den);
+
+  if (!officerName || !location || !receptionDate || !startTime || !endTime) {
+    throw new BaseError(
+      400,
+      `Dòng ${rowNumber} thiếu hoặc sai địa điểm, cán bộ, ngày, giờ bắt đầu hoặc giờ kết thúc`
+    );
+  }
+
+  let periods;
+  try {
+    periods = normalizeWorkingPeriods({
+      workingPeriods: [{ startTime, endTime }],
+    });
+  } catch (error) {
+    throw new BaseError(400, `Dòng ${rowNumber}: ${error.message}`);
+  }
+  const timeRange = periods
+    .map((period) => `${period.startTime} - ${period.endTime}`)
+    .join(", ");
+
+  return {
+    officerName,
+    receptionDate,
+    scheduleData: {
+      ten_can_bo: officerName,
+      dia_diem: location,
+      ngay_tiep_dan: new Date(`${receptionDate}T00:00:00.000Z`),
+      thoi_gian: timeRange,
+      ghi_chu: row.ghi_chu ? String(row.ghi_chu).trim() : null,
+      nguoi_tao: currentUser,
+    },
+    slotRows: buildScheduleSlotRows(periods, currentUser),
+  };
+};
 
 export const normalizeWorkingPeriods = ({
   batDau,
@@ -129,6 +220,47 @@ const mapCreatedSchedule = (schedule) => {
 
 const ReceptionScheduleManagementService = {
   ...LichTiepDanService,
+
+  async handleImport(files = [], currentUser) {
+    if (!files?.length) {
+      throw new BaseError(400, "File không được để trống");
+    }
+    const spreadsheetRows = await FileService.readSpreadsheetFile(files[0].path);
+    const nonEmptyRows = spreadsheetRows.filter((row) =>
+      Object.values(row).some((value) => value !== null && value !== "")
+    );
+    if (nonEmptyRows.length === 0) {
+      throw new BaseError(400, "File import không có dữ liệu");
+    }
+
+    const records = nonEmptyRows.map((row, index) =>
+      normalizeImportRow(row, index, currentUser)
+    );
+    const seen = new Set();
+    for (const record of records) {
+      const key = `${record.officerName.toLocaleLowerCase("vi")}::${record.receptionDate}`;
+      if (seen.has(key)) {
+        throw new BaseError(409, "File có lịch trùng cán bộ và ngày tiếp dân");
+      }
+      seen.add(key);
+    }
+
+    const conflicts =
+      await ReceptionScheduleManagementRepository.findImportConflicts(records);
+    if (conflicts.length > 0) {
+      throw new BaseError(409, "Lịch của cán bộ trong ngày tiếp dân đã tồn tại");
+    }
+
+    await ReceptionScheduleManagementRepository.createManyWithSlots(records);
+    const totalCounterSlots = records.reduce(
+      (total, record) => total + record.slotRows.length,
+      0
+    );
+    return {
+      importedCount: records.length,
+      totalCounterSlots,
+    };
+  },
 
   async getLichTiepDanById(id) {
     if (id === null || id === undefined) {

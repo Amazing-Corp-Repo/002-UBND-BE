@@ -81,25 +81,30 @@ const FileService = {
   },
 
   async readSpreadsheetFile(filePath) {
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(filePath);
-    const worksheet = workbook.worksheets[0];
+    let rows = [];
+    if (path.extname(filePath).toLowerCase() === ".xls") {
+      const workbook = XLSX.readFile(filePath, { cellDates: true });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(worksheet, { defval: null, raw: true });
+    } else {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(filePath);
+      const worksheet = workbook.worksheets[0];
+      let headers = [];
 
-    const rows = [];
-    let headers = [];
-
-    worksheet.eachRow((row, rowNumber) => {
-      const values = row.values.slice(1);
-      if (rowNumber === 1) {
-        headers = values.map((v) => String(v || "").trim());
-      } else {
-        const obj = {};
-        headers.forEach((key, i) => {
-          obj[key] = values[i] ?? null;
-        });
-        rows.push(obj);
-      }
-    });
+      worksheet.eachRow((row, rowNumber) => {
+        const values = row.values.slice(1);
+        if (rowNumber === 1) {
+          headers = values.map((v) => String(v || "").trim());
+        } else {
+          const obj = {};
+          headers.forEach((key, i) => {
+            obj[key] = values[i] ?? null;
+          });
+          rows.push(obj);
+        }
+      });
+    }
     try {
       const parentDir = path.dirname(filePath);
       await fs.remove(parentDir);
