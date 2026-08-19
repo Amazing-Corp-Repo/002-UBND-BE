@@ -214,10 +214,17 @@ model phan_cong_quay_tiep_dan {
   cau_hinh_quay         khung_gio_tiep_dan @relation(fields: [id_cau_hinh_quay], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_phan_cong_quay_cau_hinh")
   can_bo                nguoi_dung          @relation("PhanCongQuay_CanBo", fields: [id_can_bo], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
-  @@unique([id_cau_hinh_quay], map: "uq_phan_cong_quay_cau_hinh")
   @@index([id_can_bo], map: "idx_phan_cong_quay_id_can_bo")
   @@index([is_active, is_delete], map: "idx_phan_cong_quay_trang_thai")
 }
+```
+
+Vì phân công dùng soft delete và cần giữ lịch sử, không dùng `@@unique([id_cau_hinh_quay])` cho toàn bộ bảng. Database dùng partial unique index chỉ áp dụng cho phân công đang hoạt động:
+
+```sql
+CREATE UNIQUE INDEX "uq_phan_cong_quay_cau_hinh_active_v2"
+ON "phan_cong_quay_tiep_dan" ("id_cau_hinh_quay")
+WHERE "is_active" = true AND "is_delete" = false;
 ```
 
 Quy tắc service:

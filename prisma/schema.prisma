@@ -941,7 +941,6 @@ model phan_cong_quay_tiep_dan {
   cau_hinh_quay         khung_gio_tiep_dan @relation(fields: [id_cau_hinh_quay], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_phan_cong_quay_cau_hinh")
   can_bo                nguoi_dung          @relation("PhanCongQuay_CanBo", fields: [id_can_bo], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_phan_cong_quay_can_bo")
 
-  @@unique([id_cau_hinh_quay], map: "uq_phan_cong_quay_cau_hinh")
   @@index([id_can_bo], map: "idx_phan_cong_quay_id_can_bo")
   @@index([is_active, is_delete], map: "idx_phan_cong_quay_trang_thai")
 }
