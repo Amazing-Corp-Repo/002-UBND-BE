@@ -3,6 +3,7 @@ import {
   errorDemo,
   successDemo,
 } from "./reception-demo-example.util.js";
+import { RECEPTION_SWAGGER_DEMO as DEMO } from "./reception-swagger-demo.fixture.js";
 
 const ReceptionRatingSwagger = {
   "/api/reception-ratings": {
@@ -447,6 +448,15 @@ const ratingDemo = {
 
 applyReceptionDemoExamples(ReceptionRatingSwagger, {
   "GET /api/reception-ratings": {
+    parameters: {
+      page: 1,
+      size: 10,
+      search: DEMO.registrations.rated.code,
+      score: null,
+      department: null,
+      fromDate: null,
+      toDate: null,
+    },
     responses: {
       200: successDemo(
         "Lấy danh sách đánh giá tiếp dân thành công",
@@ -464,7 +474,7 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
       validFiveStarRating: {
         summary: "Demo hợp lệ - đánh giá 5 sao",
         value: {
-          receptionCode: "A00123",
+          receptionCode: DEMO.registrations.ratingCreate.code,
           score: 5,
           selectedSuggestions: [
             "Cán bộ rất tận tình và chuyên nghiệp",
@@ -475,12 +485,12 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
       },
       missingScore: {
         summary: "Demo lỗi 400 - thiếu số sao",
-        value: { receptionCode: "A00123" },
+        value: { receptionCode: DEMO.registrations.ratingCreate.code },
       },
       suggestionDoesNotMatchScore: {
         summary: "Demo lỗi 400 - gợi ý không đúng số sao",
         value: {
-          receptionCode: "A00123",
+          receptionCode: DEMO.registrations.ratingCreate.code,
           score: 1,
           selectedSuggestions: ["Cán bộ rất tận tình và chuyên nghiệp"],
         },
@@ -538,6 +548,7 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
     },
   },
   "GET /api/reception-ratings/{id}": {
+    parameters: { id: DEMO.ratingId },
     responses: {
       200: successDemo("Lấy chi tiết đánh giá tiếp dân thành công", {
         id: ratingDemo.id,
@@ -567,6 +578,11 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
     },
   },
   "GET /api/reception-ratings/statistics": {
+    parameters: {
+      department: "QUAY_5",
+      fromDate: DEMO.dates.main,
+      toDate: DEMO.dates.main,
+    },
     responses: {
       200: successDemo("Lấy thống kê đánh giá tiếp dân thành công", {
         totalRatings: 4,

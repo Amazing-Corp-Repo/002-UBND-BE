@@ -3,6 +3,7 @@ import {
   errorDemo,
   successDemo,
 } from "./reception-demo-example.util.js";
+import { RECEPTION_SWAGGER_DEMO as DEMO } from "./reception-swagger-demo.fixture.js";
 
 const registrationRequestSchema = {
   type: "object",
@@ -534,6 +535,15 @@ const registrationDemo = {
 
 applyReceptionDemoExamples(DangKyTiepDanSwagger, {
   "GET /api/reception-registrations": {
+    parameters: {
+      page: 1,
+      size: 10,
+      search: "SWG",
+      receptionDate: null,
+      approvalStatus: null,
+      ratingStatus: null,
+      department: null,
+    },
     responses: {
       200: successDemo(
         "Lấy danh sách đăng ký tiếp dân thành công",
@@ -552,13 +562,13 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
       validRegistration: {
         summary: "Demo hợp lệ - đăng ký bằng slotId",
         value: {
-          idLichTiepDan: "123e4567-e89b-42d3-a456-426614174000",
-          slotId: "223e4567-e89b-42d3-a456-426614174000",
+          idLichTiepDan: DEMO.schedules.main,
+          slotId: DEMO.slots.main,
           chuDe: "Hướng dẫn thủ tục hành chính",
           lyDo: "Đề nghị hướng dẫn hồ sơ xác nhận thông tin cư trú",
           hoTen: "Nguyễn Văn An",
-          sdt: "0912345678",
-          cccd: "042204001234",
+          sdt: DEMO.publicRegistration.phone,
+          cccd: DEMO.publicRegistration.citizenId,
           diaChi: "Phường Thành Sen, tỉnh Hà Tĩnh",
         },
       },
@@ -605,15 +615,15 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
     request: {
       lookupByCode: {
         summary: "Demo tra cứu bằng mã tiếp dân",
-        value: { receptionCode: "A00123" },
+        value: { receptionCode: DEMO.registrations.detail.code },
       },
       lookupByPhone: {
         summary: "Demo tra cứu bằng số điện thoại",
-        value: { phoneNumber: "0912345678" },
+        value: { phoneNumber: "0902000001" },
       },
       invalidLookup: {
         summary: "Demo lỗi 400 - gửi đồng thời hai điều kiện",
-        value: { receptionCode: "A00123", phoneNumber: "0912345678" },
+        value: { receptionCode: DEMO.registrations.detail.code, phoneNumber: "0902000001" },
       },
     },
     responses: {
@@ -629,6 +639,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
     },
   },
   "GET /api/reception-registrations/{id}": {
+    parameters: { id: DEMO.registrations.detail.id },
     responses: {
       200: successDemo("Lấy chi tiết đăng ký tiếp dân thành công", registrationDemo),
       404: errorDemo(
@@ -638,6 +649,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
     },
   },
   "PATCH /api/reception-registrations/{id}/approve": {
+    parameters: { id: DEMO.registrations.approve.id },
     request: {
       validCounter: {
         summary: "Demo hợp lệ - phê duyệt vào quầy 3",
@@ -670,6 +682,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
     },
   },
   "PATCH /api/reception-registrations/{id}/complete": {
+    parameters: { id: DEMO.registrations.complete.id },
     responses: {
       200: successDemo("Hoàn thành buổi tiếp dân thành công", {
         ...registrationDemo,
@@ -683,6 +696,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
     },
   },
   "PATCH /api/reception-registrations/{id}/reject": {
+    parameters: { id: DEMO.registrations.reject.id },
     request: {
       validReason: {
         summary: "Demo hợp lệ - từ chối có lý do",
@@ -707,6 +721,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
     },
   },
   "GET /api/reception-registrations/rating-lookup/{receptionCode}": {
+    parameters: { receptionCode: DEMO.registrations.ratingLookup.code },
     responses: {
       200: successDemo("Lấy thông tin để người dân xác nhận thành công", {
         ...registrationDemo,

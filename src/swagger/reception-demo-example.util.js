@@ -114,8 +114,16 @@ export const applyReceptionDemoExamples = (swagger, demos = {}) => {
       const demo = demos[`${method.toUpperCase()} ${path}`] || {};
       for (const parameter of operation.parameters || []) {
         if (!(parameter.name in PARAMETER_TEST_VALUES)) continue;
-        parameter.example = PARAMETER_TEST_VALUES[parameter.name];
-        if (PARAMETER_NOTES[parameter.name]) {
+        const hasConfiguredValue = Object.hasOwn(demo.parameters || {}, parameter.name);
+        const configuredValue = demo.parameters?.[parameter.name];
+        if (hasConfiguredValue && configuredValue === null) {
+          delete parameter.example;
+          continue;
+        }
+        parameter.example = hasConfiguredValue
+          ? configuredValue
+          : PARAMETER_TEST_VALUES[parameter.name];
+        if (PARAMETER_NOTES[parameter.name] && !hasConfiguredValue) {
           const note = PARAMETER_NOTES[parameter.name];
           if (!parameter.description?.includes(note)) {
             parameter.description = parameter.description

@@ -4,6 +4,7 @@ import {
     errorDemo,
     successDemo,
 } from "./reception-demo-example.util.js";
+import { RECEPTION_SWAGGER_DEMO as DEMO } from "./reception-swagger-demo.fixture.js";
 
 const ReceptionScheduleManagementSwagger = {
     '/api/reception-schedules/management/import': {
@@ -564,6 +565,7 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'GET /api/reception-schedules/management': {
+        parameters: { weekYear: null, monthYear: '8/2099', date: null, isActive: true },
         responses: {
             200: successDemo('Lấy danh sách lịch tiếp dân thành công', [managementScheduleDemo]),
             400: errorDemo(
@@ -574,6 +576,17 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'POST /api/reception-schedules/management': {
+        request: {
+            defaultWorkingHours: {
+                summary: 'Demo DEV hợp lệ - tạo lịch với giờ mặc định',
+                value: {
+                    tenCanBo: DEMO.createScheduleOfficer,
+                    diaDiem: 'Bộ phận tiếp công dân',
+                    ngayTiepDan: DEMO.dates.create,
+                    ghiChu: 'Lịch được tạo khi chạy thử Swagger',
+                },
+            },
+        },
         responses: {
             200: successDemo('Tạo lịch tiếp dân thành công', managementScheduleWithSlotsDemo),
             400: {
@@ -589,6 +602,7 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'GET /api/reception-schedules/management/pagination': {
+        parameters: { weekYear: null, monthYear: '8/2099', date: null, page: 1, size: 10, isActive: true },
         responses: {
             200: successDemo(
                 'Lấy danh sách lịch tiếp dân có phân trang thành công',
@@ -603,6 +617,7 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'GET /api/reception-schedules/management/count': {
+        parameters: { weekYear: null, monthYear: '8/2099', date: null },
         responses: {
             200: successDemo('Đếm lịch tiếp dân thành công', {
                 total: 12,
@@ -612,6 +627,7 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'DELETE /api/reception-schedules/management/{id}': {
+        parameters: { id: DEMO.schedules.deletion },
         responses: {
             200: successDemo('Xóa lịch tiếp dân thành công', null),
             409: {
@@ -627,6 +643,7 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'GET /api/reception-schedules/management/{id}': {
+        parameters: { id: DEMO.schedules.main },
         responses: {
             200: successDemo('Lấy chi tiết lịch tiếp dân thành công', managementScheduleWithSlotsDemo),
             404: errorDemo(
@@ -636,19 +653,23 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'PUT /api/reception-schedules/management/{id}': {
+        parameters: { id: DEMO.schedules.update },
         request: {
             updateMetadata: {
                 summary: 'Demo hợp lệ - chỉ cập nhật thông tin mô tả',
                 value: {
-                    tenCanBo: 'Nguyễn Văn An',
+                    tenCanBo: 'Cán bộ Swagger đã cập nhật',
                     diaDiem: 'Bộ phận tiếp công dân',
+                    ngayTiepDan: DEMO.dates.update,
                     ghiChu: 'Lịch đã được lãnh đạo điều chỉnh',
                 },
             },
             updateWorkingPeriods: {
                 summary: 'Demo hợp lệ - cập nhật hai khoảng làm việc',
                 value: {
-                    ngayTiepDan: '2026-08-26',
+                    tenCanBo: 'Cán bộ Swagger cập nhật',
+                    diaDiem: 'Bộ phận tiếp công dân',
+                    ngayTiepDan: DEMO.dates.update,
                     workingPeriods: [
                         { startTime: '07:30', endTime: '11:30' },
                         { startTime: '13:30', endTime: '16:30' },
@@ -669,6 +690,7 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
         },
     },
     'PUT /api/reception-schedules/management/{id}/status': {
+        parameters: { id: DEMO.schedules.status },
         request: {
             activateSchedule: {
                 summary: 'Demo hợp lệ - bật lịch',

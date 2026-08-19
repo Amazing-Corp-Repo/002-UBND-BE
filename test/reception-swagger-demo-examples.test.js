@@ -4,6 +4,7 @@ import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
 import ReceptionRatingSwagger from "../src/swagger/reception-rating.swagger.js";
 import ReceptionScheduleManagementSwagger from "../src/swagger/reception-schedule-management.swagger.js";
 import ReceptionScheduleSwagger from "../src/swagger/reception-schedule.swagger.js";
+import { RECEPTION_SWAGGER_DEMO as DEMO } from "../src/swagger/reception-swagger-demo.fixture.js";
 
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
 const swaggerGroups = [
@@ -44,19 +45,48 @@ describe("Reception Swagger demo examples", () => {
     }
   });
 
-  it("prefills every path and query parameter with a test value", () => {
+  it("prefills every required path parameter with a real DEV fixture value", () => {
     for (const { path, method, operation } of operations) {
       for (const parameter of operation.parameters || []) {
+        if (parameter.in !== "path") continue;
         assert.notEqual(
           parameter.example,
           undefined,
           `${method.toUpperCase()} ${path} thiếu giá trị test cho ${parameter.name}`
         );
-        if (["id", "scheduleId", "slotId"].includes(parameter.name)) {
-          assert.ok(parameter.description.includes("thay bằng"));
-        }
       }
     }
+  });
+
+  it("uses independent real DEV fixtures for state-changing APIs", () => {
+    const parameter = (operation, name) =>
+      operation.parameters.find((item) => item.name === name).example;
+
+    assert.equal(
+      parameter(DangKyTiepDanSwagger["/api/reception-registrations/{id}/approve"].patch, "id"),
+      DEMO.registrations.approve.id
+    );
+    assert.equal(
+      parameter(DangKyTiepDanSwagger["/api/reception-registrations/{id}/complete"].patch, "id"),
+      DEMO.registrations.complete.id
+    );
+    assert.equal(
+      parameter(DangKyTiepDanSwagger["/api/reception-registrations/{id}/reject"].patch, "id"),
+      DEMO.registrations.reject.id
+    );
+    assert.equal(
+      parameter(ReceptionRatingSwagger["/api/reception-ratings/{id}"].get, "id"),
+      DEMO.ratingId
+    );
+    assert.equal(
+      ReceptionRatingSwagger["/api/reception-ratings"].post.requestBody.content["application/json"]
+        .examples.validFiveStarRating.value.receptionCode,
+      DEMO.registrations.ratingCreate.code
+    );
+    assert.equal(
+      parameter(ReceptionScheduleManagementSwagger["/api/reception-schedules/management/{id}"].delete, "id"),
+      DEMO.schedules.deletion
+    );
   });
 
   it("provides selectable valid and invalid request demos for main write flows", () => {

@@ -3,6 +3,7 @@ import {
   errorDemo,
   successDemo,
 } from "./reception-demo-example.util.js";
+import { RECEPTION_SWAGGER_DEMO as DEMO } from "./reception-swagger-demo.fixture.js";
 
 const ReceptionScheduleSwagger = {
   "/api/reception-schedules": {
@@ -99,6 +100,7 @@ const ReceptionScheduleSwagger = {
 
 applyReceptionDemoExamples(ReceptionScheduleSwagger, {
   "GET /api/reception-schedules": {
+    parameters: { fromDate: DEMO.dates.main, toDate: "2099-08-31" },
     responses: {
       400: errorDemo(
         "Demo 400 - Khoảng ngày không hợp lệ",
@@ -107,6 +109,10 @@ applyReceptionDemoExamples(ReceptionScheduleSwagger, {
     },
   },
   "PATCH /api/reception-schedules/{scheduleId}/slots/{slotId}/capacity": {
+    parameters: {
+      scheduleId: DEMO.schedules.capacity,
+      slotId: DEMO.slots.capacity,
+    },
     request: {
       validCapacity: {
         summary: "Demo hợp lệ - tăng sức chứa quầy lên 3",
