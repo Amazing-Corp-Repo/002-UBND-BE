@@ -37,6 +37,14 @@ const LeaderMeetingScheduleController = {
       "Lấy chi tiết lịch gặp lãnh đạo thành công"
     );
   },
+
+  async createManagement(req, res) {
+    const data = await LeaderMeetingScheduleService.createManagementSchedule(
+      req.body,
+      req.payload
+    );
+    return successResponse(res, data, "Tạo lịch gặp lãnh đạo thành công");
+  },
 };
 
 export default LeaderMeetingScheduleController;

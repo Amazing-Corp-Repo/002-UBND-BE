@@ -153,6 +153,29 @@ const LeaderMeetingScheduleRepository = {
       },
     });
   },
+
+  async createManagement(data) {
+    return prisma.lich_gap_lanh_dao.create({
+      data: {
+        id_lanh_dao: data.leaderId,
+        ngay: data.receptionDate,
+        dia_diem: data.location,
+        ghi_chu: data.note,
+        nguoi_tao: data.leaderId,
+        nguoi_cap_nhat: data.leaderId,
+        khung_gio_gap_lanh_dao: {
+          create: data.slots.map((slot) => ({
+            gio_bat_dau: slot.startTime,
+            gio_ket_thuc: slot.endTime,
+            suc_chua: 1,
+            nguoi_tao: data.leaderId,
+            nguoi_cap_nhat: data.leaderId,
+          })),
+        },
+      },
+      select: { id: true },
+    });
+  },
 };
 
 export default LeaderMeetingScheduleRepository;

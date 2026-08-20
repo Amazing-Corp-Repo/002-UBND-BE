@@ -117,6 +117,73 @@ const LeaderMeetingScheduleSwagger = {
         403: { description: "Không có quyền LMS_GET_ALL" },
       },
     },
+    post: {
+      tags: ["LeaderMeetingSchedule"],
+      summary: "Lãnh đạo tự tạo lịch gặp công dân",
+      description:
+        "Yêu cầu quyền LMS_CREATE và vai trò LANH_DAO/LEADER. Backend lấy leaderId từ access token, không nhận leaderId từ body. Mỗi lãnh đạo chỉ có một lịch trong một ngày; lịch phải có 1-20 khung giờ không chồng lấn. Khung giờ có thể là 90 phút mặc định hoặc thời lượng tùy chọn và luôn có sức chứa mặc định 1.",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["receptionDate", "slots"],
+              properties: {
+                receptionDate: { type: "string", format: "date", example: "2099-08-25" },
+                location: { type: "string", example: "Phòng tiếp công dân" },
+                note: { type: "string", example: "Tiếp công dân định kỳ" },
+                slots: {
+                  type: "array",
+                  minItems: 1,
+                  maxItems: 20,
+                  items: {
+                    type: "object",
+                    required: ["startTime", "endTime"],
+                    properties: {
+                      startTime: { type: "string", example: "09:00" },
+                      endTime: { type: "string", example: "10:30" },
+                    },
+                  },
+                },
+              },
+            },
+            examples: {
+              valid: {
+                summary: "Demo hợp lệ - hai khung 90 phút",
+                value: {
+                  receptionDate: "2099-08-25",
+                  location: "Phòng tiếp công dân",
+                  note: "Tiếp công dân định kỳ",
+                  slots: [
+                    { startTime: "08:00", endTime: "09:30" },
+                    { startTime: "09:30", endTime: "11:00" },
+                  ],
+                },
+              },
+              overlap: {
+                summary: "Demo lỗi 400 - khung giờ chồng lấn",
+                value: {
+                  receptionDate: "2099-08-25",
+                  slots: [
+                    { startTime: "08:00", endTime: "09:30" },
+                    { startTime: "09:00", endTime: "10:30" },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Tạo lịch gặp lãnh đạo thành công" },
+        400: { description: "Ngày hoặc khung giờ không hợp lệ/chồng lấn" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMS_CREATE hoặc không phải lãnh đạo" },
+        409: { description: "Lãnh đạo đã có lịch trong ngày này" },
+      },
+    },
   },
   "/api/leader-meeting-schedules": {
     get: {

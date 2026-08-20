@@ -43,3 +43,33 @@ export const LeaderMeetingScheduleIdParams = Joi.object({
     "any.required": "ID lịch gặp lãnh đạo là bắt buộc",
   }),
 });
+
+const leaderMeetingSlotSchema = Joi.object({
+  startTime: Joi.string()
+    .pattern(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Giờ bắt đầu phải có định dạng HH:mm",
+      "any.required": "Giờ bắt đầu là bắt buộc",
+    }),
+  endTime: Joi.string()
+    .pattern(/^([01]\d|2[0-3]):[0-5]\d$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Giờ kết thúc phải có định dạng HH:mm",
+      "any.required": "Giờ kết thúc là bắt buộc",
+    }),
+});
+
+export const CreateLeaderMeetingScheduleRequest = Joi.object({
+  receptionDate: dateSchema("Ngày gặp lãnh đạo").required().messages({
+    "any.required": "Ngày gặp lãnh đạo là bắt buộc",
+  }),
+  location: Joi.string().trim().max(255).optional().allow("", null),
+  note: Joi.string().trim().max(2000).optional().allow("", null),
+  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).required().messages({
+    "array.min": "Phải có ít nhất một khung giờ",
+    "array.max": "Một lịch chỉ được có tối đa 20 khung giờ",
+    "any.required": "Danh sách khung giờ là bắt buộc",
+  }),
+});
