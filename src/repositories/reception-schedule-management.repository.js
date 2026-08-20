@@ -41,16 +41,33 @@ const buildV2SlotRows = async (tx, slotRows, scheduleId, caEntries) => {
 const ReceptionScheduleManagementRepository = {
   ...LichTiepDanRepository,
 
+  async findActiveCountersByCodes(counterCodes) {
+    if (!counterCodes.length) return [];
+    return prisma.quay_tiep_dan.findMany({
+      where: {
+        ma_quay: { in: counterCodes },
+        is_active: true,
+        is_delete: false,
+      },
+      select: {
+        id: true,
+        ma_quay: true,
+        ten_quay: true,
+        suc_chua_mac_dinh: true,
+      },
+    });
+  },
+
   async findImportConflicts(records) {
     return prisma.lich_tiep_dan.findMany({
       where: {
         is_delete: false,
         OR: records.map((record) => ({
-          ten_can_bo: record.officerName,
+          dia_diem: record.location,
           ngay_tiep_dan: record.scheduleData.ngay_tiep_dan,
         })),
       },
-      select: { id: true, ten_can_bo: true, ngay_tiep_dan: true },
+      select: { id: true, dia_diem: true, ngay_tiep_dan: true },
     });
   },
 
@@ -74,9 +91,41 @@ const ReceptionScheduleManagementRepository = {
           caEntries.push({ gio_bat_dau: ca.gio_bat_dau, gio_ket_thuc: ca.gio_ket_thuc, id: caEntry.id });
         }
         // Create khung_gio_tiep_dan with id_ca_tiep_dan set
-        await tx.khung_gio_tiep_dan.createMany({
-          data: await buildV2SlotRows(tx, record.slotRows, schedule.id, caEntries),
+        const slotRows = await buildV2SlotRows(
+          tx,
+          record.slotRows,
+          schedule.id,
+          caEntries
+        );
+        await tx.khung_gio_tiep_dan.createMany({ data: slotRows });
+
+        const configurations = await tx.khung_gio_tiep_dan.findMany({
+          where: { id_lich_tiep_dan: schedule.id },
+          select: { id: true, khung_gio: true, ma_quay: true },
         });
+        const configurationMap = new Map(
+          configurations.map((configuration) => [
+            `${configuration.khung_gio}::${configuration.ma_quay}`,
+            configuration.id,
+          ])
+        );
+        const assignmentData = record.assignmentRows.map((assignment) => {
+          const configurationId = configurationMap.get(
+            `${assignment.khung_gio}::${assignment.ma_quay}`
+          );
+          if (!configurationId) {
+            throw new Error(
+              `Không tìm thấy cấu hình quầy ${assignment.ma_quay} trong ca ${assignment.khung_gio}`
+            );
+          }
+          return {
+            id_cau_hinh_quay: configurationId,
+            id_can_bo: assignment.officerId,
+            nguoi_tao: record.scheduleData.nguoi_tao,
+            nguoi_cap_nhat: record.scheduleData.nguoi_tao,
+          };
+        });
+        await tx.phan_cong_quay_tiep_dan.createMany({ data: assignmentData });
       }
     });
   },

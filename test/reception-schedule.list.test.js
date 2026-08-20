@@ -5,18 +5,25 @@ import ReceptionScheduleController from "../src/controllers/reception-schedule.c
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionScheduleRepository from "../src/repositories/reception-schedule.repository.js";
 import receptionScheduleRouter from "../src/routes/reception-schedule.route.js";
-import { buildHourlySlots } from "../src/services/reception-schedule.service.js";
+import {
+  buildHourlySlots,
+  getReceptionVisibilityWindow,
+} from "../src/services/reception-schedule.service.js";
 import ReceptionScheduleSwagger from "../src/swagger/reception-schedule.swagger.js";
 
 const originalFindActiveBetweenDates =
   ReceptionScheduleRepository.findActiveBetweenDates;
+
+const visibilityWindow = getReceptionVisibilityWindow();
+const tomorrow = new Date(`${visibilityWindow.fromDate}T00:00:00.000Z`);
+tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
 const schedules = [
   {
     id: "123e4567-e89b-42d3-a456-426614174000",
     ten_can_bo: "Trần Văn Bình",
     dia_diem: "Trụ sở UBND",
-    ngay_tiep_dan: new Date("2099-08-20T00:00:00.000Z"),
+    ngay_tiep_dan: tomorrow,
     thoi_gian: "08:00 - 10:30",
     ghi_chu: null,
   },
@@ -43,6 +50,7 @@ describe("GET /api/reception-schedules", () => {
     const operation = ReceptionScheduleSwagger["/api/reception-schedules"].get;
 
     assert.ok(operation.description.includes("số chỗ đã giữ"));
+    assert.ok(operation.description.includes("7 ngày"));
     assert.ok(operation.responses[200]);
     assert.equal(
       operation.responses[200].content["application/json"].examples.success.value.data[0]
@@ -78,7 +86,7 @@ describe("GET /api/reception-schedules", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/reception-schedules?fromDate=2099-08-01&toDate=2099-08-31`
+        `http://127.0.0.1:${port}/api/reception-schedules`
       );
       const body = await response.json();
 
@@ -116,7 +124,7 @@ describe("GET /api/reception-schedules", () => {
     const { port } = server.address();
     try {
       const response = await fetch(
-        `http://127.0.0.1:${port}/api/reception-schedules?fromDate=2099-08-01&toDate=2099-08-31`
+        `http://127.0.0.1:${port}/api/reception-schedules`
       );
       const body = await response.json();
 
@@ -136,6 +144,51 @@ describe("GET /api/reception-schedules", () => {
       assert.equal(body.data[0].slots[0].status, "FULL");
       assert.equal(body.data[0].slots[0].isFull, true);
       assert.deepEqual(body.data[0].openSlots, []);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("queries only the rolling seven-day Vietnam window", async () => {
+    let capturedRange;
+    ReceptionScheduleRepository.findActiveBetweenDates = async (
+      fromDate,
+      toDate
+    ) => {
+      capturedRange = { fromDate, toDate };
+      return [];
+    };
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules`
+      );
+
+      assert.equal(response.status, 200);
+      assert.deepEqual(capturedRange, visibilityWindow);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("does not expose schedules outside the rolling seven-day window", async () => {
+    let repositoryCalled = false;
+    ReceptionScheduleRepository.findActiveBetweenDates = async () => {
+      repositoryCalled = true;
+      return schedules;
+    };
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-schedules?fromDate=2099-08-01&toDate=2099-08-31`
+      );
+      const body = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.deepEqual(body.data, []);
+      assert.equal(repositoryCalled, false);
     } finally {
       server.close();
     }

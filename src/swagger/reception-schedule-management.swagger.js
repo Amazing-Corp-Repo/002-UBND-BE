@@ -11,7 +11,7 @@ const ReceptionScheduleManagementSwagger = {
         post: {
             tags: ['ReceptionScheduleManagement'],
             summary: 'Import lịch tiếp dân từ file Excel',
-            description: 'Đọc và kiểm tra toàn bộ file trước khi ghi dữ liệu. Mỗi dòng tạo lịch cùng các ca một tiếng, 8 quầy và sức chứa mặc định 2 người/quầy/ca. File được xử lý trong một transaction; nếu có dòng sai hoặc trùng thì không lưu dòng nào.',
+            description: 'Dành cho tài khoản có quyền LTD_CREATE. Mỗi dòng Excel phân công một tài khoản cán bộ trực một quầy trong một khoảng giờ; backend tự tách thành các ca một tiếng, tạo cấu hình quầy và phân công cán bộ trong cùng một transaction. Chỉ các quầy được khai báo mới được mở. Tài khoản cán bộ phải đang hoạt động và có quyền RR_APPROVE. Nếu có dòng sai, trùng quầy/ca, một cán bộ trực nhiều quầy cùng ca hoặc lịch ngày/địa điểm đã tồn tại thì không lưu dữ liệu nào.',
             security: [{ bearerAuth: [] }],
             requestBody: {
                 required: true,
@@ -44,7 +44,9 @@ const ReceptionScheduleManagementSwagger = {
                                         type: 'object',
                                         properties: {
                                             importedCount: { type: 'integer', minimum: 1 },
-                                            totalCounterSlots: { type: 'integer', minimum: 8 },
+                                            importedRowCount: { type: 'integer', minimum: 1 },
+                                            totalCounterSlots: { type: 'integer', minimum: 1 },
+                                            totalAssignments: { type: 'integer', minimum: 1 },
                                         },
                                     },
                                     message: { type: 'string', example: 'Import lịch tiếp dân thành công' },
@@ -54,10 +56,10 @@ const ReceptionScheduleManagementSwagger = {
                         },
                     },
                 },
-                400: { description: 'Thiếu file, sai định dạng, file rỗng hoặc dữ liệu một dòng không hợp lệ' },
+                400: { description: 'Thiếu file, sai định dạng, file rỗng, sai quầy/tài khoản/sức chứa hoặc cán bộ chưa có quyền RR_APPROVE' },
                 401: { description: 'Thiếu hoặc sai access token' },
                 403: { description: 'Không có quyền LTD_CREATE' },
-                409: { description: 'Trùng cán bộ và ngày tiếp dân trong file hoặc trong dữ liệu hiện có' },
+                409: { description: 'Trùng lịch ngày/địa điểm, trùng quầy trong ca hoặc một cán bộ được xếp nhiều quầy cùng ca' },
             }
         },
     },
@@ -500,7 +502,7 @@ const ReceptionScheduleManagementSwagger = {
             tags: ['ReceptionScheduleManagement'],
             security: [{ bearerAuth: [] }],
             summary: 'Lấy template lịch tiếp dân',
-            description: 'Dành cho tài khoản có quyền LTD_GET_TEMPLATE. Trả đường dẫn tương đối tới file Excel mẫu. Sheet LichTiepDan đứng đầu và gồm 6 cột: Địa điểm, Tên cán bộ, Ngày tiếp dân, Ghi chú, Từ, Đến; sheet Hướng dẫn mô tả quy tắc ca một tiếng, 8 quầy và sức chứa mặc định 2.',
+            description: 'Dành cho tài khoản có quyền LTD_GET_TEMPLATE. Trả đường dẫn tương đối tới file Excel mẫu. Sheet LichTiepDan đứng đầu và gồm 9 cột: Ngày tiếp dân, Từ, Đến, Mã quầy, Tài khoản cán bộ, Họ tên cán bộ, Sức chứa / ca, Địa điểm, Ghi chú. Sheet Hướng dẫn mô tả quy tắc phân công cán bộ–quầy, ca một tiếng và quyền RR_APPROVE.',
             responses: {
                 200: {
                     description: 'Lấy đường dẫn file Excel mẫu thành công',
@@ -554,8 +556,10 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
     'POST /api/reception-schedules/management/import': {
         responses: {
             200: successDemo('Import lịch tiếp dân thành công', {
-                importedCount: 2,
-                totalCounterSlots: 112,
+                importedCount: 1,
+                importedRowCount: 8,
+                totalCounterSlots: 32,
+                totalAssignments: 32,
             }),
             400: errorDemo(
                 'Demo 400 - File có dòng không hợp lệ',
@@ -564,7 +568,7 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
             ),
             409: errorDemo(
                 'Demo 409 - Lịch trong file bị trùng',
-                'Lịch tiếp dân của cán bộ vào ngày này đã tồn tại'
+                'Quầy QUAY_1 đã có cán bộ trực trong ca 07:30 - 08:30'
             ),
         },
     },
