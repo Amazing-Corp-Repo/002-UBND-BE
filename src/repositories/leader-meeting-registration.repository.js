@@ -141,6 +141,301 @@ const LeaderMeetingRegistrationRepository = {
       },
     });
   },
+
+  async findManagement({
+    page,
+    limit,
+    search,
+    status,
+    leaderId,
+    fromDate,
+    toDate,
+  }) {
+    const where = {
+      is_active: true,
+      is_delete: false,
+      trang_thai: status,
+      ngay_hen:
+        fromDate || toDate
+          ? {
+              gte: fromDate ? new Date(`${fromDate}T00:00:00.000Z`) : undefined,
+              lte: toDate ? new Date(`${toDate}T23:59:59.999Z`) : undefined,
+            }
+          : undefined,
+      khung_gio_gap_lanh_dao: {
+        lich_gap_lanh_dao: {
+          id_lanh_dao: leaderId || undefined,
+          is_delete: false,
+        },
+      },
+      ...(search
+        ? {
+            OR: [
+              { ma_dang_ky: { contains: search, mode: "insensitive" } },
+              { ho_ten: { contains: search, mode: "insensitive" } },
+              { sdt: { contains: search } },
+              { cccd: { contains: search } },
+              { chu_de: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
+    const [data, totalItems] = await Promise.all([
+      prisma.dang_ky_gap_lanh_dao.findMany({
+        where,
+        orderBy: [{ ngay_hen: "desc" }, { thoi_gian_tao: "desc" }],
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          ma_dang_ky: true,
+          ngay_hen: true,
+          chu_de: true,
+          ho_ten: true,
+          sdt: true,
+          cccd: true,
+          trang_thai: true,
+          thoi_gian_phe_duyet: true,
+          thoi_gian_bat_dau_xu_ly: true,
+          thoi_gian_hoan_thanh: true,
+          thoi_gian_tu_choi: true,
+          thoi_gian_huy: true,
+          thoi_gian_tao: true,
+          khung_gio_gap_lanh_dao: {
+            select: {
+              id: true,
+              gio_bat_dau: true,
+              gio_ket_thuc: true,
+              lich_gap_lanh_dao: {
+                select: {
+                  id: true,
+                  dia_diem: true,
+                  lanh_dao: { select: { id: true, ho_va_ten: true } },
+                },
+              },
+            },
+          },
+          danh_gia_gap_lanh_dao: { select: { id: true } },
+        },
+      }),
+      prisma.dang_ky_gap_lanh_dao.count({ where }),
+    ]);
+    return { data, totalItems };
+  },
+
+  async findManagementDetail(id, leaderId) {
+    return prisma.dang_ky_gap_lanh_dao.findFirst({
+      where: {
+        id,
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: {
+            id_lanh_dao: leaderId || undefined,
+            is_delete: false,
+          },
+        },
+      },
+      select: {
+        id: true,
+        ma_dang_ky: true,
+        ngay_hen: true,
+        chu_de: true,
+        ly_do: true,
+        ho_ten: true,
+        sdt: true,
+        cccd: true,
+        ngay_cap_cccd: true,
+        noi_cap_cccd: true,
+        dia_chi: true,
+        ngay_lam_don: true,
+        trang_thai: true,
+        ly_do_tu_choi: true,
+        ly_do_huy: true,
+        ghi_chu_xu_ly: true,
+        ghi_chu_hoan_thanh: true,
+        thoi_gian_phe_duyet: true,
+        thoi_gian_bat_dau_xu_ly: true,
+        thoi_gian_hoan_thanh: true,
+        thoi_gian_tu_choi: true,
+        thoi_gian_huy: true,
+        thoi_gian_tao: true,
+        thoi_gian_cap_nhat: true,
+        khung_gio_gap_lanh_dao: {
+          select: {
+            id: true,
+            gio_bat_dau: true,
+            gio_ket_thuc: true,
+            lich_gap_lanh_dao: {
+              select: {
+                id: true,
+                ngay: true,
+                dia_diem: true,
+                ghi_chu: true,
+                lanh_dao: {
+                  select: {
+                    id: true,
+                    ho_va_ten: true,
+                    email: true,
+                    so_dien_thoai: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        nguoi_duyet: { select: { id: true, ho_va_ten: true } },
+        nguoi_bat_dau_xu_ly_ref: { select: { id: true, ho_va_ten: true } },
+        nguoi_hoan_thanh_ref: { select: { id: true, ho_va_ten: true } },
+        nguoi_tu_choi_ref: { select: { id: true, ho_va_ten: true } },
+        nguoi_huy_ref: { select: { id: true, ho_va_ten: true } },
+        dinh_kem_dang_ky_gap_lanh_dao: {
+          orderBy: { thoi_gian_tao: "asc" },
+          select: {
+            id: true,
+            loai_dinh_kem: true,
+            ten_file_goc: true,
+            mime_type: true,
+            kich_thuoc: true,
+            thoi_gian_tao: true,
+          },
+        },
+        danh_gia_gap_lanh_dao: {
+          select: {
+            id: true,
+            diem_tong: true,
+            tieu_chi: true,
+            ly_do: true,
+            nhan_xet: true,
+            thoi_gian_tao: true,
+          },
+        },
+      },
+    });
+  },
+
+  async approvePending(id, leaderId, data) {
+    const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        id,
+        trang_thai: "PENDING",
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: {
+            id_lanh_dao: leaderId,
+            is_delete: false,
+          },
+        },
+      },
+      data,
+    });
+    if (result.count === 0) return null;
+    return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
+  },
+
+  async rejectPending(id, leaderId, data) {
+    const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        id,
+        trang_thai: "PENDING",
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: {
+            id_lanh_dao: leaderId,
+            is_delete: false,
+          },
+        },
+      },
+      data,
+    });
+    if (result.count === 0) return null;
+    return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
+  },
+
+  async processApproved(id, leaderId, data) {
+    const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        id,
+        trang_thai: "APPROVED",
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: {
+            id_lanh_dao: leaderId,
+            is_delete: false,
+          },
+        },
+      },
+      data,
+    });
+    if (result.count === 0) return null;
+    return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
+  },
+
+  async completeInProgress(id, leaderId, data) {
+    const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        id,
+        trang_thai: "IN_PROGRESS",
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: { id_lanh_dao: leaderId, is_delete: false },
+        },
+      },
+      data,
+    });
+    if (result.count === 0) return null;
+    return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
+  },
+
+  async cancelApproved(id, leaderId, data) {
+    const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        id,
+        trang_thai: "APPROVED",
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: { id_lanh_dao: leaderId, is_delete: false },
+        },
+      },
+      data,
+    });
+    if (result.count === 0) return null;
+    return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
+  },
+
+  async findAttachment(registrationId, attachmentId, leaderId) {
+    return prisma.dinh_kem_dang_ky_gap_lanh_dao.findFirst({
+      where: {
+        id: attachmentId,
+        id_dang_ky: registrationId,
+        dang_ky_gap_lanh_dao: {
+          is_active: true,
+          is_delete: false,
+          khung_gio_gap_lanh_dao: {
+            lich_gap_lanh_dao: {
+              id_lanh_dao: leaderId || undefined,
+              is_delete: false,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        id_dang_ky: true,
+        loai_dinh_kem: true,
+        ten_file_goc: true,
+        duong_dan_file: true,
+        mime_type: true,
+        kich_thuoc: true,
+      },
+    });
+  },
 };
 
 export default LeaderMeetingRegistrationRepository;

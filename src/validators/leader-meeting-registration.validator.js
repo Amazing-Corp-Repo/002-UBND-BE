@@ -77,3 +77,86 @@ export const LookupLeaderMeetingRegistrationRequest = Joi.object({
     "object.missing": "Phải nhập mã đăng ký hoặc số điện thoại",
     "object.xor": "Chỉ được tra cứu bằng mã đăng ký hoặc số điện thoại",
   });
+
+const receptionDateFilter = Joi.string()
+  .pattern(/^\d{4}-\d{2}-\d{2}$/)
+  .custom((value, helpers) => {
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+      ? value
+      : helpers.error("date.invalid");
+  })
+  .messages({
+    "string.pattern.base": "Ngày lọc phải có định dạng YYYY-MM-DD",
+    "date.invalid": "Ngày lọc không tồn tại",
+  });
+
+export const GetLeaderMeetingRegistrationsQuery = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  search: Joi.string().trim().max(100).allow("").optional(),
+  status: Joi.string()
+    .valid("PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED")
+    .optional()
+    .messages({ "any.only": "Trạng thái đăng ký không hợp lệ" }),
+  leaderId: Joi.string().uuid().optional().messages({
+    "string.guid": "ID lãnh đạo không hợp lệ",
+  }),
+  fromDate: receptionDateFilter.optional(),
+  toDate: receptionDateFilter.optional(),
+});
+
+export const LeaderMeetingRegistrationIdParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID đăng ký gặp lãnh đạo không hợp lệ",
+    "any.required": "ID đăng ký gặp lãnh đạo là bắt buộc",
+  }),
+});
+
+export const RejectLeaderMeetingRegistrationRequest = Joi.object({
+  reason: Joi.string().trim().min(5).max(2000).required().messages({
+    "string.empty": "Lý do từ chối là bắt buộc",
+    "string.min": "Lý do từ chối phải có ít nhất 5 ký tự",
+    "string.max": "Lý do từ chối không được vượt quá 2000 ký tự",
+    "any.required": "Lý do từ chối là bắt buộc",
+  }),
+});
+
+export const ProcessLeaderMeetingRegistrationRequest = Joi.object({
+  note: Joi.string().trim().max(2000).allow("", null).optional().messages({
+    "string.max": "Ghi chú xử lý không được vượt quá 2000 ký tự",
+  }),
+});
+
+export const CompleteLeaderMeetingRegistrationRequest = Joi.object({
+  note: Joi.string().trim().max(2000).allow("", null).optional().messages({
+    "string.max": "Ghi chú hoàn thành không được vượt quá 2000 ký tự",
+  }),
+});
+
+export const CancelLeaderMeetingRegistrationRequest = Joi.object({
+  reason: Joi.string().trim().min(5).max(2000).required().messages({
+    "string.empty": "Lý do hủy là bắt buộc",
+    "string.min": "Lý do hủy phải có ít nhất 5 ký tự",
+    "string.max": "Lý do hủy không được vượt quá 2000 ký tự",
+    "any.required": "Lý do hủy là bắt buộc",
+  }),
+});
+
+export const LeaderMeetingAttachmentParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID đăng ký gặp lãnh đạo không hợp lệ",
+    "any.required": "ID đăng ký gặp lãnh đạo là bắt buộc",
+  }),
+  attachmentId: Joi.string().uuid().required().messages({
+    "string.guid": "ID tệp đính kèm không hợp lệ",
+    "any.required": "ID tệp đính kèm là bắt buộc",
+  }),
+});
+
+export const GetLeaderMeetingAttachmentQuery = Joi.object({
+  download: Joi.boolean().truthy("true").falsy("false").default(false),
+});
