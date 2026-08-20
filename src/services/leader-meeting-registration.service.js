@@ -88,6 +88,47 @@ const mapCreated = ({ registration, slot }) => ({
   leaderName: slot.lich_gap_lanh_dao.lanh_dao.ho_va_ten,
 });
 
+const maskValue = (value, suffixLength = 4) => {
+  if (!value) return null;
+  const suffix = value.slice(-suffixLength);
+  return `${"*".repeat(Math.max(0, value.length - suffixLength))}${suffix}`;
+};
+
+const mapCitizenLookup = (registration) => {
+  const slot = registration.khung_gio_gap_lanh_dao;
+  const schedule = slot.lich_gap_lanh_dao;
+  return {
+    id: registration.id,
+    registrationCode: registration.ma_dang_ky,
+    status: registration.trang_thai,
+    receptionDate: vietnamDate(registration.ngay_hen),
+    timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
+    topic: registration.chu_de,
+    reason: registration.ly_do,
+    applicant: {
+      fullName: registration.ho_ten,
+      phoneNumber: maskValue(registration.sdt),
+      citizenId: maskValue(registration.cccd),
+      address: registration.dia_chi,
+    },
+    leader: {
+      id: schedule.lanh_dao.id,
+      fullName: schedule.lanh_dao.ho_va_ten,
+    },
+    location: schedule.dia_diem,
+    rejectionReason: registration.ly_do_tu_choi,
+    rejectedAt: registration.thoi_gian_tu_choi,
+    cancellationReason: registration.ly_do_huy,
+    canceledAt: registration.thoi_gian_huy,
+    approvedAt: registration.thoi_gian_phe_duyet,
+    processingAt: registration.thoi_gian_bat_dau_xu_ly,
+    completedAt: registration.thoi_gian_hoan_thanh,
+    ratingStatus: registration.danh_gia_gap_lanh_dao ? "RATED" : "NOT_RATED",
+    createdAt: registration.thoi_gian_tao,
+    updatedAt: registration.thoi_gian_cap_nhat,
+  };
+};
+
 const LeaderMeetingRegistrationService = {
   async create(input, files = {}) {
     const now = new Date();
@@ -150,6 +191,18 @@ const LeaderMeetingRegistrationService = {
     }
 
     throw new BaseError(500, "Không thể tạo mã đăng ký gặp lãnh đạo");
+  },
+
+  async lookup(input) {
+    const registrations =
+      await LeaderMeetingRegistrationRepository.findForCitizenLookup({
+        registrationCode: input.registrationCode?.toUpperCase(),
+        phoneNumber: input.phoneNumber,
+      });
+    if (registrations.length === 0) {
+      throw new BaseError(404, "Không tìm thấy đăng ký gặp lãnh đạo");
+    }
+    return registrations.map(mapCitizenLookup);
   },
 };
 

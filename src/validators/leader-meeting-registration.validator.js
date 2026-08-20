@@ -59,3 +59,21 @@ export const CreateLeaderMeetingRegistrationRequest = Joi.object({
     "any.required": "Lý do gặp là bắt buộc",
   }),
 });
+
+export const LookupLeaderMeetingRegistrationRequest = Joi.object({
+  registrationCode: Joi.string()
+    .trim()
+    .uppercase()
+    .pattern(/^LD\d{6}$/)
+    .messages({
+      "string.pattern.base": "Mã đăng ký gặp lãnh đạo không hợp lệ",
+    }),
+  phoneNumber: Joi.string().trim().pattern(vietnamesePhoneRegex).messages({
+    "string.pattern.base": "Số điện thoại Việt Nam không hợp lệ",
+  }),
+})
+  .xor("registrationCode", "phoneNumber")
+  .messages({
+    "object.missing": "Phải nhập mã đăng ký hoặc số điện thoại",
+    "object.xor": "Chỉ được tra cứu bằng mã đăng ký hoặc số điện thoại",
+  });

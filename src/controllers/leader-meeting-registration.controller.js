@@ -13,6 +13,15 @@ const LeaderMeetingRegistrationController = {
       "Đăng ký gặp lãnh đạo thành công"
     );
   },
+
+  async lookup(req, res) {
+    const data = await LeaderMeetingRegistrationService.lookup(req.body);
+    return successResponse(
+      res,
+      data,
+      "Tra cứu đăng ký gặp lãnh đạo thành công"
+    );
+  },
 };
 
 export default LeaderMeetingRegistrationController;

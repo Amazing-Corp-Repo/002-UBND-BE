@@ -1,4 +1,74 @@
 const LeaderMeetingRegistrationSwagger = {
+  "/api/leader-meeting-registrations/lookup": {
+    post: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Tra cứu đăng ký gặp lãnh đạo",
+      description:
+        "Tra cứu bằng đúng một trong hai giá trị: mã đăng ký hoặc số điện thoại. Kết quả che số điện thoại và CCCD, không trả đường dẫn file lưu trữ. Giới hạn 60 yêu cầu/10 phút/IP để chống dò mã.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                registrationCode: { type: "string", example: "LD000123" },
+                phoneNumber: { type: "string", example: "0901234567" },
+              },
+            },
+            examples: {
+              byCode: {
+                summary: "Demo tra cứu bằng mã đăng ký",
+                value: { registrationCode: "LD000123" },
+              },
+              byPhone: {
+                summary: "Demo tra cứu bằng số điện thoại",
+                value: { phoneNumber: "0901234567" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Tra cứu đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Demo thành công - đơn đang chờ duyệt",
+                  value: {
+                    success: true,
+                    message: "Tra cứu đăng ký gặp lãnh đạo thành công",
+                    data: [{
+                      id: "423e4567-e89b-42d3-a456-426614174001",
+                      registrationCode: "LD000123",
+                      status: "PENDING",
+                      receptionDate: "2099-08-25",
+                      timeSlot: "09:00 - 10:30",
+                      applicant: {
+                        fullName: "Nguyễn Văn Bình",
+                        phoneNumber: "******4567",
+                        citizenId: "********8901",
+                      },
+                      leader: {
+                        id: "123e4567-e89b-42d3-a456-426614174001",
+                        fullName: "Nguyễn Văn An",
+                      },
+                      ratingStatus: "NOT_RATED",
+                    }],
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Dữ liệu tra cứu không hợp lệ" },
+        404: { description: "Không tìm thấy đăng ký gặp lãnh đạo" },
+        429: { description: "Vượt quá 60 yêu cầu trong 10 phút trên một IP" },
+      },
+    },
+  },
   "/api/leader-meeting-registrations": {
     post: {
       tags: ["LeaderMeetingRegistration"],
