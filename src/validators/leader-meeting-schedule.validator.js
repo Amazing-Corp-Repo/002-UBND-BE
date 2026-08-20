@@ -27,3 +27,12 @@ export const GetLeaderMeetingSchedulesQuery = Joi.object({
     "string.guid": "ID lãnh đạo không hợp lệ",
   }),
 });
+
+export const GetLeaderMeetingScheduleManagementQuery = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  size: Joi.number().integer().min(1).max(100).default(10),
+  fromDate: dateSchema("Ngày bắt đầu").optional(),
+  toDate: dateSchema("Ngày kết thúc").optional(),
+  isActive: Joi.boolean().truthy("true").falsy("false").optional(),
+  search: Joi.string().trim().max(100).allow("").optional(),
+});

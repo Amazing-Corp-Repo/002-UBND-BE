@@ -1,4 +1,62 @@
 const LeaderMeetingScheduleSwagger = {
+  "/api/leader-meeting-schedules/management": {
+    get: {
+      tags: ["LeaderMeetingSchedule"],
+      summary: "Lấy danh sách lịch gặp lãnh đạo theo quyền",
+      description:
+        "Yêu cầu quyền LMS_GET_ALL. Lãnh đạo chỉ xem lịch của chính mình theo userId trong access token; ADMIN, APPROVER hoặc PHE_DUYET được xem toàn bộ. Backend không nhận leaderId từ client. Hỗ trợ phân trang, khoảng ngày, trạng thái hoạt động và tìm tên lãnh đạo.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+        { name: "size", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+        { name: "fromDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-01" } },
+        { name: "toDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-31" } },
+        { name: "isActive", in: "query", schema: { type: "boolean", example: true } },
+        { name: "search", in: "query", schema: { type: "string", example: "Nguyễn Văn An" } },
+      ],
+      responses: {
+        200: {
+          description: "Lấy danh sách lịch gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Demo lãnh đạo xem lịch của mình",
+                  value: {
+                    success: true,
+                    message: "Lấy danh sách lịch gặp lãnh đạo thành công",
+                    data: [{
+                      id: "223e4567-e89b-42d3-a456-426614174001",
+                      leader: {
+                        id: "123e4567-e89b-42d3-a456-426614174001",
+                        fullName: "Nguyễn Văn An",
+                      },
+                      receptionDate: "2099-08-25",
+                      location: "Phòng tiếp công dân",
+                      isActive: true,
+                      slotCount: 1,
+                      totalCapacity: 1,
+                      registrationCount: 1,
+                      statusSummary: { PENDING: 1 },
+                    }],
+                    pagination: {
+                      currentPage: 1,
+                      pageSize: 10,
+                      totalPages: 1,
+                      totalItems: 1,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Bộ lọc không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMS_GET_ALL" },
+      },
+    },
+  },
   "/api/leader-meeting-schedules": {
     get: {
       tags: ["LeaderMeetingSchedule"],

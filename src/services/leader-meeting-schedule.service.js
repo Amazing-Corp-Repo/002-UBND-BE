@@ -1,5 +1,6 @@
 import LeaderMeetingScheduleRepository from "../repositories/leader-meeting-schedule.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { createPagination } from "../utils/response.util.js";
 
 const formatVietnamDate = (date) =>
   new Intl.DateTimeFormat("en-CA", {
@@ -82,6 +83,54 @@ const LeaderMeetingScheduleService = {
           .map(mapSlot),
       }))
       .filter((schedule) => schedule.slots.length > 0);
+  },
+
+  async getManagementSchedules(filters, currentUser) {
+    if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
+      throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
+    }
+
+    const roles = currentUser.roles || [];
+    const canViewAll = roles.some((role) =>
+      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+    );
+    const result = await LeaderMeetingScheduleRepository.findManagement({
+      ...filters,
+      leaderId: canViewAll ? undefined : currentUser.userId,
+    });
+
+    return {
+      data: result.data.map((schedule) => {
+        const registrations = schedule.khung_gio_gap_lanh_dao.flatMap(
+          (slot) => slot.dang_ky_gap_lanh_dao
+        );
+        return {
+          id: schedule.id,
+          leader: {
+            id: schedule.lanh_dao.id,
+            fullName: schedule.lanh_dao.ho_va_ten,
+          },
+          receptionDate: formatVietnamDate(schedule.ngay),
+          location: schedule.dia_diem,
+          note: schedule.ghi_chu,
+          isActive: schedule.is_active,
+          slotCount: schedule.khung_gio_gap_lanh_dao.length,
+          totalCapacity: schedule.khung_gio_gap_lanh_dao.reduce(
+            (total, slot) => total + slot.suc_chua,
+            0
+          ),
+          registrationCount: registrations.length,
+          statusSummary: registrations.reduce((summary, registration) => {
+            summary[registration.trang_thai] =
+              (summary[registration.trang_thai] || 0) + 1;
+            return summary;
+          }, {}),
+          createdAt: schedule.thoi_gian_tao,
+          updatedAt: schedule.thoi_gian_cap_nhat,
+        };
+      }),
+      pagination: createPagination(filters.page, filters.size, result.totalItems),
+    };
   },
 };
 
