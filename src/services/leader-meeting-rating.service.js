@@ -95,6 +95,53 @@ const LeaderMeetingRatingService = {
       pagination: createPagination(filters.page, filters.limit, result.totalItems),
     };
   },
+
+  async getStatistics(filters, currentUser) {
+    if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
+      throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
+    }
+    const roles = currentUser.roles || [];
+    const canViewAll = roles.some((role) =>
+      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+    );
+    const result = await LeaderMeetingRatingRepository.getStatistics({
+      ...filters,
+      leaderId: canViewAll ? filters.leaderId : currentUser.userId,
+    });
+    const totalRatings = result.overall._count._all;
+    const countByScore = new Map(
+      result.scoreGroups.map((group) => [group.diem_tong, group._count._all])
+    );
+    const byLeader = new Map();
+    for (const row of result.leaderRows) {
+      const leader =
+        row.dang_ky_gap_lanh_dao.khung_gio_gap_lanh_dao.lich_gap_lanh_dao.lanh_dao;
+      const current = byLeader.get(leader.id) || {
+        leader: { id: leader.id, fullName: leader.ho_va_ten },
+        totalRatings: 0,
+        scoreTotal: 0,
+      };
+      current.totalRatings += 1;
+      current.scoreTotal += row.diem_tong;
+      byLeader.set(leader.id, current);
+    }
+    const round = (value) => Math.round(value * 100) / 100;
+    const satisfied = (countByScore.get(4) || 0) + (countByScore.get(5) || 0);
+    return {
+      totalRatings,
+      averageScore: round(result.overall._avg.diem_tong || 0),
+      satisfactionRate: totalRatings ? round((satisfied / totalRatings) * 100) : 0,
+      scoreDistribution: Array.from({ length: 5 }, (_, index) => ({
+        score: index + 1,
+        count: countByScore.get(index + 1) || 0,
+      })),
+      byLeader: Array.from(byLeader.values()).map((item) => ({
+        leader: item.leader,
+        totalRatings: item.totalRatings,
+        averageScore: round(item.scoreTotal / item.totalRatings),
+      })),
+    };
+  },
 };
 
 export default LeaderMeetingRatingService;

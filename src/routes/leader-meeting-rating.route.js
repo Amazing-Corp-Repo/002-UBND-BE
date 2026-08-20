@@ -4,6 +4,7 @@ import validate from "../middlewares/validate.middleware.js";
 import {
   CreateLeaderMeetingRatingRequest,
   GetLeaderMeetingRatingsQuery,
+  GetLeaderMeetingRatingStatisticsQuery,
 } from "../validators/leader-meeting-rating.validator.js";
 import leaderMeetingRatingRateLimiter from "../middlewares/leader-meeting-rating-rate-limit.middleware.js";
 import { receptionAudit } from "../middlewares/reception-audit.middleware.js";
@@ -26,6 +27,14 @@ leaderMeetingRatingRouter.get(
   authorize([PERMISSION.LMRT_GET_ALL]),
   validateQuery(GetLeaderMeetingRatingsQuery),
   LeaderMeetingRatingController.getAll
+);
+
+leaderMeetingRatingRouter.get(
+  "/statistics",
+  authenticate,
+  authorize([PERMISSION.LMRT_GET_STATS]),
+  validateQuery(GetLeaderMeetingRatingStatisticsQuery),
+  LeaderMeetingRatingController.getStatistics
 );
 
 leaderMeetingRatingRouter.post(

@@ -93,6 +93,63 @@ const LeaderMeetingRatingRepository = {
     ]);
     return { data, totalItems };
   },
+
+  async getStatistics({ leaderId, fromDate, toDate }) {
+    const where = {
+      is_active: true,
+      is_delete: false,
+      thoi_gian_tao:
+        fromDate || toDate
+          ? {
+              gte: fromDate ? new Date(`${fromDate}T00:00:00.000Z`) : undefined,
+              lte: toDate ? new Date(`${toDate}T23:59:59.999Z`) : undefined,
+            }
+          : undefined,
+      dang_ky_gap_lanh_dao: {
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: {
+            id_lanh_dao: leaderId || undefined,
+            is_delete: false,
+          },
+        },
+      },
+    };
+    const [overall, scoreGroups, leaderRows] = await Promise.all([
+      prisma.danh_gia_gap_lanh_dao.aggregate({
+        where,
+        _count: { _all: true },
+        _avg: { diem_tong: true },
+      }),
+      prisma.danh_gia_gap_lanh_dao.groupBy({
+        by: ["diem_tong"],
+        where,
+        _count: { _all: true },
+        orderBy: { diem_tong: "asc" },
+      }),
+      prisma.danh_gia_gap_lanh_dao.findMany({
+        where,
+        select: {
+          diem_tong: true,
+          dang_ky_gap_lanh_dao: {
+            select: {
+              khung_gio_gap_lanh_dao: {
+                select: {
+                  lich_gap_lanh_dao: {
+                    select: {
+                      lanh_dao: { select: { id: true, ho_va_ten: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+    return { overall, scoreGroups, leaderRows };
+  },
 };
 
 export default LeaderMeetingRatingRepository;

@@ -27,6 +27,18 @@ const LeaderMeetingRatingController = {
       result.pagination
     );
   },
+
+  async getStatistics(req, res) {
+    const data = await LeaderMeetingRatingService.getStatistics(
+      req.validatedQuery,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Lấy thống kê đánh giá gặp lãnh đạo thành công"
+    );
+  },
 };
 
 export default LeaderMeetingRatingController;

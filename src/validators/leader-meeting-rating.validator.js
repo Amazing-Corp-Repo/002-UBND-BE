@@ -59,3 +59,11 @@ export const GetLeaderMeetingRatingsQuery = Joi.object({
   fromDate: ratingDate.optional(),
   toDate: ratingDate.optional(),
 });
+
+export const GetLeaderMeetingRatingStatisticsQuery = Joi.object({
+  leaderId: Joi.string().uuid().optional().messages({
+    "string.guid": "ID lãnh đạo không hợp lệ",
+  }),
+  fromDate: ratingDate.optional(),
+  toDate: ratingDate.optional(),
+});

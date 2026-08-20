@@ -159,6 +159,56 @@ const LeaderMeetingRatingSwagger = {
       },
     },
   },
+  "/api/leader-meeting-ratings/statistics": {
+    get: {
+      tags: ["LeaderMeetingRating"],
+      summary: "Thống kê đánh giá gặp lãnh đạo theo quyền",
+      description:
+        "Yêu cầu quyền LMRT_GET_STATS. Lãnh đạo chỉ xem thống kê của chính mình; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ và có thể lọc leaderId. Trả tổng lượt, điểm trung bình, tỷ lệ hài lòng (4-5 sao), phân bố điểm và tổng hợp theo lãnh đạo.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "leaderId", in: "query", schema: { type: "string", format: "uuid", example: "123e4567-e89b-42d3-a456-426614174001" } },
+        { name: "fromDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-01" } },
+        { name: "toDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-31" } },
+      ],
+      responses: {
+        200: {
+          description: "Lấy thống kê đánh giá gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Thống kê đánh giá theo lãnh đạo",
+                  value: {
+                    success: true,
+                    message: "Lấy thống kê đánh giá gặp lãnh đạo thành công",
+                    data: {
+                      totalRatings: 10,
+                      averageScore: 4.4,
+                      satisfactionRate: 80,
+                      scoreDistribution: [
+                        { score: 1, count: 0 }, { score: 2, count: 1 },
+                        { score: 3, count: 1 }, { score: 4, count: 3 },
+                        { score: 5, count: 5 },
+                      ],
+                      byLeader: [{
+                        leader: { id: "123e4567-e89b-42d3-a456-426614174001", fullName: "Nguyễn Văn An" },
+                        totalRatings: 10,
+                        averageScore: 4.4,
+                      }],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Khoảng ngày hoặc ID lãnh đạo không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMRT_GET_STATS" },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRatingSwagger;
