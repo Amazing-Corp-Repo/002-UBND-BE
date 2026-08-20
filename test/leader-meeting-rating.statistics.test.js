@@ -13,14 +13,6 @@ const originalStats = Repository.getStatistics;
 let filters;
 const token = (roles = ["LANH_DAO"], permissions = [PERMISSION.LMRT_GET_STATS]) =>
   jwtUtils.signAccessToken({ id: leaderId, ten_dang_nhap: "leader", roles, permissions, cate: null }, "127.0.0.1");
-const leaderRow = (score) => ({
-  diem_tong: score,
-  dang_ky_gap_lanh_dao: {
-    khung_gio_gap_lanh_dao: {
-      lich_gap_lanh_dao: { lanh_dao: { id: leaderId, ho_va_ten: "Nguyễn Văn An" } },
-    },
-  },
-});
 const createServer = () => { const app = express(); app.use("/api/leader-meeting-ratings", router); app.use(errorHandler); return app.listen(0); };
 beforeEach(() => {
   filters = null;
@@ -33,7 +25,12 @@ beforeEach(() => {
         { diem_tong: 4, _count: { _all: 1 } },
         { diem_tong: 5, _count: { _all: 2 } },
       ],
-      leaderRows: [leaderRow(3), leaderRow(4), leaderRow(5), leaderRow(5)],
+      leaderGroups: [{
+        leaderId,
+        leaderName: "Nguyễn Văn An",
+        totalRatings: 4,
+        averageScore: 4.25,
+      }],
     };
   };
 });
@@ -60,7 +57,7 @@ describe("GET /api/leader-meeting-ratings/statistics", () => {
   it("allows ADMIN to filter a leader and returns zero-safe statistics", async () => {
     Repository.getStatistics = async (input) => {
       filters = input;
-      return { overall: { _count: { _all: 0 }, _avg: { diem_tong: null } }, scoreGroups: [], leaderRows: [] };
+      return { overall: { _count: { _all: 0 }, _avg: { diem_tong: null } }, scoreGroups: [], leaderGroups: [] };
     };
     const other = "223e4567-e89b-42d3-a456-426614174001";
     const server = createServer(); const { port } = server.address();
