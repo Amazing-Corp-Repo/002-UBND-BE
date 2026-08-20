@@ -59,6 +59,71 @@ const LeaderMeetingScheduleSwagger = {
         404: { description: "Lịch không tồn tại hoặc không thuộc phạm vi" },
       },
     },
+    put: {
+      tags: ["LeaderMeetingSchedule"],
+      summary: "Cập nhật lịch gặp lãnh đạo chưa có đơn",
+      description:
+        "Yêu cầu quyền LMS_UPDATE và vai trò LANH_DAO/LEADER. Chỉ đúng lãnh đạo sở hữu lịch được sửa. Không cho sửa ngày, địa điểm, ghi chú hoặc khung giờ nếu lịch đã có bất kỳ đăng ký giữ chỗ. Các khung giờ không còn dùng được xóa mềm; sức chứa khung mới mặc định 1.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        schema: {
+          type: "string",
+          format: "uuid",
+          example: "223e4567-e89b-42d3-a456-426614174001",
+        },
+      }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["receptionDate", "slots"],
+              properties: {
+                receptionDate: { type: "string", format: "date", example: "2099-08-26" },
+                location: { type: "string", example: "Phòng họp số 2" },
+                note: { type: "string", example: "Điều chỉnh lịch công tác" },
+                slots: {
+                  type: "array",
+                  minItems: 1,
+                  maxItems: 20,
+                  items: {
+                    type: "object",
+                    required: ["startTime", "endTime"],
+                    properties: {
+                      startTime: { type: "string", example: "13:30" },
+                      endTime: { type: "string", example: "15:00" },
+                    },
+                  },
+                },
+              },
+            },
+            examples: {
+              valid: {
+                summary: "Demo hợp lệ - đổi sang lịch buổi chiều",
+                value: {
+                  receptionDate: "2099-08-26",
+                  location: "Phòng họp số 2",
+                  note: "Điều chỉnh lịch công tác",
+                  slots: [{ startTime: "13:30", endTime: "15:00" }],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Cập nhật lịch gặp lãnh đạo thành công" },
+        400: { description: "ID, ngày hoặc khung giờ không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMS_UPDATE hoặc không phải lãnh đạo" },
+        404: { description: "Lịch không tồn tại hoặc không thuộc lãnh đạo" },
+        409: { description: "Lịch đã có đơn hoặc trùng lịch khác trong ngày" },
+      },
+    },
   },
   "/api/leader-meeting-schedules/management": {
     get: {

@@ -45,6 +45,15 @@ const LeaderMeetingScheduleController = {
     );
     return successResponse(res, data, "Tạo lịch gặp lãnh đạo thành công");
   },
+
+  async updateManagement(req, res) {
+    const data = await LeaderMeetingScheduleService.updateManagementSchedule(
+      req.validatedParams.id,
+      req.body,
+      req.payload
+    );
+    return successResponse(res, data, "Cập nhật lịch gặp lãnh đạo thành công");
+  },
 };
 
 export default LeaderMeetingScheduleController;

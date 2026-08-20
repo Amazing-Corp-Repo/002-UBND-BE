@@ -237,6 +237,50 @@ const LeaderMeetingScheduleService = {
       );
     return mapManagementDetail(schedule);
   },
+
+  async updateManagementSchedule(id, input, currentUser) {
+    const roles = currentUser.roles || [];
+    if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
+      throw new BaseError(403, "Chỉ lãnh đạo được sửa lịch gặp công dân của mình");
+    }
+    if (input.receptionDate < formatVietnamDate(new Date())) {
+      throw new BaseError(400, "Không thể chuyển lịch gặp lãnh đạo về quá khứ");
+    }
+    const slots = validateSlots(input.slots);
+
+    let result;
+    try {
+      result = await LeaderMeetingScheduleRepository.updateManagement(
+        id,
+        currentUser.userId,
+        {
+          receptionDate: new Date(`${input.receptionDate}T00:00:00.000Z`),
+          location: input.location || null,
+          note: input.note || null,
+          slots,
+        }
+      );
+    } catch (error) {
+      if (error?.code === "P2002") {
+        throw new BaseError(409, "Lãnh đạo đã có lịch khác trong ngày này");
+      }
+      throw error;
+    }
+
+    if (result.conflict === "NOT_FOUND") {
+      throw new BaseError(404, "Lịch gặp lãnh đạo không tồn tại");
+    }
+    if (result.conflict === "HAS_REGISTRATIONS") {
+      throw new BaseError(409, "Không được sửa lịch đã có đăng ký giữ chỗ");
+    }
+
+    const schedule =
+      await LeaderMeetingScheduleRepository.findManagementDetail(
+        id,
+        currentUser.userId
+      );
+    return mapManagementDetail(schedule);
+  },
 };
 
 export default LeaderMeetingScheduleService;

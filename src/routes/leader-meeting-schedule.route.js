@@ -6,6 +6,7 @@ import {
   GetLeaderMeetingSchedulesQuery,
   LeaderMeetingScheduleIdParams,
   CreateLeaderMeetingScheduleRequest,
+  UpdateLeaderMeetingScheduleRequest,
 } from "../validators/leader-meeting-schedule.validator.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
@@ -39,6 +40,16 @@ leaderMeetingScheduleRouter.get(
   authorize([PERMISSION.LMS_GET_DETAIL]),
   validateParams(LeaderMeetingScheduleIdParams),
   LeaderMeetingScheduleController.getManagementDetail
+);
+
+leaderMeetingScheduleRouter.put(
+  "/management/:id",
+  authenticate,
+  authorize([PERMISSION.LMS_UPDATE]),
+  validateParams(LeaderMeetingScheduleIdParams),
+  validate(UpdateLeaderMeetingScheduleRequest),
+  receptionAudit(AUDIT_LOGS.UPDATE, { tableName: "lich_gap_lanh_dao" }),
+  LeaderMeetingScheduleController.updateManagement
 );
 
 leaderMeetingScheduleRouter.get(

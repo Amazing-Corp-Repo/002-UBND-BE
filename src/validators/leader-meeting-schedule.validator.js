@@ -73,3 +73,5 @@ export const CreateLeaderMeetingScheduleRequest = Joi.object({
     "any.required": "Danh sách khung giờ là bắt buộc",
   }),
 });
+
+export const UpdateLeaderMeetingScheduleRequest = CreateLeaderMeetingScheduleRequest;
