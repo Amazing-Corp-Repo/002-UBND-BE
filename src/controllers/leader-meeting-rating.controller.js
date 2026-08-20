@@ -14,6 +14,19 @@ const LeaderMeetingRatingController = {
     const data = await LeaderMeetingRatingService.create(req.body);
     return successResponse(res, data, "Gửi đánh giá gặp lãnh đạo thành công");
   },
+
+  async getAll(req, res) {
+    const result = await LeaderMeetingRatingService.getAll(
+      req.validatedQuery,
+      req.payload
+    );
+    return successResponse(
+      res,
+      result.data,
+      "Lấy danh sách đánh giá gặp lãnh đạo thành công",
+      result.pagination
+    );
+  },
 };
 
 export default LeaderMeetingRatingController;

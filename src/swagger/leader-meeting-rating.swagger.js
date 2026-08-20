@@ -1,5 +1,54 @@
 const LeaderMeetingRatingSwagger = {
   "/api/leader-meeting-ratings": {
+    get: {
+      tags: ["LeaderMeetingRating"],
+      summary: "Lấy danh sách đánh giá gặp lãnh đạo theo quyền",
+      description:
+        "Yêu cầu quyền LMRT_GET_ALL. Lãnh đạo chỉ xem đánh giá của các lịch mình phụ trách; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ và có thể lọc leaderId. Hỗ trợ search, score, leaderId, fromDate, toDate, page và limit; phạm vi luôn lấy từ access token.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "search", in: "query", schema: { type: "string", example: "LD000126" } },
+        { name: "score", in: "query", schema: { type: "integer", minimum: 1, maximum: 5, example: 5 } },
+        { name: "leaderId", in: "query", schema: { type: "string", format: "uuid", example: "123e4567-e89b-42d3-a456-426614174001" } },
+        { name: "fromDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-01" } },
+        { name: "toDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-31" } },
+        { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+        { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+      ],
+      responses: {
+        200: {
+          description: "Lấy danh sách đánh giá gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Danh sách đánh giá 5 sao",
+                  value: {
+                    success: true,
+                    message: "Lấy danh sách đánh giá gặp lãnh đạo thành công",
+                    data: [{
+                      id: "723e4567-e89b-42d3-a456-426614174001",
+                      registrationCode: "LD000126",
+                      applicantName: "Nguyễn Văn Bình",
+                      appointmentDate: "2099-08-25",
+                      timeSlot: "09:00 - 10:30",
+                      leader: { id: "123e4567-e89b-42d3-a456-426614174001", fullName: "Nguyễn Văn An" },
+                      score: 5,
+                      selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
+                      comment: "Tôi rất hài lòng",
+                    }],
+                    pagination: { currentPage: 1, pageSize: 10, totalPages: 1, totalItems: 1 },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Bộ lọc không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMRT_GET_ALL" },
+      },
+    },
     post: {
       tags: ["LeaderMeetingRating"],
       summary: "Gửi đánh giá buổi gặp lãnh đạo từ iPad",
