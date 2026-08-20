@@ -60,6 +60,19 @@ const LeaderMeetingRegistrationController = {
       "Phê duyệt đăng ký gặp lãnh đạo thành công"
     );
   },
+
+  async reject(req, res) {
+    const data = await LeaderMeetingRegistrationService.reject(
+      req.validatedParams.id,
+      req.body,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Từ chối đăng ký gặp lãnh đạo thành công"
+    );
+  },
 };
 
 export default LeaderMeetingRegistrationController;

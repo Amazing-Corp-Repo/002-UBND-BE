@@ -395,6 +395,41 @@ const LeaderMeetingRegistrationService = {
     }
     return mapManagementDetail(updated);
   },
+
+  async reject(id, input, currentUser) {
+    const registration =
+      await LeaderMeetingRegistrationRepository.findManagementDetail(
+        id,
+        currentUser.userId
+      );
+    if (!registration) {
+      throw new BaseError(
+        404,
+        "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn"
+      );
+    }
+    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.PENDING) {
+      throw new BaseError(409, "Chỉ đăng ký đang chờ mới được từ chối");
+    }
+
+    const now = new Date();
+    const updated = await LeaderMeetingRegistrationRepository.rejectPending(
+      id,
+      currentUser.userId,
+      {
+        trang_thai: TRANG_THAI_GAP_LANH_DAO.REJECTED,
+        ly_do_tu_choi: input.reason,
+        nguoi_tu_choi: currentUser.userId,
+        nguoi_cap_nhat: currentUser.userId,
+        thoi_gian_tu_choi: now,
+        thoi_gian_cap_nhat: now,
+      }
+    );
+    if (!updated) {
+      throw new BaseError(409, "Đăng ký đã được xử lý bởi yêu cầu khác");
+    }
+    return mapManagementDetail(updated);
+  },
 };
 
 export default LeaderMeetingRegistrationService;

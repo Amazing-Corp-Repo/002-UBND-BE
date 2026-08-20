@@ -11,6 +11,7 @@ import {
   LookupLeaderMeetingRegistrationRequest,
   GetLeaderMeetingRegistrationsQuery,
   LeaderMeetingRegistrationIdParams,
+  RejectLeaderMeetingRegistrationRequest,
 } from "../validators/leader-meeting-registration.validator.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
@@ -45,6 +46,19 @@ leaderMeetingRegistrationRouter.patch(
     sensitiveFields: ["phoneNumber", "citizenId"],
   }),
   LeaderMeetingRegistrationController.approve
+);
+
+leaderMeetingRegistrationRouter.patch(
+  "/:id/reject",
+  authenticate,
+  authorize([PERMISSION.LMR_REJECT]),
+  validateParams(LeaderMeetingRegistrationIdParams),
+  validate(RejectLeaderMeetingRegistrationRequest),
+  receptionAudit(AUDIT_LOGS.UPDATE, {
+    tableName: "dang_ky_gap_lanh_dao",
+    sensitiveFields: ["phoneNumber", "citizenId"],
+  }),
+  LeaderMeetingRegistrationController.reject
 );
 
 leaderMeetingRegistrationRouter.post(

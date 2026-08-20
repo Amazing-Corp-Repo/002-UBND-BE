@@ -378,6 +378,89 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/{id}/reject": {
+    patch: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Từ chối đăng ký gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMR_REJECT. Chỉ đúng lãnh đạo của lịch hẹn được chuyển đơn từ PENDING sang REJECTED và phải nhập lý do. Đơn bị từ chối cho phép người dân đăng ký lại ngày hẹn đó ở khung giờ khác, nhưng chỗ của khung giờ cũ không được hoàn lại.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "ID đăng ký đang ở trạng thái PENDING",
+          schema: {
+            type: "string",
+            format: "uuid",
+            example: "423e4567-e89b-42d3-a456-426614174002",
+          },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["reason"],
+              properties: {
+                reason: { type: "string", minLength: 5, maxLength: 2000 },
+              },
+            },
+            examples: {
+              valid: {
+                summary: "Demo hợp lệ - từ chối có lý do",
+                value: { reason: "Nội dung không thuộc thẩm quyền giải quyết" },
+              },
+              missingReason: {
+                summary: "Demo lỗi - thiếu lý do",
+                value: {},
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Từ chối đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Đơn đã chuyển sang REJECTED",
+                  value: {
+                    success: true,
+                    message: "Từ chối đăng ký gặp lãnh đạo thành công",
+                    data: {
+                      id: "423e4567-e89b-42d3-a456-426614174002",
+                      registrationCode: "LD000124",
+                      status: "REJECTED",
+                      workflow: {
+                        rejectionReason: "Nội dung không thuộc thẩm quyền giải quyết",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID không hợp lệ hoặc thiếu/sai lý do từ chối" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMR_REJECT" },
+        404: {
+          description:
+            "Đăng ký không tồn tại hoặc không thuộc lãnh đạo đang đăng nhập",
+        },
+        409: {
+          description:
+            "Đơn không còn ở trạng thái PENDING hoặc đã được yêu cầu khác xử lý",
+        },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRegistrationSwagger;

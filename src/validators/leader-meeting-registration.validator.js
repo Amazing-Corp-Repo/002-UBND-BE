@@ -115,3 +115,12 @@ export const LeaderMeetingRegistrationIdParams = Joi.object({
     "any.required": "ID đăng ký gặp lãnh đạo là bắt buộc",
   }),
 });
+
+export const RejectLeaderMeetingRegistrationRequest = Joi.object({
+  reason: Joi.string().trim().min(5).max(2000).required().messages({
+    "string.empty": "Lý do từ chối là bắt buộc",
+    "string.min": "Lý do từ chối phải có ít nhất 5 ký tự",
+    "string.max": "Lý do từ chối không được vượt quá 2000 ký tự",
+    "any.required": "Lý do từ chối là bắt buộc",
+  }),
+});
