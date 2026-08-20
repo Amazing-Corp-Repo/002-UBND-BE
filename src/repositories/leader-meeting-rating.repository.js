@@ -150,6 +150,66 @@ const LeaderMeetingRatingRepository = {
     ]);
     return { overall, scoreGroups, leaderRows };
   },
+
+  async findDetail(id, leaderId) {
+    return prisma.danh_gia_gap_lanh_dao.findFirst({
+      where: {
+        id,
+        is_active: true,
+        is_delete: false,
+        dang_ky_gap_lanh_dao: {
+          is_active: true,
+          is_delete: false,
+          khung_gio_gap_lanh_dao: {
+            lich_gap_lanh_dao: {
+              id_lanh_dao: leaderId || undefined,
+              is_delete: false,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        diem_tong: true,
+        tieu_chi: true,
+        ly_do: true,
+        nhan_xet: true,
+        thoi_gian_tao: true,
+        dang_ky_gap_lanh_dao: {
+          select: {
+            id: true,
+            ma_dang_ky: true,
+            ngay_hen: true,
+            ngay_lam_don: true,
+            chu_de: true,
+            ly_do: true,
+            ho_ten: true,
+            sdt: true,
+            cccd: true,
+            dia_chi: true,
+            trang_thai: true,
+            thoi_gian_hoan_thanh: true,
+            khung_gio_gap_lanh_dao: {
+              select: {
+                id: true,
+                gio_bat_dau: true,
+                gio_ket_thuc: true,
+                lich_gap_lanh_dao: {
+                  select: {
+                    id: true,
+                    dia_diem: true,
+                    lanh_dao: {
+                      select: { id: true, ho_va_ten: true, email: true, so_dien_thoai: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  },
 };
 
 export default LeaderMeetingRatingRepository;

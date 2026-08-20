@@ -142,6 +142,55 @@ const LeaderMeetingRatingService = {
       })),
     };
   },
+
+  async getDetail(id, currentUser) {
+    const roles = currentUser.roles || [];
+    const canViewAll = roles.some((role) =>
+      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+    );
+    const rating = await LeaderMeetingRatingRepository.findDetail(
+      id,
+      canViewAll ? undefined : currentUser.userId
+    );
+    if (!rating) {
+      throw new BaseError(404, "Đánh giá gặp lãnh đạo không tồn tại");
+    }
+    const registration = rating.dang_ky_gap_lanh_dao;
+    const slot = registration.khung_gio_gap_lanh_dao;
+    const schedule = slot.lich_gap_lanh_dao;
+    return {
+      id: rating.id,
+      score: rating.diem_tong,
+      criteria: rating.tieu_chi,
+      selectedSuggestions: rating.ly_do || [],
+      comment: rating.nhan_xet || "",
+      ratedAt: rating.thoi_gian_tao,
+      registration: {
+        id: registration.id,
+        registrationCode: registration.ma_dang_ky,
+        applicationDate: registration.ngay_lam_don,
+        appointmentDate: registration.ngay_hen,
+        timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
+        topic: registration.chu_de,
+        reason: registration.ly_do,
+        status: registration.trang_thai,
+        completedAt: registration.thoi_gian_hoan_thanh,
+        applicant: {
+          fullName: registration.ho_ten,
+          phoneNumber: registration.sdt,
+          citizenId: registration.cccd,
+          address: registration.dia_chi,
+        },
+        location: schedule.dia_diem,
+        leader: {
+          id: schedule.lanh_dao.id,
+          fullName: schedule.lanh_dao.ho_va_ten,
+          email: schedule.lanh_dao.email,
+          phoneNumber: schedule.lanh_dao.so_dien_thoai,
+        },
+      },
+    };
+  },
 };
 
 export default LeaderMeetingRatingService;

@@ -39,6 +39,18 @@ const LeaderMeetingRatingController = {
       "Lấy thống kê đánh giá gặp lãnh đạo thành công"
     );
   },
+
+  async getDetail(req, res) {
+    const data = await LeaderMeetingRatingService.getDetail(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Lấy chi tiết đánh giá gặp lãnh đạo thành công"
+    );
+  },
 };
 
 export default LeaderMeetingRatingController;

@@ -209,6 +209,68 @@ const LeaderMeetingRatingSwagger = {
       },
     },
   },
+  "/api/leader-meeting-ratings/{id}": {
+    get: {
+      tags: ["LeaderMeetingRating"],
+      summary: "Xem chi tiết đánh giá gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMRT_GET_DETAIL. Lãnh đạo chỉ xem đánh giá thuộc lịch của chính mình; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ. Trả đầy đủ nội dung đánh giá, hồ sơ đăng ký, lịch hẹn và lãnh đạo; không chứa dữ liệu quầy.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        description: "ID đánh giá gặp lãnh đạo",
+        schema: { type: "string", format: "uuid", example: "723e4567-e89b-42d3-a456-426614174001" },
+      }],
+      responses: {
+        200: {
+          description: "Lấy chi tiết đánh giá gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Chi tiết đánh giá 5 sao",
+                  value: {
+                    success: true,
+                    message: "Lấy chi tiết đánh giá gặp lãnh đạo thành công",
+                    data: {
+                      id: "723e4567-e89b-42d3-a456-426614174001",
+                      score: 5,
+                      selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
+                      comment: "Tôi rất hài lòng",
+                      registration: {
+                        id: "423e4567-e89b-42d3-a456-426614174004",
+                        registrationCode: "LD000126",
+                        appointmentDate: "2099-08-25",
+                        timeSlot: "09:00 - 10:30",
+                        status: "COMPLETED",
+                        applicant: {
+                          fullName: "Nguyễn Văn Bình",
+                          phoneNumber: "0901234567",
+                          citizenId: "012345678901",
+                          address: "Hà Tĩnh",
+                        },
+                        location: "Phòng tiếp công dân",
+                        leader: {
+                          id: "123e4567-e89b-42d3-a456-426614174001",
+                          fullName: "Nguyễn Văn An",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID đánh giá không đúng định dạng UUID" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMRT_GET_DETAIL" },
+        404: { description: "Đánh giá không tồn tại hoặc ngoài phạm vi lãnh đạo" },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRatingSwagger;

@@ -5,6 +5,7 @@ import {
   CreateLeaderMeetingRatingRequest,
   GetLeaderMeetingRatingsQuery,
   GetLeaderMeetingRatingStatisticsQuery,
+  LeaderMeetingRatingIdParams,
 } from "../validators/leader-meeting-rating.validator.js";
 import leaderMeetingRatingRateLimiter from "../middlewares/leader-meeting-rating-rate-limit.middleware.js";
 import { receptionAudit } from "../middlewares/reception-audit.middleware.js";
@@ -12,6 +13,7 @@ import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
+import validateParams from "../middlewares/validate-params.middleware.js";
 
 const leaderMeetingRatingRouter = express.Router();
 
@@ -35,6 +37,14 @@ leaderMeetingRatingRouter.get(
   authorize([PERMISSION.LMRT_GET_STATS]),
   validateQuery(GetLeaderMeetingRatingStatisticsQuery),
   LeaderMeetingRatingController.getStatistics
+);
+
+leaderMeetingRatingRouter.get(
+  "/:id",
+  authenticate,
+  authorize([PERMISSION.LMRT_GET_DETAIL]),
+  validateParams(LeaderMeetingRatingIdParams),
+  LeaderMeetingRatingController.getDetail
 );
 
 leaderMeetingRatingRouter.post(
