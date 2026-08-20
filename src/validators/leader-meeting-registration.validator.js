@@ -130,3 +130,9 @@ export const ProcessLeaderMeetingRegistrationRequest = Joi.object({
     "string.max": "Ghi chú xử lý không được vượt quá 2000 ký tự",
   }),
 });
+
+export const CompleteLeaderMeetingRegistrationRequest = Joi.object({
+  note: Joi.string().trim().max(2000).allow("", null).optional().messages({
+    "string.max": "Ghi chú hoàn thành không được vượt quá 2000 ký tự",
+  }),
+});

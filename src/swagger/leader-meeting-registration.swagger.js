@@ -546,6 +546,89 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/{id}/complete": {
+    patch: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Hoàn thành đăng ký gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMR_COMPLETE. Chỉ đúng lãnh đạo của lịch hẹn được chuyển đơn từ IN_PROGRESS sang COMPLETED. Backend tự ghi người và thời điểm hoàn thành. Chỉ sau bước này đơn mới đủ điều kiện đánh giá trên iPad.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "ID đăng ký đang ở trạng thái IN_PROGRESS",
+          schema: {
+            type: "string",
+            format: "uuid",
+            example: "423e4567-e89b-42d3-a456-426614174004",
+          },
+        },
+      ],
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                note: { type: "string", maxLength: 2000, nullable: true },
+              },
+            },
+            examples: {
+              valid: {
+                summary: "Demo hoàn thành có ghi chú",
+                value: { note: "Đã xử lý xong nội dung kiến nghị" },
+              },
+              withoutNote: {
+                summary: "Demo hoàn thành không ghi chú",
+                value: {},
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Hoàn thành đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Đơn hoàn thành và được phép đánh giá",
+                  value: {
+                    success: true,
+                    message: "Hoàn thành đăng ký gặp lãnh đạo thành công",
+                    data: {
+                      id: "423e4567-e89b-42d3-a456-426614174004",
+                      registrationCode: "LD000126",
+                      status: "COMPLETED",
+                      ratingEligible: true,
+                      workflow: {
+                        completionNote: "Đã xử lý xong nội dung kiến nghị",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID không hợp lệ hoặc ghi chú quá 2000 ký tự" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMR_COMPLETE" },
+        404: {
+          description:
+            "Đăng ký không tồn tại hoặc không thuộc lãnh đạo đang đăng nhập",
+        },
+        409: {
+          description:
+            "Đơn không ở trạng thái IN_PROGRESS hoặc đã được yêu cầu khác xử lý",
+        },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRegistrationSwagger;
