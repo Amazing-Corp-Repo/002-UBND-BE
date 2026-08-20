@@ -1,4 +1,47 @@
 const LeaderMeetingScheduleSwagger = {
+  "/api/leader-meeting-schedules/management/{id}/status": {
+    put: {
+      tags: ["LeaderMeetingSchedule"],
+      summary: "Bật hoặc tắt lịch gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMS_UPDATE_STATUS và vai trò LANH_DAO/LEADER. Chỉ đúng lãnh đạo sở hữu lịch được thay đổi trạng thái. Không cho bật hoặc tắt lịch đã có bất kỳ đăng ký giữ chỗ.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        schema: {
+          type: "string",
+          format: "uuid",
+          example: "223e4567-e89b-42d3-a456-426614174001",
+        },
+      }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["isActive"],
+              properties: { isActive: { type: "boolean", example: false } },
+            },
+            examples: {
+              disable: { summary: "Demo tắt lịch", value: { isActive: false } },
+              enable: { summary: "Demo bật lịch", value: { isActive: true } },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Cập nhật trạng thái lịch gặp lãnh đạo thành công" },
+        400: { description: "ID hoặc trạng thái không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMS_UPDATE_STATUS hoặc không phải chủ lịch" },
+        404: { description: "Lịch không tồn tại hoặc không thuộc lãnh đạo" },
+        409: { description: "Lịch đã có đăng ký giữ chỗ" },
+      },
+    },
+  },
   "/api/leader-meeting-schedules/management/{id}": {
     get: {
       tags: ["LeaderMeetingSchedule"],

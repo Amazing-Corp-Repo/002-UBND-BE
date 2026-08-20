@@ -281,6 +281,35 @@ const LeaderMeetingScheduleService = {
       );
     return mapManagementDetail(schedule);
   },
+
+  async updateManagementStatus(id, isActive, currentUser) {
+    const roles = currentUser.roles || [];
+    if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
+      throw new BaseError(403, "Chỉ lãnh đạo được cập nhật trạng thái lịch của mình");
+    }
+    const result =
+      await LeaderMeetingScheduleRepository.updateManagementStatus(
+        id,
+        currentUser.userId,
+        isActive
+      );
+    if (result.conflict === "NOT_FOUND") {
+      throw new BaseError(404, "Lịch gặp lãnh đạo không tồn tại");
+    }
+    if (result.conflict === "HAS_REGISTRATIONS") {
+      throw new BaseError(
+        409,
+        "Không được thay đổi trạng thái lịch đã có đăng ký giữ chỗ"
+      );
+    }
+
+    const schedule =
+      await LeaderMeetingScheduleRepository.findManagementDetail(
+        id,
+        currentUser.userId
+      );
+    return mapManagementDetail(schedule);
+  },
 };
 
 export default LeaderMeetingScheduleService;

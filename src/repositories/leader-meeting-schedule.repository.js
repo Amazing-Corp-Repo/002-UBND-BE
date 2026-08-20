@@ -269,6 +269,35 @@ const LeaderMeetingScheduleRepository = {
       return { updated: true };
     }, { isolationLevel: "Serializable", maxWait: 15000, timeout: 30000 });
   },
+
+  async updateManagementStatus(id, leaderId, isActive) {
+    return prisma.$transaction(async (tx) => {
+      const schedule = await tx.lich_gap_lanh_dao.findFirst({
+        where: { id, id_lanh_dao: leaderId, is_delete: false },
+        select: { id: true, is_active: true },
+      });
+      if (!schedule) return { conflict: "NOT_FOUND" };
+
+      const registrationCount = await tx.dang_ky_gap_lanh_dao.count({
+        where: {
+          khung_gio_gap_lanh_dao: { id_lich_gap: id },
+          is_active: true,
+          is_delete: false,
+        },
+      });
+      if (registrationCount > 0) return { conflict: "HAS_REGISTRATIONS" };
+
+      await tx.lich_gap_lanh_dao.update({
+        where: { id },
+        data: {
+          is_active: isActive,
+          nguoi_cap_nhat: leaderId,
+          thoi_gian_cap_nhat: new Date().toISOString(),
+        },
+      });
+      return { updated: true };
+    }, { isolationLevel: "Serializable" });
+  },
 };
 
 export default LeaderMeetingScheduleRepository;

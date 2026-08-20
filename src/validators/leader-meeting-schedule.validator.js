@@ -75,3 +75,10 @@ export const CreateLeaderMeetingScheduleRequest = Joi.object({
 });
 
 export const UpdateLeaderMeetingScheduleRequest = CreateLeaderMeetingScheduleRequest;
+
+export const UpdateLeaderMeetingScheduleStatusRequest = Joi.object({
+  isActive: Joi.boolean().required().messages({
+    "boolean.base": "Trạng thái hoạt động phải là true hoặc false",
+    "any.required": "Trạng thái hoạt động là bắt buộc",
+  }),
+});
