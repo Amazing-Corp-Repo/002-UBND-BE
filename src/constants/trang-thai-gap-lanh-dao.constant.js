@@ -5,14 +5,18 @@
 export const TRANG_THAI_GAP_LANH_DAO = Object.freeze({
   PENDING: "PENDING",
   APPROVED: "APPROVED",
+  IN_PROGRESS: "IN_PROGRESS",
   REJECTED: "REJECTED",
+  CANCELED: "CANCELED",
   COMPLETED: "COMPLETED",
 });
 
 export const TRANG_THAI_GAP_LANH_DAO_DESC = Object.freeze({
   PENDING: "Chờ duyệt",
   APPROVED: "Đã duyệt",
+  IN_PROGRESS: "Đang xử lý",
   REJECTED: "Từ chối",
+  CANCELED: "Đã hủy",
   COMPLETED: "Đã hoàn thành",
 });
 

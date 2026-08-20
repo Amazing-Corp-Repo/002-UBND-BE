@@ -280,6 +280,8 @@ model nguoi_dung {
   dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_duyetTonguoi_dung                          dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiDuyet")
   dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_hoan_thanh_refTonguoi_dung                 dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiHoanThanh")
   dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_tu_choi_refTonguoi_dung                    dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiTuChoi")
+  dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_bat_dau_xu_ly_refTonguoi_dung              dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiBatDauXuLy")
+  dang_ky_gap_lanh_dao_dang_ky_gap_lanh_dao_nguoi_huy_refTonguoi_dung                        dang_ky_gap_lanh_dao[]            @relation("DangKyGapLanhDao_NguoiHuy")
 
   // Reverse relations — Phân công quầy tiếp dân
   phan_cong_quay_tiep_dan phan_cong_quay_tiep_dan[] @relation("PhanCongQuay_CanBo")
@@ -778,7 +780,7 @@ model khung_gio_gap_lanh_dao {
   id_lich_gap       String    @db.Uuid
   gio_bat_dau       String    @db.VarChar(10)
   gio_ket_thuc      String    @db.VarChar(10)
-  suc_chua          Int?      @default(1)
+  suc_chua          Int       @default(1)
   is_active         Boolean?  @default(true)
   is_delete         Boolean?  @default(false)
   nguoi_tao         String?   @db.Uuid
@@ -810,12 +812,19 @@ model dang_ky_gap_lanh_dao {
   ly_do                     String
   trang_thai                String  @default("PENDING") @db.VarChar(30)
   thoi_gian_phe_duyet       DateTime? @db.Timestamp(6)
+  thoi_gian_bat_dau_xu_ly   DateTime? @db.Timestamp(6)
   thoi_gian_hoan_thanh      DateTime? @db.Timestamp(6)
   thoi_gian_tu_choi         DateTime? @db.Timestamp(6)
+  thoi_gian_huy             DateTime? @db.Timestamp(6)
   ly_do_tu_choi             String?
+  ly_do_huy                 String?
+  ghi_chu_xu_ly             String?
+  ghi_chu_hoan_thanh        String?
   nguoi_duyet_don           String? @db.Uuid
+  nguoi_bat_dau_xu_ly       String? @db.Uuid
   nguoi_hoan_thanh          String? @db.Uuid
   nguoi_tu_choi             String? @db.Uuid
+  nguoi_huy                 String? @db.Uuid
   is_active                 Boolean @default(true)
   is_delete                 Boolean @default(false)
   nguoi_tao                 String? @db.Uuid
@@ -828,6 +837,8 @@ model dang_ky_gap_lanh_dao {
   nguoi_duyet               nguoi_dung? @relation("DangKyGapLanhDao_NguoiDuyet", fields: [nguoi_duyet_don], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_duyet")
   nguoi_hoan_thanh_ref      nguoi_dung? @relation("DangKyGapLanhDao_NguoiHoanThanh", fields: [nguoi_hoan_thanh], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_hoan_thanh")
   nguoi_tu_choi_ref         nguoi_dung? @relation("DangKyGapLanhDao_NguoiTuChoi", fields: [nguoi_tu_choi], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_tu_choi")
+  nguoi_bat_dau_xu_ly_ref   nguoi_dung? @relation("DangKyGapLanhDao_NguoiBatDauXuLy", fields: [nguoi_bat_dau_xu_ly], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_bat_dau_xu_ly")
+  nguoi_huy_ref             nguoi_dung? @relation("DangKyGapLanhDao_NguoiHuy", fields: [nguoi_huy], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_dang_ky_gap_nguoi_huy")
 
   dinh_kem_dang_ky_gap_lanh_dao dinh_kem_dang_ky_gap_lanh_dao[]
   danh_gia_gap_lanh_dao         danh_gia_gap_lanh_dao?
