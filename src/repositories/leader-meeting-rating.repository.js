@@ -116,7 +116,47 @@ const LeaderMeetingRatingRepository = {
         },
       },
     };
-    const [overall, scoreGroups, leaderRows] = await Promise.all([
+    const queryConditions = [
+      'rating."is_active" = TRUE',
+      'rating."is_delete" = FALSE',
+      'registration."is_active" = TRUE',
+      'registration."is_delete" = FALSE',
+      'schedule."is_delete" = FALSE',
+    ];
+    const queryParameters = [];
+    const addParameter = (condition, value) => {
+      queryParameters.push(value);
+      queryConditions.push(`${condition} $${queryParameters.length}`);
+    };
+    if (fromDate) {
+      addParameter('rating."thoi_gian_tao" >=', new Date(`${fromDate}T00:00:00.000Z`));
+    }
+    if (toDate) {
+      addParameter('rating."thoi_gian_tao" <=', new Date(`${toDate}T23:59:59.999Z`));
+    }
+    if (leaderId) addParameter('schedule."id_lanh_dao" =', leaderId);
+
+    const leaderStatisticsQuery = `
+      SELECT
+        leader."id" AS "leaderId",
+        leader."ho_va_ten" AS "leaderName",
+        COUNT(*)::bigint AS "totalRatings",
+        AVG(rating."diem_tong")::float8 AS "averageScore"
+      FROM "danh_gia_gap_lanh_dao" rating
+      JOIN "dang_ky_gap_lanh_dao" registration
+        ON registration."id" = rating."id_dang_ky_gap_lanh_dao"
+      JOIN "khung_gio_gap_lanh_dao" slot
+        ON slot."id" = registration."id_khung_gio_gap"
+      JOIN "lich_gap_lanh_dao" schedule
+        ON schedule."id" = slot."id_lich_gap"
+      JOIN "nguoi_dung" leader
+        ON leader."id" = schedule."id_lanh_dao"
+      WHERE ${queryConditions.join(" AND ")}
+      GROUP BY leader."id", leader."ho_va_ten"
+      ORDER BY COUNT(*) DESC, leader."ho_va_ten" ASC
+    `;
+
+    const [overall, scoreGroups, rawLeaderGroups] = await Promise.all([
       prisma.danh_gia_gap_lanh_dao.aggregate({
         where,
         _count: { _all: true },
@@ -128,27 +168,15 @@ const LeaderMeetingRatingRepository = {
         _count: { _all: true },
         orderBy: { diem_tong: "asc" },
       }),
-      prisma.danh_gia_gap_lanh_dao.findMany({
-        where,
-        select: {
-          diem_tong: true,
-          dang_ky_gap_lanh_dao: {
-            select: {
-              khung_gio_gap_lanh_dao: {
-                select: {
-                  lich_gap_lanh_dao: {
-                    select: {
-                      lanh_dao: { select: { id: true, ho_va_ten: true } },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
+      prisma.$queryRawUnsafe(leaderStatisticsQuery, ...queryParameters),
     ]);
-    return { overall, scoreGroups, leaderRows };
+    const leaderGroups = rawLeaderGroups.map((group) => ({
+      leaderId: group.leaderId,
+      leaderName: group.leaderName,
+      totalRatings: Number(group.totalRatings),
+      averageScore: Number(group.averageScore ?? 0),
+    }));
+    return { overall, scoreGroups, leaderGroups };
   },
 
   async findDetail(id, leaderId) {

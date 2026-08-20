@@ -13,7 +13,7 @@ const LeaderMeetingScheduleSwagger = {
         schema: {
           type: "string",
           format: "uuid",
-          example: "223e4567-e89b-42d3-a456-426614174001",
+          example: "223e4567-e89b-42d3-a456-426614174003",
         },
       }],
       requestBody: {
@@ -115,7 +115,7 @@ const LeaderMeetingScheduleSwagger = {
         schema: {
           type: "string",
           format: "uuid",
-          example: "223e4567-e89b-42d3-a456-426614174001",
+          example: "223e4567-e89b-42d3-a456-426614174002",
         },
       }],
       requestBody: {
@@ -180,7 +180,7 @@ const LeaderMeetingScheduleSwagger = {
         schema: {
           type: "string",
           format: "uuid",
-          example: "223e4567-e89b-42d3-a456-426614174001",
+          example: "223e4567-e89b-42d3-a456-426614174004",
         },
       }],
       responses: {
@@ -195,7 +195,7 @@ const LeaderMeetingScheduleSwagger = {
                     success: true,
                     message: "Xóa lịch gặp lãnh đạo thành công",
                     data: {
-                      id: "223e4567-e89b-42d3-a456-426614174001",
+                      id: "223e4567-e89b-42d3-a456-426614174004",
                       deleted: true,
                     },
                   },
@@ -283,7 +283,7 @@ const LeaderMeetingScheduleSwagger = {
               type: "object",
               required: ["receptionDate", "slots"],
               properties: {
-                receptionDate: { type: "string", format: "date", example: "2099-08-25" },
+                receptionDate: { type: "string", format: "date", example: "2099-08-29" },
                 location: { type: "string", example: "Phòng tiếp công dân" },
                 note: { type: "string", example: "Tiếp công dân định kỳ" },
                 slots: {
@@ -305,7 +305,7 @@ const LeaderMeetingScheduleSwagger = {
               valid: {
                 summary: "Demo hợp lệ - hai khung 90 phút",
                 value: {
-                  receptionDate: "2099-08-25",
+                  receptionDate: "2099-08-29",
                   location: "Phòng tiếp công dân",
                   note: "Tiếp công dân định kỳ",
                   slots: [

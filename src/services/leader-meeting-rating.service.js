@@ -6,6 +6,7 @@ import {
 import LeaderMeetingRatingRepository from "../repositories/leader-meeting-rating.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import { normalizeRoleNames } from "../utils/auth-context.util.js";
 
 const LeaderMeetingRatingService = {
   getConfiguration() {
@@ -64,7 +65,7 @@ const LeaderMeetingRatingService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -100,7 +101,7 @@ const LeaderMeetingRatingService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -112,19 +113,6 @@ const LeaderMeetingRatingService = {
     const countByScore = new Map(
       result.scoreGroups.map((group) => [group.diem_tong, group._count._all])
     );
-    const byLeader = new Map();
-    for (const row of result.leaderRows) {
-      const leader =
-        row.dang_ky_gap_lanh_dao.khung_gio_gap_lanh_dao.lich_gap_lanh_dao.lanh_dao;
-      const current = byLeader.get(leader.id) || {
-        leader: { id: leader.id, fullName: leader.ho_va_ten },
-        totalRatings: 0,
-        scoreTotal: 0,
-      };
-      current.totalRatings += 1;
-      current.scoreTotal += row.diem_tong;
-      byLeader.set(leader.id, current);
-    }
     const round = (value) => Math.round(value * 100) / 100;
     const satisfied = (countByScore.get(4) || 0) + (countByScore.get(5) || 0);
     return {
@@ -135,16 +123,16 @@ const LeaderMeetingRatingService = {
         score: index + 1,
         count: countByScore.get(index + 1) || 0,
       })),
-      byLeader: Array.from(byLeader.values()).map((item) => ({
-        leader: item.leader,
+      byLeader: result.leaderGroups.map((item) => ({
+        leader: { id: item.leaderId, fullName: item.leaderName },
         totalRatings: item.totalRatings,
-        averageScore: round(item.scoreTotal / item.totalRatings),
+        averageScore: round(item.averageScore),
       })),
     };
   },
 
   async getDetail(id, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );

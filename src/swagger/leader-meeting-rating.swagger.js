@@ -7,7 +7,7 @@ const LeaderMeetingRatingSwagger = {
         "Yêu cầu quyền LMRT_GET_ALL. Lãnh đạo chỉ xem đánh giá của các lịch mình phụ trách; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ và có thể lọc leaderId. Hỗ trợ search, score, leaderId, fromDate, toDate, page và limit; phạm vi luôn lấy từ access token.",
       security: [{ bearerAuth: [] }],
       parameters: [
-        { name: "search", in: "query", schema: { type: "string", example: "LD000126" } },
+        { name: "search", in: "query", schema: { type: "string", example: "LD000129" } },
         { name: "score", in: "query", schema: { type: "integer", minimum: 1, maximum: 5, example: 5 } },
         { name: "leaderId", in: "query", schema: { type: "string", format: "uuid", example: "123e4567-e89b-42d3-a456-426614174001" } },
         { name: "fromDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-01" } },
@@ -28,7 +28,7 @@ const LeaderMeetingRatingSwagger = {
                     message: "Lấy danh sách đánh giá gặp lãnh đạo thành công",
                     data: [{
                       id: "723e4567-e89b-42d3-a456-426614174001",
-                      registrationCode: "LD000126",
+                      registrationCode: "LD000129",
                       applicantName: "Nguyễn Văn Bình",
                       appointmentDate: "2099-08-25",
                       timeSlot: "09:00 - 10:30",
@@ -62,7 +62,7 @@ const LeaderMeetingRatingSwagger = {
               type: "object",
               required: ["registrationCode", "score"],
               properties: {
-                registrationCode: { type: "string", example: "LD000126" },
+                registrationCode: { type: "string", example: "LD000130" },
                 score: { type: "integer", minimum: 1, maximum: 5, example: 5 },
                 selectedSuggestions: {
                   type: "array",
@@ -76,7 +76,7 @@ const LeaderMeetingRatingSwagger = {
               valid: {
                 summary: "Demo hợp lệ - đánh giá 5 sao",
                 value: {
-                  registrationCode: "LD000126",
+                  registrationCode: "LD000130",
                   score: 5,
                   selectedSuggestions: [
                     "Lãnh đạo rất tận tình và chuyên nghiệp",
@@ -103,7 +103,7 @@ const LeaderMeetingRatingSwagger = {
                     message: "Gửi đánh giá gặp lãnh đạo thành công",
                     data: {
                       id: "723e4567-e89b-42d3-a456-426614174001",
-                      registrationCode: "LD000126",
+                      registrationCode: "LD000130",
                       score: 5,
                       selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
                       comment: "Buổi gặp giải quyết đúng nội dung tôi quan tâm.",
@@ -240,8 +240,8 @@ const LeaderMeetingRatingSwagger = {
                       selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
                       comment: "Tôi rất hài lòng",
                       registration: {
-                        id: "423e4567-e89b-42d3-a456-426614174004",
-                        registrationCode: "LD000126",
+                        id: "423e4567-e89b-42d3-a456-426614174007",
+                        registrationCode: "LD000129",
                         appointmentDate: "2099-08-25",
                         timeSlot: "09:00 - 10:30",
                         status: "COMPLETED",
