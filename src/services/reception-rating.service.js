@@ -11,10 +11,14 @@ import {
   hasAssignedReceptionCounter,
   resolveReceptionDepartment,
 } from "../mapper/reception-registration-v2.mapper.js";
+import {
+  formatVietnamDate,
+  normalizeReceptionTimes,
+} from "../utils/vietnam-time.util.js";
 
 const isUniqueConstraintError = (error) => error?.code === "P2002";
 
-const mapRating = (rating, receptionCode) => ({
+const mapRating = (rating, receptionCode) => normalizeReceptionTimes({
   id: rating.id,
   receptionCode,
   score: rating.diem_tong,
@@ -23,7 +27,7 @@ const mapRating = (rating, receptionCode) => ({
   createdAt: rating.thoi_gian_tao,
 });
 
-const mapRatingListItem = (rating) => ({
+const mapRatingListItem = (rating) => normalizeReceptionTimes({
   id: rating.id,
   receptionCode: rating.dang_ky_tiep_dan.ma_tiep_dan,
   applicantName: rating.dang_ky_tiep_dan.ho_ten,
@@ -39,7 +43,7 @@ const mapRatingListItem = (rating) => ({
 
 const mapRatingDetail = (rating) => {
   const registration = rating.dang_ky_tiep_dan;
-  return {
+  return normalizeReceptionTimes({
     id: rating.id,
     score: rating.diem_tong,
     selectedSuggestions: rating.ly_do || [],
@@ -80,17 +84,17 @@ const mapRatingDetail = (rating) => {
           }
         : null,
     },
-  };
+  });
 };
 
 const normalizeDateFilters = (filters) => {
   const normalized = {
     ...filters,
     fromDate: filters.fromDate
-      ? new Date(filters.fromDate).toISOString().slice(0, 10)
+      ? formatVietnamDate(filters.fromDate)
       : undefined,
     toDate: filters.toDate
-      ? new Date(filters.toDate).toISOString().slice(0, 10)
+      ? formatVietnamDate(filters.toDate)
       : undefined,
   };
   if (

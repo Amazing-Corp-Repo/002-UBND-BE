@@ -1,7 +1,8 @@
 import ReceptionCounterRepository from "../repositories/reception-counter.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { normalizeReceptionTimes } from "../utils/vietnam-time.util.js";
 
-const mapCounter = (counter) => ({
+const mapCounter = (counter) => normalizeReceptionTimes({
   id: counter.id,
   counterCode: counter.ma_quay,
   counterName: counter.ten_quay,

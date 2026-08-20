@@ -3,6 +3,7 @@ import {
   buildReceptionDepartmentFilter,
   receptionCounterRelation,
 } from "../mapper/reception-registration-v2.mapper.js";
+import { getVietnamDayUtcRange } from "../utils/vietnam-time.util.js";
 
 const ReceptionRatingRepository = {
   async findRegistrationByCode(receptionCode) {
@@ -42,14 +43,7 @@ const ReceptionRatingRepository = {
       ...(filters.score ? { diem_tong: filters.score } : {}),
       ...(filters.fromDate || filters.toDate
         ? {
-            thoi_gian_tao: {
-              ...(filters.fromDate
-                ? { gte: new Date(`${filters.fromDate}T00:00:00.000Z`) }
-                : {}),
-              ...(filters.toDate
-                ? { lte: new Date(`${filters.toDate}T23:59:59.999Z`) }
-                : {}),
-            },
+            thoi_gian_tao: getVietnamDayUtcRange(filters),
           }
         : {}),
       ...(filters.search
@@ -128,14 +122,7 @@ const ReceptionRatingRepository = {
     const createdAtFilter =
       filters.fromDate || filters.toDate
         ? {
-            thoi_gian_tao: {
-              ...(filters.fromDate
-                ? { gte: new Date(`${filters.fromDate}T00:00:00.000Z`) }
-                : {}),
-              ...(filters.toDate
-                ? { lte: new Date(`${filters.toDate}T23:59:59.999Z`) }
-                : {}),
-            },
+            thoi_gian_tao: getVietnamDayUtcRange(filters),
           }
         : {};
     const baseWhere = {

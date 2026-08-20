@@ -4,16 +4,9 @@ import {
   DEFAULT_RECEPTION_COUNTER_CAPACITY,
   RECEPTION_COUNTER_CODES,
 } from "../constants/reception-schedule.constant.js";
+import { formatVietnamDate } from "../utils/vietnam-time.util.js";
 
 const MAX_TRANSACTION_RETRIES = 3;
-
-const formatVietnamDate = (date) =>
-  new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
 
 const formatVietnamTime = (date) =>
   new Intl.DateTimeFormat("en-GB", {
@@ -147,7 +140,7 @@ const ReceptionScheduleService = {
           id: item.id,
           officerName: item.ten_can_bo,
           location: item.dia_diem,
-          receptionDate: item.ngay_tiep_dan,
+          receptionDate: formatVietnamDate(item.ngay_tiep_dan),
           timeRange: item.thoi_gian,
           availableSlots: slots.map((slot) => slot.timeSlot),
           openSlots: slots

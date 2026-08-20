@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { BaseError } from "../utils/base-error.util.js";
 import {
   DEFAULT_RECEPTION_COUNTER_CAPACITY,
@@ -15,6 +14,13 @@ import {
 import { createPagination } from "../utils/response.util.js";
 import { access } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import {
+  formatVietnamDate,
+  normalizeReceptionTimes,
+  parseVietnamImportDate,
+  parseVietnamImportTime,
+  toDatabaseDate,
+} from "../utils/vietnam-time.util.js";
 
 const RECEPTION_TEMPLATE_URL = "/static/template-lich-tiep-dan.xlsx";
 const RECEPTION_TEMPLATE_PATH = fileURLToPath(
@@ -31,50 +37,6 @@ const toTime = (minutes) =>
     minutes % 60
   ).padStart(2, "0")}`;
 
-const isRealCalendarDate = (value) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  );
-};
-
-const parseImportDate = (value) => {
-  if (typeof value === "number") {
-    const date = new Date(Date.UTC(1899, 11, 30) + Math.floor(value) * 86400000);
-    return date.toISOString().slice(0, 10);
-  }
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-  if (typeof value !== "string") return null;
-
-  const normalized = value.trim();
-  if (isRealCalendarDate(normalized)) return normalized;
-  const vietnameseDate = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(normalized);
-  if (!vietnameseDate) return null;
-  const [, day, month, year] = vietnameseDate;
-  const result = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  return isRealCalendarDate(result) ? result : null;
-};
-
-const parseImportTime = (value) => {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return `${String(value.getUTCHours()).padStart(2, "0")}:${String(
-      value.getUTCMinutes()
-    ).padStart(2, "0")}`;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    const minutes = Math.round((value - Math.floor(value)) * 1440) % 1440;
-    return toTime(minutes);
-  }
-  if (typeof value !== "string") return null;
-  const normalized = value.trim();
-  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(normalized)) return normalized;
-  const parsed = new Date(normalized);
-  return Number.isNaN(parsed.getTime()) ? null : parseImportTime(parsed);
-};
-
 const normalizeImportRow = (item, index, currentUser) => {
   const row = Object.fromEntries(
     Object.entries(item).map(([key, value]) => [toSnakeCaseNonAccent(key), value])
@@ -82,9 +44,9 @@ const normalizeImportRow = (item, index, currentUser) => {
   const rowNumber = index + 2;
   const officerName = String(row.ten_can_bo || "").trim();
   const location = String(row.dia_diem || "").trim();
-  const receptionDate = parseImportDate(row.ngay_tiep_dan);
-  const startTime = parseImportTime(row.tu);
-  const endTime = parseImportTime(row.den);
+  const receptionDate = parseVietnamImportDate(row.ngay_tiep_dan);
+  const startTime = parseVietnamImportTime(row.tu);
+  const endTime = parseVietnamImportTime(row.den);
 
   if (!officerName || !location || !receptionDate || !startTime || !endTime) {
     throw new BaseError(
@@ -111,7 +73,7 @@ const normalizeImportRow = (item, index, currentUser) => {
     scheduleData: {
       ten_can_bo: officerName,
       dia_diem: location,
-      ngay_tiep_dan: new Date(`${receptionDate}T00:00:00.000Z`),
+      ngay_tiep_dan: toDatabaseDate(receptionDate),
       thoi_gian: timeRange,
       ghi_chu: row.ghi_chu ? String(row.ghi_chu).trim() : null,
       nguoi_tao: currentUser,
@@ -229,7 +191,10 @@ const mapCreatedSchedule = (schedule) => {
     dang_ky_tiep_dan: _registrations,
     ...scheduleData
   } = schedule;
-  return { ...scheduleData, slots: [...groupedSlots.values()] };
+  return normalizeReceptionTimes({
+    ...scheduleData,
+    slots: [...groupedSlots.values()],
+  });
 };
 
 const ReceptionScheduleManagementService = {
@@ -244,7 +209,7 @@ const ReceptionScheduleManagementService = {
       isActive:
         typeof isActive === "boolean" ? String(isActive) : isActive,
     });
-    return data.sort((left, right) => {
+    return normalizeReceptionTimes(data.sort((left, right) => {
       const dateDifference =
         new Date(left.ngay_tiep_dan).getTime() -
         new Date(right.ngay_tiep_dan).getTime();
@@ -252,7 +217,7 @@ const ReceptionScheduleManagementService = {
       return String(left.thoi_gian || "").localeCompare(
         String(right.thoi_gian || "")
       );
-    });
+    }));
   },
 
   async getLichTiepDanWithPagination(filters) {
@@ -276,7 +241,10 @@ const ReceptionScheduleManagementService = {
         String(right.thoi_gian || "")
       );
     });
-    return { data, pagination: createPagination(page, size, totalItems) };
+    return normalizeReceptionTimes({
+      data,
+      pagination: createPagination(page, size, totalItems),
+    });
   },
 
   async countLichTiepDan(filters) {
@@ -351,7 +319,7 @@ const ReceptionScheduleManagementService = {
         "Không thể ngừng lịch tiếp dân đã có đăng ký giữ chỗ"
       );
     }
-    return result.data;
+    return normalizeReceptionTimes(result.data);
   },
 
   async getTemplateLichTiepDan() {
@@ -495,8 +463,8 @@ const ReceptionScheduleManagementService = {
           .map(({ startTime, endTime }) => `${startTime} - ${endTime}`)
           .join(", ")
       : existing.thoi_gian;
-    const requestedDate = dayjs(ngayTiepDan).format("YYYY-MM-DD");
-    const existingDate = dayjs(existing.ngay_tiep_dan).format("YYYY-MM-DD");
+    const requestedDate = formatVietnamDate(ngayTiepDan);
+    const existingDate = formatVietnamDate(existing.ngay_tiep_dan);
     const scheduleTimeChanged =
       requestedDate !== existingDate || thoiGian !== existing.thoi_gian;
     const workingPeriodsChanged =

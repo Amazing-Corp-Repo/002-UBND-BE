@@ -13,6 +13,10 @@ import {
   hasAssignedReceptionCounter,
   resolveReceptionDepartment,
 } from "../mapper/reception-registration-v2.mapper.js";
+import {
+  formatVietnamDate,
+  normalizeReceptionTimes,
+} from "../utils/vietnam-time.util.js";
 
 const MAX_CODE_RETRIES = 10;
 
@@ -84,7 +88,7 @@ const maskValue = (value, visibleSuffix = 4) => {
   return `${"*".repeat(Math.max(0, value.length - visibleSuffix))}${suffix}`;
 };
 
-const mapCitizenRegistration = (item) => ({
+const mapCitizenRegistration = (item) => normalizeReceptionTimes({
   id: item.id,
   receptionCode: item.ma_tiep_dan,
   receptionType: item.loai,
@@ -106,14 +110,14 @@ const mapCitizenRegistration = (item) => ({
   updatedAt: item.thoi_gian_cap_nhat,
 });
 
-const mapCreatedRegistration = (item, slotId) => ({
+const mapCreatedRegistration = (item, slotId) => normalizeReceptionTimes({
   ...item,
   ...mapCitizenRegistration(item),
   scheduleId: item.id_lich_tiep_dan,
   slotId,
 });
 
-const mapStaffRegistration = (item) => ({
+const mapStaffRegistration = (item) => normalizeReceptionTimes({
   id: item.id,
   receptionCode: item.ma_tiep_dan,
   applicantName: item.ho_ten,
@@ -139,7 +143,7 @@ const mapStaffRegistration = (item) => ({
 
 const mapStaffRegistrationDetail = (item) => {
   const rating = item.danh_gia_tiep_dan?.[0] || null;
-  return {
+  return normalizeReceptionTimes({
     id: item.id,
     receptionCode: item.ma_tiep_dan,
     receptionType: item.loai,
@@ -187,10 +191,10 @@ const mapStaffRegistrationDetail = (item) => {
       : null,
     createdAt: item.thoi_gian_tao,
     updatedAt: item.thoi_gian_cap_nhat,
-  };
+  });
 };
 
-const mapRatingLookup = (item) => ({
+const mapRatingLookup = (item) => normalizeReceptionTimes({
   registrationId: item.id,
   receptionCode: item.ma_tiep_dan,
   receptionDate: item.ngay,
@@ -218,9 +222,7 @@ const DangKyTiepDanService = {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại hoặc đã ngừng hoạt động");
     }
 
-    const scheduleDate = new Date(schedule.ngay_tiep_dan)
-      .toISOString()
-      .slice(0, 10);
+    const scheduleDate = formatVietnamDate(schedule.ngay_tiep_dan);
     if (scheduleDate < getVietnamDate()) {
       throw new BaseError(400, "Không thể đăng ký lịch tiếp dân đã qua");
     }
@@ -339,7 +341,7 @@ const DangKyTiepDanService = {
     const normalizedFilters = {
       ...filters,
       receptionDate: filters.receptionDate
-        ? new Date(filters.receptionDate).toISOString().slice(0, 10)
+        ? formatVietnamDate(filters.receptionDate)
         : undefined,
     };
     const { data, totalItems } =
