@@ -491,5 +491,9 @@ Cần seed tối thiểu:
 ## 12. Trạng thái tài liệu
 
 - Nghiệp vụ đã được chốt theo trao đổi hiện tại.
-- Tài liệu này chưa đồng nghĩa với việc API đã được code.
-- Chưa thực hiện thay đổi DB, migration hoặc backfill cho các nội dung bổ sung trong tài liệu này.
+- Đã triển khai đủ 22 API theo cấu trúc route-controller-service-repository, validator, phân quyền, audit và Swagger.
+- Đã có migration schema/workflow, chống trùng theo ngày hẹn và backfill idempotent có dry-run.
+- Hai migration gặp lãnh đạo đã được deploy trên DB DEV ngày 20/08/2026.
+- Bản ghi `LEADER_MEETING` cũ trên DB DEV đã được backfill và đối soát đúng một đăng ký/một đánh giá; chạy apply lần hai không nhân đôi.
+- Đã có seed Swagger DEV, test contract, unit/integration test và smoke test với DB thật.
+- Hướng dẫn contract và vận hành nằm tại `docs/leader-meeting-api-integration.md`.
