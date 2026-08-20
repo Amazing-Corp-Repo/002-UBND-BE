@@ -49,6 +49,7 @@
     "backfill:leader-meetings": "node --experimental-strip-types scripts/backfill-leader-meetings.js",
     "generate:reception-template": "node scripts/generate-reception-schedule-template.js",
     "seed:reception-swagger-demo": "node --experimental-strip-types scripts/seed-reception-swagger-demo.js",
+    "seed:leader-meeting-swagger-demo": "node --experimental-strip-types scripts/seed-leader-meeting-swagger-demo.js",
     "dev": "node --watch --experimental-strip-types src/app.js",
     "start": "node --experimental-strip-types src/app.js",
     "postinstall": "prisma generate"
