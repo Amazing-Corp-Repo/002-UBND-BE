@@ -461,6 +461,91 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/{id}/process": {
+    patch: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Bắt đầu xử lý đăng ký gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMR_PROCESS. Chỉ đúng lãnh đạo của lịch hẹn được chuyển đơn từ APPROVED sang IN_PROGRESS. Backend tự ghi người và thời điểm bắt đầu xử lý; ghi chú là tùy chọn. API không sử dụng thông tin quầy.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "ID đăng ký đang ở trạng thái APPROVED",
+          schema: {
+            type: "string",
+            format: "uuid",
+            example: "423e4567-e89b-42d3-a456-426614174003",
+          },
+        },
+      ],
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                note: { type: "string", maxLength: 2000, nullable: true },
+              },
+            },
+            examples: {
+              withNote: {
+                summary: "Demo bắt đầu xử lý có ghi chú",
+                value: {
+                  note: "Buổi gặp đã diễn ra, vụ việc đang được tiếp tục xử lý",
+                },
+              },
+              withoutNote: {
+                summary: "Demo bắt đầu xử lý không ghi chú",
+                value: {},
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Bắt đầu xử lý đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Đơn đã chuyển sang IN_PROGRESS",
+                  value: {
+                    success: true,
+                    message: "Bắt đầu xử lý đăng ký gặp lãnh đạo thành công",
+                    data: {
+                      id: "423e4567-e89b-42d3-a456-426614174003",
+                      registrationCode: "LD000125",
+                      status: "IN_PROGRESS",
+                      workflow: {
+                        processingNote:
+                          "Buổi gặp đã diễn ra, vụ việc đang được tiếp tục xử lý",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID không hợp lệ hoặc ghi chú quá 2000 ký tự" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMR_PROCESS" },
+        404: {
+          description:
+            "Đăng ký không tồn tại hoặc không thuộc lãnh đạo đang đăng nhập",
+        },
+        409: {
+          description:
+            "Đơn không ở trạng thái APPROVED hoặc đã được yêu cầu khác xử lý",
+        },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRegistrationSwagger;

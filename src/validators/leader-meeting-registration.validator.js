@@ -124,3 +124,9 @@ export const RejectLeaderMeetingRegistrationRequest = Joi.object({
     "any.required": "Lý do từ chối là bắt buộc",
   }),
 });
+
+export const ProcessLeaderMeetingRegistrationRequest = Joi.object({
+  note: Joi.string().trim().max(2000).allow("", null).optional().messages({
+    "string.max": "Ghi chú xử lý không được vượt quá 2000 ký tự",
+  }),
+});
