@@ -223,6 +223,97 @@ const LeaderMeetingRegistrationRepository = {
     ]);
     return { data, totalItems };
   },
+
+  async findManagementDetail(id, leaderId) {
+    return prisma.dang_ky_gap_lanh_dao.findFirst({
+      where: {
+        id,
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          lich_gap_lanh_dao: {
+            id_lanh_dao: leaderId || undefined,
+            is_delete: false,
+          },
+        },
+      },
+      select: {
+        id: true,
+        ma_dang_ky: true,
+        ngay_hen: true,
+        chu_de: true,
+        ly_do: true,
+        ho_ten: true,
+        sdt: true,
+        cccd: true,
+        ngay_cap_cccd: true,
+        noi_cap_cccd: true,
+        dia_chi: true,
+        ngay_lam_don: true,
+        trang_thai: true,
+        ly_do_tu_choi: true,
+        ly_do_huy: true,
+        ghi_chu_xu_ly: true,
+        ghi_chu_hoan_thanh: true,
+        thoi_gian_phe_duyet: true,
+        thoi_gian_bat_dau_xu_ly: true,
+        thoi_gian_hoan_thanh: true,
+        thoi_gian_tu_choi: true,
+        thoi_gian_huy: true,
+        thoi_gian_tao: true,
+        thoi_gian_cap_nhat: true,
+        khung_gio_gap_lanh_dao: {
+          select: {
+            id: true,
+            gio_bat_dau: true,
+            gio_ket_thuc: true,
+            lich_gap_lanh_dao: {
+              select: {
+                id: true,
+                ngay: true,
+                dia_diem: true,
+                ghi_chu: true,
+                lanh_dao: {
+                  select: {
+                    id: true,
+                    ho_va_ten: true,
+                    email: true,
+                    so_dien_thoai: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        nguoi_duyet: { select: { id: true, ho_va_ten: true } },
+        nguoi_bat_dau_xu_ly_ref: { select: { id: true, ho_va_ten: true } },
+        nguoi_hoan_thanh_ref: { select: { id: true, ho_va_ten: true } },
+        nguoi_tu_choi_ref: { select: { id: true, ho_va_ten: true } },
+        nguoi_huy_ref: { select: { id: true, ho_va_ten: true } },
+        dinh_kem_dang_ky_gap_lanh_dao: {
+          orderBy: { thoi_gian_tao: "asc" },
+          select: {
+            id: true,
+            loai_dinh_kem: true,
+            ten_file_goc: true,
+            mime_type: true,
+            kich_thuoc: true,
+            thoi_gian_tao: true,
+          },
+        },
+        danh_gia_gap_lanh_dao: {
+          select: {
+            id: true,
+            diem_tong: true,
+            tieu_chi: true,
+            ly_do: true,
+            nhan_xet: true,
+            thoi_gian_tao: true,
+          },
+        },
+      },
+    });
+  },
 };
 
 export default LeaderMeetingRegistrationRepository;

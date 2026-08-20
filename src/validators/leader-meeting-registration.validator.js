@@ -108,3 +108,10 @@ export const GetLeaderMeetingRegistrationsQuery = Joi.object({
   fromDate: receptionDateFilter.optional(),
   toDate: receptionDateFilter.optional(),
 });
+
+export const LeaderMeetingRegistrationIdParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID đăng ký gặp lãnh đạo không hợp lệ",
+    "any.required": "ID đăng ký gặp lãnh đạo là bắt buộc",
+  }),
+});

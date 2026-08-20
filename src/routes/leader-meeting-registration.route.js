@@ -10,8 +10,10 @@ import {
   CreateLeaderMeetingRegistrationRequest,
   LookupLeaderMeetingRegistrationRequest,
   GetLeaderMeetingRegistrationsQuery,
+  LeaderMeetingRegistrationIdParams,
 } from "../validators/leader-meeting-registration.validator.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
+import validateParams from "../middlewares/validate-params.middleware.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 
@@ -23,6 +25,14 @@ leaderMeetingRegistrationRouter.get(
   authorize([PERMISSION.LMR_GET_ALL]),
   validateQuery(GetLeaderMeetingRegistrationsQuery),
   LeaderMeetingRegistrationController.getManagement
+);
+
+leaderMeetingRegistrationRouter.get(
+  "/:id",
+  authenticate,
+  authorize([PERMISSION.LMR_GET_DETAIL]),
+  validateParams(LeaderMeetingRegistrationIdParams),
+  LeaderMeetingRegistrationController.getManagementDetail
 );
 
 leaderMeetingRegistrationRouter.post(

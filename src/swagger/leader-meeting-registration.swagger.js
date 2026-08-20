@@ -225,6 +225,97 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/{id}": {
+    get: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Xem chi tiết đăng ký gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMR_GET_DETAIL. Lãnh đạo chỉ xem hồ sơ đăng ký gặp chính mình; ADMIN, APPROVER hoặc PHE_DUYET được xem toàn bộ. Kết quả có hồ sơ người dân, lịch hẹn, tiến trình xử lý, đánh giá và metadata file nhưng không trả đường dẫn lưu trữ vật lý. Module này không chứa dữ liệu quầy.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "ID đăng ký gặp lãnh đạo",
+          schema: {
+            type: "string",
+            format: "uuid",
+            example: "423e4567-e89b-42d3-a456-426614174001",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Lấy chi tiết đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Demo hồ sơ đầy đủ đang chờ duyệt",
+                  value: {
+                    success: true,
+                    message: "Lấy chi tiết đăng ký gặp lãnh đạo thành công",
+                    data: {
+                      id: "423e4567-e89b-42d3-a456-426614174001",
+                      registrationCode: "LD000123",
+                      status: "PENDING",
+                      applicationDate: "2099-08-20",
+                      appointment: {
+                        date: "2099-08-25",
+                        slotId: "323e4567-e89b-42d3-a456-426614174001",
+                        startTime: "09:00",
+                        endTime: "10:30",
+                        location: "Phòng tiếp công dân",
+                        leader: {
+                          id: "123e4567-e89b-42d3-a456-426614174001",
+                          fullName: "Nguyễn Văn An",
+                        },
+                      },
+                      applicant: {
+                        fullName: "Nguyễn Văn Bình",
+                        phoneNumber: "0901234567",
+                        citizenId: "012345678901",
+                        address: "Phường Thành Sen, Hà Tĩnh",
+                      },
+                      topic: "Kiến nghị về đất đai",
+                      reason: "Đề nghị hướng dẫn giải quyết hồ sơ.",
+                      workflow: {
+                        approver: null,
+                        processor: null,
+                        completer: null,
+                        rejecter: null,
+                        canceler: null,
+                      },
+                      attachments: [
+                        {
+                          id: "623e4567-e89b-42d3-a456-426614174001",
+                          type: "SUPPORTING_DOCUMENT",
+                          originalName: "ho-so.pdf",
+                          mimeType: "application/pdf",
+                          size: 245760,
+                          contentEndpoint: "/api/leader-meeting-registrations/423e4567-e89b-42d3-a456-426614174001/attachments/623e4567-e89b-42d3-a456-426614174001",
+                          canDownload: true,
+                        },
+                      ],
+                      rating: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID đăng ký không đúng định dạng UUID" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMR_GET_DETAIL" },
+        404: {
+          description:
+            "Đăng ký không tồn tại hoặc không thuộc phạm vi lãnh đạo đang đăng nhập",
+        },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRegistrationSwagger;

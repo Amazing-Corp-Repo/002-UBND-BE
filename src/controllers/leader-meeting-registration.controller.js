@@ -36,6 +36,18 @@ const LeaderMeetingRegistrationController = {
       result.pagination
     );
   },
+
+  async getManagementDetail(req, res) {
+    const data = await LeaderMeetingRegistrationService.getManagementDetail(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Lấy chi tiết đăng ký gặp lãnh đạo thành công"
+    );
+  },
 };
 
 export default LeaderMeetingRegistrationController;

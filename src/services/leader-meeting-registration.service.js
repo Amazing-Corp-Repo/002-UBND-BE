@@ -160,6 +160,98 @@ const mapManagementListItem = (registration) => {
   };
 };
 
+const mapOperator = (operator, operatedAt) =>
+  operator
+    ? { id: operator.id, fullName: operator.ho_va_ten, operatedAt }
+    : null;
+
+const mapManagementDetail = (registration) => {
+  const slot = registration.khung_gio_gap_lanh_dao;
+  const schedule = slot.lich_gap_lanh_dao;
+  return {
+    id: registration.id,
+    registrationCode: registration.ma_dang_ky,
+    status: registration.trang_thai,
+    applicationDate: registration.ngay_lam_don
+      ? vietnamDate(registration.ngay_lam_don)
+      : null,
+    appointment: {
+      date: vietnamDate(registration.ngay_hen),
+      slotId: slot.id,
+      startTime: slot.gio_bat_dau,
+      endTime: slot.gio_ket_thuc,
+      location: schedule.dia_diem,
+      scheduleNote: schedule.ghi_chu,
+      leader: {
+        id: schedule.lanh_dao.id,
+        fullName: schedule.lanh_dao.ho_va_ten,
+        email: schedule.lanh_dao.email,
+        phoneNumber: schedule.lanh_dao.so_dien_thoai,
+      },
+    },
+    applicant: {
+      fullName: registration.ho_ten,
+      phoneNumber: registration.sdt,
+      citizenId: registration.cccd,
+      citizenIdIssuedDate: registration.ngay_cap_cccd
+        ? vietnamDate(registration.ngay_cap_cccd)
+        : null,
+      citizenIdIssuedPlace: registration.noi_cap_cccd,
+      address: registration.dia_chi,
+    },
+    topic: registration.chu_de,
+    reason: registration.ly_do,
+    workflow: {
+      approver: mapOperator(
+        registration.nguoi_duyet,
+        registration.thoi_gian_phe_duyet
+      ),
+      processor: mapOperator(
+        registration.nguoi_bat_dau_xu_ly_ref,
+        registration.thoi_gian_bat_dau_xu_ly
+      ),
+      completer: mapOperator(
+        registration.nguoi_hoan_thanh_ref,
+        registration.thoi_gian_hoan_thanh
+      ),
+      rejecter: mapOperator(
+        registration.nguoi_tu_choi_ref,
+        registration.thoi_gian_tu_choi
+      ),
+      canceler: mapOperator(
+        registration.nguoi_huy_ref,
+        registration.thoi_gian_huy
+      ),
+      processingNote: registration.ghi_chu_xu_ly,
+      completionNote: registration.ghi_chu_hoan_thanh,
+      rejectionReason: registration.ly_do_tu_choi,
+      cancellationReason: registration.ly_do_huy,
+    },
+    attachments: registration.dinh_kem_dang_ky_gap_lanh_dao.map((item) => ({
+      id: item.id,
+      type: item.loai_dinh_kem,
+      originalName: item.ten_file_goc,
+      mimeType: item.mime_type,
+      size: item.kich_thuoc,
+      createdAt: item.thoi_gian_tao,
+      contentEndpoint: `/api/leader-meeting-registrations/${registration.id}/attachments/${item.id}`,
+      canDownload: item.loai_dinh_kem === "SUPPORTING_DOCUMENT",
+    })),
+    rating: registration.danh_gia_gap_lanh_dao
+      ? {
+          id: registration.danh_gia_gap_lanh_dao.id,
+          score: registration.danh_gia_gap_lanh_dao.diem_tong,
+          criteria: registration.danh_gia_gap_lanh_dao.tieu_chi,
+          reasons: registration.danh_gia_gap_lanh_dao.ly_do,
+          comment: registration.danh_gia_gap_lanh_dao.nhan_xet,
+          createdAt: registration.danh_gia_gap_lanh_dao.thoi_gian_tao,
+        }
+      : null,
+    createdAt: registration.thoi_gian_tao,
+    updatedAt: registration.thoi_gian_cap_nhat,
+  };
+};
+
 const LeaderMeetingRegistrationService = {
   async create(input, files = {}) {
     const now = new Date();
@@ -252,6 +344,22 @@ const LeaderMeetingRegistrationService = {
       data: result.data.map(mapManagementListItem),
       pagination: createPagination(filters.page, filters.limit, result.totalItems),
     };
+  },
+
+  async getManagementDetail(id, currentUser) {
+    const roles = currentUser.roles || [];
+    const canViewAll = roles.some((role) =>
+      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+    );
+    const registration =
+      await LeaderMeetingRegistrationRepository.findManagementDetail(
+        id,
+        canViewAll ? undefined : currentUser.userId
+      );
+    if (!registration) {
+      throw new BaseError(404, "Đăng ký gặp lãnh đạo không tồn tại");
+    }
+    return mapManagementDetail(registration);
   },
 };
 
