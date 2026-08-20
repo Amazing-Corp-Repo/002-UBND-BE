@@ -25,6 +25,7 @@ import ReceptionScheduleManagementSwagger from './reception-schedule-management.
 import ReceptionRatingSwagger from './reception-rating.swagger.js';
 import ReceptionCounterSwagger from './reception-counter.swagger.js';
 import ReceptionCounterAssignmentSwagger from './reception-counter-assignment.swagger.js';
+import LeaderMeetingScheduleSwagger from './leader-meeting-schedule.swagger.js';
 
 const swaggerDocument = {
 
@@ -67,7 +68,8 @@ const swaggerDocument = {
         ...ReceptionScheduleManagementSwagger,
         ...ReceptionRatingSwagger,
         ...ReceptionCounterSwagger,
-        ...ReceptionCounterAssignmentSwagger
+        ...ReceptionCounterAssignmentSwagger,
+        ...LeaderMeetingScheduleSwagger
     },
 
     components: {

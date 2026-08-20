@@ -27,6 +27,7 @@ import receptionRatingRouter from './reception-rating.route.js';
 import receptionCounterRouter from './reception-counter.route.js';
 import receptionCounterAssignmentRouter from './reception-counter-assignment.route.js';
 import receptionShiftAssignmentRouter from './reception-shift-assignment.route.js';
+import leaderMeetingScheduleRouter from './leader-meeting-schedule.route.js';
 
 const rootRouter = express.Router();
 
@@ -59,6 +60,7 @@ rootRouter.use('/reception-ratings', receptionRatingRouter);
 rootRouter.use('/reception-counters', receptionCounterRouter);
 rootRouter.use('/reception-counter-assignments', receptionCounterAssignmentRouter);
 rootRouter.use('/reception-shifts', receptionShiftAssignmentRouter);
+rootRouter.use('/leader-meeting-schedules', leaderMeetingScheduleRouter);
 
 export default rootRouter;
 
