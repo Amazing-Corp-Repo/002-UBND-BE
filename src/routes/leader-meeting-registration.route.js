@@ -9,9 +9,21 @@ import validate from "../middlewares/validate.middleware.js";
 import {
   CreateLeaderMeetingRegistrationRequest,
   LookupLeaderMeetingRegistrationRequest,
+  GetLeaderMeetingRegistrationsQuery,
 } from "../validators/leader-meeting-registration.validator.js";
+import validateQuery from "../middlewares/validate-query.middleware.js";
+import { authenticate, authorize } from "../middlewares/auth.middleware.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 
 const leaderMeetingRegistrationRouter = express.Router();
+
+leaderMeetingRegistrationRouter.get(
+  "/",
+  authenticate,
+  authorize([PERMISSION.LMR_GET_ALL]),
+  validateQuery(GetLeaderMeetingRegistrationsQuery),
+  LeaderMeetingRegistrationController.getManagement
+);
 
 leaderMeetingRegistrationRouter.post(
   "/lookup",

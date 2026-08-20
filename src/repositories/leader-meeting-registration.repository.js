@@ -141,6 +141,88 @@ const LeaderMeetingRegistrationRepository = {
       },
     });
   },
+
+  async findManagement({
+    page,
+    limit,
+    search,
+    status,
+    leaderId,
+    fromDate,
+    toDate,
+  }) {
+    const where = {
+      is_active: true,
+      is_delete: false,
+      trang_thai: status,
+      ngay_hen:
+        fromDate || toDate
+          ? {
+              gte: fromDate ? new Date(`${fromDate}T00:00:00.000Z`) : undefined,
+              lte: toDate ? new Date(`${toDate}T23:59:59.999Z`) : undefined,
+            }
+          : undefined,
+      khung_gio_gap_lanh_dao: {
+        lich_gap_lanh_dao: {
+          id_lanh_dao: leaderId || undefined,
+          is_delete: false,
+        },
+      },
+      ...(search
+        ? {
+            OR: [
+              { ma_dang_ky: { contains: search, mode: "insensitive" } },
+              { ho_ten: { contains: search, mode: "insensitive" } },
+              { sdt: { contains: search } },
+              { cccd: { contains: search } },
+              { chu_de: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
+    const [data, totalItems] = await Promise.all([
+      prisma.dang_ky_gap_lanh_dao.findMany({
+        where,
+        orderBy: [{ ngay_hen: "desc" }, { thoi_gian_tao: "desc" }],
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          ma_dang_ky: true,
+          ngay_hen: true,
+          chu_de: true,
+          ho_ten: true,
+          sdt: true,
+          cccd: true,
+          trang_thai: true,
+          thoi_gian_phe_duyet: true,
+          thoi_gian_bat_dau_xu_ly: true,
+          thoi_gian_hoan_thanh: true,
+          thoi_gian_tu_choi: true,
+          thoi_gian_huy: true,
+          thoi_gian_tao: true,
+          khung_gio_gap_lanh_dao: {
+            select: {
+              id: true,
+              gio_bat_dau: true,
+              gio_ket_thuc: true,
+              lich_gap_lanh_dao: {
+                select: {
+                  id: true,
+                  dia_diem: true,
+                  lanh_dao: { select: { id: true, ho_va_ten: true } },
+                },
+              },
+            },
+          },
+          danh_gia_gap_lanh_dao: { select: { id: true } },
+        },
+      }),
+      prisma.dang_ky_gap_lanh_dao.count({ where }),
+    ]);
+    return { data, totalItems };
+  },
 };
 
 export default LeaderMeetingRegistrationRepository;

@@ -70,6 +70,61 @@ const LeaderMeetingRegistrationSwagger = {
     },
   },
   "/api/leader-meeting-registrations": {
+    get: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Lấy danh sách đăng ký gặp lãnh đạo theo quyền",
+      description:
+        "Yêu cầu quyền LMR_GET_ALL. Lãnh đạo chỉ xem đơn đăng ký gặp chính mình; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ và có thể lọc leaderId. Hỗ trợ search, status, leaderId, fromDate, toDate, page và limit. Phạm vi lãnh đạo luôn được xác định từ access token.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "search", in: "query", schema: { type: "string", example: "LD000123" } },
+        { name: "status", in: "query", schema: { type: "string", enum: ["PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED"] } },
+        { name: "leaderId", in: "query", schema: { type: "string", format: "uuid", example: "123e4567-e89b-42d3-a456-426614174001" } },
+        { name: "fromDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-01" } },
+        { name: "toDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-31" } },
+        { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+        { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+      ],
+      responses: {
+        200: {
+          description: "Lấy danh sách đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Demo danh sách đơn chờ duyệt",
+                  value: {
+                    success: true,
+                    message: "Lấy danh sách đăng ký gặp lãnh đạo thành công",
+                    data: [{
+                      id: "423e4567-e89b-42d3-a456-426614174001",
+                      registrationCode: "LD000123",
+                      applicant: {
+                        fullName: "Nguyễn Văn Bình",
+                        phoneNumber: "0901234567",
+                        citizenId: "012345678901",
+                      },
+                      status: "PENDING",
+                      receptionDate: "2099-08-25",
+                      timeSlot: "09:00 - 10:30",
+                      leader: {
+                        id: "123e4567-e89b-42d3-a456-426614174001",
+                        fullName: "Nguyễn Văn An",
+                      },
+                      ratingStatus: "NOT_RATED",
+                    }],
+                    pagination: { currentPage: 1, pageSize: 10, totalPages: 1, totalItems: 1 },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Bộ lọc không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMR_GET_ALL" },
+      },
+    },
     post: {
       tags: ["LeaderMeetingRegistration"],
       summary: "Gửi đăng ký gặp lãnh đạo từ Mobile",

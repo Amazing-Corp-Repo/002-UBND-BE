@@ -22,6 +22,20 @@ const LeaderMeetingRegistrationController = {
       "Tra cứu đăng ký gặp lãnh đạo thành công"
     );
   },
+
+  async getManagement(req, res) {
+    const result =
+      await LeaderMeetingRegistrationService.getManagementRegistrations(
+        req.validatedQuery,
+        req.payload
+      );
+    return successResponse(
+      res,
+      result.data,
+      "Lấy danh sách đăng ký gặp lãnh đạo thành công",
+      result.pagination
+    );
+  },
 };
 
 export default LeaderMeetingRegistrationController;

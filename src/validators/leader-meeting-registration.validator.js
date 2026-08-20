@@ -77,3 +77,34 @@ export const LookupLeaderMeetingRegistrationRequest = Joi.object({
     "object.missing": "Phải nhập mã đăng ký hoặc số điện thoại",
     "object.xor": "Chỉ được tra cứu bằng mã đăng ký hoặc số điện thoại",
   });
+
+const receptionDateFilter = Joi.string()
+  .pattern(/^\d{4}-\d{2}-\d{2}$/)
+  .custom((value, helpers) => {
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+      ? value
+      : helpers.error("date.invalid");
+  })
+  .messages({
+    "string.pattern.base": "Ngày lọc phải có định dạng YYYY-MM-DD",
+    "date.invalid": "Ngày lọc không tồn tại",
+  });
+
+export const GetLeaderMeetingRegistrationsQuery = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  search: Joi.string().trim().max(100).allow("").optional(),
+  status: Joi.string()
+    .valid("PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED")
+    .optional()
+    .messages({ "any.only": "Trạng thái đăng ký không hợp lệ" }),
+  leaderId: Joi.string().uuid().optional().messages({
+    "string.guid": "ID lãnh đạo không hợp lệ",
+  }),
+  fromDate: receptionDateFilter.optional(),
+  toDate: receptionDateFilter.optional(),
+});

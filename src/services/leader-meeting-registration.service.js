@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import path from "node:path";
 import LeaderMeetingRegistrationRepository from "../repositories/leader-meeting-registration.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { createPagination } from "../utils/response.util.js";
 
 const MAX_RETRIES = 10;
 
@@ -129,6 +130,36 @@ const mapCitizenLookup = (registration) => {
   };
 };
 
+const mapManagementListItem = (registration) => {
+  const slot = registration.khung_gio_gap_lanh_dao;
+  const schedule = slot.lich_gap_lanh_dao;
+  return {
+    id: registration.id,
+    registrationCode: registration.ma_dang_ky,
+    applicant: {
+      fullName: registration.ho_ten,
+      phoneNumber: registration.sdt,
+      citizenId: registration.cccd,
+    },
+    topic: registration.chu_de,
+    status: registration.trang_thai,
+    receptionDate: vietnamDate(registration.ngay_hen),
+    timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
+    location: schedule.dia_diem,
+    leader: {
+      id: schedule.lanh_dao.id,
+      fullName: schedule.lanh_dao.ho_va_ten,
+    },
+    ratingStatus: registration.danh_gia_gap_lanh_dao ? "RATED" : "NOT_RATED",
+    approvedAt: registration.thoi_gian_phe_duyet,
+    processingAt: registration.thoi_gian_bat_dau_xu_ly,
+    completedAt: registration.thoi_gian_hoan_thanh,
+    rejectedAt: registration.thoi_gian_tu_choi,
+    canceledAt: registration.thoi_gian_huy,
+    createdAt: registration.thoi_gian_tao,
+  };
+};
+
 const LeaderMeetingRegistrationService = {
   async create(input, files = {}) {
     const now = new Date();
@@ -203,6 +234,24 @@ const LeaderMeetingRegistrationService = {
       throw new BaseError(404, "Không tìm thấy đăng ký gặp lãnh đạo");
     }
     return registrations.map(mapCitizenLookup);
+  },
+
+  async getManagementRegistrations(filters, currentUser) {
+    if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
+      throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
+    }
+    const roles = currentUser.roles || [];
+    const canViewAll = roles.some((role) =>
+      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+    );
+    const result = await LeaderMeetingRegistrationRepository.findManagement({
+      ...filters,
+      leaderId: canViewAll ? filters.leaderId : currentUser.userId,
+    });
+    return {
+      data: result.data.map(mapManagementListItem),
+      pagination: createPagination(filters.page, filters.limit, result.totalItems),
+    };
   },
 };
 
