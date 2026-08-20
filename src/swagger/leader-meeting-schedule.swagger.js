@@ -167,6 +167,50 @@ const LeaderMeetingScheduleSwagger = {
         409: { description: "Lịch đã có đơn hoặc trùng lịch khác trong ngày" },
       },
     },
+    delete: {
+      tags: ["LeaderMeetingSchedule"],
+      summary: "Xóa mềm lịch gặp lãnh đạo chưa có đơn",
+      description:
+        "Yêu cầu quyền LMS_DELETE và vai trò LANH_DAO/LEADER. Chỉ đúng lãnh đạo sở hữu lịch được xóa. Backend xóa mềm lịch và các khung giờ; lịch đã có bất kỳ đăng ký giữ chỗ sẽ bị từ chối.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        schema: {
+          type: "string",
+          format: "uuid",
+          example: "223e4567-e89b-42d3-a456-426614174001",
+        },
+      }],
+      responses: {
+        200: {
+          description: "Xóa lịch gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Demo xóa mềm thành công",
+                  value: {
+                    success: true,
+                    message: "Xóa lịch gặp lãnh đạo thành công",
+                    data: {
+                      id: "223e4567-e89b-42d3-a456-426614174001",
+                      deleted: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID lịch không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMS_DELETE hoặc không phải chủ lịch" },
+        404: { description: "Lịch không tồn tại hoặc không thuộc lãnh đạo" },
+        409: { description: "Lịch đã có đăng ký giữ chỗ" },
+      },
+    },
   },
   "/api/leader-meeting-schedules/management": {
     get: {

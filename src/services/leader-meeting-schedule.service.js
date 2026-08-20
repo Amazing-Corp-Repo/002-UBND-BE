@@ -310,6 +310,24 @@ const LeaderMeetingScheduleService = {
       );
     return mapManagementDetail(schedule);
   },
+
+  async deleteManagementSchedule(id, currentUser) {
+    const roles = currentUser.roles || [];
+    if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
+      throw new BaseError(403, "Chỉ lãnh đạo được xóa lịch gặp công dân của mình");
+    }
+    const result = await LeaderMeetingScheduleRepository.deleteManagement(
+      id,
+      currentUser.userId
+    );
+    if (result.conflict === "NOT_FOUND") {
+      throw new BaseError(404, "Lịch gặp lãnh đạo không tồn tại");
+    }
+    if (result.conflict === "HAS_REGISTRATIONS") {
+      throw new BaseError(409, "Không được xóa lịch đã có đăng ký giữ chỗ");
+    }
+    return { id, deleted: true };
+  },
 };
 
 export default LeaderMeetingScheduleService;

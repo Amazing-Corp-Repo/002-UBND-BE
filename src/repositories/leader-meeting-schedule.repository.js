@@ -298,6 +298,46 @@ const LeaderMeetingScheduleRepository = {
       return { updated: true };
     }, { isolationLevel: "Serializable" });
   },
+
+  async deleteManagement(id, leaderId) {
+    return prisma.$transaction(async (tx) => {
+      const schedule = await tx.lich_gap_lanh_dao.findFirst({
+        where: { id, id_lanh_dao: leaderId, is_delete: false },
+        select: { id: true },
+      });
+      if (!schedule) return { conflict: "NOT_FOUND" };
+
+      const registrationCount = await tx.dang_ky_gap_lanh_dao.count({
+        where: {
+          khung_gio_gap_lanh_dao: { id_lich_gap: id },
+          is_active: true,
+          is_delete: false,
+        },
+      });
+      if (registrationCount > 0) return { conflict: "HAS_REGISTRATIONS" };
+
+      const updatedAt = new Date().toISOString();
+      await tx.khung_gio_gap_lanh_dao.updateMany({
+        where: { id_lich_gap: id, is_delete: false },
+        data: {
+          is_active: false,
+          is_delete: true,
+          nguoi_cap_nhat: leaderId,
+          thoi_gian_cap_nhat: updatedAt,
+        },
+      });
+      await tx.lich_gap_lanh_dao.update({
+        where: { id },
+        data: {
+          is_active: false,
+          is_delete: true,
+          nguoi_cap_nhat: leaderId,
+          thoi_gian_cap_nhat: updatedAt,
+        },
+      });
+      return { deleted: true };
+    }, { isolationLevel: "Serializable" });
+  },
 };
 
 export default LeaderMeetingScheduleRepository;

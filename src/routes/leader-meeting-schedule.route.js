@@ -63,6 +63,15 @@ leaderMeetingScheduleRouter.put(
   LeaderMeetingScheduleController.updateManagementStatus
 );
 
+leaderMeetingScheduleRouter.delete(
+  "/management/:id",
+  authenticate,
+  authorize([PERMISSION.LMS_DELETE]),
+  validateParams(LeaderMeetingScheduleIdParams),
+  receptionAudit(AUDIT_LOGS.DELETE, { tableName: "lich_gap_lanh_dao" }),
+  LeaderMeetingScheduleController.deleteManagement
+);
+
 leaderMeetingScheduleRouter.get(
   "/",
   validateQuery(GetLeaderMeetingSchedulesQuery),

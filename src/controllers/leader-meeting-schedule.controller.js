@@ -67,6 +67,14 @@ const LeaderMeetingScheduleController = {
       "Cập nhật trạng thái lịch gặp lãnh đạo thành công"
     );
   },
+
+  async deleteManagement(req, res) {
+    const data = await LeaderMeetingScheduleService.deleteManagementSchedule(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(res, data, "Xóa lịch gặp lãnh đạo thành công");
+  },
 };
 
 export default LeaderMeetingScheduleController;
