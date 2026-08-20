@@ -136,3 +136,12 @@ export const CompleteLeaderMeetingRegistrationRequest = Joi.object({
     "string.max": "Ghi chú hoàn thành không được vượt quá 2000 ký tự",
   }),
 });
+
+export const CancelLeaderMeetingRegistrationRequest = Joi.object({
+  reason: Joi.string().trim().min(5).max(2000).required().messages({
+    "string.empty": "Lý do hủy là bắt buộc",
+    "string.min": "Lý do hủy phải có ít nhất 5 ký tự",
+    "string.max": "Lý do hủy không được vượt quá 2000 ký tự",
+    "any.required": "Lý do hủy là bắt buộc",
+  }),
+});

@@ -99,6 +99,15 @@ const LeaderMeetingRegistrationController = {
       "Hoàn thành đăng ký gặp lãnh đạo thành công"
     );
   },
+
+  async cancel(req, res) {
+    const data = await LeaderMeetingRegistrationService.cancel(
+      req.validatedParams.id,
+      req.body,
+      req.payload
+    );
+    return successResponse(res, data, "Hủy đăng ký gặp lãnh đạo thành công");
+  },
 };
 
 export default LeaderMeetingRegistrationController;

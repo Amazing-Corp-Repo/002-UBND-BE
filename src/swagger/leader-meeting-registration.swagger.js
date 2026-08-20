@@ -629,6 +629,70 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/{id}/cancel": {
+    patch: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Hủy đăng ký gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMR_CANCEL. Chỉ đúng lãnh đạo của lịch hẹn được chuyển đơn từ APPROVED sang CANCELED; ADMIN và APPROVER không được hủy thay. Lý do là bắt buộc. Người dân được đăng ký lại ở khung giờ khác nhưng chỗ cũ không được hoàn lại.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        description: "ID đăng ký đang ở trạng thái APPROVED",
+        schema: { type: "string", format: "uuid", example: "423e4567-e89b-42d3-a456-426614174005" },
+      }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["reason"],
+              properties: { reason: { type: "string", minLength: 5, maxLength: 2000 } },
+            },
+            examples: {
+              valid: {
+                summary: "Demo hủy do lịch công tác đột xuất",
+                value: { reason: "Lãnh đạo có lịch công tác đột xuất" },
+              },
+              missingReason: { summary: "Demo lỗi - thiếu lý do", value: {} },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Hủy đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Đơn đã chuyển sang CANCELED",
+                  value: {
+                    success: true,
+                    message: "Hủy đăng ký gặp lãnh đạo thành công",
+                    data: {
+                      id: "423e4567-e89b-42d3-a456-426614174005",
+                      registrationCode: "LD000127",
+                      status: "CANCELED",
+                      workflow: { cancellationReason: "Lãnh đạo có lịch công tác đột xuất" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID không hợp lệ hoặc thiếu/sai lý do hủy" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMR_CANCEL" },
+        404: { description: "Đăng ký không tồn tại hoặc không thuộc lãnh đạo đang đăng nhập" },
+        409: { description: "Đơn không ở trạng thái APPROVED hoặc đã được yêu cầu khác xử lý" },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRegistrationSwagger;

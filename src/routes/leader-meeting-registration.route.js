@@ -14,6 +14,7 @@ import {
   RejectLeaderMeetingRegistrationRequest,
   ProcessLeaderMeetingRegistrationRequest,
   CompleteLeaderMeetingRegistrationRequest,
+  CancelLeaderMeetingRegistrationRequest,
 } from "../validators/leader-meeting-registration.validator.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
@@ -87,6 +88,19 @@ leaderMeetingRegistrationRouter.patch(
     sensitiveFields: ["phoneNumber", "citizenId"],
   }),
   LeaderMeetingRegistrationController.complete
+);
+
+leaderMeetingRegistrationRouter.patch(
+  "/:id/cancel",
+  authenticate,
+  authorize([PERMISSION.LMR_CANCEL]),
+  validateParams(LeaderMeetingRegistrationIdParams),
+  validate(CancelLeaderMeetingRegistrationRequest),
+  receptionAudit(AUDIT_LOGS.UPDATE, {
+    tableName: "dang_ky_gap_lanh_dao",
+    sensitiveFields: ["phoneNumber", "citizenId"],
+  }),
+  LeaderMeetingRegistrationController.cancel
 );
 
 leaderMeetingRegistrationRouter.post(

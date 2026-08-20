@@ -507,6 +507,38 @@ const LeaderMeetingRegistrationService = {
     }
     return { ...mapManagementDetail(updated), ratingEligible: true };
   },
+
+  async cancel(id, input, currentUser) {
+    const roles = currentUser.roles || [];
+    if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
+      throw new BaseError(403, "Chỉ lãnh đạo của lịch hẹn được hủy đăng ký");
+    }
+    const registration = await LeaderMeetingRegistrationRepository.findManagementDetail(
+      id,
+      currentUser.userId
+    );
+    if (!registration) {
+      throw new BaseError(404, "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn");
+    }
+    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.APPROVED) {
+      throw new BaseError(409, "Chỉ đăng ký đã được phê duyệt mới được hủy");
+    }
+    const now = new Date();
+    const updated = await LeaderMeetingRegistrationRepository.cancelApproved(
+      id,
+      currentUser.userId,
+      {
+        trang_thai: TRANG_THAI_GAP_LANH_DAO.CANCELED,
+        ly_do_huy: input.reason,
+        nguoi_huy: currentUser.userId,
+        nguoi_cap_nhat: currentUser.userId,
+        thoi_gian_huy: now,
+        thoi_gian_cap_nhat: now,
+      }
+    );
+    if (!updated) throw new BaseError(409, "Đăng ký đã được xử lý bởi yêu cầu khác");
+    return mapManagementDetail(updated);
+  },
 };
 
 export default LeaderMeetingRegistrationService;
