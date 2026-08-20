@@ -316,6 +316,68 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/{id}/approve": {
+    patch: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Phê duyệt đăng ký gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMR_APPROVE. Chỉ đúng lãnh đạo của lịch hẹn được chuyển đơn từ PENDING sang APPROVED. Backend lấy lãnh đạo và người duyệt từ access token, không nhận thông tin quầy và chống hai yêu cầu xử lý đồng thời.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "ID đăng ký đang ở trạng thái PENDING",
+          schema: {
+            type: "string",
+            format: "uuid",
+            example: "423e4567-e89b-42d3-a456-426614174001",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Phê duyệt đăng ký gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Demo hợp lệ - chuyển sang APPROVED",
+                  value: {
+                    success: true,
+                    message: "Phê duyệt đăng ký gặp lãnh đạo thành công",
+                    data: {
+                      id: "423e4567-e89b-42d3-a456-426614174001",
+                      registrationCode: "LD000123",
+                      status: "APPROVED",
+                      appointment: {
+                        date: "2099-08-25",
+                        startTime: "09:00",
+                        endTime: "10:30",
+                        location: "Phòng tiếp công dân",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID đăng ký không đúng định dạng UUID" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMR_APPROVE" },
+        404: {
+          description:
+            "Đăng ký không tồn tại hoặc không thuộc lãnh đạo đang đăng nhập",
+        },
+        409: {
+          description:
+            "Đơn không còn ở trạng thái PENDING hoặc đã được yêu cầu khác xử lý",
+        },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRegistrationSwagger;

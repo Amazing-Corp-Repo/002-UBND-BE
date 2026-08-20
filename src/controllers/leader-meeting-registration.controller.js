@@ -48,6 +48,18 @@ const LeaderMeetingRegistrationController = {
       "Lấy chi tiết đăng ký gặp lãnh đạo thành công"
     );
   },
+
+  async approve(req, res) {
+    const data = await LeaderMeetingRegistrationService.approve(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Phê duyệt đăng ký gặp lãnh đạo thành công"
+    );
+  },
 };
 
 export default LeaderMeetingRegistrationController;

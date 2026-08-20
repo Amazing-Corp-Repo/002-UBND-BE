@@ -3,6 +3,7 @@ import path from "node:path";
 import LeaderMeetingRegistrationRepository from "../repositories/leader-meeting-registration.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 
 const MAX_RETRIES = 10;
 
@@ -360,6 +361,39 @@ const LeaderMeetingRegistrationService = {
       throw new BaseError(404, "Đăng ký gặp lãnh đạo không tồn tại");
     }
     return mapManagementDetail(registration);
+  },
+
+  async approve(id, currentUser) {
+    const registration =
+      await LeaderMeetingRegistrationRepository.findManagementDetail(
+        id,
+        currentUser.userId
+      );
+    if (!registration) {
+      throw new BaseError(
+        404,
+        "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn"
+      );
+    }
+    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.PENDING) {
+      throw new BaseError(409, "Chỉ đăng ký đang chờ mới được phê duyệt");
+    }
+
+    const updated = await LeaderMeetingRegistrationRepository.approvePending(
+      id,
+      currentUser.userId,
+      {
+        trang_thai: TRANG_THAI_GAP_LANH_DAO.APPROVED,
+        nguoi_duyet_don: currentUser.userId,
+        nguoi_cap_nhat: currentUser.userId,
+        thoi_gian_phe_duyet: new Date(),
+        thoi_gian_cap_nhat: new Date(),
+      }
+    );
+    if (!updated) {
+      throw new BaseError(409, "Đăng ký đã được xử lý bởi yêu cầu khác");
+    }
+    return mapManagementDetail(updated);
   },
 };
 

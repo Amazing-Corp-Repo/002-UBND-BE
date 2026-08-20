@@ -35,6 +35,18 @@ leaderMeetingRegistrationRouter.get(
   LeaderMeetingRegistrationController.getManagementDetail
 );
 
+leaderMeetingRegistrationRouter.patch(
+  "/:id/approve",
+  authenticate,
+  authorize([PERMISSION.LMR_APPROVE]),
+  validateParams(LeaderMeetingRegistrationIdParams),
+  receptionAudit(AUDIT_LOGS.UPDATE, {
+    tableName: "dang_ky_gap_lanh_dao",
+    sensitiveFields: ["phoneNumber", "citizenId"],
+  }),
+  LeaderMeetingRegistrationController.approve
+);
+
 leaderMeetingRegistrationRouter.post(
   "/lookup",
   leaderMeetingLookupRateLimiter,
