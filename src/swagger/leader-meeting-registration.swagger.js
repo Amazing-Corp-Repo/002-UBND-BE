@@ -241,7 +241,7 @@ const LeaderMeetingRegistrationSwagger = {
           schema: {
             type: "string",
             format: "uuid",
-            example: "423e4567-e89b-42d3-a456-426614174001",
+            example: "423e4567-e89b-42d3-a456-426614174006",
           },
         },
       ],
@@ -257,8 +257,8 @@ const LeaderMeetingRegistrationSwagger = {
                     success: true,
                     message: "Lấy chi tiết đăng ký gặp lãnh đạo thành công",
                     data: {
-                      id: "423e4567-e89b-42d3-a456-426614174001",
-                      registrationCode: "LD000123",
+                      id: "423e4567-e89b-42d3-a456-426614174006",
+                      registrationCode: "LD000128",
                       status: "PENDING",
                       applicationDate: "2099-08-20",
                       appointment: {
@@ -294,7 +294,7 @@ const LeaderMeetingRegistrationSwagger = {
                           originalName: "ho-so.pdf",
                           mimeType: "application/pdf",
                           size: 245760,
-                          contentEndpoint: "/api/leader-meeting-registrations/423e4567-e89b-42d3-a456-426614174001/attachments/623e4567-e89b-42d3-a456-426614174001",
+                          contentEndpoint: "/api/leader-meeting-registrations/423e4567-e89b-42d3-a456-426614174006/attachments/623e4567-e89b-42d3-a456-426614174001",
                           canDownload: true,
                         },
                       ],
@@ -706,7 +706,7 @@ const LeaderMeetingRegistrationSwagger = {
           in: "path",
           required: true,
           description: "ID đăng ký gặp lãnh đạo",
-          schema: { type: "string", format: "uuid", example: "423e4567-e89b-42d3-a456-426614174001" },
+          schema: { type: "string", format: "uuid", example: "423e4567-e89b-42d3-a456-426614174006" },
         },
         {
           name: "attachmentId",

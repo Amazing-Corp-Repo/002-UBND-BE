@@ -6,6 +6,7 @@ import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import LeaderMeetingRegistrationRepository from "../src/repositories/leader-meeting-registration.repository.js";
 import leaderMeetingRegistrationRouter from "../src/routes/leader-meeting-registration.route.js";
 import LeaderMeetingRegistrationSwagger from "../src/swagger/leader-meeting-registration.swagger.js";
+import { LEADER_MEETING_SWAGGER_DEMO as DEMO } from "../src/swagger/leader-meeting-swagger-demo.fixture.js";
 import jwtUtils from "../src/utils/jwt.util.js";
 
 const leaderId = "123e4567-e89b-42d3-a456-426614174001";
@@ -110,7 +111,7 @@ describe("GET /api/leader-meeting-registrations/:id", () => {
     ].get;
     assert.match(operation.description, /LMR_GET_DETAIL/);
     assert.match(operation.description, /không trả đường dẫn lưu trữ vật lý/);
-    assert.equal(operation.parameters[0].schema.example, registrationId);
+    assert.equal(operation.parameters[0].schema.example, DEMO.registrations.detail.id);
   });
 
   it("returns owned registration detail without exposing a physical path", async () => {
