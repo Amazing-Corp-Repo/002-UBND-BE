@@ -36,3 +36,10 @@ export const GetLeaderMeetingScheduleManagementQuery = Joi.object({
   isActive: Joi.boolean().truthy("true").falsy("false").optional(),
   search: Joi.string().trim().max(100).allow("").optional(),
 });
+
+export const LeaderMeetingScheduleIdParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID lịch gặp lãnh đạo không hợp lệ",
+    "any.required": "ID lịch gặp lãnh đạo là bắt buộc",
+  }),
+});

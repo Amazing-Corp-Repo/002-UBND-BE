@@ -132,6 +132,59 @@ const LeaderMeetingScheduleService = {
       pagination: createPagination(filters.page, filters.size, result.totalItems),
     };
   },
+
+  async getManagementDetail(id, currentUser) {
+    const roles = currentUser.roles || [];
+    const canViewAll = roles.some((role) =>
+      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+    );
+    const schedule =
+      await LeaderMeetingScheduleRepository.findManagementDetail(
+        id,
+        canViewAll ? undefined : currentUser.userId
+      );
+    if (!schedule) {
+      throw new BaseError(404, "Lịch gặp lãnh đạo không tồn tại");
+    }
+
+    return {
+      id: schedule.id,
+      leader: {
+        id: schedule.lanh_dao.id,
+        fullName: schedule.lanh_dao.ho_va_ten,
+        email: schedule.lanh_dao.email,
+        phoneNumber: schedule.lanh_dao.so_dien_thoai,
+      },
+      receptionDate: formatVietnamDate(schedule.ngay),
+      location: schedule.dia_diem,
+      note: schedule.ghi_chu,
+      isActive: schedule.is_active,
+      slots: schedule.khung_gio_gap_lanh_dao.map((slot) => {
+        const statusSummary = slot.dang_ky_gap_lanh_dao.reduce(
+          (summary, registration) => {
+            summary[registration.trang_thai] =
+              (summary[registration.trang_thai] || 0) + 1;
+            return summary;
+          },
+          {}
+        );
+        const heldCount = slot.dang_ky_gap_lanh_dao.length;
+        return {
+          id: slot.id,
+          startTime: slot.gio_bat_dau,
+          endTime: slot.gio_ket_thuc,
+          timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
+          capacity: slot.suc_chua,
+          heldCount,
+          remainingCapacity: Math.max(0, slot.suc_chua - heldCount),
+          isActive: slot.is_active,
+          statusSummary,
+        };
+      }),
+      createdAt: schedule.thoi_gian_tao,
+      updatedAt: schedule.thoi_gian_cap_nhat,
+    };
+  },
 };
 
 export default LeaderMeetingScheduleService;

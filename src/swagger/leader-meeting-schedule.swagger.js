@@ -1,4 +1,65 @@
 const LeaderMeetingScheduleSwagger = {
+  "/api/leader-meeting-schedules/management/{id}": {
+    get: {
+      tags: ["LeaderMeetingSchedule"],
+      summary: "Lấy chi tiết lịch gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMS_GET_DETAIL. Lãnh đạo chỉ xem được lịch của chính mình; ADMIN, APPROVER hoặc PHE_DUYET được xem toàn bộ. Lịch không thuộc phạm vi được trả 404. Kết quả gồm các khung giờ, sức chứa và tổng hợp trạng thái đơn, không chứa dữ liệu quầy.",
+      security: [{ bearerAuth: [] }],
+      parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        description: "ID lịch gặp lãnh đạo",
+        schema: {
+          type: "string",
+          format: "uuid",
+          example: "223e4567-e89b-42d3-a456-426614174001",
+        },
+      }],
+      responses: {
+        200: {
+          description: "Lấy chi tiết lịch gặp lãnh đạo thành công",
+          content: {
+            "application/json": {
+              examples: {
+                success: {
+                  summary: "Demo lịch có một đơn đang chờ",
+                  value: {
+                    success: true,
+                    message: "Lấy chi tiết lịch gặp lãnh đạo thành công",
+                    data: {
+                      id: "223e4567-e89b-42d3-a456-426614174001",
+                      leader: {
+                        id: "123e4567-e89b-42d3-a456-426614174001",
+                        fullName: "Nguyễn Văn An",
+                      },
+                      receptionDate: "2099-08-25",
+                      location: "Phòng tiếp công dân",
+                      isActive: true,
+                      slots: [{
+                        id: "323e4567-e89b-42d3-a456-426614174001",
+                        startTime: "09:00",
+                        endTime: "10:30",
+                        capacity: 1,
+                        heldCount: 1,
+                        remainingCapacity: 0,
+                        statusSummary: { PENDING: 1 },
+                      }],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID lịch không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền LMS_GET_DETAIL" },
+        404: { description: "Lịch không tồn tại hoặc không thuộc phạm vi" },
+      },
+    },
+  },
   "/api/leader-meeting-schedules/management": {
     get: {
       tags: ["LeaderMeetingSchedule"],

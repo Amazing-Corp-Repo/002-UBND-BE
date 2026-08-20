@@ -116,6 +116,43 @@ const LeaderMeetingScheduleRepository = {
 
     return { data, totalItems };
   },
+
+  async findManagementDetail(id, leaderId) {
+    return prisma.lich_gap_lanh_dao.findFirst({
+      where: {
+        id,
+        id_lanh_dao: leaderId || undefined,
+        is_delete: false,
+      },
+      select: {
+        id: true,
+        ngay: true,
+        dia_diem: true,
+        ghi_chu: true,
+        is_active: true,
+        thoi_gian_tao: true,
+        thoi_gian_cap_nhat: true,
+        lanh_dao: {
+          select: { id: true, ho_va_ten: true, email: true, so_dien_thoai: true },
+        },
+        khung_gio_gap_lanh_dao: {
+          where: { is_delete: false },
+          orderBy: [{ gio_bat_dau: "asc" }, { gio_ket_thuc: "asc" }],
+          select: {
+            id: true,
+            gio_bat_dau: true,
+            gio_ket_thuc: true,
+            suc_chua: true,
+            is_active: true,
+            dang_ky_gap_lanh_dao: {
+              where: { is_active: true, is_delete: false },
+              select: { id: true, trang_thai: true },
+            },
+          },
+        },
+      },
+    });
+  },
 };
 
 export default LeaderMeetingScheduleRepository;

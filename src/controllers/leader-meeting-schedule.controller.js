@@ -25,6 +25,18 @@ const LeaderMeetingScheduleController = {
       result.pagination
     );
   },
+
+  async getManagementDetail(req, res) {
+    const data = await LeaderMeetingScheduleService.getManagementDetail(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Lấy chi tiết lịch gặp lãnh đạo thành công"
+    );
+  },
 };
 
 export default LeaderMeetingScheduleController;
