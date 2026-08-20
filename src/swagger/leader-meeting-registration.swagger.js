@@ -693,6 +693,48 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/{id}/attachments/{attachmentId}": {
+    get: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Xem hoặc tải tệp của đăng ký gặp lãnh đạo",
+      description:
+        "Yêu cầu quyền LMR_GET_DETAIL và kiểm tra phạm vi lãnh đạo từ access token. Ảnh CCCD_FRONT/CCCD_BACK luôn trả Content-Disposition inline và từ chối download=true. SUPPORTING_DOCUMENT được xem inline hoặc tải bằng download=true. API không trả đường dẫn lưu trữ vật lý và mọi lần xem/tải đều được audit.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "ID đăng ký gặp lãnh đạo",
+          schema: { type: "string", format: "uuid", example: "423e4567-e89b-42d3-a456-426614174001" },
+        },
+        {
+          name: "attachmentId",
+          in: "path",
+          required: true,
+          description: "ID tệp đính kèm thuộc đăng ký",
+          schema: { type: "string", format: "uuid", example: "623e4567-e89b-42d3-a456-426614174001" },
+        },
+        {
+          name: "download",
+          in: "query",
+          required: false,
+          description: "Chỉ đặt true khi tải tài liệu hỗ trợ; ảnh CCCD không cho tải",
+          schema: { type: "boolean", default: false, example: false },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Trả nội dung tệp dạng binary với Content-Disposition phù hợp",
+          content: { "application/octet-stream": { schema: { type: "string", format: "binary" } } },
+        },
+        400: { description: "ID hoặc tham số download không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền hoặc yêu cầu tải ảnh CCCD" },
+        404: { description: "Tệp không tồn tại, sai đăng ký hoặc ngoài phạm vi lãnh đạo" },
+      },
+    },
+  },
 };
 
 export default LeaderMeetingRegistrationSwagger;

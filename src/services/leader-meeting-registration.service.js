@@ -1,11 +1,19 @@
 import { randomInt } from "node:crypto";
 import path from "node:path";
+import fs from "node:fs";
 import LeaderMeetingRegistrationRepository from "../repositories/leader-meeting-registration.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
 import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 
 const MAX_RETRIES = 10;
+const PRIVATE_UPLOAD_ROOT = path.resolve(
+  process.cwd(),
+  "src",
+  "private",
+  "uploads",
+  "leader-meetings"
+);
 
 const createCode = () => `LD${String(randomInt(0, 1000000)).padStart(6, "0")}`;
 
@@ -538,6 +546,51 @@ const LeaderMeetingRegistrationService = {
     );
     if (!updated) throw new BaseError(409, "Đăng ký đã được xử lý bởi yêu cầu khác");
     return mapManagementDetail(updated);
+  },
+
+  async getAttachment(registrationId, attachmentId, download, currentUser) {
+    const roles = currentUser.roles || [];
+    const canViewAll = roles.some((role) =>
+      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+    );
+    const attachment = await LeaderMeetingRegistrationRepository.findAttachment(
+      registrationId,
+      attachmentId,
+      canViewAll ? undefined : currentUser.userId
+    );
+    if (!attachment) {
+      throw new BaseError(404, "Tệp đính kèm không tồn tại hoặc ngoài phạm vi truy cập");
+    }
+    if (
+      download &&
+      ["CCCD_FRONT", "CCCD_BACK"].includes(attachment.loai_dinh_kem)
+    ) {
+      throw new BaseError(403, "Ảnh CCCD chỉ được xem trực tiếp, không được tải xuống");
+    }
+
+    const fullPath = path.resolve(process.cwd(), attachment.duong_dan_file);
+    if (
+      fullPath !== PRIVATE_UPLOAD_ROOT &&
+      !fullPath.startsWith(`${PRIVATE_UPLOAD_ROOT}${path.sep}`)
+    ) {
+      throw new BaseError(404, "Tệp đính kèm không hợp lệ");
+    }
+    try {
+      await fs.promises.access(fullPath, fs.constants.R_OK);
+    } catch {
+      throw new BaseError(404, "Nội dung tệp đính kèm không tồn tại");
+    }
+
+    return {
+      fullPath,
+      originalName: path.basename(attachment.ten_file_goc).replace(/[\r\n"]/g, "_"),
+      mimeType: attachment.mime_type || "application/octet-stream",
+      size: attachment.kich_thuoc,
+      disposition:
+        download && attachment.loai_dinh_kem === "SUPPORTING_DOCUMENT"
+          ? "attachment"
+          : "inline",
+    };
   },
 };
 

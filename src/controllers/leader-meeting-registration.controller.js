@@ -1,5 +1,6 @@
 import LeaderMeetingRegistrationService from "../services/leader-meeting-registration.service.js";
 import { successResponse } from "../utils/response.util.js";
+import fs from "node:fs";
 
 const LeaderMeetingRegistrationController = {
   async create(req, res) {
@@ -107,6 +108,23 @@ const LeaderMeetingRegistrationController = {
       req.payload
     );
     return successResponse(res, data, "Hủy đăng ký gặp lãnh đạo thành công");
+  },
+
+  async getAttachment(req, res) {
+    const file = await LeaderMeetingRegistrationService.getAttachment(
+      req.validatedParams.id,
+      req.validatedParams.attachmentId,
+      req.validatedQuery.download,
+      req.payload
+    );
+    const encodedName = encodeURIComponent(file.originalName);
+    res.setHeader("Content-Type", file.mimeType);
+    if (file.size) res.setHeader("Content-Length", file.size);
+    res.setHeader(
+      "Content-Disposition",
+      `${file.disposition}; filename="file"; filename*=UTF-8''${encodedName}`
+    );
+    return fs.createReadStream(file.fullPath).pipe(res);
   },
 };
 

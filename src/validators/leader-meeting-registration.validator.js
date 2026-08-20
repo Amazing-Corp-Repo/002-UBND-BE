@@ -145,3 +145,18 @@ export const CancelLeaderMeetingRegistrationRequest = Joi.object({
     "any.required": "Lý do hủy là bắt buộc",
   }),
 });
+
+export const LeaderMeetingAttachmentParams = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.guid": "ID đăng ký gặp lãnh đạo không hợp lệ",
+    "any.required": "ID đăng ký gặp lãnh đạo là bắt buộc",
+  }),
+  attachmentId: Joi.string().uuid().required().messages({
+    "string.guid": "ID tệp đính kèm không hợp lệ",
+    "any.required": "ID tệp đính kèm là bắt buộc",
+  }),
+});
+
+export const GetLeaderMeetingAttachmentQuery = Joi.object({
+  download: Joi.boolean().truthy("true").falsy("false").default(false),
+});

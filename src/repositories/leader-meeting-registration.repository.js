@@ -408,6 +408,34 @@ const LeaderMeetingRegistrationRepository = {
     if (result.count === 0) return null;
     return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
   },
+
+  async findAttachment(registrationId, attachmentId, leaderId) {
+    return prisma.dinh_kem_dang_ky_gap_lanh_dao.findFirst({
+      where: {
+        id: attachmentId,
+        id_dang_ky: registrationId,
+        dang_ky_gap_lanh_dao: {
+          is_active: true,
+          is_delete: false,
+          khung_gio_gap_lanh_dao: {
+            lich_gap_lanh_dao: {
+              id_lanh_dao: leaderId || undefined,
+              is_delete: false,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        id_dang_ky: true,
+        loai_dinh_kem: true,
+        ten_file_goc: true,
+        duong_dan_file: true,
+        mime_type: true,
+        kich_thuoc: true,
+      },
+    });
+  },
 };
 
 export default LeaderMeetingRegistrationRepository;
