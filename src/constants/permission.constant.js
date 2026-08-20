@@ -31,6 +31,28 @@ export const PERMISSION = {
   RRT_GET_DETAIL: "RRT_GET_DETAIL",
   RRT_GET_STATS: "RRT_GET_STATS",
 
+  // Lịch gặp lãnh đạo
+  LMS_GET_ALL: "LMS_GET_ALL",
+  LMS_GET_DETAIL: "LMS_GET_DETAIL",
+  LMS_CREATE: "LMS_CREATE",
+  LMS_UPDATE: "LMS_UPDATE",
+  LMS_UPDATE_STATUS: "LMS_UPDATE_STATUS",
+  LMS_DELETE: "LMS_DELETE",
+
+  // Đăng ký gặp lãnh đạo
+  LMR_GET_ALL: "LMR_GET_ALL",
+  LMR_GET_DETAIL: "LMR_GET_DETAIL",
+  LMR_APPROVE: "LMR_APPROVE",
+  LMR_REJECT: "LMR_REJECT",
+  LMR_PROCESS: "LMR_PROCESS",
+  LMR_COMPLETE: "LMR_COMPLETE",
+  LMR_CANCEL: "LMR_CANCEL",
+
+  // Đánh giá gặp lãnh đạo
+  LMRT_GET_ALL: "LMRT_GET_ALL",
+  LMRT_GET_DETAIL: "LMRT_GET_DETAIL",
+  LMRT_GET_STATS: "LMRT_GET_STATS",
+
   // Lĩnh vực phản ánh
   LVPA_CREATE: "LVPA_CREATE",
   LVPA_UPDATE: "LVPA_UPDATE",
@@ -126,6 +148,25 @@ export const PERMISSION_DESC = {
   RRT_GET_DETAIL: "Xem chi tiết đánh giá tiếp dân",
   RRT_GET_STATS: "Xem thống kê đánh giá tiếp dân",
 
+  LMS_GET_ALL: "Xem danh sách lịch gặp lãnh đạo",
+  LMS_GET_DETAIL: "Xem chi tiết lịch gặp lãnh đạo",
+  LMS_CREATE: "Tạo lịch gặp lãnh đạo",
+  LMS_UPDATE: "Cập nhật lịch gặp lãnh đạo",
+  LMS_UPDATE_STATUS: "Cập nhật trạng thái lịch gặp lãnh đạo",
+  LMS_DELETE: "Xóa lịch gặp lãnh đạo",
+
+  LMR_GET_ALL: "Xem danh sách đăng ký gặp lãnh đạo",
+  LMR_GET_DETAIL: "Xem chi tiết đăng ký gặp lãnh đạo",
+  LMR_APPROVE: "Phê duyệt đăng ký gặp lãnh đạo",
+  LMR_REJECT: "Từ chối đăng ký gặp lãnh đạo",
+  LMR_PROCESS: "Bắt đầu xử lý đăng ký gặp lãnh đạo",
+  LMR_COMPLETE: "Hoàn thành buổi gặp lãnh đạo",
+  LMR_CANCEL: "Hủy đăng ký gặp lãnh đạo",
+
+  LMRT_GET_ALL: "Xem danh sách đánh giá gặp lãnh đạo",
+  LMRT_GET_DETAIL: "Xem chi tiết đánh giá gặp lãnh đạo",
+  LMRT_GET_STATS: "Xem thống kê đánh giá gặp lãnh đạo",
+
   LVPA_CREATE: "Tạo lĩnh vực phản ánh",
   LVPA_UPDATE: "Cập nhật lĩnh vực phản ánh",
   LVPA_DELETE: "Xóa lĩnh vực phản ánh",
@@ -188,6 +229,9 @@ export const PERMISSION_CATEGORIES = {
   LTD: "Lịch tiếp dân",
   RR: "Đăng ký tiếp dân",
   RRT: "Đánh giá tiếp dân",
+  LMS: "Lịch gặp lãnh đạo",
+  LMR: "Đăng ký gặp lãnh đạo",
+  LMRT: "Đánh giá gặp lãnh đạo",
   LVPA: "Lĩnh vực phản ánh",
   LVTTHC: "Lĩnh vực thủ tục hành chính",
   MD: "Mẫu đơn",
@@ -214,6 +258,8 @@ export const PERMISSION_TYPE = {
   APPROVE: "Phê duyệt",
   COMPLETE: "Hoàn thành",
   REJECT: "Từ chối",
+  PROCESS: "Bắt đầu xử lý",
+  CANCEL: "Hủy",
   GET_EXCEL: "Xuất Excel",
   THUONG_TRUC: "Thường trực",
 };
