@@ -801,6 +801,7 @@ model dang_ky_gap_lanh_dao {
   id                        String  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   ma_dang_ky                String  @unique(map: "uq_dang_ky_gap_lanh_dao_ma") @db.VarChar(50)
   id_khung_gio_gap          String  @db.Uuid
+  ngay_hen                  DateTime @db.Date
   chu_de                    String? @db.VarChar(255)   // THÊM MỚI V2 — Chủ đề gặp lãnh đạo
   ho_ten                    String  @db.VarChar(150)
   sdt                       String  @db.VarChar(20)
@@ -848,6 +849,7 @@ model dang_ky_gap_lanh_dao {
   @@index([cccd], map: "idx_dang_ky_gap_cccd")
   @@index([trang_thai], map: "idx_dang_ky_gap_trang_thai")
   @@index([thoi_gian_tao], map: "idx_dang_ky_gap_thoi_gian_tao")
+  @@index([ngay_hen], map: "idx_dang_ky_gap_ngay_hen")
   @@unique([id_khung_gio_gap, sdt], map: "uq_leader_meeting_slot_phone")
   @@unique([id_khung_gio_gap, cccd], map: "uq_leader_meeting_slot_citizen")
 }
