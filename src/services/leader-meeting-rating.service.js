@@ -6,6 +6,7 @@ import {
 import LeaderMeetingRatingRepository from "../repositories/leader-meeting-rating.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import { normalizeRoleNames } from "../utils/auth-context.util.js";
 
 const LeaderMeetingRatingService = {
   getConfiguration() {
@@ -64,7 +65,7 @@ const LeaderMeetingRatingService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -100,7 +101,7 @@ const LeaderMeetingRatingService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -144,7 +145,7 @@ const LeaderMeetingRatingService = {
   },
 
   async getDetail(id, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );

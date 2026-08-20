@@ -1,6 +1,7 @@
 import LeaderMeetingScheduleRepository from "../repositories/leader-meeting-schedule.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import { normalizeRoleNames } from "../utils/auth-context.util.js";
 
 const formatVietnamDate = (date) =>
   new Intl.DateTimeFormat("en-CA", {
@@ -144,7 +145,7 @@ const LeaderMeetingScheduleService = {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
 
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -188,7 +189,7 @@ const LeaderMeetingScheduleService = {
   },
 
   async getManagementDetail(id, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -205,7 +206,7 @@ const LeaderMeetingScheduleService = {
   },
 
   async createManagementSchedule(input, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
       throw new BaseError(403, "Chỉ lãnh đạo được tự tạo lịch gặp công dân");
     }
@@ -239,7 +240,7 @@ const LeaderMeetingScheduleService = {
   },
 
   async updateManagementSchedule(id, input, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
       throw new BaseError(403, "Chỉ lãnh đạo được sửa lịch gặp công dân của mình");
     }
@@ -283,7 +284,7 @@ const LeaderMeetingScheduleService = {
   },
 
   async updateManagementStatus(id, isActive, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
       throw new BaseError(403, "Chỉ lãnh đạo được cập nhật trạng thái lịch của mình");
     }
@@ -312,7 +313,7 @@ const LeaderMeetingScheduleService = {
   },
 
   async deleteManagementSchedule(id, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
       throw new BaseError(403, "Chỉ lãnh đạo được xóa lịch gặp công dân của mình");
     }

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import LeaderMeetingRegistrationRepository from "../repositories/leader-meeting-registration.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import { normalizeRoleNames } from "../utils/auth-context.util.js";
 import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 
 const MAX_RETRIES = 10;
@@ -341,7 +342,7 @@ const LeaderMeetingRegistrationService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -356,7 +357,7 @@ const LeaderMeetingRegistrationService = {
   },
 
   async getManagementDetail(id, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
@@ -517,7 +518,7 @@ const LeaderMeetingRegistrationService = {
   },
 
   async cancel(id, input, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
       throw new BaseError(403, "Chỉ lãnh đạo của lịch hẹn được hủy đăng ký");
     }
@@ -549,7 +550,7 @@ const LeaderMeetingRegistrationService = {
   },
 
   async getAttachment(registrationId, attachmentId, download, currentUser) {
-    const roles = currentUser.roles || [];
+    const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
       ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
     );
