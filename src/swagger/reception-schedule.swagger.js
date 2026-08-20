@@ -11,18 +11,20 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Lấy lịch tiếp dân đang hoạt động dành cho Mobile",
       description:
-        "Trả về các lịch tiếp dân đang hoạt động, chưa bị xóa và còn ít nhất một khung giờ chưa qua. Khung giờ đã bắt đầu trong ngày hiện tại không được trả về. Mỗi ca có shiftId chuẩn, slotId tương thích, giờ bắt đầu, giờ kết thúc, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ nguyên để tương thích API cũ; client hiện tại vẫn có thể gửi slotId khi đăng ký.",
+        "Trả về lịch tiếp dân cho Mobile trong cửa sổ động 7 ngày theo giờ Việt Nam, gồm ngày hiện tại và 6 ngày tiếp theo. Lịch xa hơn không được trả về dù cán bộ đã tạo; khi sang ngày mới, ngày cũ tự rời khỏi cửa sổ và ngày kế tiếp mới được hiển thị. fromDate/toDate chỉ có thể lọc hẹp hơn bên trong cửa sổ này, không thể mở rộng quá 7 ngày. Khung giờ đã bắt đầu trong ngày hiện tại không được trả về. Mỗi ca có shiftId chuẩn, slotId tương thích, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ để tương thích API cũ.",
       parameters: [
         {
           name: "fromDate",
           in: "query",
           required: false,
+          description: "Ngày bắt đầu lọc; backend không cho nhỏ hơn ngày hiện tại theo giờ Việt Nam",
           schema: { type: "string", format: "date" },
         },
         {
           name: "toDate",
           in: "query",
           required: false,
+          description: "Ngày kết thúc lọc; backend không cho vượt quá ngày thứ 7 của cửa sổ hiển thị",
           schema: { type: "string", format: "date" },
         },
       ],
@@ -101,7 +103,7 @@ const ReceptionScheduleSwagger = {
 
 applyReceptionDemoExamples(ReceptionScheduleSwagger, {
   "GET /api/reception-schedules": {
-    parameters: { fromDate: DEMO.dates.main, toDate: "2099-08-31" },
+    parameters: { fromDate: null, toDate: null },
     responses: {
       400: errorDemo(
         "Demo 400 - Khoảng ngày không hợp lệ",

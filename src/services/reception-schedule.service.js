@@ -31,6 +31,11 @@ const addDays = (date, days) => {
   return result;
 };
 
+export const getReceptionVisibilityWindow = (now = new Date()) => ({
+  fromDate: formatVietnamDate(now),
+  toDate: formatVietnamDate(addDays(now, 6)),
+});
+
 const toMinutes = (value) => {
   const [hour, minute] = value.split(":").map(Number);
   return hour * 60 + minute;
@@ -114,16 +119,28 @@ const buildScheduleAvailability = (schedule) => {
 const ReceptionScheduleService = {
   async getAvailableSchedules(filters = {}) {
     const today = new Date();
-    const fromDate = filters.fromDate
+    const visibilityWindow = getReceptionVisibilityWindow(today);
+    const requestedFromDate = filters.fromDate
       ? formatVietnamDate(new Date(filters.fromDate))
-      : formatVietnamDate(today);
-    const toDate = filters.toDate
+      : visibilityWindow.fromDate;
+    const requestedToDate = filters.toDate
       ? formatVietnamDate(new Date(filters.toDate))
-      : formatVietnamDate(addDays(today, 90));
+      : visibilityWindow.toDate;
 
-    if (fromDate > toDate) {
+    if (requestedFromDate > requestedToDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
+
+    const fromDate =
+      requestedFromDate < visibilityWindow.fromDate
+        ? visibilityWindow.fromDate
+        : requestedFromDate;
+    const toDate =
+      requestedToDate > visibilityWindow.toDate
+        ? visibilityWindow.toDate
+        : requestedToDate;
+
+    if (fromDate > toDate) return [];
 
     const schedules = await ReceptionScheduleRepository.findActiveBetweenDates(
       fromDate,

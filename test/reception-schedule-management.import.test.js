@@ -9,6 +9,7 @@ import { PERMISSION } from "../src/constants/permission.constant.js";
 import prisma from "../src/config/database.config.js";
 import { errorHandler } from "../src/middlewares/error-handle.middleware.js";
 import ReceptionScheduleManagementRepository from "../src/repositories/reception-schedule-management.repository.js";
+import UserRepository from "../src/repositories/user.repository.js";
 import receptionScheduleManagementRouter from "../src/routes/reception-schedule-management.route.js";
 import FileService from "../src/services/file.service.js";
 import ReceptionScheduleManagementService from "../src/services/reception-schedule-management.service.js";
@@ -19,7 +20,10 @@ const userId = "123e4567-e89b-42d3-a456-426614174000";
 const originalMethods = {
   readSpreadsheetFile: FileService.readSpreadsheetFile,
   findImportConflicts: ReceptionScheduleManagementRepository.findImportConflicts,
+  findActiveCountersByCodes:
+    ReceptionScheduleManagementRepository.findActiveCountersByCodes,
   createManyWithSlots: ReceptionScheduleManagementRepository.createManyWithSlots,
+  findActiveByUsernames: UserRepository.findActiveByUsernames,
   auditCreate: prisma.audit_logs.create,
 };
 
@@ -27,8 +31,11 @@ let capturedRecords = [];
 const validRows = [
   {
     "Địa điểm": "Bộ phận tiếp công dân",
-    "Tên cán bộ": "Nguyễn Văn An",
+    "Mã quầy": "QUAY_1",
+    "Tài khoản cán bộ": "canbo",
+    "Họ tên cán bộ": "Nguyễn Văn An",
     "Ngày tiếp dân": "25/08/2099",
+    "Sức chứa / ca": 2,
     "Ghi chú": "Lịch định kỳ",
     Từ: "07:30",
     Đến: "11:30",
@@ -57,6 +64,24 @@ const createTestServer = () => {
 beforeEach(() => {
   capturedRecords = [];
   FileService.readSpreadsheetFile = async () => validRows;
+  UserRepository.findActiveByUsernames = async () => [{
+    id: "223e4567-e89b-42d3-a456-426614174001",
+    ten_dang_nhap: "canbo",
+    ho_va_ten: "Nguyễn Văn An",
+    user_roles: [{
+      roles: {
+        is_active: true,
+        is_delete: false,
+        role_permissions: [{ permission_code: PERMISSION.RR_APPROVE }],
+      },
+    }],
+  }];
+  ReceptionScheduleManagementRepository.findActiveCountersByCodes = async () => [{
+    id: "323e4567-e89b-42d3-a456-426614174001",
+    ma_quay: "QUAY_1",
+    ten_quay: "Quầy số 1",
+    suc_chua_mac_dinh: 2,
+  }];
   ReceptionScheduleManagementRepository.findImportConflicts = async () => [];
   ReceptionScheduleManagementRepository.createManyWithSlots = async (records) => {
     capturedRecords = records;
@@ -68,8 +93,11 @@ after(() => {
   FileService.readSpreadsheetFile = originalMethods.readSpreadsheetFile;
   ReceptionScheduleManagementRepository.findImportConflicts =
     originalMethods.findImportConflicts;
+  ReceptionScheduleManagementRepository.findActiveCountersByCodes =
+    originalMethods.findActiveCountersByCodes;
   ReceptionScheduleManagementRepository.createManyWithSlots =
     originalMethods.createManyWithSlots;
+  UserRepository.findActiveByUsernames = originalMethods.findActiveByUsernames;
   prisma.audit_logs.create = originalMethods.auditCreate;
 });
 
@@ -92,18 +120,66 @@ describe("POST /api/reception-schedules/management/import", () => {
     assert.ok(operation.responses[409]);
   });
 
-  it("builds hourly slots for all eight counters before one bulk write", async () => {
+  it("builds hourly slots and officer assignments for imported counters", async () => {
     const result = await ReceptionScheduleManagementService.handleImport(
       [{ path: "mock.xlsx" }],
       userId
     );
 
     assert.equal(result.importedCount, 1);
-    assert.equal(result.totalCounterSlots, 32);
+    assert.equal(result.importedRowCount, 1);
+    assert.equal(result.totalCounterSlots, 4);
+    assert.equal(result.totalAssignments, 4);
     assert.equal(capturedRecords.length, 1);
-    assert.equal(capturedRecords[0].slotRows.length, 32);
+    assert.equal(capturedRecords[0].slotRows.length, 4);
+    assert.equal(capturedRecords[0].assignmentRows.length, 4);
     assert.equal(capturedRecords[0].slotRows[0].suc_chua, 2);
     assert.equal(capturedRecords[0].slotRows[0].ma_quay, "QUAY_1");
+    assert.equal(
+      capturedRecords[0].assignmentRows[0].officerId,
+      "223e4567-e89b-42d3-a456-426614174001"
+    );
+  });
+
+  it("groups multiple counter assignments of one date and location into one schedule", async () => {
+    FileService.readSpreadsheetFile = async () => [
+      validRows[0],
+      {
+        ...validRows[0],
+        "Mã quầy": "QUAY_2",
+        "Tài khoản cán bộ": "canbo2",
+        "Họ tên cán bộ": "Trần Thị Bình",
+      },
+    ];
+    UserRepository.findActiveByUsernames = async () => [
+      {
+        id: "223e4567-e89b-42d3-a456-426614174001",
+        ten_dang_nhap: "canbo",
+        ho_va_ten: "Nguyễn Văn An",
+        user_roles: [{ roles: { is_active: true, is_delete: false, role_permissions: [{ permission_code: PERMISSION.RR_APPROVE }] } }],
+      },
+      {
+        id: "223e4567-e89b-42d3-a456-426614174002",
+        ten_dang_nhap: "canbo2",
+        ho_va_ten: "Trần Thị Bình",
+        user_roles: [{ roles: { is_active: true, is_delete: false, role_permissions: [{ permission_code: PERMISSION.RR_APPROVE }] } }],
+      },
+    ];
+    ReceptionScheduleManagementRepository.findActiveCountersByCodes = async () => [
+      { id: "323e4567-e89b-42d3-a456-426614174001", ma_quay: "QUAY_1", suc_chua_mac_dinh: 2 },
+      { id: "323e4567-e89b-42d3-a456-426614174002", ma_quay: "QUAY_2", suc_chua_mac_dinh: 2 },
+    ];
+
+    const result = await ReceptionScheduleManagementService.handleImport(
+      [{ path: "mock.xlsx" }],
+      userId
+    );
+
+    assert.equal(result.importedCount, 1);
+    assert.equal(result.importedRowCount, 2);
+    assert.equal(result.totalCounterSlots, 8);
+    assert.equal(result.totalAssignments, 8);
+    assert.equal(capturedRecords.length, 1);
   });
 
   it("keeps typed spreadsheet dates and times as Vietnam wall-clock values", async () => {
@@ -139,7 +215,7 @@ describe("POST /api/reception-schedules/management/import", () => {
     const rows = await FileService.readSpreadsheetFile(filePath);
 
     assert.equal(rows.length, 1);
-    assert.equal(rows[0]["Tên cán bộ"], "Nguyễn Văn An");
+    assert.equal(rows[0]["Tài khoản cán bộ"], "canbo");
     await assert.rejects(() => fs.access(tempDirectory));
   });
 
@@ -159,7 +235,7 @@ describe("POST /api/reception-schedules/management/import", () => {
     assert.equal(capturedRecords.length, 0);
   });
 
-  it("rejects duplicate officer and date rows inside the file", async () => {
+  it("rejects duplicate counter assignments in the same shift", async () => {
     FileService.readSpreadsheetFile = async () => [
       validRows[0],
       { ...validRows[0] },
@@ -172,6 +248,24 @@ describe("POST /api/reception-schedules/management/import", () => {
           userId
         ),
       (error) => error.statusCode === 409
+    );
+    assert.equal(capturedRecords.length, 0);
+  });
+
+  it("rejects an officer account without approval permission", async () => {
+    UserRepository.findActiveByUsernames = async () => [{
+      id: "223e4567-e89b-42d3-a456-426614174001",
+      ten_dang_nhap: "canbo",
+      ho_va_ten: "Nguyễn Văn An",
+      user_roles: [],
+    }];
+
+    await assert.rejects(
+      () => ReceptionScheduleManagementService.handleImport(
+        [{ path: "mock.xlsx" }],
+        userId
+      ),
+      (error) => error.statusCode === 400 && error.message.includes("RR_APPROVE")
     );
     assert.equal(capturedRecords.length, 0);
   });

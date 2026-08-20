@@ -46,7 +46,8 @@ describe("GET /api/reception-schedules/management/template", () => {
 
     assert.deepEqual(operation.security, [{ bearerAuth: [] }]);
     assert.ok(operation.description.includes("LTD_GET_TEMPLATE"));
-    assert.ok(operation.description.includes("6 cột"));
+    assert.ok(operation.description.includes("9 cột"));
+    assert.ok(operation.description.includes("RR_APPROVE"));
     assert.ok(operation.responses[200]);
     assert.ok(operation.responses[401]);
     assert.ok(operation.responses[403]);
@@ -55,27 +56,37 @@ describe("GET /api/reception-schedules/management/template", () => {
 
   it("contains an import-first sheet with valid examples and instructions", () => {
     const workbook = XLSX.readFile(templatePath, { cellDates: false });
-    assert.deepEqual(workbook.SheetNames, ["LichTiepDan", "Hướng dẫn"]);
+    assert.deepEqual(workbook.SheetNames, [
+      "LichTiepDan",
+      "Hướng dẫn",
+      "Danh mục quầy",
+    ]);
 
     const rows = XLSX.utils.sheet_to_json(
       workbook.Sheets.LichTiepDan,
       { header: 1, defval: null }
     );
     assert.deepEqual(rows[0], [
-      "Địa điểm",
-      "Tên cán bộ",
       "Ngày tiếp dân",
-      "Ghi chú",
       "Từ",
       "Đến",
+      "Mã quầy",
+      "Tài khoản cán bộ",
+      "Họ tên cán bộ",
+      "Sức chứa / ca",
+      "Địa điểm",
+      "Ghi chú",
     ]);
-    assert.ok(rows.length >= 3);
+    assert.ok(rows.length >= 9);
 
     const seen = new Set();
-    for (const row of rows.slice(1)) {
-      const [location, officer, date, , startTime, endTime] = row;
+    for (const row of rows.slice(1).filter((row) => row.some(Boolean))) {
+      const [date, startTime, endTime, counterCode, username, , capacity, location] = row;
       assert.ok(location);
-      assert.ok(officer);
+      assert.match(counterCode, /^QUAY_[1-8]$/);
+      assert.ok(username);
+      assert.ok(Number.isInteger(capacity));
+      assert.ok(capacity >= 1);
       assert.match(date, /^\d{2}\/\d{2}\/\d{4}$/);
       assert.match(startTime, /^\d{2}:\d{2}$/);
       assert.match(endTime, /^\d{2}:\d{2}$/);
@@ -86,7 +97,7 @@ describe("GET /api/reception-schedules/management/template", () => {
       const duration = toMinutes(endTime) - toMinutes(startTime);
       assert.ok(duration > 0);
       assert.equal(duration % 60, 0);
-      const duplicateKey = `${officer.toLowerCase()}::${date}`;
+      const duplicateKey = `${date}::${startTime}::${endTime}::${counterCode}`;
       assert.equal(seen.has(duplicateKey), false);
       seen.add(duplicateKey);
     }
@@ -97,6 +108,8 @@ describe("GET /api/reception-schedules/management/template", () => {
     assert.ok(instructionText.includes("8 quầy"));
     assert.ok(instructionText.includes("mặc định 2"));
     assert.ok(instructionText.includes("ca 1 giờ"));
+    assert.ok(instructionText.includes("rr_approve"));
+    assert.ok(instructionText.includes("không được phân công hai quầy"));
   });
 
   it("returns a URL that downloads the generated workbook", async () => {
