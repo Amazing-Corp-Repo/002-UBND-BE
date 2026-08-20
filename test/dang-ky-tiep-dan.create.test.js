@@ -101,13 +101,13 @@ describe("POST /api/reception-registrations", () => {
     assert.match(result.ma_tiep_dan, /^[A-Z]\d{5}$/);
     assert.equal(result.loai, "COUNTER_RECEPTION");
     assert.equal(result.trang_thai, "PENDING");
-    assert.equal(result.ngay, futureSchedule.ngay_tiep_dan);
+    assert.equal(result.ngay, "2099-08-20");
     assert.equal(capturedGuardInput.totalCapacity, 16);
     assert.equal(result.slotId, futureSchedule.khung_gio_tiep_dan[0].id);
     assert.equal(result.receptionCode, result.ma_tiep_dan);
     assert.equal(result.receptionType, "COUNTER_RECEPTION");
     assert.equal(result.scheduleId, validBody.idLichTiepDan);
-    assert.equal(result.receptionDate, futureSchedule.ngay_tiep_dan);
+    assert.equal(result.receptionDate, "2099-08-20");
     assert.equal(result.timeSlot, validBody.slot);
     assert.equal(result.topic, validBody.chuDe);
     assert.equal(result.description, validBody.lyDo);

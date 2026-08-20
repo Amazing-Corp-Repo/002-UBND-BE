@@ -53,7 +53,7 @@ const ReceptionRatingSwagger = {
                             "QUAY_8",
                           ],
                         },
-                        receptionDate: { type: "string", format: "date-time" },
+                        receptionDate: { type: "string", format: "date" },
                         timeSlot: { type: "string", example: "08:00 - 09:00" },
                         topic: { type: "string", example: "Hướng dẫn thủ tục" },
                         score: { type: "integer", minimum: 1, maximum: 5 },
@@ -254,7 +254,7 @@ const ReceptionRatingSwagger = {
                         properties: {
                           id: { type: "string", format: "uuid" },
                           receptionCode: { type: "string", example: "A00123" },
-                          receptionDate: { type: "string", format: "date-time" },
+                          receptionDate: { type: "string", format: "date" },
                           timeSlot: { type: "string", example: "08:00 - 09:00" },
                           topic: { type: "string", example: "Hướng dẫn thủ tục" },
                           workingContent: { type: "string" },
@@ -300,7 +300,7 @@ const ReceptionRatingSwagger = {
                               id: { type: "string", format: "uuid" },
                               officerName: { type: "string" },
                               location: { type: "string" },
-                              receptionDate: { type: "string", format: "date-time" },
+                              receptionDate: { type: "string", format: "date" },
                               timeRange: { type: "string" },
                               note: { type: "string", nullable: true },
                             },
@@ -434,7 +434,7 @@ const ratingDemo = {
   receptionCode: "A00123",
   applicantName: "Nguyễn Văn An",
   department: "QUAY_3",
-  receptionDate: "2026-08-26T00:00:00.000Z",
+  receptionDate: "2026-08-26",
   timeSlot: "07:30 - 08:30",
   topic: "Hướng dẫn thủ tục hành chính",
   score: 5,
@@ -443,7 +443,7 @@ const ratingDemo = {
     "Yêu cầu được giải thích đầy đủ, rõ ràng",
   ],
   comment: "Tôi hài lòng với quá trình tiếp dân.",
-  ratedAt: "2026-08-26T08:35:00.000Z",
+  ratedAt: "2026-08-26T15:35:00.000+07:00",
 };
 
 applyReceptionDemoExamples(ReceptionRatingSwagger, {

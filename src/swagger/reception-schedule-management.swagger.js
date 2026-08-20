@@ -522,7 +522,7 @@ const managementScheduleDemo = {
     id: '123e4567-e89b-42d3-a456-426614174000',
     ten_can_bo: 'Nguyễn Văn An',
     dia_diem: 'Bộ phận tiếp công dân',
-    ngay_tiep_dan: '2026-08-26T00:00:00.000Z',
+    ngay_tiep_dan: '2026-08-26',
     thoi_gian: '07:30 - 16:30',
     ghi_chu: 'Tiếp công dân định kỳ',
     is_active: true,

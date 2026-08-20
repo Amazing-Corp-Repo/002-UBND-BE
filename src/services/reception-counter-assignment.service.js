@@ -1,7 +1,8 @@
 import ReceptionCounterAssignmentRepository from "../repositories/reception-counter-assignment.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
+import { normalizeReceptionTimes } from "../utils/vietnam-time.util.js";
 
-const mapAssignment = (item) => ({
+const mapAssignment = (item) => normalizeReceptionTimes({
   id: item.id,
   shiftId: item.cau_hinh_quay.id_ca_tiep_dan,
   counterConfigurationId: item.id_cau_hinh_quay,

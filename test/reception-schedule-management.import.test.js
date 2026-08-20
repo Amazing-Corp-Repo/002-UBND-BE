@@ -106,6 +106,27 @@ describe("POST /api/reception-schedules/management/import", () => {
     assert.equal(capturedRecords[0].slotRows[0].ma_quay, "QUAY_1");
   });
 
+  it("keeps typed spreadsheet dates and times as Vietnam wall-clock values", async () => {
+    FileService.readSpreadsheetFile = async () => [{
+      ...validRows[0],
+      "Ngày tiếp dân": new Date("2099-08-25T00:00:00.000Z"),
+      Từ: new Date("1899-12-30T07:30:00.000Z"),
+      Đến: new Date("1899-12-30T11:30:00.000Z"),
+    }];
+
+    await ReceptionScheduleManagementService.handleImport(
+      [{ path: "mock.xlsx" }],
+      userId
+    );
+
+    assert.equal(
+      capturedRecords[0].scheduleData.ngay_tiep_dan.toISOString(),
+      "2099-08-25T00:00:00.000Z"
+    );
+    assert.equal(capturedRecords[0].scheduleData.thoi_gian, "07:30 - 11:30");
+    assert.equal(capturedRecords[0].slotRows[0].khung_gio, "07:30 - 08:30");
+  });
+
   it("reads a real legacy .xls file accepted by the upload contract", async () => {
     const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "ubnd-import-"));
     const filePath = path.join(tempDirectory, "reception-schedules.xls");
