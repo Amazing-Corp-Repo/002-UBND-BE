@@ -66,28 +66,15 @@ taiLieuVanHoaRouter.post(
   "/",
   authenticate,
   authorize([PERMISSION.TL_CREATE]),
+  createUploader({
+    type: UPLOAD_TYPE.THU_VIEN,
+    fields: [
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+      { fieldName: "images", maxCount: 10, maxSizeMB: 10, allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp"] },
+      { fieldName: "videos", maxCount: 5, maxSizeMB: 200, allowed_types: ["video/mp4", "video/mpeg", "video/quicktime"] },
+    ],
+  }),
   validate(CreateVanHoaRequest),
-  createUploader({
-    type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "file",
-    maxCount: 1,
-    maxSizeMB: 50,
-    allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-  }),
-  createUploader({
-    type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "images",
-    maxCount: 10,
-    maxSizeMB: 10,
-    allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-  }),
-  createUploader({
-    type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "videos",
-    maxCount: 5,
-    maxSizeMB: 200,
-    allowed_types: ["video/mp4", "video/mpeg", "video/quicktime"],
-  }),
   audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.TL_CREATE),
   ThuVienController.create,
 );
@@ -97,28 +84,15 @@ taiLieuVanHoaRouter.put(
   "/:id",
   authenticate,
   authorize([PERMISSION.TL_UPDATE]),
+  createUploader({
+    type: UPLOAD_TYPE.THU_VIEN,
+    fields: [
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+      { fieldName: "images", maxCount: 10, maxSizeMB: 10, allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp"] },
+      { fieldName: "videos", maxCount: 5, maxSizeMB: 200, allowed_types: ["video/mp4", "video/mpeg", "video/quicktime"] },
+    ],
+  }),
   validate(UpdateVanHoaRequest),
-  createUploader({
-    type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "file",
-    maxCount: 1,
-    maxSizeMB: 50,
-    allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-  }),
-  createUploader({
-    type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "images",
-    maxCount: 10,
-    maxSizeMB: 10,
-    allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-  }),
-  createUploader({
-    type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "videos",
-    maxCount: 5,
-    maxSizeMB: 200,
-    allowed_types: ["video/mp4", "video/mpeg", "video/quicktime"],
-  }),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_UPDATE),
   ThuVienController.update,
 );

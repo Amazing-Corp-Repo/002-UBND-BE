@@ -14,14 +14,19 @@ const cleanupUploadFolder = async (req) => {
 export const createUploader = ({
   type,
   fieldName,
+  fields,
   maxCount = 5,
   maxSizeMB = 10,
   allowed_types = [],
   basePathSegments = ["src", "public", "uploads"],
   isPublic = true,
 } = {}) => {
-  if (!type || !fieldName) {
-    throw new BaseError(500, "Thiếu 'type' hoặc 'fieldName' khi tạo uploader");
+  if (!type) {
+    throw new BaseError(500, "Thiếu 'type' khi tạo uploader");
+  }
+
+  if (!fieldName && !fields) {
+    throw new BaseError(500, "Thiếu 'fieldName' hoặc 'fields' khi tạo uploader");
   }
 
   const storage = multer.diskStorage({
@@ -100,17 +105,63 @@ export const createUploader = ({
   });
 
   const fileFilter = (req, file, cb) => {
-    if (!allowed_types.includes(file.mimetype)) {
+    // Kiểm tra allowed_types theo fieldName
+    let allowList = allowed_types;
+    if (fields && fields.length > 0) {
+      const fieldCfg = fields.find((f) => f.fieldName === file.fieldname);
+      if (fieldCfg && fieldCfg.allowed_types && fieldCfg.allowed_types.length > 0) {
+        allowList = fieldCfg.allowed_types;
+      }
+    }
+    if (allowList.length > 0 && !allowList.includes(file.mimetype)) {
       return cb(new BaseError(400, `File không hợp lệ`));
     }
     cb(null, true);
   };
 
-  const limits = { fileSize: maxSizeMB * 1024 * 1024 };
-  const uploader = multer({ storage, fileFilter, limits }).array(
-    fieldName,
-    maxCount,
-  );
+  // Tính maxSize từ tất cả field
+  let globalMaxSizeMB = maxSizeMB;
+  if (fields && fields.length > 0) {
+    globalMaxSizeMB = Math.max(...fields.map((f) => f.maxSizeMB || maxSizeMB));
+  }
+
+  const limits = { fileSize: globalMaxSizeMB * 1024 * 1024 };
+
+  // Tạo multer instance: dùng .fields() nếu có multi-field, .array() nếu single
+  let uploader;
+  if (fields && fields.length > 0) {
+    uploader = multer({ storage, fileFilter, limits }).fields(
+      fields.map((f) => ({
+        name: f.fieldName,
+        maxCount: f.maxCount || 5,
+      }))
+    );
+  } else {
+    uploader = multer({ storage, fileFilter, limits }).array(
+      fieldName,
+      maxCount,
+    );
+  }
+
+  const processFile = (f) => {
+    const sizeMB = +(f.size / (1024 * 1024)).toFixed(2);
+    if (isPublic) {
+      const publicDir = path.join(process.cwd(), "src", "public");
+      const relativePath = path
+        .relative(publicDir, f.path)
+        .replace(/\\/g, "/");
+      return {
+        ...f,
+        relativeUrl: `/${relativePath}`,
+        sizeMB,
+      };
+    }
+    return {
+      ...f,
+      sizeMB,
+      relativeUrl: null,
+    };
+  };
 
   return (req, res, next) => {
     uploader(req, res, async (err) => {
@@ -121,13 +172,13 @@ export const createUploader = ({
             return next(
               new BaseError(
                 400,
-                `File vượt quá dung lượng cho phép (${maxSizeMB}MB)`,
+                `File vượt quá dung lượng cho phép (${globalMaxSizeMB}MB)`,
               ),
             );
           case "LIMIT_FILE_COUNT":
           case "LIMIT_UNEXPECTED_FILE":
             return next(
-              new BaseError(400, `Chỉ được upload tối đa ${maxCount}`),
+              new BaseError(400, `Chỉ được upload tối đa số lượng cho phép`),
             );
           default:
             return next(new BaseError(400, err.message));
@@ -137,26 +188,21 @@ export const createUploader = ({
         return next(err);
       }
 
-      req.files = (req.files || []).map((f) => {
-        const sizeMB = +(f.size / (1024 * 1024)).toFixed(2);
-        if (isPublic) {
-          const publicDir = path.join(process.cwd(), "src", "public");
-          const relativePath = path
-            .relative(publicDir, f.path)
-            .replace(/\\/g, "/");
-          return {
-            ...f,
-            relativeUrl: `/${relativePath}`,
-            sizeMB,
-          };
+      // Xử lý post-processing: map files để thêm relativeUrl, sizeMB
+      if (req.files) {
+        if (Array.isArray(req.files)) {
+          // .array() mode: req.files là array
+          req.files = req.files.map(processFile);
+        } else {
+          // .fields() mode: req.files là object { fieldName: [file, ...] }
+          const processed = {};
+          for (const [key, fileList] of Object.entries(req.files)) {
+            processed[key] = fileList.map(processFile);
+          }
+          req.files = processed;
         }
-        // Private file: không public URL
-        return {
-          ...f,
-          sizeMB,
-          relativeUrl: null,
-        };
-      });
+      }
+
       next();
     });
   };

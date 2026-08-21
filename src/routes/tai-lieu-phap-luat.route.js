@@ -69,7 +69,6 @@ taiLieuPhapLuatRouter.post(
   "/",
   authenticate,
   authorize([PERMISSION.TL_CREATE]),
-  validate(CreatePhapLuatRequest),
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
     fieldName: "file",
@@ -77,6 +76,7 @@ taiLieuPhapLuatRouter.post(
     maxSizeMB: 50,
     allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
   }),
+  validate(CreatePhapLuatRequest),
   audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.TL_CREATE),
   ThuVienController.create,
 );
@@ -86,7 +86,6 @@ taiLieuPhapLuatRouter.put(
   "/:id",
   authenticate,
   authorize([PERMISSION.TL_UPDATE]),
-  validate(UpdatePhapLuatRequest),
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
     fieldName: "file",
@@ -94,6 +93,7 @@ taiLieuPhapLuatRouter.put(
     maxSizeMB: 50,
     allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
   }),
+  validate(UpdatePhapLuatRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_UPDATE),
   ThuVienController.update,
 );

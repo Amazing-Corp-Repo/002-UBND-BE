@@ -1,6 +1,30 @@
 import prisma from "../config/database.config.js";
 
 const ThuVienRepository = {
+  async _mapUserNames(items) {
+    // Gom tất cả user ID cần lấy tên
+    const userIds = new Set();
+    for (const item of items) {
+      if (item.nguoi_tao) userIds.add(item.nguoi_tao);
+      if (item.nguoi_cap_nhat) userIds.add(item.nguoi_cap_nhat);
+      if (item.nguoi_duyet) userIds.add(item.nguoi_duyet);
+    }
+    if (userIds.size === 0) return items;
+
+    const users = await prisma.nguoi_dung.findMany({
+      where: { id: { in: [...userIds] }, is_delete: false },
+      select: { id: true, ho_va_ten: true },
+    });
+    const userMap = Object.fromEntries(users.map((u) => [u.id, u.ho_va_ten]));
+
+    return items.map((item) => ({
+      ...item,
+      ten_nguoi_tao: item.nguoi_tao ? userMap[item.nguoi_tao] || null : null,
+      ten_nguoi_cap_nhat: item.nguoi_cap_nhat ? userMap[item.nguoi_cap_nhat] || null : null,
+      ten_nguoi_duyet: item.nguoi_duyet ? userMap[item.nguoi_duyet] || null : null,
+    }));
+  },
+
   async getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, isDelete = false }) {
     const skip = (page - 1) * size;
     const where = {
@@ -64,11 +88,12 @@ const ThuVienRepository = {
       prisma.thu_vien_tai_lieu.count({ where }),
     ]);
 
-    return { data, totalItems };
+    const mappedData = await this._mapUserNames(data);
+    return { data: mappedData, totalItems };
   },
 
   async getById(id) {
-    return prisma.thu_vien_tai_lieu.findFirst({
+    const result = await prisma.thu_vien_tai_lieu.findFirst({
       where: { id, is_delete: false },
       include: {
         thu_vien_danh_muc: {
@@ -93,6 +118,10 @@ const ThuVienRepository = {
         },
       },
     });
+
+    if (!result) return null;
+    const mapped = await this._mapUserNames([result]);
+    return mapped[0];
   },
 
   async create(data) {
