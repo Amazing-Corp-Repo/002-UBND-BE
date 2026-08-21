@@ -11,8 +11,15 @@ const ReceptionScheduleManagementSwagger = {
         post: {
             tags: ['ReceptionScheduleManagement'],
             summary: 'Import lịch tiếp dân từ file Excel',
-            description: 'Dành cho tài khoản có quyền LTD_CREATE. Mỗi dòng Excel phân công một tài khoản cán bộ trực một quầy trong một khoảng giờ; backend tự tách thành các ca một tiếng, tạo cấu hình quầy và phân công cán bộ trong cùng một transaction. Chỉ các quầy được khai báo mới được mở. Tài khoản cán bộ phải đang hoạt động và có quyền RR_APPROVE. Nếu có dòng sai, trùng quầy/ca, một cán bộ trực nhiều quầy cùng ca hoặc lịch ngày/địa điểm đã tồn tại thì không lưu dữ liệu nào.',
+            description: 'Dành cho tài khoản có quyền LTD_CREATE. Backend lấy toàn bộ danh sách cán bộ và quầy xuất hiện trong file làm nguồn xếp lịch; mỗi buổi đều được bổ sung đủ toàn bộ các quầy đó, kể cả khi riêng buổi đó thiếu một vài dòng quầy. Backend xếp ngẫu nhiên cán bộ theo từng buổi, không random theo ca một tiếng: cán bộ được giữ nguyên quầy trong toàn bộ buổi sáng 07:30-11:30; sang buổi chiều 13:30-16:30 danh sách được trộn lại độc lập. File phải có số cán bộ hợp lệ ít nhất bằng số quầy. Việc tạo lịch, ca, cấu hình quầy và phân công được lưu trong cùng một transaction. Khi overwrite=true, lịch cùng ngày/địa điểm chưa có đơn đăng ký sẽ được thay thế và random lại; nếu đã có đơn thì toàn bộ import bị từ chối.',
             security: [{ bearerAuth: [] }],
+            parameters: [{
+                name: 'overwrite',
+                in: 'query',
+                required: false,
+                description: 'Đặt true để ghi đè lịch cùng ngày/địa điểm và random lại cán bộ. Backend từ chối nếu lịch cũ đã có đơn đăng ký.',
+                schema: { type: 'boolean', default: false, example: true },
+            }],
             requestBody: {
                 required: true,
                 content: {
@@ -43,10 +50,41 @@ const ReceptionScheduleManagementSwagger = {
                                     data: {
                                         type: 'object',
                                         properties: {
+                                            assignmentMode: { type: 'string', enum: ['RANDOM'], example: 'RANDOM', description: 'Chế độ tự động xếp ngẫu nhiên cán bộ vào quầy khi import.' },
+                                            assignmentScope: { type: 'string', enum: ['SESSION'], example: 'SESSION', description: 'Random theo buổi sáng/chiều; không đổi quầy giữa các ca một tiếng trong cùng buổi.' },
+                                            overwriteApplied: { type: 'boolean', example: true },
+                                            overwrittenCount: { type: 'integer', minimum: 0, example: 1 },
                                             importedCount: { type: 'integer', minimum: 1 },
                                             importedRowCount: { type: 'integer', minimum: 1 },
+                                            generatedAssignmentRowCount: { type: 'integer', minimum: 1, description: 'Số dòng phân công được backend sinh sau khi bổ sung đủ quầy cho từng buổi.' },
                                             totalCounterSlots: { type: 'integer', minimum: 1 },
                                             totalAssignments: { type: 'integer', minimum: 1 },
+                                            dateFrom: { type: 'string', format: 'date', example: '2026-09-09' },
+                                            dateTo: { type: 'string', format: 'date', example: '2026-09-30' },
+                                            importedDates: {
+                                                type: 'array',
+                                                items: { type: 'string', format: 'date' },
+                                            },
+                                            importedRows: {
+                                                type: 'array',
+                                                description: 'Kết quả cán bộ đã được backend xếp ngẫu nhiên và lưu thực tế theo từng quầy.',
+                                                items: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        rowNumber: { type: 'integer', example: 2 },
+                                                        receptionDate: { type: 'string', format: 'date', example: '2026-09-09' },
+                                                        startTime: { type: 'string', example: '07:30' },
+                                                        endTime: { type: 'string', example: '11:30' },
+                                                        counterCode: { type: 'string', example: 'QUAY_1' },
+                                                        counterName: { type: 'string', example: 'Quầy số 1' },
+                                                        officerUsername: { type: 'string', example: 'canbo1' },
+                                                        officerFullName: { type: 'string', example: 'Nguyễn Văn An' },
+                                                        capacity: { type: 'integer', minimum: 1, example: 2 },
+                                                        location: { type: 'string', example: 'Bộ phận tiếp công dân' },
+                                                        note: { type: 'string', nullable: true, example: 'Ca sáng - phân công luân phiên' },
+                                                    },
+                                                },
+                                            },
                                         },
                                     },
                                     message: { type: 'string', example: 'Import lịch tiếp dân thành công' },
@@ -59,7 +97,7 @@ const ReceptionScheduleManagementSwagger = {
                 400: { description: 'Thiếu file, sai định dạng, file rỗng, sai quầy/tài khoản/sức chứa hoặc cán bộ chưa có quyền RR_APPROVE' },
                 401: { description: 'Thiếu hoặc sai access token' },
                 403: { description: 'Không có quyền LTD_CREATE' },
-                409: { description: 'Trùng lịch ngày/địa điểm, trùng quầy trong ca hoặc một cán bộ được xếp nhiều quầy cùng ca' },
+                409: { description: 'Trùng lịch khi overwrite=false; hoặc lịch cần ghi đè đã có đơn đăng ký; hoặc dữ liệu trong file trùng quầy/cán bộ trong ca' },
             }
         },
     },
@@ -556,10 +594,31 @@ applyReceptionDemoExamples(ReceptionScheduleManagementSwagger, {
     'POST /api/reception-schedules/management/import': {
         responses: {
             200: successDemo('Import lịch tiếp dân thành công', {
+                assignmentMode: 'RANDOM',
+                assignmentScope: 'SESSION',
+                overwriteApplied: true,
+                overwrittenCount: 1,
                 importedCount: 1,
                 importedRowCount: 8,
+                generatedAssignmentRowCount: 16,
                 totalCounterSlots: 32,
                 totalAssignments: 32,
+                dateFrom: '2099-08-25',
+                dateTo: '2099-08-25',
+                importedDates: ['2099-08-25'],
+                importedRows: [{
+                    rowNumber: 2,
+                    receptionDate: '2099-08-25',
+                    startTime: '07:30',
+                    endTime: '11:30',
+                    counterCode: 'QUAY_1',
+                    counterName: 'Quầy số 1',
+                    officerUsername: 'canbo',
+                    officerFullName: 'Nguyễn Văn An',
+                    capacity: 2,
+                    location: 'Bộ phận tiếp công dân',
+                    note: 'Lịch định kỳ',
+                }],
             }),
             400: errorDemo(
                 'Demo 400 - File có dòng không hợp lệ',

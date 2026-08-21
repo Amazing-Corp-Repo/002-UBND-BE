@@ -37,6 +37,12 @@ const WorkingPeriodSchema = Joi.object({
     }),
 });
 
+export const ImportReceptionScheduleQuery = Joi.object({
+    overwrite: Joi.boolean().default(false).messages({
+        'boolean.base': 'overwrite phải là true hoặc false',
+    }),
+});
+
 export const GetReceptionScheduleManagementQuery = Joi.object({
     weekYear: Joi.string()
         .pattern(/^(?:[1-9]|[1-4]\d|5[0-3])\/\d{4}$/)

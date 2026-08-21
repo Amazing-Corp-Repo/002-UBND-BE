@@ -28,14 +28,75 @@ const findActiveCounters = (tx) =>
     select: { id: true, ma_quay: true },
   });
 
-const buildV2SlotRows = async (tx, slotRows, scheduleId, caEntries) => {
-  const counters = await findActiveCounters(tx);
+const createCaEntries = async (tx, scheduleId, slotRows) => {
+  const caData = buildCaTiepDanData(slotRows);
+  const params = [];
+  const values = caData.map((ca, index) => {
+    const offset = index * 3;
+    params.push(scheduleId, ca.gio_bat_dau, ca.gio_ket_thuc);
+    return `($${offset + 1}, $${offset + 2}, $${offset + 3})`;
+  });
+
+  return tx.$queryRawUnsafe(
+    `INSERT INTO "ca_tiep_dan" ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc")
+     VALUES ${values.join(", ")}
+     RETURNING "id", "gio_bat_dau"::text AS "gio_bat_dau", "gio_ket_thuc"::text AS "gio_ket_thuc"`,
+    ...params
+  );
+};
+
+const buildV2SlotRows = (slotRows, scheduleId, caEntries, counters) => {
   return attachReceptionV2Relations({
     slotRows,
     scheduleId,
     shiftEntries: caEntries,
     counters,
   });
+};
+
+const createImportRecords = async (tx, records) => {
+  const counters = await findActiveCounters(tx);
+  for (const record of records) {
+    const schedule = await tx.lich_tiep_dan.create({
+      data: record.scheduleData,
+    });
+    const caEntries = await createCaEntries(tx, schedule.id, record.slotRows);
+    const slotRows = buildV2SlotRows(
+      record.slotRows,
+      schedule.id,
+      caEntries,
+      counters
+    );
+    await tx.khung_gio_tiep_dan.createMany({ data: slotRows });
+
+    const configurations = await tx.khung_gio_tiep_dan.findMany({
+      where: { id_lich_tiep_dan: schedule.id },
+      select: { id: true, khung_gio: true, ma_quay: true },
+    });
+    const configurationMap = new Map(
+      configurations.map((configuration) => [
+        `${configuration.khung_gio}::${configuration.ma_quay}`,
+        configuration.id,
+      ])
+    );
+    const assignmentData = record.assignmentRows.map((assignment) => {
+      const configurationId = configurationMap.get(
+        `${assignment.khung_gio}::${assignment.ma_quay}`
+      );
+      if (!configurationId) {
+        throw new Error(
+          `Không tìm thấy cấu hình quầy ${assignment.ma_quay} trong ca ${assignment.khung_gio}`
+        );
+      }
+      return {
+        id_cau_hinh_quay: configurationId,
+        id_can_bo: assignment.officerId,
+        nguoi_tao: record.scheduleData.nguoi_tao,
+        nguoi_cap_nhat: record.scheduleData.nguoi_tao,
+      };
+    });
+    await tx.phan_cong_quay_tiep_dan.createMany({ data: assignmentData });
+  }
 };
 
 const ReceptionScheduleManagementRepository = {
@@ -73,83 +134,70 @@ const ReceptionScheduleManagementRepository = {
 
   async createManyWithSlots(records) {
     return prisma.$transaction(async (tx) => {
-      for (const record of records) {
-        const schedule = await tx.lich_tiep_dan.create({
-          data: record.scheduleData,
+      await createImportRecords(tx, records);
+    }, { maxWait: 10_000, timeout: 60_000 });
+  },
+
+  async overwriteManyWithSlots(records) {
+    return prisma.$transaction(async (tx) => {
+      const existingSchedules = await tx.lich_tiep_dan.findMany({
+        where: {
+          is_delete: false,
+          OR: records.map((record) => ({
+            dia_diem: record.location,
+            ngay_tiep_dan: record.scheduleData.ngay_tiep_dan,
+          })),
+        },
+        select: { id: true },
+      });
+      const scheduleIds = existingSchedules.map(({ id }) => id);
+
+      if (scheduleIds.length > 0) {
+        const registrationCount = await tx.dang_ky_tiep_dan.count({
+          where: { id_lich_tiep_dan: { in: scheduleIds } },
         });
-        // Create ca_tiep_dan entries from distinct slot times (V2)
-        const caData = buildCaTiepDanData(record.slotRows);
-        const caEntries = [];
-        for (const ca of caData) {
-          const [caEntry] = await tx.$queryRawUnsafe(
-            `INSERT INTO "ca_tiep_dan" ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc")
-             VALUES ($1, $2, $3)
-             ON CONFLICT ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc") DO UPDATE SET "gio_bat_dau" = EXCLUDED."gio_bat_dau"
-             RETURNING "id"`,
-            schedule.id, ca.gio_bat_dau, ca.gio_ket_thuc
-          );
-          caEntries.push({ gio_bat_dau: ca.gio_bat_dau, gio_ket_thuc: ca.gio_ket_thuc, id: caEntry.id });
+        if (registrationCount > 0) {
+          return { status: "HAS_REGISTRATIONS", registrationCount };
         }
-        // Create khung_gio_tiep_dan with id_ca_tiep_dan set
-        const slotRows = await buildV2SlotRows(
-          tx,
-          record.slotRows,
-          schedule.id,
-          caEntries
-        );
-        await tx.khung_gio_tiep_dan.createMany({ data: slotRows });
 
         const configurations = await tx.khung_gio_tiep_dan.findMany({
-          where: { id_lich_tiep_dan: schedule.id },
-          select: { id: true, khung_gio: true, ma_quay: true },
+          where: { id_lich_tiep_dan: { in: scheduleIds } },
+          select: { id: true },
         });
-        const configurationMap = new Map(
-          configurations.map((configuration) => [
-            `${configuration.khung_gio}::${configuration.ma_quay}`,
-            configuration.id,
-          ])
-        );
-        const assignmentData = record.assignmentRows.map((assignment) => {
-          const configurationId = configurationMap.get(
-            `${assignment.khung_gio}::${assignment.ma_quay}`
-          );
-          if (!configurationId) {
-            throw new Error(
-              `Không tìm thấy cấu hình quầy ${assignment.ma_quay} trong ca ${assignment.khung_gio}`
-            );
-          }
-          return {
-            id_cau_hinh_quay: configurationId,
-            id_can_bo: assignment.officerId,
-            nguoi_tao: record.scheduleData.nguoi_tao,
-            nguoi_cap_nhat: record.scheduleData.nguoi_tao,
-          };
+        const configurationIds = configurations.map(({ id }) => id);
+        if (configurationIds.length > 0) {
+          await tx.phan_cong_quay_tiep_dan.deleteMany({
+            where: { id_cau_hinh_quay: { in: configurationIds } },
+          });
+        }
+        await tx.khung_gio_tiep_dan.deleteMany({
+          where: { id_lich_tiep_dan: { in: scheduleIds } },
         });
-        await tx.phan_cong_quay_tiep_dan.createMany({ data: assignmentData });
+        await tx.ca_tiep_dan.deleteMany({
+          where: { id_lich_tiep_dan: { in: scheduleIds } },
+        });
+        await tx.lich_tiep_dan.deleteMany({
+          where: { id: { in: scheduleIds } },
+        });
       }
-    });
+
+      await createImportRecords(tx, records);
+      return {
+        status: scheduleIds.length > 0 ? "OVERWRITTEN" : "CREATED",
+        overwrittenCount: scheduleIds.length,
+      };
+    }, { maxWait: 10_000, timeout: 60_000 });
   },
 
   async createWithSlots(scheduleData, slotRows) {
     return prisma.$transaction(async (tx) => {
       const schedule = await tx.lich_tiep_dan.create({ data: scheduleData });
 
-      // Create ca_tiep_dan entries from distinct slot times (V2)
-      const caData = buildCaTiepDanData(slotRows);
-      const caEntries = [];
-      for (const ca of caData) {
-        const [caEntry] = await tx.$queryRawUnsafe(
-          `INSERT INTO "ca_tiep_dan" ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc")
-           VALUES ($1, $2, $3)
-           ON CONFLICT ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc") DO UPDATE SET "gio_bat_dau" = EXCLUDED."gio_bat_dau"
-           RETURNING "id"`,
-          schedule.id, ca.gio_bat_dau, ca.gio_ket_thuc
-        );
-        caEntries.push({ gio_bat_dau: ca.gio_bat_dau, gio_ket_thuc: ca.gio_ket_thuc, id: caEntry.id });
-      }
+      const caEntries = await createCaEntries(tx, schedule.id, slotRows);
+      const counters = await findActiveCounters(tx);
 
       await tx.khung_gio_tiep_dan.createMany({
-        data: await buildV2SlotRows(tx, slotRows, schedule.id, caEntries),
+        data: buildV2SlotRows(slotRows, schedule.id, caEntries, counters),
       });
 
       return tx.lich_tiep_dan.findUnique({
@@ -242,22 +290,11 @@ const ReceptionScheduleManagementRepository = {
           where: { id_lich_tiep_dan: id },
         });
 
-        // Create ca_tiep_dan entries from distinct slot times (V2)
-        const caData = buildCaTiepDanData(slotRows);
-        const caEntries = [];
-        for (const ca of caData) {
-          const [caEntry] = await tx.$queryRawUnsafe(
-            `INSERT INTO "ca_tiep_dan" ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc")
-             VALUES ($1, $2, $3)
-             ON CONFLICT ("id_lich_tiep_dan", "gio_bat_dau", "gio_ket_thuc") DO UPDATE SET "gio_bat_dau" = EXCLUDED."gio_bat_dau"
-             RETURNING "id"`,
-            id, ca.gio_bat_dau, ca.gio_ket_thuc
-          );
-          caEntries.push({ gio_bat_dau: ca.gio_bat_dau, gio_ket_thuc: ca.gio_ket_thuc, id: caEntry.id });
-        }
+        const caEntries = await createCaEntries(tx, id, slotRows);
+        const counters = await findActiveCounters(tx);
 
         await tx.khung_gio_tiep_dan.createMany({
-          data: await buildV2SlotRows(tx, slotRows, id, caEntries),
+          data: buildV2SlotRows(slotRows, id, caEntries, counters),
         });
       }
 
