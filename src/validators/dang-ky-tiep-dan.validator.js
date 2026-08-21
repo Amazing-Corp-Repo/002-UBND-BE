@@ -131,10 +131,9 @@ export const ReceptionCodeParams = Joi.object({
 export const ApproveReceptionRegistrationRequest = Joi.object({
   department: Joi.string()
     .pattern(/^QUAY_[1-8]$/)
-    .required()
+    .optional()
     .messages({
       "string.pattern.base": "Bộ phận phải từ QUAY_1 đến QUAY_8",
-      "any.required": "Bộ phận tiếp nhận là bắt buộc",
     }),
 });
 

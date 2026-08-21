@@ -85,7 +85,10 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
       DangKyTiepDanSwagger["/api/reception-registrations/{id}/approve"].patch;
 
     assert.ok(operation.description.includes("được phân công"));
+    assert.ok(operation.description.includes("không cần gửi mã quầy"));
     assert.ok(operation.description.includes("sức chứa"));
+    assert.equal(operation.requestBody.required, false);
+    assert.equal(operation.requestBody.content["application/json"].schema.required, undefined);
     assert.ok(operation.responses[403].description.includes("phân công"));
     assert.ok(operation.responses[409].description.includes("quầy"));
     assert.ok(operation.responses[503]);
@@ -97,12 +100,14 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
 
   it("approves a pending registration and assigns a counter", async () => {
     let persistedApprovalData;
+    let requestedDepartment = "not-called";
     DangKyTiepDanRepository.approvePendingWithCounterGuard = async (
       _id,
-      _department,
+      department,
       approverId,
       data
     ) => {
+      requestedDepartment = department;
       persistedApprovalData = data;
       assert.equal(approverId, "223e4567-e89b-42d3-a456-426614174000");
       return { registration: approvedDetail };
@@ -118,12 +123,13 @@ describe("PATCH /api/reception-registrations/:id/approve", () => {
             "content-type": "application/json",
             authorization: `Bearer ${createToken([PERMISSION.RR_APPROVE])}`,
           },
-          body: JSON.stringify({ department: "QUAY_3" }),
+          body: JSON.stringify({}),
         }
       );
       const body = await response.json();
 
       assert.equal(response.status, 200);
+      assert.equal(requestedDepartment, undefined);
       assert.equal(body.data.department, "QUAY_3");
       assert.equal(body.data.approver.name, "Nguyễn Văn Lãnh đạo");
       assert.equal(

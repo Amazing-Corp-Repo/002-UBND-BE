@@ -299,7 +299,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Phê duyệt đăng ký tiếp dân",
       description:
-        "Cán bộ phê duyệt yêu cầu gặp tại quầy đã được phân công cho tài khoản trong đúng ca. Backend tự lấy quầy từ phân công, chỉ dùng department để đối chiếu, kiểm tra sức chứa rồi ghi nhận người duyệt và thời điểm duyệt. Không có phân công hoặc gửi mã quầy khác phân công sẽ bị từ chối.",
+        "Cán bộ phê duyệt yêu cầu gặp tại quầy đã được phân công cho tài khoản trong đúng ca. Frontend không cần gửi mã quầy; backend tự lấy quầy từ phân công của tài khoản đăng nhập, kiểm tra sức chứa rồi ghi nhận người duyệt và thời điểm duyệt. Trường department cũ vẫn được hỗ trợ để đối chiếu tương thích; nếu gửi khác phân công sẽ bị từ chối.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -310,15 +310,16 @@ const DangKyTiepDanSwagger = {
         },
       ],
       requestBody: {
-        required: true,
+        required: false,
         content: {
           "application/json": {
             schema: {
               type: "object",
-              required: ["department"],
               properties: {
                 department: {
                   type: "string",
+                  nullable: true,
+                  description: "Không bắt buộc; backend tự xác định quầy từ phân công ca trực.",
                   enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"],
                 },
               },
@@ -651,8 +652,12 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
   "PATCH /api/reception-registrations/{id}/approve": {
     parameters: { id: DEMO.registrations.approve.id },
     request: {
+      automaticCounter: {
+        summary: "Demo hợp lệ - backend tự lấy quầy theo cán bộ đăng nhập",
+        value: {},
+      },
       validCounter: {
-        summary: "Demo hợp lệ - xác nhận quầy 3 đúng phân công",
+        summary: "Demo tương thích cũ - gửi quầy 3 để đối chiếu phân công",
         value: { department: "QUAY_3" },
       },
       invalidCounter: {
