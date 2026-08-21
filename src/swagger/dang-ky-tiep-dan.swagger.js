@@ -160,6 +160,12 @@ const DangKyTiepDanSwagger = {
       parameters: [
         { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
         { name: "size", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+        {
+          name: "scope",
+          in: "query",
+          description: "ALL trả tất cả đơn; MY chỉ trả đơn do chính tài khoản đăng nhập đã phê duyệt, hoàn thành hoặc từ chối.",
+          schema: { type: "string", enum: ["ALL", "MY"], default: "ALL" },
+        },
         { name: "search", in: "query", schema: { type: "string", maxLength: 100 } },
         { name: "receptionDate", in: "query", schema: { type: "string", format: "date" } },
         { name: "approvalStatus", in: "query", schema: { type: "string", enum: ["PENDING", "APPROVED", "COMPLETED", "REJECTED"] } },

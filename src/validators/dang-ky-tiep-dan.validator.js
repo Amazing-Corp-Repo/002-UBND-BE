@@ -91,6 +91,12 @@ export const LookupDangKyTiepDanRequest = Joi.object({
 export const GetDangKyTiepDanQuery = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   size: Joi.number().integer().min(1).max(100).default(10),
+  scope: Joi.string()
+    .trim()
+    .uppercase()
+    .valid("ALL", "MY")
+    .default("ALL")
+    .messages({ "any.only": "Phạm vi danh sách chỉ hỗ trợ ALL hoặc MY" }),
   search: Joi.string().trim().max(100).allow("").optional(),
   receptionDate: receptionDateSchema.optional(),
   approvalStatus: Joi.string()

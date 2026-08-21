@@ -226,6 +226,15 @@ const DangKyTiepDanRepository = {
       ...(filters.ratingStatus === "NOT_RATED"
         ? { danh_gia_tiep_dan: { none: { is_delete: false } } }
         : {}),
+      ...(filters.handledByUserId
+        ? {
+            OR: [
+              { nguoi_duyet_don: filters.handledByUserId },
+              { nguoi_hoan_thanh: filters.handledByUserId },
+              { nguoi_tu_choi: filters.handledByUserId },
+            ],
+          }
+        : {}),
     };
 
     const [data, totalItems] = await Promise.all([

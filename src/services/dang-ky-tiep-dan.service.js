@@ -337,9 +337,11 @@ const DangKyTiepDanService = {
     return registrations.map(mapCitizenRegistration);
   },
 
-  async getAllForStaff(filters) {
+  async getAllForStaff(filters, currentUser) {
     const normalizedFilters = {
       ...filters,
+      handledByUserId:
+        filters.scope === "MY" ? currentUser?.userId : undefined,
       receptionDate: filters.receptionDate
         ? formatVietnamDate(filters.receptionDate)
         : undefined,
