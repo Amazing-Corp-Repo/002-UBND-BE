@@ -11,7 +11,7 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Lấy lịch tiếp dân đang hoạt động dành cho Mobile",
       description:
-        "Trả về lịch tiếp dân cho Mobile trong cửa sổ động 7 ngày theo giờ Việt Nam, gồm ngày hiện tại và 6 ngày tiếp theo. Lịch xa hơn không được trả về dù cán bộ đã tạo; khi sang ngày mới, ngày cũ tự rời khỏi cửa sổ và ngày kế tiếp mới được hiển thị. fromDate/toDate chỉ có thể lọc hẹp hơn bên trong cửa sổ này, không thể mở rộng quá 7 ngày. Khung giờ đã bắt đầu trong ngày hiện tại không được trả về. Mỗi ca có shiftId chuẩn, slotId tương thích, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ để tương thích API cũ.",
+        "Trả lịch tiếp dân công khai trong cửa sổ động 7 ngày theo giờ Việt Nam, gồm ngày hiện tại và 6 ngày tiếp theo. Người dân chỉ xem ngày và khoảng thời gian chung của buổi tiếp dân để đến trực tiếp; API không trả ca 1 giờ, slot, sức chứa hoặc tình trạng giữ chỗ. fromDate/toDate chỉ có thể lọc hẹp hơn bên trong cửa sổ này, không thể mở rộng quá 7 ngày.",
       parameters: [
         {
           name: "fromDate",
@@ -30,30 +30,15 @@ const ReceptionScheduleSwagger = {
       ],
       responses: {
         200: {
-          description: "Lấy danh sách lịch tiếp dân và tình trạng chỗ thành công",
+          description: "Lấy danh sách ngày và thời gian tiếp dân thành công",
           content: {
             "application/json": {
               example: {
                 success: true,
                 data: [{
                   id: "123e4567-e89b-12d3-a456-426614174000",
-                  officerName: "Nguyễn Văn An",
-                  location: "Bộ phận tiếp công dân",
                   receptionDate: "2026-08-26",
-                  availableSlots: ["07:30 - 08:30"],
-                  openSlots: ["07:30 - 08:30"],
-                  slots: [{
-                    slotId: "223e4567-e89b-12d3-a456-426614174000",
-                    shiftId: "323e4567-e89b-12d3-a456-426614174000",
-                    startTime: "07:30",
-                    endTime: "08:30",
-                    timeSlot: "07:30 - 08:30",
-                    totalCapacity: 16,
-                    heldCount: 3,
-                    remainingCapacity: 13,
-                    status: "AVAILABLE",
-                    isFull: false,
-                  }],
+                  timeRange: "07:30 - 11:30, 13:30 - 16:30",
                 }],
               },
             },

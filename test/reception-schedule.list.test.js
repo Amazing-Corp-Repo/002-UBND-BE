@@ -46,30 +46,19 @@ afterEach(() => {
 });
 
 describe("GET /api/reception-schedules", () => {
-  it("documents capacity and full-slot fields in Swagger", () => {
+  it("documents the public date and common time-range contract in Swagger", () => {
     const operation = ReceptionScheduleSwagger["/api/reception-schedules"].get;
+    const example =
+      operation.responses[200].content["application/json"].examples.success.value
+        .data[0];
 
-    assert.ok(operation.description.includes("số chỗ đã giữ"));
+    assert.ok(operation.description.includes("khoảng thời gian chung"));
     assert.ok(operation.description.includes("7 ngày"));
     assert.ok(operation.responses[200]);
-    assert.equal(
-      operation.responses[200].content["application/json"].examples.success.value.data[0]
-        .slots[0].isFull,
-      false
-    );
-    assert.equal(
-      operation.responses[200].content["application/json"].examples.success.value.data[0]
-        .slots[0].status,
-      "AVAILABLE"
-    );
-    assert.ok(
-      operation.responses[200].content["application/json"].examples.success.value.data[0]
-        .slots[0].slotId
-    );
-    assert.ok(
-      operation.responses[200].content["application/json"].examples.success.value.data[0]
-        .slots[0].shiftId
-    );
+    assert.equal(example.timeRange, "07:30 - 11:30, 13:30 - 16:30");
+    assert.equal(example.slots, undefined);
+    assert.equal(example.availableSlots, undefined);
+    assert.equal(example.openSlots, undefined);
   });
 
   it("splits a configured time range into display slots", () => {
@@ -92,58 +81,11 @@ describe("GET /api/reception-schedules", () => {
 
       assert.equal(response.status, 200);
       assert.equal(body.success, true);
-      assert.equal(body.data[0].officerName, "Trần Văn Bình");
-      assert.deepEqual(body.data[0].availableSlots, [
-        "08:00 - 09:00",
-        "09:00 - 10:00",
-        "10:00 - 10:30",
-      ]);
-      assert.equal(body.data[0].slots[0].totalCapacity, 16);
-      assert.equal(body.data[0].slots[0].heldCount, 0);
-    } finally {
-      server.close();
-    }
-  });
-
-  it("marks a configured slot full after all capacity has been held", async () => {
-    ReceptionScheduleRepository.findActiveBetweenDates = async () => [{
-      ...schedules[0],
-      thoi_gian: "08:00 - 09:00",
-      khung_gio_tiep_dan: Array.from({ length: 8 }, (_, index) => ({
-        id: `${index + 1}23e4567-e89b-42d3-a456-426614174000`,
-        id_ca_tiep_dan: "923e4567-e89b-42d3-a456-426614174000",
-        khung_gio: "08:00 - 09:00",
-        ma_quay: `QUAY_${index + 1}`,
-        suc_chua: 1,
-      })),
-      dang_ky_tiep_dan: Array.from({ length: 8 }, () => ({
-        slot: "08:00 - 09:00",
-      })),
-    }];
-    const server = createTestServer();
-    const { port } = server.address();
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:${port}/api/reception-schedules`
-      );
-      const body = await response.json();
-
-      assert.equal(response.status, 200);
-      assert.equal(body.data[0].slots[0].heldCount, 8);
-      assert.equal(body.data[0].slots[0].remainingCapacity, 0);
-      assert.equal(
-        body.data[0].slots[0].slotId,
-        "123e4567-e89b-42d3-a456-426614174000"
-      );
-      assert.equal(
-        body.data[0].slots[0].shiftId,
-        "923e4567-e89b-42d3-a456-426614174000"
-      );
-      assert.equal(body.data[0].slots[0].startTime, "08:00");
-      assert.equal(body.data[0].slots[0].endTime, "09:00");
-      assert.equal(body.data[0].slots[0].status, "FULL");
-      assert.equal(body.data[0].slots[0].isFull, true);
-      assert.deepEqual(body.data[0].openSlots, []);
+      assert.deepEqual(body.data[0], {
+        id: schedules[0].id,
+        receptionDate: schedules[0].ngay_tiep_dan.toISOString().slice(0, 10),
+        timeRange: "08:00 - 10:30",
+      });
     } finally {
       server.close();
     }
@@ -194,7 +136,7 @@ describe("GET /api/reception-schedules", () => {
     }
   });
 
-  it("does not return time slots that have already started today", async () => {
+  it("keeps today's published common time range visible until the date changes", async () => {
     const today = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Ho_Chi_Minh",
       year: "numeric",
@@ -205,13 +147,6 @@ describe("GET /api/reception-schedules", () => {
       ...schedules[0],
       ngay_tiep_dan: new Date(`${today}T00:00:00.000Z`),
       thoi_gian: "00:00 - 01:00",
-      khung_gio_tiep_dan: Array.from({ length: 8 }, (_, index) => ({
-        id: `${index + 1}23e4567-e89b-42d3-a456-426614174000`,
-        khung_gio: "00:00 - 01:00",
-        ma_quay: `QUAY_${index + 1}`,
-        suc_chua: 2,
-      })),
-      dang_ky_tiep_dan: [],
     }];
     const server = createTestServer();
     const { port } = server.address();
@@ -222,7 +157,9 @@ describe("GET /api/reception-schedules", () => {
       const body = await response.json();
 
       assert.equal(response.status, 200);
-      assert.deepEqual(body.data, []);
+      assert.equal(body.data[0].receptionDate, today);
+      assert.equal(body.data[0].timeRange, "00:00 - 01:00");
+      assert.equal(body.data[0].slots, undefined);
     } finally {
       server.close();
     }
