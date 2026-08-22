@@ -12,33 +12,10 @@ const ReceptionScheduleRepository = {
         },
       },
       orderBy: [{ ngay_tiep_dan: "asc" }, { thoi_gian: "asc" }],
-      include: {
-        ca_tiep_dan: {
-          where: { is_active: true, is_delete: false },
-          orderBy: [{ gio_bat_dau: "asc" }],
-          select: {
-            id: true,
-            gio_bat_dau: true,
-            gio_ket_thuc: true,
-          },
-        },
-        khung_gio_tiep_dan: {
-          where: { is_active: true, is_delete: false },
-          orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
-          select: {
-            id: true,
-            khung_gio: true,
-            ma_quay: true,
-            id_quay: true,
-            id_ca_tiep_dan: true,
-            suc_chua: true,
-            is_active: true,
-          },
-        },
-        dang_ky_tiep_dan: {
-          where: { loai: "COUNTER_RECEPTION" },
-          select: { slot: true },
-        },
+      select: {
+        id: true,
+        ngay_tiep_dan: true,
+        thoi_gian: true,
       },
     });
   },
