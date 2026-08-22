@@ -32,6 +32,7 @@ describe("GET /api/reception-ratings/configuration", () => {
       "4",
       "5",
     ]);
+    assert.equal(dataSchema.properties.counters.minItems, 8);
   });
 
   it("returns the 1-5 scale, comment limit and suggestions for every score", async () => {
@@ -46,6 +47,10 @@ describe("GET /api/reception-ratings/configuration", () => {
       assert.equal(response.status, 200);
       assert.deepEqual(body.data.scale, { min: 1, max: 5 });
       assert.equal(body.data.comment.maxLength, 2000);
+      assert.deepEqual(
+        body.data.counters.map((counter) => counter.code),
+        Array.from({ length: 8 }, (_, index) => `QUAY_${index + 1}`)
+      );
       assert.deepEqual(Object.keys(body.data.suggestionsByScore), [
         "1",
         "2",

@@ -5,6 +5,11 @@ export const RECEPTION_RATING_SCALE = {
 
 export const RECEPTION_RATING_COMMENT_MAX_LENGTH = 2000;
 
+export const RECEPTION_RATING_COUNTER_CODES = Array.from(
+  { length: 8 },
+  (_, index) => `QUAY_${index + 1}`
+);
+
 export const RECEPTION_RATING_SUGGESTIONS = {
   1: [
     "Cán bộ đã tiếp nhận ý kiến của tôi",
