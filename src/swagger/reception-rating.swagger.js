@@ -35,13 +35,6 @@ const manualRatingProperties = {
     description: "Alias tương thích cho workingContent",
   },
   score: { type: "integer", minimum: 1, maximum: 5, example: 5 },
-  selectedSuggestions: {
-    type: "array",
-    minItems: 1,
-    maxItems: 5,
-    uniqueItems: true,
-    items: { type: "string" },
-  },
   comment: { type: "string", minLength: 1, maxLength: 2000 },
   ratedAt: { type: "string", format: "date-time" },
   createdAt: {
@@ -141,7 +134,6 @@ const ReceptionRatingSwagger = {
                 "timeSlot",
                 "workingContent",
                 "score",
-                "selectedSuggestions",
                 "comment",
               ],
               properties: {
@@ -163,13 +155,6 @@ const ReceptionRatingSwagger = {
                 },
                 workingContent: { type: "string", minLength: 1 },
                 score: { type: "integer", minimum: 1, maximum: 5 },
-                selectedSuggestions: {
-                  type: "array",
-                  minItems: 1,
-                  maxItems: 5,
-                  uniqueItems: true,
-                  items: { type: "string", maxLength: 200 },
-                },
                 comment: { type: "string", minLength: 1, maxLength: 2000 },
               },
             },
@@ -199,7 +184,7 @@ const ReceptionRatingSwagger = {
       tags: ["ReceptionRating"],
       summary: "Lấy cấu hình đánh giá tiếp dân dành cho iPad",
       description:
-        "Trả thang điểm, danh sách quầy, giới hạn nhận xét và các gợi ý theo số sao. API không cần đăng nhập.",
+        "Trả thang điểm 1-5 sao, danh sách quầy và giới hạn nhận xét. API không cần đăng nhập.",
       responses: {
         200: {
           description: "Lấy cấu hình đánh giá tiếp dân thành công",
@@ -230,16 +215,6 @@ const ReceptionRatingSwagger = {
                         name: { type: "string", example: "Quầy 1" },
                       },
                     },
-                  },
-                  suggestionsByScore: {
-                    type: "object",
-                    required: ["1", "2", "3", "4", "5"],
-                    properties: Object.fromEntries(
-                      [1, 2, 3, 4, 5].map((score) => [
-                        score,
-                        { type: "array", items: { type: "string" } },
-                      ])
-                    ),
                   },
                 },
               }),
@@ -410,7 +385,6 @@ const ratingDemo = {
   workingContent: "Hướng dẫn thủ tục hành chính",
   topic: "Hướng dẫn thủ tục hành chính",
   score: 5,
-  selectedSuggestions: ["Cán bộ rất tận tình và chuyên nghiệp"],
   comment: "Cán bộ hướng dẫn rõ ràng và dễ hiểu.",
   ratedAt: "2026-08-22T09:30:00.000+07:00",
   createdAt: "2026-08-22T09:30:00.000+07:00",
@@ -452,7 +426,6 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
           timeSlot: ratingDemo.timeSlot,
           workingContent: ratingDemo.workingContent,
           score: ratingDemo.score,
-          selectedSuggestions: ratingDemo.selectedSuggestions,
           comment: ratingDemo.comment,
         },
       },
@@ -466,7 +439,6 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
           timeSlot: "08:30 - 09:30",
           workingContent: "Hướng dẫn thủ tục hành chính",
           score: 5,
-          selectedSuggestions: ["Cán bộ rất tận tình và chuyên nghiệp"],
           comment: "Hài lòng",
         },
       },
@@ -493,13 +465,6 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
           code,
           name: `Quầy ${index + 1}`,
         })),
-        suggestionsByScore: {
-          1: ["Cán bộ đã tiếp nhận ý kiến của tôi"],
-          2: ["Cán bộ có lắng nghe ý kiến"],
-          3: ["Cán bộ giao tiếp lịch sự"],
-          4: ["Cán bộ nhiệt tình và tôn trọng"],
-          5: ["Cán bộ rất tận tình và chuyên nghiệp"],
-        },
       }),
     },
   },

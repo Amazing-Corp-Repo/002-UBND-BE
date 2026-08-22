@@ -83,18 +83,6 @@ export const CreateReceptionRatingRequest = Joi.object({
     "number.max": "Điểm đánh giá phải từ 1 đến 5",
     "any.required": "Điểm đánh giá là bắt buộc",
   }),
-  selectedSuggestions: Joi.array()
-    .items(Joi.string().trim().max(200))
-    .unique()
-    .min(1)
-    .max(5)
-    .required()
-    .messages({
-      "array.unique": "Gợi ý đánh giá không được trùng nhau",
-      "array.min": "Phải chọn ít nhất 1 gợi ý đánh giá",
-      "array.max": "Chỉ được chọn tối đa 5 gợi ý",
-      "any.required": "Gợi ý đánh giá là bắt buộc",
-    }),
   comment: Joi.string()
     .trim()
     .min(1)
