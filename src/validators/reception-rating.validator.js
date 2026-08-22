@@ -1,5 +1,7 @@
 import Joi from "joi";
-import { RECEPTION_RATING_COMMENT_MAX_LENGTH } from "../constants/reception-rating.constant.js";
+import {
+  RECEPTION_RATING_COMMENT_MAX_LENGTH,
+} from "../constants/reception-rating.constant.js";
 
 const receptionDateSchema = (fieldLabel) =>
   Joi.string()
@@ -32,6 +34,50 @@ export const CreateReceptionRatingRequest = Joi.object({
       "string.pattern.base": "Mã tiếp dân không hợp lệ",
       "any.required": "Mã tiếp dân là bắt buộc",
     }),
+  citizenName: Joi.string().trim().min(2).max(150).required().messages({
+    "string.min": "Tên người dân phải có ít nhất 2 ký tự",
+    "string.max": "Tên người dân không được vượt quá 150 ký tự",
+    "string.empty": "Tên người dân là bắt buộc",
+    "any.required": "Tên người dân là bắt buộc",
+  }),
+  officerName: Joi.string().trim().min(2).max(150).required().messages({
+    "string.min": "Tên cán bộ phải có ít nhất 2 ký tự",
+    "string.max": "Tên cán bộ không được vượt quá 150 ký tự",
+    "string.empty": "Tên cán bộ là bắt buộc",
+    "any.required": "Tên cán bộ là bắt buộc",
+  }),
+  counterCode: Joi.string()
+    .trim()
+    .uppercase()
+    .pattern(/^QUAY_[1-8]$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Mã quầy phải từ QUAY_1 đến QUAY_8",
+      "any.required": "Mã quầy là bắt buộc",
+    }),
+  receptionDate: receptionDateSchema("Ngày tiếp dân").required().messages({
+    "any.required": "Ngày tiếp dân là bắt buộc",
+  }),
+  timeSlot: Joi.string()
+    .trim()
+    .pattern(/^([01]\d|2[0-3]):[0-5]\d\s-\s([01]\d|2[0-3]):[0-5]\d$/)
+    .custom((value, helpers) => {
+      const [start, end] = value.split(" - ");
+      return start < end ? value : helpers.error("time.range");
+    })
+    .required()
+    .messages({
+      "string.pattern.base": "Khung giờ phải có định dạng HH:mm - HH:mm",
+      "time.range": "Giờ bắt đầu phải nhỏ hơn giờ kết thúc",
+      "any.required": "Khung giờ là bắt buộc",
+    }),
+  workingContent: Joi.string()
+    .trim()
+    .required()
+    .messages({
+      "string.empty": "Nội dung làm việc là bắt buộc",
+      "any.required": "Nội dung làm việc là bắt buộc",
+    }),
   score: Joi.number().integer().min(1).max(5).required().messages({
     "number.min": "Điểm đánh giá phải từ 1 đến 5",
     "number.max": "Điểm đánh giá phải từ 1 đến 5",
@@ -40,19 +86,24 @@ export const CreateReceptionRatingRequest = Joi.object({
   selectedSuggestions: Joi.array()
     .items(Joi.string().trim().max(200))
     .unique()
+    .min(1)
     .max(5)
-    .default([])
+    .required()
     .messages({
       "array.unique": "Gợi ý đánh giá không được trùng nhau",
+      "array.min": "Phải chọn ít nhất 1 gợi ý đánh giá",
       "array.max": "Chỉ được chọn tối đa 5 gợi ý",
+      "any.required": "Gợi ý đánh giá là bắt buộc",
     }),
   comment: Joi.string()
     .trim()
+    .min(1)
     .max(RECEPTION_RATING_COMMENT_MAX_LENGTH)
-    .allow("")
-    .default("")
+    .required()
     .messages({
+      "string.empty": "Nhận xét là bắt buộc",
       "string.max": `Nhận xét không được vượt quá ${RECEPTION_RATING_COMMENT_MAX_LENGTH} ký tự`,
+      "any.required": "Nhận xét là bắt buộc",
     }),
 });
 

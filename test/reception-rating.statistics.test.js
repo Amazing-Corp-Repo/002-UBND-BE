@@ -37,9 +37,16 @@ beforeEach(() => {
       { diem_tong: 4, _count: { _all: 1 } },
       { diem_tong: 5, _count: { _all: 2 } },
     ],
-    departmentGroups: [
+    counterGroups: [
       {
-        department: "QUAY_1",
+        counterCode: "QUAY_1",
+        _count: { _all: 4 },
+        _avg: { diem_tong: 4.25 },
+      },
+    ],
+    officerGroups: [
+      {
+        ten_can_bo: "Trần Thị Bình",
         _count: { _all: 4 },
         _avg: { diem_tong: 4.25 },
       },
@@ -62,6 +69,8 @@ describe("GET /api/reception-ratings/statistics", () => {
     assert.equal(dataSchema.properties.averageScore.maximum, 5);
     assert.equal(dataSchema.properties.satisfactionRate.maximum, 100);
     assert.equal(dataSchema.properties.scoreDistribution.minItems, 5);
+    assert.equal(dataSchema.properties.byCounter.type, "array");
+    assert.equal(dataSchema.properties.byOfficer.type, "array");
     assert.equal(operation.responses[403].description.includes("RRT_GET_STATS"), true);
   });
 
@@ -90,6 +99,9 @@ describe("GET /api/reception-ratings/statistics", () => {
         1,
         2,
       ]);
+      assert.equal(body.data.byCounter[0].counterCode, "QUAY_1");
+      assert.equal(body.data.byDepartment[0].department, "QUAY_1");
+      assert.equal(body.data.byOfficer[0].officerName, "Trần Thị Bình");
     } finally {
       server.close();
     }
@@ -166,7 +178,8 @@ describe("GET /api/reception-ratings/statistics", () => {
     ReceptionRatingRepository.getStatistics = async () => ({
       overall: { _count: { _all: 0 }, _avg: { diem_tong: null } },
       scoreGroups: [],
-      departmentGroups: [],
+      counterGroups: [],
+      officerGroups: [],
     });
     const server = createTestServer();
     const { port } = server.address();

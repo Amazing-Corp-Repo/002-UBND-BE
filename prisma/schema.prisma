@@ -731,22 +731,32 @@ model dang_ky_tiep_dan {
 
 // Đánh giá sau buổi tiếp dân / gặp lãnh đạo
 model danh_gia_tiep_dan {
-  id                   String           @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  id_dang_ky_tiep_dan  String           @unique @db.Uuid
+  id                   String            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_dang_ky_tiep_dan  String?           @unique @db.Uuid
+  ma_tiep_dan          String            @unique(map: "uq_danh_gia_tiep_dan_ma_tiep_dan") @db.VarChar(50)
+  ten_nguoi_dan        String            @db.VarChar(150)
+  ten_can_bo           String            @db.VarChar(150)
+  ma_quay              String            @db.VarChar(20)
+  ngay_tiep_dan        DateTime          @db.Date
+  khung_gio            String            @db.VarChar(50)
+  noi_dung_lam_viec    String
   diem_tong            Int
   tieu_chi             Json?
   ly_do                Json?
   nhan_xet             String?
-  is_active            Boolean?         @default(true)
-  is_delete            Boolean?         @default(false)
-  nguoi_tao            String?          @db.Uuid
-  nguoi_cap_nhat       String?          @db.Uuid
-  thoi_gian_tao        DateTime?        @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  thoi_gian_cap_nhat   DateTime?        @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
-  dang_ky_tiep_dan     dang_ky_tiep_dan @relation(fields: [id_dang_ky_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_danh_gia_tiep_dan_dang_ky")
+  is_active            Boolean?          @default(true)
+  is_delete            Boolean?          @default(false)
+  nguoi_tao            String?           @db.Uuid
+  nguoi_cap_nhat       String?           @db.Uuid
+  thoi_gian_tao        DateTime?         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat   DateTime?         @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  dang_ky_tiep_dan     dang_ky_tiep_dan? @relation(fields: [id_dang_ky_tiep_dan], references: [id], onUpdate: NoAction, map: "fk_danh_gia_tiep_dan_dang_ky")
 
   @@index([id_dang_ky_tiep_dan], map: "idx_danh_gia_tiep_dan_id_dang_ky")
   @@index([diem_tong], map: "idx_danh_gia_tiep_dan_diem_tong")
+  @@index([ma_quay], map: "idx_danh_gia_tiep_dan_ma_quay")
+  @@index([ten_can_bo], map: "idx_danh_gia_tiep_dan_ten_can_bo")
+  @@index([ngay_tiep_dan], map: "idx_danh_gia_tiep_dan_ngay_tiep_dan")
 }
 
 // ══════════════ HỆ THỐNG ĐĂNG KÝ GẶP LÃNH ĐẠO (MỚI) ══════════════

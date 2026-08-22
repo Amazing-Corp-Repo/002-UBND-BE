@@ -255,6 +255,7 @@ export const PERMISSION_TYPE = {
   GET_TEMPLATE: "Lấy mẫu",
   GET_DETAIL: "Xem chi tiết",
   GET_ALL: "Xem tất cả",
+  GET_STATS: "Xem thống kê",
   APPROVE: "Phê duyệt",
   COMPLETE: "Hoàn thành",
   REJECT: "Từ chối",

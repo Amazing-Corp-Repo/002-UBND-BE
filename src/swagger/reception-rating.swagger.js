@@ -5,20 +5,82 @@ import {
 } from "./reception-demo-example.util.js";
 import { RECEPTION_SWAGGER_DEMO as DEMO } from "./reception-swagger-demo.fixture.js";
 
+const counterEnum = Array.from({ length: 8 }, (_, index) => `QUAY_${index + 1}`);
+
+const manualRatingProperties = {
+  id: { type: "string", format: "uuid" },
+  receptionCode: { type: "string", example: "TD-20260822-001" },
+  citizenName: { type: "string", example: "Nguyễn Văn An" },
+  applicantName: {
+    type: "string",
+    example: "Nguyễn Văn An",
+    description: "Alias tương thích cho citizenName",
+  },
+  officerName: { type: "string", example: "Trần Thị Bình" },
+  counterCode: { type: "string", enum: counterEnum, example: "QUAY_2" },
+  department: {
+    type: "string",
+    enum: counterEnum,
+    example: "QUAY_2",
+    description: "Alias tương thích cho counterCode",
+  },
+  receptionDate: { type: "string", format: "date", example: "2026-08-22" },
+  timeSlot: { type: "string", example: "08:30 - 09:30" },
+  workingContent: {
+    type: "string",
+    example: "Hướng dẫn thủ tục hành chính",
+  },
+  topic: {
+    type: "string",
+    description: "Alias tương thích cho workingContent",
+  },
+  score: { type: "integer", minimum: 1, maximum: 5, example: 5 },
+  selectedSuggestions: {
+    type: "array",
+    minItems: 1,
+    maxItems: 5,
+    uniqueItems: true,
+    items: { type: "string" },
+  },
+  comment: { type: "string", minLength: 1, maxLength: 2000 },
+  ratedAt: { type: "string", format: "date-time" },
+  createdAt: {
+    type: "string",
+    format: "date-time",
+    description: "Alias tương thích cho ratedAt",
+  },
+};
+
+const successEnvelope = (data) => ({
+  type: "object",
+  required: ["success", "data", "message"],
+  properties: {
+    success: { type: "boolean", example: true },
+    data,
+    message: { type: "string" },
+    pagination: { nullable: true },
+  },
+});
+
 const ReceptionRatingSwagger = {
   "/api/reception-ratings": {
     get: {
       tags: ["ReceptionRating"],
       summary: "Lấy danh sách đánh giá tiếp dân dành cho lãnh đạo",
       description:
-        "Trả về danh sách đánh giá có phân trang. Hỗ trợ tìm kiếm và lọc theo số sao, quầy tiếp nhận và khoảng ngày đánh giá.",
+        "Trả dữ liệu tiếp dân do cán bộ nhập thủ công trên iPad, có phân trang và lọc. Yêu cầu quyền RRT_GET_ALL.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
         { name: "size", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
-        { name: "search", in: "query", schema: { type: "string", maxLength: 100 } },
+        {
+          name: "search",
+          in: "query",
+          description: "Tìm theo mã tiếp dân, người dân, cán bộ, nội dung làm việc hoặc nhận xét",
+          schema: { type: "string", maxLength: 100 },
+        },
         { name: "score", in: "query", schema: { type: "integer", minimum: 1, maximum: 5 } },
-        { name: "department", in: "query", schema: { type: "string", example: "QUAY_1" } },
+        { name: "department", in: "query", schema: { type: "string", enum: counterEnum } },
         { name: "fromDate", in: "query", schema: { type: "string", format: "date" } },
         { name: "toDate", in: "query", schema: { type: "string", format: "date" } },
       ],
@@ -28,47 +90,16 @@ const ReceptionRatingSwagger = {
           content: {
             "application/json": {
               schema: {
-                type: "object",
+                ...successEnvelope({
+                  type: "array",
+                  items: { type: "object", properties: manualRatingProperties },
+                }),
                 required: ["success", "data", "message", "pagination"],
                 properties: {
-                  success: { type: "boolean", example: true },
+                  ...successEnvelope({}).properties,
                   data: {
                     type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string", format: "uuid" },
-                        receptionCode: { type: "string", example: "A00123" },
-                        applicantName: { type: "string", example: "Nguyễn Văn An" },
-                        department: {
-                          type: "string",
-                          enum: [
-                            "QUAY_1",
-                            "QUAY_2",
-                            "QUAY_3",
-                            "QUAY_4",
-                            "QUAY_5",
-                            "QUAY_6",
-                            "QUAY_7",
-                            "QUAY_8",
-                          ],
-                        },
-                        receptionDate: { type: "string", format: "date" },
-                        timeSlot: { type: "string", example: "08:00 - 09:00" },
-                        topic: { type: "string", example: "Hướng dẫn thủ tục" },
-                        score: { type: "integer", minimum: 1, maximum: 5 },
-                        selectedSuggestions: {
-                          type: "array",
-                          items: { type: "string" },
-                        },
-                        comment: { type: "string", maxLength: 2000 },
-                        ratedAt: { type: "string", format: "date-time" },
-                      },
-                    },
-                  },
-                  message: {
-                    type: "string",
-                    example: "Lấy danh sách đánh giá tiếp dân thành công",
+                    items: { type: "object", properties: manualRatingProperties },
                   },
                   pagination: {
                     type: "object",
@@ -91,26 +122,55 @@ const ReceptionRatingSwagger = {
     },
     post: {
       tags: ["ReceptionRating"],
-      summary: "Gửi đánh giá tiếp dân từ iPad",
+      summary: "Gửi đánh giá tiếp dân nhập thủ công từ iPad",
       description:
-        "API công khai dành cho iPad. Chỉ đăng ký ở trạng thái COMPLETED mới được đánh giá và mỗi mã tiếp dân chỉ được đánh giá một lần. Nội dung gợi ý được chọn phải thuộc cấu hình của số sao đã gửi. Giới hạn 20 yêu cầu gửi đánh giá trong 10 phút cho mỗi IP.",
+        "API công khai, không cần đăng nhập. Cán bộ nhập toàn bộ thông tin phiên tiếp dân; backend không đối chiếu đăng ký, lịch, ca, quầy hoặc cán bộ với DB. Mã tiếp dân phải duy nhất. Giới hạn 20 yêu cầu trong 10 phút cho mỗi IP.",
       requestBody: {
         required: true,
         content: {
           "application/json": {
             schema: {
               type: "object",
-              required: ["receptionCode", "score"],
+              additionalProperties: false,
+              required: [
+                "receptionCode",
+                "citizenName",
+                "officerName",
+                "counterCode",
+                "receptionDate",
+                "timeSlot",
+                "workingContent",
+                "score",
+                "selectedSuggestions",
+                "comment",
+              ],
               properties: {
-                receptionCode: { type: "string", example: "A00123" },
+                receptionCode: {
+                  type: "string",
+                  minLength: 4,
+                  maxLength: 50,
+                  pattern: "^[A-Z0-9-]+$",
+                  example: "TD-20260822-001",
+                },
+                citizenName: { type: "string", minLength: 2, maxLength: 150 },
+                officerName: { type: "string", minLength: 2, maxLength: 150 },
+                counterCode: { type: "string", enum: counterEnum },
+                receptionDate: { type: "string", format: "date" },
+                timeSlot: {
+                  type: "string",
+                  pattern: "^([01]\\d|2[0-3]):[0-5]\\d\\s-\\s([01]\\d|2[0-3]):[0-5]\\d$",
+                  example: "08:30 - 09:30",
+                },
+                workingContent: { type: "string", minLength: 1 },
                 score: { type: "integer", minimum: 1, maximum: 5 },
                 selectedSuggestions: {
                   type: "array",
+                  minItems: 1,
                   maxItems: 5,
                   uniqueItems: true,
                   items: { type: "string", maxLength: 200 },
                 },
-                comment: { type: "string", maxLength: 2000 },
+                comment: { type: "string", minLength: 1, maxLength: 2000 },
               },
             },
           },
@@ -121,38 +181,15 @@ const ReceptionRatingSwagger = {
           description: "Gửi đánh giá tiếp dân thành công",
           content: {
             "application/json": {
-              schema: {
+              schema: successEnvelope({
                 type: "object",
-                properties: {
-                  success: { type: "boolean", example: true },
-                  data: {
-                    type: "object",
-                    properties: {
-                      id: { type: "string", format: "uuid" },
-                      receptionCode: { type: "string", example: "A00123" },
-                      score: { type: "integer", minimum: 1, maximum: 5 },
-                      selectedSuggestions: {
-                        type: "array",
-                        maxItems: 5,
-                        uniqueItems: true,
-                        items: { type: "string" },
-                      },
-                      comment: { type: "string", maxLength: 2000 },
-                      createdAt: { type: "string", format: "date-time" },
-                    },
-                  },
-                  message: {
-                    type: "string",
-                    example: "Gửi đánh giá tiếp dân thành công",
-                  },
-                },
-              },
+                properties: manualRatingProperties,
+              }),
             },
           },
         },
-        400: { description: "Thiếu dữ liệu hoặc dữ liệu đánh giá không hợp lệ" },
-        404: { description: "Không tìm thấy mã tiếp dân" },
-        409: { description: "Buổi tiếp dân chưa hoàn thành hoặc mã đã được đánh giá" },
+        400: { description: "Thiếu dữ liệu hoặc dữ liệu nhập thủ công không hợp lệ" },
+        409: { description: "Mã tiếp dân đã được đánh giá" },
         429: { description: "Vượt quá 20 yêu cầu gửi đánh giá trong 10 phút từ cùng một IP" },
       },
     },
@@ -162,51 +199,50 @@ const ReceptionRatingSwagger = {
       tags: ["ReceptionRating"],
       summary: "Lấy cấu hình đánh giá tiếp dân dành cho iPad",
       description:
-        "Trả về thang điểm từ 1 đến 5 sao, giới hạn nhận xét 2000 ký tự và danh sách nội dung gợi ý tương ứng với từng mức sao.",
+        "Trả thang điểm, danh sách quầy, giới hạn nhận xét và các gợi ý theo số sao. API không cần đăng nhập.",
       responses: {
         200: {
           description: "Lấy cấu hình đánh giá tiếp dân thành công",
           content: {
             "application/json": {
-              schema: {
+              schema: successEnvelope({
                 type: "object",
                 properties: {
-                  success: { type: "boolean", example: true },
-                  data: {
+                  scale: {
                     type: "object",
                     properties: {
-                      scale: {
-                        type: "object",
-                        properties: {
-                          min: { type: "integer", enum: [1] },
-                          max: { type: "integer", enum: [5] },
-                        },
-                      },
-                      comment: {
-                        type: "object",
-                        properties: {
-                          maxLength: { type: "integer", enum: [2000] },
-                        },
-                      },
-                      suggestionsByScore: {
-                        type: "object",
-                        required: ["1", "2", "3", "4", "5"],
-                        properties: {
-                          1: { type: "array", items: { type: "string" } },
-                          2: { type: "array", items: { type: "string" } },
-                          3: { type: "array", items: { type: "string" } },
-                          4: { type: "array", items: { type: "string" } },
-                          5: { type: "array", items: { type: "string" } },
-                        },
+                      min: { type: "integer", enum: [1] },
+                      max: { type: "integer", enum: [5] },
+                    },
+                  },
+                  comment: {
+                    type: "object",
+                    properties: { maxLength: { type: "integer", enum: [2000] } },
+                  },
+                  counters: {
+                    type: "array",
+                    minItems: 8,
+                    maxItems: 8,
+                    items: {
+                      type: "object",
+                      properties: {
+                        code: { type: "string", enum: counterEnum },
+                        name: { type: "string", example: "Quầy 1" },
                       },
                     },
                   },
-                  message: {
-                    type: "string",
-                    example: "Lấy cấu hình đánh giá tiếp dân thành công",
+                  suggestionsByScore: {
+                    type: "object",
+                    required: ["1", "2", "3", "4", "5"],
+                    properties: Object.fromEntries(
+                      [1, 2, 3, 4, 5].map((score) => [
+                        score,
+                        { type: "array", items: { type: "string" } },
+                      ])
+                    ),
                   },
                 },
-              },
+              }),
             },
           },
         },
@@ -218,7 +254,7 @@ const ReceptionRatingSwagger = {
       tags: ["ReceptionRating"],
       summary: "Lấy chi tiết đánh giá tiếp dân dành cho lãnh đạo",
       description:
-        "Trả về nội dung đánh giá cùng thông tin đăng ký tiếp dân gốc để lãnh đạo kiểm tra.",
+        "Trả đầy đủ dữ liệu nhập thủ công. Quan hệ đăng ký cũ chỉ còn dùng để truy vết dữ liệu lịch sử.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -233,89 +269,42 @@ const ReceptionRatingSwagger = {
           description: "Lấy chi tiết đánh giá tiếp dân thành công",
           content: {
             "application/json": {
-              schema: {
+              schema: successEnvelope({
                 type: "object",
-                required: ["success", "data", "message"],
                 properties: {
-                  success: { type: "boolean", example: true },
-                  data: {
+                  ...manualRatingProperties,
+                  legacyRegistrationId: {
+                    type: "string",
+                    format: "uuid",
+                    nullable: true,
+                  },
+                  registration: {
                     type: "object",
+                    description: "Khối tương thích FE cũ, được dựng từ snapshot",
                     properties: {
-                      id: { type: "string", format: "uuid" },
-                      score: { type: "integer", minimum: 1, maximum: 5 },
-                      selectedSuggestions: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      comment: { type: "string", maxLength: 2000 },
-                      ratedAt: { type: "string", format: "date-time" },
-                      registration: {
+                      id: { type: "string", format: "uuid", nullable: true },
+                      receptionCode: { type: "string" },
+                      receptionDate: { type: "string", format: "date" },
+                      timeSlot: { type: "string" },
+                      topic: { type: "string" },
+                      workingContent: { type: "string" },
+                      applicant: {
                         type: "object",
                         properties: {
-                          id: { type: "string", format: "uuid" },
-                          receptionCode: { type: "string", example: "A00123" },
-                          receptionDate: { type: "string", format: "date" },
-                          timeSlot: { type: "string", example: "08:00 - 09:00" },
-                          topic: { type: "string", example: "Hướng dẫn thủ tục" },
-                          workingContent: { type: "string" },
-                          applicant: {
-                            type: "object",
-                            properties: {
-                              fullName: { type: "string" },
-                              phoneNumber: { type: "string" },
-                              citizenId: { type: "string" },
-                              address: { type: "string" },
-                            },
-                          },
-                          department: {
-                            type: "string",
-                            enum: [
-                              "QUAY_1",
-                              "QUAY_2",
-                              "QUAY_3",
-                              "QUAY_4",
-                              "QUAY_5",
-                              "QUAY_6",
-                              "QUAY_7",
-                              "QUAY_8",
-                            ],
-                          },
-                          approvalStatus: {
-                            type: "string",
-                            enum: ["PENDING", "APPROVED", "COMPLETED", "REJECTED"],
-                          },
-                          approver: {
-                            type: "object",
-                            nullable: true,
-                            properties: {
-                              name: { type: "string" },
-                              title: { type: "string", nullable: true },
-                              approvedAt: { type: "string", format: "date-time" },
-                            },
-                          },
-                          schedule: {
-                            type: "object",
-                            nullable: true,
-                            properties: {
-                              id: { type: "string", format: "uuid" },
-                              officerName: { type: "string" },
-                              location: { type: "string" },
-                              receptionDate: { type: "string", format: "date" },
-                              timeRange: { type: "string" },
-                              note: { type: "string", nullable: true },
-                            },
-                          },
+                          fullName: { type: "string" },
+                          phoneNumber: { type: "string", nullable: true },
+                          citizenId: { type: "string", nullable: true },
+                          address: { type: "string", nullable: true },
                         },
                       },
+                      department: { type: "string" },
+                      approvalStatus: { type: "string", nullable: true },
+                      approver: { type: "object", nullable: true },
+                      schedule: { type: "object", nullable: true },
                     },
                   },
-                  message: {
-                    type: "string",
-                    example: "Lấy chi tiết đánh giá tiếp dân thành công",
-                  },
-                  pagination: { nullable: true, example: null },
                 },
-              },
+              }),
             },
           },
         },
@@ -331,26 +320,10 @@ const ReceptionRatingSwagger = {
       tags: ["ReceptionRating"],
       summary: "Lấy thống kê cơ bản về đánh giá tiếp dân",
       description:
-        "Thống kê tổng lượt đánh giá, điểm trung bình, tỷ lệ hài lòng, phân bố số sao và kết quả theo từng quầy tiếp nhận.",
+        "Thống kê điểm, tỷ lệ hài lòng, kết quả theo quầy và theo tên cán bộ được nhập trên iPad. Yêu cầu quyền RRT_GET_STATS.",
       security: [{ bearerAuth: [] }],
       parameters: [
-        {
-          name: "department",
-          in: "query",
-          schema: {
-            type: "string",
-            enum: [
-              "QUAY_1",
-              "QUAY_2",
-              "QUAY_3",
-              "QUAY_4",
-              "QUAY_5",
-              "QUAY_6",
-              "QUAY_7",
-              "QUAY_8",
-            ],
-          },
-        },
+        { name: "department", in: "query", schema: { type: "string", enum: counterEnum } },
         { name: "fromDate", in: "query", schema: { type: "string", format: "date" } },
         { name: "toDate", in: "query", schema: { type: "string", format: "date" } },
       ],
@@ -359,65 +332,60 @@ const ReceptionRatingSwagger = {
           description: "Lấy thống kê đánh giá tiếp dân thành công",
           content: {
             "application/json": {
-              schema: {
+              schema: successEnvelope({
                 type: "object",
-                required: ["success", "data", "message"],
                 properties: {
-                  success: { type: "boolean", example: true },
-                  data: {
-                    type: "object",
-                    properties: {
-                      totalRatings: { type: "integer", minimum: 0 },
-                      averageScore: {
-                        type: "number",
-                        format: "double",
-                        minimum: 0,
-                        maximum: 5,
-                      },
-                      satisfactionRate: {
-                        type: "number",
-                        format: "double",
-                        minimum: 0,
-                        maximum: 100,
-                        description: "Tỷ lệ phần trăm đánh giá từ 4 đến 5 sao",
-                      },
-                      scoreDistribution: {
-                        type: "array",
-                        minItems: 5,
-                        maxItems: 5,
-                        items: {
-                          type: "object",
-                          properties: {
-                            score: { type: "integer", minimum: 1, maximum: 5 },
-                            count: { type: "integer", minimum: 0 },
-                          },
-                        },
-                      },
-                      byDepartment: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            department: { type: "string", example: "QUAY_1" },
-                            totalRatings: { type: "integer", minimum: 0 },
-                            averageScore: {
-                              type: "number",
-                              format: "double",
-                              minimum: 0,
-                              maximum: 5,
-                            },
-                          },
-                        },
+                  totalRatings: { type: "integer", minimum: 0 },
+                  averageScore: { type: "number", minimum: 0, maximum: 5 },
+                  satisfactionRate: { type: "number", minimum: 0, maximum: 100 },
+                  scoreDistribution: {
+                    type: "array",
+                    minItems: 5,
+                    maxItems: 5,
+                    items: {
+                      type: "object",
+                      properties: {
+                        score: { type: "integer", minimum: 1, maximum: 5 },
+                        count: { type: "integer", minimum: 0 },
                       },
                     },
                   },
-                  message: {
-                    type: "string",
-                    example: "Lấy thống kê đánh giá tiếp dân thành công",
+                  byCounter: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        counterCode: { type: "string" },
+                        totalRatings: { type: "integer" },
+                        averageScore: { type: "number" },
+                      },
+                    },
                   },
-                  pagination: { nullable: true, example: null },
+                  byDepartment: {
+                    type: "array",
+                    description: "Alias tương thích cho byCounter",
+                    items: {
+                      type: "object",
+                      properties: {
+                        department: { type: "string" },
+                        totalRatings: { type: "integer" },
+                        averageScore: { type: "number" },
+                      },
+                    },
+                  },
+                  byOfficer: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        officerName: { type: "string" },
+                        totalRatings: { type: "integer" },
+                        averageScore: { type: "number" },
+                      },
+                    },
+                  },
                 },
-              },
+              }),
             },
           },
         },
@@ -431,19 +399,21 @@ const ReceptionRatingSwagger = {
 
 const ratingDemo = {
   id: "423e4567-e89b-42d3-a456-426614174000",
-  receptionCode: "A00123",
+  receptionCode: "TD-20260822-001",
+  citizenName: "Nguyễn Văn An",
   applicantName: "Nguyễn Văn An",
-  department: "QUAY_3",
-  receptionDate: "2026-08-26",
-  timeSlot: "07:30 - 08:30",
+  officerName: "Trần Thị Bình",
+  counterCode: "QUAY_2",
+  department: "QUAY_2",
+  receptionDate: "2026-08-22",
+  timeSlot: "08:30 - 09:30",
+  workingContent: "Hướng dẫn thủ tục hành chính",
   topic: "Hướng dẫn thủ tục hành chính",
   score: 5,
-  selectedSuggestions: [
-    "Cán bộ rất tận tình và chuyên nghiệp",
-    "Yêu cầu được giải thích đầy đủ, rõ ràng",
-  ],
-  comment: "Tôi hài lòng với quá trình tiếp dân.",
-  ratedAt: "2026-08-26T15:35:00.000+07:00",
+  selectedSuggestions: ["Cán bộ rất tận tình và chuyên nghiệp"],
+  comment: "Cán bộ hướng dẫn rõ ràng và dễ hiểu.",
+  ratedAt: "2026-08-22T09:30:00.000+07:00",
+  createdAt: "2026-08-22T09:30:00.000+07:00",
 };
 
 applyReceptionDemoExamples(ReceptionRatingSwagger, {
@@ -451,11 +421,11 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
     parameters: {
       page: 1,
       size: 10,
-      search: DEMO.registrations.rated.code,
-      score: null,
-      department: null,
-      fromDate: null,
-      toDate: null,
+      search: ratingDemo.receptionCode,
+      score: 5,
+      department: "QUAY_2",
+      fromDate: "2026-08-22",
+      toDate: "2026-08-22",
     },
     responses: {
       200: successDemo(
@@ -471,65 +441,47 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
   },
   "POST /api/reception-ratings": {
     request: {
-      validFiveStarRating: {
-        summary: "Demo hợp lệ - đánh giá 5 sao",
+      validManualRating: {
+        summary: "Demo hợp lệ - nhập thủ công và đánh giá 5 sao",
         value: {
-          receptionCode: DEMO.registrations.ratingCreate.code,
-          score: 5,
-          selectedSuggestions: [
-            "Cán bộ rất tận tình và chuyên nghiệp",
-            "Yêu cầu được giải thích đầy đủ, rõ ràng",
-          ],
-          comment: "Tôi hài lòng với quá trình tiếp dân.",
+          receptionCode: ratingDemo.receptionCode,
+          citizenName: ratingDemo.citizenName,
+          officerName: ratingDemo.officerName,
+          counterCode: ratingDemo.counterCode,
+          receptionDate: ratingDemo.receptionDate,
+          timeSlot: ratingDemo.timeSlot,
+          workingContent: ratingDemo.workingContent,
+          score: ratingDemo.score,
+          selectedSuggestions: ratingDemo.selectedSuggestions,
+          comment: ratingDemo.comment,
         },
       },
-      missingScore: {
-        summary: "Demo lỗi 400 - thiếu số sao",
-        value: { receptionCode: DEMO.registrations.ratingCreate.code },
-      },
-      suggestionDoesNotMatchScore: {
-        summary: "Demo lỗi 400 - gợi ý không đúng số sao",
+      missingOfficerName: {
+        summary: "Demo lỗi 400 - thiếu tên cán bộ",
         value: {
-          receptionCode: DEMO.registrations.ratingCreate.code,
-          score: 1,
+          receptionCode: "TD-20260822-002",
+          citizenName: "Nguyễn Văn An",
+          counterCode: "QUAY_2",
+          receptionDate: "2026-08-22",
+          timeSlot: "08:30 - 09:30",
+          workingContent: "Hướng dẫn thủ tục hành chính",
+          score: 5,
           selectedSuggestions: ["Cán bộ rất tận tình và chuyên nghiệp"],
+          comment: "Hài lòng",
         },
       },
     },
     responses: {
-      200: successDemo("Gửi đánh giá tiếp dân thành công", {
-        id: ratingDemo.id,
-        receptionCode: ratingDemo.receptionCode,
-        score: ratingDemo.score,
-        selectedSuggestions: ratingDemo.selectedSuggestions,
-        comment: ratingDemo.comment,
-        createdAt: ratingDemo.ratedAt,
-      }),
-      400: {
-        missingData: errorDemo(
-          "Demo 400 - Thiếu dữ liệu bắt buộc",
-          "Dữ liệu không hợp lệ",
-          [{ field: "score", message: "Điểm đánh giá là bắt buộc" }]
-        ),
-        invalidSuggestion: errorDemo(
-          "Demo 400 - Gợi ý không đúng số sao",
-          "Gợi ý đã chọn không phù hợp với số sao đánh giá"
-        ),
-      },
-      404: errorDemo(
-        "Demo 404 - Mã tiếp dân không tồn tại",
-        "Không tìm thấy mã tiếp dân"
+      200: successDemo("Gửi đánh giá tiếp dân thành công", ratingDemo),
+      400: errorDemo(
+        "Demo 400 - Thiếu dữ liệu bắt buộc",
+        "Dữ liệu không hợp lệ",
+        [{ field: "officerName", message: "Tên cán bộ là bắt buộc" }]
       ),
-      409: {
-        notCompleted: errorDemo(
-          "Demo 409 - Buổi tiếp chưa hoàn thành",
-          "Buổi tiếp dân chưa hoàn thành để đánh giá"
-        ),
-        duplicateRating: errorDemo(
-          "Demo 409 - Đã đánh giá trước đó",
-          "Mã tiếp dân đã được đánh giá"
-        ),
-      },
+      409: errorDemo(
+        "Demo 409 - Mã tiếp dân bị trùng",
+        "Mã tiếp dân đã được đánh giá"
+      ),
     },
   },
   "GET /api/reception-ratings/configuration": {
@@ -537,6 +489,10 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
       200: successDemo("Lấy cấu hình đánh giá tiếp dân thành công", {
         scale: { min: 1, max: 5 },
         comment: { maxLength: 2000 },
+        counters: counterEnum.map((code, index) => ({
+          code,
+          name: `Quầy ${index + 1}`,
+        })),
         suggestionsByScore: {
           1: ["Cán bộ đã tiếp nhận ý kiến của tôi"],
           2: ["Cán bộ có lắng nghe ý kiến"],
@@ -551,24 +507,25 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
     parameters: { id: DEMO.ratingId },
     responses: {
       200: successDemo("Lấy chi tiết đánh giá tiếp dân thành công", {
-        id: ratingDemo.id,
-        score: ratingDemo.score,
-        selectedSuggestions: ratingDemo.selectedSuggestions,
-        comment: ratingDemo.comment,
-        ratedAt: ratingDemo.ratedAt,
+        ...ratingDemo,
+        legacyRegistrationId: null,
         registration: {
+          id: null,
           receptionCode: ratingDemo.receptionCode,
           receptionDate: ratingDemo.receptionDate,
           timeSlot: ratingDemo.timeSlot,
-          topic: ratingDemo.topic,
-          department: ratingDemo.department,
-          approvalStatus: "COMPLETED",
+          topic: ratingDemo.workingContent,
+          workingContent: ratingDemo.workingContent,
           applicant: {
-            fullName: "Nguyễn Văn An",
-            phoneNumber: "0912345678",
-            citizenId: "042204001234",
-            address: "Phường Thành Sen, tỉnh Hà Tĩnh",
+            fullName: ratingDemo.citizenName,
+            phoneNumber: null,
+            citizenId: null,
+            address: null,
           },
+          department: ratingDemo.counterCode,
+          approvalStatus: null,
+          approver: null,
+          schedule: null,
         },
       }),
       404: errorDemo(
@@ -579,9 +536,9 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
   },
   "GET /api/reception-ratings/statistics": {
     parameters: {
-      department: "QUAY_5",
-      fromDate: DEMO.dates.main,
-      toDate: DEMO.dates.main,
+      department: "QUAY_2",
+      fromDate: "2026-08-22",
+      toDate: "2026-08-22",
     },
     responses: {
       200: successDemo("Lấy thống kê đánh giá tiếp dân thành công", {
@@ -595,13 +552,16 @@ applyReceptionDemoExamples(ReceptionRatingSwagger, {
           { score: 4, count: 1 },
           { score: 5, count: 2 },
         ],
-        byDepartment: [{ department: "QUAY_3", totalRatings: 4, averageScore: 4.25 }],
+        byCounter: [
+          { counterCode: "QUAY_2", totalRatings: 4, averageScore: 4.25 },
+        ],
+        byDepartment: [
+          { department: "QUAY_2", totalRatings: 4, averageScore: 4.25 },
+        ],
+        byOfficer: [
+          { officerName: "Trần Thị Bình", totalRatings: 4, averageScore: 4.25 },
+        ],
       }),
-      400: errorDemo(
-        "Demo 400 - Quầy không hợp lệ",
-        "Dữ liệu không hợp lệ",
-        [{ field: "department", message: "Bộ phận phải từ QUAY_1 đến QUAY_8" }]
-      ),
     },
   },
 });

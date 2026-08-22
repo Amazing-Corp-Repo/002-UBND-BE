@@ -80,8 +80,8 @@ describe("Reception Swagger demo examples", () => {
     );
     assert.equal(
       ReceptionRatingSwagger["/api/reception-ratings"].post.requestBody.content["application/json"]
-        .examples.validFiveStarRating.value.receptionCode,
-      DEMO.registrations.ratingCreate.code
+        .examples.validManualRating.value.receptionCode,
+      "TD-20260822-001"
     );
     assert.equal(
       parameter(ReceptionScheduleManagementSwagger["/api/reception-schedules/management/{id}"].delete, "id"),
@@ -107,8 +107,8 @@ describe("Reception Swagger demo examples", () => {
 
     assert.ok(registrationExamples.validRegistration);
     assert.ok(registrationExamples.missingRequiredFields);
-    assert.ok(ratingExamples.validFiveStarRating);
-    assert.ok(ratingExamples.suggestionDoesNotMatchScore);
+    assert.ok(ratingExamples.validManualRating);
+    assert.ok(ratingExamples.missingOfficerName);
     assert.ok(approvalExamples.validCounter);
     assert.ok(approvalExamples.invalidCounter);
     assert.ok(statusExamples.activateSchedule);
@@ -129,8 +129,7 @@ describe("Reception Swagger demo examples", () => {
 
     assert.ok(registrationConflict.duplicateRegistration);
     assert.ok(registrationConflict.fullSlot);
-    assert.ok(ratingConflict.notCompleted);
-    assert.ok(ratingConflict.duplicateRating);
+    assert.ok(ratingConflict.error409);
     assert.ok(deleteConflict.activeSchedule);
     assert.ok(deleteConflict.heldRegistration);
   });

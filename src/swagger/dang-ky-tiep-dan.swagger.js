@@ -463,9 +463,10 @@ const DangKyTiepDanSwagger = {
   "/api/reception-registrations/rating-lookup/{receptionCode}": {
     get: {
       tags: ["ReceptionRegistration"],
-      summary: "Tra cứu đăng ký đã hoàn thành để đánh giá trên iPad",
+      deprecated: true,
+      summary: "[Luồng cũ] Tra cứu đăng ký đã hoàn thành để đánh giá trên iPad",
       description:
-        "API công khai dành cho iPad. Chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá. Giới hạn riêng 60 lượt tra mã trong 10 phút cho mỗi IP.",
+        "API luồng cũ được giữ nguyên để tương thích và không còn được iPad mới sử dụng. Luồng mới nhập thủ công toàn bộ thông tin qua POST /api/reception-ratings. API này vẫn chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá. Giới hạn riêng 60 lượt tra mã trong 10 phút cho mỗi IP.",
       parameters: [
         {
           name: "receptionCode",

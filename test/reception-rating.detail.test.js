@@ -12,29 +12,19 @@ const ratingId = "123e4567-e89b-42d3-a456-426614174000";
 const originalFindDetailById = ReceptionRatingRepository.findDetailById;
 const rating = {
   id: ratingId,
+  id_dang_ky_tiep_dan: null,
+  ma_tiep_dan: "TD-20260822-001",
+  ten_nguoi_dan: "Nguyễn Văn An",
+  ten_can_bo: "Trần Thị Bình",
+  ma_quay: "QUAY_1",
+  ngay_tiep_dan: new Date("2026-08-22T00:00:00.000Z"),
+  khung_gio: "08:00 - 09:00",
+  noi_dung_lam_viec: "Hướng dẫn thủ tục",
   diem_tong: 5,
   ly_do: ["Cán bộ rất tận tình và chuyên nghiệp"],
   nhan_xet: "Tôi rất hài lòng",
   thoi_gian_tao: new Date(),
-  dang_ky_tiep_dan: {
-    id: "223e4567-e89b-42d3-a456-426614174000",
-    loai: "COUNTER_RECEPTION",
-    ma_tiep_dan: "A00123",
-    ngay: new Date("2099-08-20T00:00:00.000Z"),
-    slot: "08:00 - 09:00",
-    chu_de: "Hướng dẫn thủ tục",
-    ly_do: "Nội dung do người dân gửi",
-    ho_ten: "Nguyễn Văn An",
-    sdt: "0912345678",
-    cccd: "042204001234",
-    dia_chi: "Thành phố Hà Tĩnh",
-    bo_phan: "QUAY_1",
-    trang_thai: "COMPLETED",
-    ten_lanh_dao: "Lãnh đạo A",
-    chuc_vu_lanh_dao: "LEADER",
-    thoi_gian_cap_nhat: new Date(),
-    lich_tiep_dan: null,
-  },
+  dang_ky_tiep_dan: null,
 };
 
 const createToken = (permissions) =>
@@ -83,7 +73,7 @@ describe("GET /api/reception-ratings/:id", () => {
     );
   });
 
-  it("returns rating and original registration details", async () => {
+  it("returns the full manual rating without a registration relation", async () => {
     const server = createTestServer();
     const { port } = server.address();
     try {
@@ -99,8 +89,10 @@ describe("GET /api/reception-ratings/:id", () => {
 
       assert.equal(response.status, 200);
       assert.equal(body.data.score, 5);
-      assert.equal(body.data.registration.receptionCode, "A00123");
-      assert.equal(body.data.registration.applicant.citizenId, "042204001234");
+      assert.equal(body.data.receptionCode, "TD-20260822-001");
+      assert.equal(body.data.officerName, "Trần Thị Bình");
+      assert.equal(body.data.registration.receptionCode, "TD-20260822-001");
+      assert.equal(body.data.registration.applicant.citizenId, null);
     } finally {
       server.close();
     }
@@ -159,8 +151,8 @@ describe("GET /api/reception-ratings/:id", () => {
   it("returns 404 when the rating is not for counter reception", async () => {
     ReceptionRatingRepository.findDetailById = async () => ({
       ...rating,
+      id_dang_ky_tiep_dan: "223e4567-e89b-42d3-a456-426614174000",
       dang_ky_tiep_dan: {
-        ...rating.dang_ky_tiep_dan,
         loai: "LEADER_MEETING",
       },
     });

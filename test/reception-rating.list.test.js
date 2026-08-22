@@ -11,18 +11,17 @@ import jwtUtils from "../src/utils/jwt.util.js";
 const originalFindAllForLeader = ReceptionRatingRepository.findAllForLeader;
 const rating = {
   id: "123e4567-e89b-42d3-a456-426614174000",
+  ma_tiep_dan: "TD-20260822-001",
+  ten_nguoi_dan: "Nguyễn Văn An",
+  ten_can_bo: "Trần Thị Bình",
+  ma_quay: "QUAY_1",
+  ngay_tiep_dan: new Date("2026-08-22T00:00:00.000Z"),
+  khung_gio: "08:00 - 09:00",
+  noi_dung_lam_viec: "Hướng dẫn thủ tục",
   diem_tong: 5,
   ly_do: ["Cán bộ rất tận tình và chuyên nghiệp"],
   nhan_xet: "Tôi rất hài lòng",
   thoi_gian_tao: new Date(),
-  dang_ky_tiep_dan: {
-    ma_tiep_dan: "A00123",
-    ho_ten: "Nguyễn Văn An",
-    bo_phan: "QUAY_1",
-    ngay: new Date("2099-08-20T00:00:00.000Z"),
-    slot: "08:00 - 09:00",
-    chu_de: "Hướng dẫn thủ tục",
-  },
 };
 
 const createToken = (permissions) =>
@@ -88,7 +87,10 @@ describe("GET /api/reception-ratings", () => {
       const body = await response.json();
 
       assert.equal(response.status, 200);
-      assert.equal(body.data[0].receptionCode, "A00123");
+      assert.equal(body.data[0].receptionCode, "TD-20260822-001");
+      assert.equal(body.data[0].officerName, "Trần Thị Bình");
+      assert.equal(body.data[0].counterCode, "QUAY_1");
+      assert.equal(body.data[0].workingContent, "Hướng dẫn thủ tục");
       assert.equal(body.data[0].score, 5);
       assert.equal(body.pagination.totalItems, 1);
     } finally {
