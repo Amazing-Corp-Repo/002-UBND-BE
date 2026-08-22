@@ -99,6 +99,34 @@ const ThuVienSwagger = {
       responses: {},
     },
   },
+  "/api/tai-lieu-van-hoa/approve/{id}": {
+    put: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Phê duyệt tài liệu văn hóa",
+      description: "Chuyển trạng thái từ CHO_DUYET sang DA_DUYET. Ghi nhận người duyệt và thời gian duyệt.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/reject/{id}": {
+    put: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Từ chối tài liệu văn hóa",
+      description: "Chuyển trạng thái từ CHO_DUYET về NHAP. Có thể ghi lý do từ chối.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
+      requestBody: {
+        content: { "application/json": { schema: ThuVienSchemas.RejectTaiLieuRequest } },
+        required: false,
+      },
+      responses: {},
+    },
+  },
   "/api/tai-lieu-van-hoa/statistics": {
     get: {
       tags: ["TaiLieuVanHoa"],
@@ -234,6 +262,34 @@ const ThuVienSwagger = {
       requestBody: {
         content: { "application/json": { schema: ThuVienSchemas.AiLearnRequest } },
         required: true,
+      },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/approve/{id}": {
+    put: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Phê duyệt tài liệu pháp luật",
+      description: "Chuyển trạng thái từ CHO_DUYET sang DA_DUYET. Ghi nhận người duyệt và thời gian duyệt.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/reject/{id}": {
+    put: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Từ chối tài liệu pháp luật",
+      description: "Chuyển trạng thái từ CHO_DUYET về NHAP. Có thể ghi lý do từ chối.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
+      requestBody: {
+        content: { "application/json": { schema: ThuVienSchemas.RejectTaiLieuRequest } },
+        required: false,
       },
       responses: {},
     },

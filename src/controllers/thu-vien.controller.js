@@ -56,6 +56,21 @@ const ThuVienController = {
     return successResponse(res, result, "Đồng bộ AI thành công");
   },
 
+  async approve(req, res) {
+    const { id } = req.params;
+    const currentUser = req.payload.userId;
+    const result = await ThuVienService.approve(id, currentUser);
+    return successResponse(res, result, "Phê duyệt tài liệu thành công");
+  },
+
+  async reject(req, res) {
+    const { id } = req.params;
+    const { lyDoTuChoi } = req.body;
+    const currentUser = req.payload.userId;
+    const result = await ThuVienService.reject(id, lyDoTuChoi, currentUser);
+    return successResponse(res, result, "Từ chối tài liệu thành công");
+  },
+
   async getStatistics(req, res) {
     const loai = req.loai;
     const result = await ThuVienService.getStatistics(loai);

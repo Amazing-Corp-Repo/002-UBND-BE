@@ -9,6 +9,8 @@ export const PERMISSION = {
   TL_AI_LEARN: "TL_AI_LEARN",
   TL_DOWNLOAD: "TL_DOWNLOAD",
   TL_EXPORT: "TL_EXPORT",
+  TL_APPROVE: "TL_APPROVE",
+  TL_REJECT: "TL_REJECT",
 
   // Cơ sở dịch vụ công
   CSV_CREATE: "CSV_CREATE",
@@ -141,6 +143,8 @@ export const PERMISSION_DESC = {
   TL_AI_LEARN: "Đồng bộ AI tài liệu",
   TL_DOWNLOAD: "Tải xuống tài liệu",
   TL_EXPORT: "Xuất danh sách tài liệu",
+  TL_APPROVE: "Phê duyệt tài liệu",
+  TL_REJECT: "Từ chối tài liệu",
 
   CSV_CREATE: "Tạo cơ sở dịch vụ công",
   CSV_UPDATE: "Cập nhật cơ sở dịch vụ công",

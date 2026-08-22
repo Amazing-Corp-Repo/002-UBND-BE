@@ -9,6 +9,8 @@ import {
   UpdatePhapLuatRequest,
   UpdateStatusTaiLieuRequest,
   AiLearnRequest,
+  ApproveTaiLieuRequest,
+  RejectTaiLieuRequest,
 } from "../validators/thu-vien.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
@@ -54,6 +56,26 @@ taiLieuPhapLuatRouter.post(
   validate(AiLearnRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_AI_LEARN),
   ThuVienController.aiLearn,
+);
+
+// Phê duyệt tài liệu
+taiLieuPhapLuatRouter.put(
+  "/approve/:id",
+  authenticate,
+  authorize([PERMISSION.TL_APPROVE]),
+  validate(ApproveTaiLieuRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_APPROVE),
+  ThuVienController.approve,
+);
+
+// Từ chối tài liệu
+taiLieuPhapLuatRouter.put(
+  "/reject/:id",
+  authenticate,
+  authorize([PERMISSION.TL_REJECT]),
+  validate(RejectTaiLieuRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_REJECT),
+  ThuVienController.reject,
 );
 
 // === PARAM ROUTES (có :id) ===

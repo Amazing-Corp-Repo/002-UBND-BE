@@ -205,6 +205,46 @@ const ThuVienService = {
     return ThuVienRepository.getById(id);
   },
 
+  async approve(id, currentUser) {
+    const existing = await ThuVienRepository.findById(id);
+    if (!existing) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    if (existing.trang_thai !== "CHO_DUYET") {
+      throw new BaseError(400, "Chỉ có thể phê duyệt tài liệu đang chờ duyệt");
+    }
+
+    const updateData = {
+      trang_thai: "DA_DUYET",
+      nguoi_duyet: currentUser,
+      thoi_gian_duyet: new Date().toISOString(),
+      nguoi_cap_nhat: currentUser,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    };
+
+    await ThuVienRepository.update(id, updateData);
+    return ThuVienRepository.getById(id);
+  },
+
+  async reject(id, lyDoTuChoi, currentUser) {
+    const existing = await ThuVienRepository.findById(id);
+    if (!existing) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    if (existing.trang_thai !== "CHO_DUYET") {
+      throw new BaseError(400, "Chỉ có thể từ chối tài liệu đang chờ duyệt");
+    }
+
+    const updateData = {
+      trang_thai: "NHAP",
+      nguoi_cap_nhat: currentUser,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    };
+
+    await ThuVienRepository.update(id, updateData);
+    return ThuVienRepository.getById(id);
+  },
+
   async getStatistics(loai) {
     return ThuVienRepository.getStatistics(loai);
   },

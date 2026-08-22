@@ -154,3 +154,13 @@ export const AiLearnRequest = Joi.object({
       "any.required": "Hành động là bắt buộc",
     }),
 });
+
+export const ApproveTaiLieuRequest = Joi.object({
+  // Không yêu cầu body, chỉ cần id trên URL
+});
+
+export const RejectTaiLieuRequest = Joi.object({
+  lyDoTuChoi: Joi.string().trim().max(500).optional().allow(null, "").messages({
+    "string.max": "Lý do từ chối không được vượt quá 500 ký tự",
+  }),
+});
