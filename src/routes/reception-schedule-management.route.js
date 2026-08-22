@@ -8,6 +8,7 @@ import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
   CreateLichTiepDanRequest,
+  ImportReceptionScheduleQuery,
   GetReceptionScheduleManagementQuery,
   GetReceptionScheduleManagementPaginationQuery,
   GetReceptionScheduleManagementCountQuery,
@@ -25,6 +26,7 @@ receptionScheduleManagementRouter.post(
   "/import",
   authenticate,
   authorize([PERMISSION.LTD_CREATE]),
+  validateQuery(ImportReceptionScheduleQuery),
   createUploader({
     type: UPLOAD_TYPE.LICH_TIEP_DAN,
     fieldName: "file",

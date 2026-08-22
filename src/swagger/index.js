@@ -28,6 +28,7 @@ import ReceptionCounterAssignmentSwagger from './reception-counter-assignment.sw
 import LeaderMeetingScheduleSwagger from './leader-meeting-schedule.swagger.js';
 import LeaderMeetingRegistrationSwagger from './leader-meeting-registration.swagger.js';
 import LeaderMeetingRatingSwagger from './leader-meeting-rating.swagger.js';
+import ThuVienSwagger from './thu-vien.swagger.js';
 
 const swaggerDocument = {
 
@@ -73,7 +74,8 @@ const swaggerDocument = {
         ...ReceptionCounterAssignmentSwagger,
         ...LeaderMeetingScheduleSwagger,
         ...LeaderMeetingRegistrationSwagger,
-        ...LeaderMeetingRatingSwagger
+        ...LeaderMeetingRatingSwagger,
+        ...ThuVienSwagger,
     },
 
     components: {

@@ -12,7 +12,10 @@ import ReceptionScheduleManagementRepository from "../src/repositories/reception
 import UserRepository from "../src/repositories/user.repository.js";
 import receptionScheduleManagementRouter from "../src/routes/reception-schedule-management.route.js";
 import FileService from "../src/services/file.service.js";
-import ReceptionScheduleManagementService from "../src/services/reception-schedule-management.service.js";
+import ReceptionScheduleManagementService, {
+  expandImportRowsForAllSessionCounters,
+  randomizeImportOfficerAssignments,
+} from "../src/services/reception-schedule-management.service.js";
 import ReceptionScheduleManagementSwagger from "../src/swagger/reception-schedule-management.swagger.js";
 import jwtUtils from "../src/utils/jwt.util.js";
 
@@ -23,6 +26,8 @@ const originalMethods = {
   findActiveCountersByCodes:
     ReceptionScheduleManagementRepository.findActiveCountersByCodes,
   createManyWithSlots: ReceptionScheduleManagementRepository.createManyWithSlots,
+  overwriteManyWithSlots:
+    ReceptionScheduleManagementRepository.overwriteManyWithSlots,
   findActiveByUsernames: UserRepository.findActiveByUsernames,
   auditCreate: prisma.audit_logs.create,
 };
@@ -86,6 +91,10 @@ beforeEach(() => {
   ReceptionScheduleManagementRepository.createManyWithSlots = async (records) => {
     capturedRecords = records;
   };
+  ReceptionScheduleManagementRepository.overwriteManyWithSlots = async (records) => {
+    capturedRecords = records;
+    return { status: "OVERWRITTEN", overwrittenCount: 1 };
+  };
   prisma.audit_logs.create = async () => ({});
 });
 
@@ -97,11 +106,113 @@ after(() => {
     originalMethods.findActiveCountersByCodes;
   ReceptionScheduleManagementRepository.createManyWithSlots =
     originalMethods.createManyWithSlots;
+  ReceptionScheduleManagementRepository.overwriteManyWithSlots =
+    originalMethods.overwriteManyWithSlots;
   UserRepository.findActiveByUsernames = originalMethods.findActiveByUsernames;
   prisma.audit_logs.create = originalMethods.auditCreate;
 });
 
 describe("POST /api/reception-schedules/management/import", () => {
+  it("randomly assigns the imported officer pool to counters in the same morning", () => {
+    const rows = [
+      {
+        receptionDate: "2099-08-25",
+        location: "Bộ phận tiếp công dân",
+        periods: [{ startTime: "07:30", endTime: "11:30" }],
+        counterCode: "QUAY_1",
+        officerUsername: "canbo1",
+        officerDisplayName: "Cán bộ 1",
+      },
+      {
+        receptionDate: "2099-08-25",
+        location: "Bộ phận tiếp công dân",
+        periods: [{ startTime: "07:30", endTime: "11:30" }],
+        counterCode: "QUAY_2",
+        officerUsername: "canbo2",
+        officerDisplayName: "Cán bộ 2",
+      },
+    ];
+
+    const result = randomizeImportOfficerAssignments(rows, () => 0);
+
+    assert.equal(result[0].counterCode, "QUAY_1");
+    assert.equal(result[0].officerUsername, "canbo2");
+    assert.equal(result[1].counterCode, "QUAY_2");
+    assert.equal(result[1].officerUsername, "canbo1");
+    assert.equal(rows[0].officerUsername, "canbo1");
+  });
+
+  it("keeps one assignment for the whole morning and randomizes the afternoon independently", () => {
+    const common = {
+      receptionDate: "2099-08-25",
+      location: "Bộ phận tiếp công dân",
+    };
+    const rows = [
+      { ...common, periods: [{ startTime: "07:30", endTime: "11:30" }], counterCode: "QUAY_1", officerUsername: "canbo1", officerDisplayName: "Cán bộ 1" },
+      { ...common, periods: [{ startTime: "08:30", endTime: "11:30" }], counterCode: "QUAY_2", officerUsername: "canbo2", officerDisplayName: "Cán bộ 2" },
+      { ...common, periods: [{ startTime: "13:30", endTime: "16:30" }], counterCode: "QUAY_1", officerUsername: "canbo1", officerDisplayName: "Cán bộ 1" },
+      { ...common, periods: [{ startTime: "14:30", endTime: "16:30" }], counterCode: "QUAY_2", officerUsername: "canbo2", officerDisplayName: "Cán bộ 2" },
+    ];
+    const randomValues = [0, 0.9];
+
+    const result = randomizeImportOfficerAssignments(
+      rows,
+      () => randomValues.shift()
+    );
+
+    assert.equal(result[0].officerUsername, "canbo2");
+    assert.equal(result[1].officerUsername, "canbo1");
+    assert.equal(result[2].officerUsername, "canbo1");
+    assert.equal(result[3].officerUsername, "canbo2");
+  });
+
+  it("fills every imported counter in every session using the workbook officer pool", () => {
+    const rows = [
+      {
+        rowNumber: 2,
+        receptionDate: "2099-08-25",
+        location: "Bộ phận tiếp công dân",
+        periods: [{ startTime: "07:30", endTime: "11:30" }],
+        counterCode: "QUAY_1",
+        officerUsername: "canbo1",
+        officerDisplayName: "Cán bộ 1",
+      },
+      {
+        rowNumber: 3,
+        receptionDate: "2099-08-25",
+        location: "Bộ phận tiếp công dân",
+        periods: [{ startTime: "13:30", endTime: "16:30" }],
+        counterCode: "QUAY_2",
+        officerUsername: "canbo2",
+        officerDisplayName: "Cán bộ 2",
+      },
+    ];
+    const users = [
+      { id: "officer-1", ten_dang_nhap: "canbo1", ho_va_ten: "Cán bộ 1" },
+      { id: "officer-2", ten_dang_nhap: "canbo2", ho_va_ten: "Cán bộ 2" },
+    ];
+    const counters = [
+      { id: "counter-1", ma_quay: "QUAY_1" },
+      { id: "counter-2", ma_quay: "QUAY_2" },
+    ];
+
+    const result = expandImportRowsForAllSessionCounters(
+      { rows, users, counters },
+      () => 0
+    );
+    const morningRows = result.filter(
+      (row) => row.periods[0].startTime === "07:30"
+    );
+    const afternoonRows = result.filter(
+      (row) => row.periods[0].startTime === "13:30"
+    );
+
+    assert.deepEqual(morningRows.map((row) => row.counterCode), ["QUAY_1", "QUAY_2"]);
+    assert.deepEqual(afternoonRows.map((row) => row.counterCode), ["QUAY_1", "QUAY_2"]);
+    assert.equal(new Set(morningRows.map((row) => row.officerUsername)).size, 2);
+    assert.equal(new Set(afternoonRows.map((row) => row.officerUsername)).size, 2);
+  });
+
   it("documents file limits, transaction behavior and responses in Swagger", () => {
     const operation =
       ReceptionScheduleManagementSwagger[
@@ -113,6 +224,7 @@ describe("POST /api/reception-schedules/management/import", () => {
       "file"
     );
     assert.ok(operation.description.includes("một transaction"));
+    assert.ok(operation.description.includes("ngẫu nhiên"));
     assert.ok(operation.responses[200]);
     assert.ok(operation.responses[400]);
     assert.ok(operation.responses[401]);
@@ -130,6 +242,22 @@ describe("POST /api/reception-schedules/management/import", () => {
     assert.equal(result.importedRowCount, 1);
     assert.equal(result.totalCounterSlots, 4);
     assert.equal(result.totalAssignments, 4);
+    assert.equal(result.dateFrom, "2099-08-25");
+    assert.equal(result.dateTo, "2099-08-25");
+    assert.deepEqual(result.importedDates, ["2099-08-25"]);
+    assert.deepEqual(result.importedRows[0], {
+      rowNumber: 2,
+      receptionDate: "2099-08-25",
+      startTime: "07:30",
+      endTime: "11:30",
+      counterCode: "QUAY_1",
+      counterName: "Quầy số 1",
+      officerUsername: "canbo",
+      officerFullName: "Nguyễn Văn An",
+      capacity: 2,
+      location: "Bộ phận tiếp công dân",
+      note: "Lịch định kỳ",
+    });
     assert.equal(capturedRecords.length, 1);
     assert.equal(capturedRecords[0].slotRows.length, 4);
     assert.equal(capturedRecords[0].assignmentRows.length, 4);
@@ -182,6 +310,42 @@ describe("POST /api/reception-schedules/management/import", () => {
     assert.equal(capturedRecords.length, 1);
   });
 
+  it("overwrites an existing schedule and randomizes assignments when overwrite is true", async () => {
+    ReceptionScheduleManagementRepository.findImportConflicts = async () => {
+      throw new Error("Không được kiểm tra xung đột ngoài transaction ghi đè");
+    };
+
+    const result = await ReceptionScheduleManagementService.handleImport(
+      [{ path: "mock.xlsx" }],
+      userId,
+      true
+    );
+
+    assert.equal(result.assignmentMode, "RANDOM");
+    assert.equal(result.assignmentScope, "SESSION");
+    assert.equal(result.overwriteApplied, true);
+    assert.equal(result.overwrittenCount, 1);
+    assert.equal(capturedRecords.length, 1);
+  });
+
+  it("rejects overwrite when the existing schedule has registrations", async () => {
+    ReceptionScheduleManagementRepository.overwriteManyWithSlots = async () => ({
+      status: "HAS_REGISTRATIONS",
+      registrationCount: 1,
+    });
+
+    await assert.rejects(
+      () => ReceptionScheduleManagementService.handleImport(
+        [{ path: "mock.xlsx" }],
+        userId,
+        true
+      ),
+      (error) =>
+        error.statusCode === 409 && error.message.includes("đã có đơn đăng ký")
+    );
+    assert.equal(capturedRecords.length, 0);
+  });
+
   it("keeps typed spreadsheet dates and times as Vietnam wall-clock values", async () => {
     FileService.readSpreadsheetFile = async () => [{
       ...validRows[0],
@@ -210,6 +374,30 @@ describe("POST /api/reception-schedules/management/import", () => {
     const worksheet = XLSX.utils.json_to_sheet(validRows);
     XLSX.utils.book_append_sheet(workbook, worksheet, "Lịch tiếp dân");
     XLSX.writeFile(workbook, filePath, { bookType: "biff8" });
+    FileService.readSpreadsheetFile = originalMethods.readSpreadsheetFile;
+
+    const rows = await FileService.readSpreadsheetFile(filePath);
+
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0]["Tài khoản cán bộ"], "canbo");
+    await assert.rejects(() => fs.access(tempDirectory));
+  });
+
+  it("reads a multi-sheet .xlsx file generated by SheetJS", async () => {
+    const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "ubnd-import-"));
+    const filePath = path.join(tempDirectory, "reception-schedules.xlsx");
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(validRows),
+      "LichTiepDan"
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Hướng dẫn nhập lịch"]]),
+      "Hướng dẫn"
+    );
+    XLSX.writeFile(workbook, filePath, { bookType: "xlsx" });
     FileService.readSpreadsheetFile = originalMethods.readSpreadsheetFile;
 
     const rows = await FileService.readSpreadsheetFile(filePath);

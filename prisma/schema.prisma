@@ -1005,7 +1005,7 @@ model thu_vien_danh_muc {
 model thu_vien_tai_lieu {
   id                     String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   id_danh_muc            String?                   @db.Uuid
-  loai                   String?                   @db.VarChar(30) // SACH | TAI_LIEU | VAN_BAN | BAN_DO | PHAP_LUAT
+  loai                   String?                   @db.VarChar(30) // SACH | TAI_LIEU | VAN_BAN | BAN_DO | PHAP_LUAT | VAN_HOA
   tieu_de                String?                   @db.VarChar(255)
   tac_gia                String?                   @db.VarChar(255)
   mo_ta                  String?
@@ -1027,6 +1027,13 @@ model thu_vien_tai_lieu {
   thoi_gian_duyet        DateTime?                 @db.Timestamp(6)
   ngay_dang              Int?
   ngon_ngu               String?                   @db.VarChar(10)
+  // === THÊM MỚI — Task 4: Kho tư liệu & Tra cứu văn bản ===
+  luot_xem               BigInt?                   @default(0)    // viewCount
+  ai_da_hoc              Boolean?                  @default(false) // AI learned
+  thoi_gian_ai_hoc       DateTime?                 @db.Timestamp(6) // thời điểm AI học
+  ngay_het_han           DateTime?                 @db.Date       // expirationDate — cho pháp luật
+  dia_chi                String?                   @db.VarChar(500) // address — cho văn hóa
+  ten_di_tich            String?                   @db.VarChar(255) // relicName — cho văn hóa
   is_active              Boolean?                  @default(true)
   is_delete              Boolean?                  @default(false)
   nguoi_tao              String?                   @db.Uuid
@@ -1037,12 +1044,35 @@ model thu_vien_tai_lieu {
   thu_vien_tai_lieu_tag  thu_vien_tai_lieu_tag[]
   thu_vien_tai_lieu_file thu_vien_tai_lieu_file[]
   thu_vien_tai_lieu_quyen thu_vien_tai_lieu_quyen[]
+  thu_vien_tai_lieu_media thu_vien_tai_lieu_media[] // THÊM MỚI — ảnh/video đính kèm
 
   @@index([loai], map: "idx_thu_vien_tai_lieu_loai")
   @@index([trang_thai], map: "idx_thu_vien_tai_lieu_trang_thai")
   @@index([pham_vi], map: "idx_thu_vien_tai_lieu_pham_vi")
   @@index([is_active], map: "idx_thu_vien_tai_lieu_is_active")
   @@index([is_delete], map: "idx_thu_vien_tai_lieu_is_delete")
+  @@index([luot_xem], map: "idx_thu_vien_tai_lieu_luot_xem")          // THÊM MỚI
+  @@index([ai_da_hoc], map: "idx_thu_vien_tai_lieu_ai_da_hoc")        // THÊM MỚI
+}
+
+// Ảnh / Video đính kèm tài liệu — dành cho tài liệu văn hóa - lịch sử
+model thu_vien_tai_lieu_media {
+  id                String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_tai_lieu       String    @db.Uuid
+  loai              String    @db.VarChar(10)           // IMAGE | VIDEO
+  ten_file_goc      String?   @db.VarChar(255)          // originalName
+  url               String?   @db.VarChar(500)          // đường dẫn private
+  kich_thuoc        BigInt?                             // dung lượng byte
+  mime_type         String?   @db.VarChar(50)           // image/jpeg, video/mp4
+  is_active         Boolean?  @default(true)
+  is_delete         Boolean?  @default(false)
+  nguoi_tao         String?   @db.Uuid
+  thoi_gian_tao     DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+
+  thu_vien_tai_lieu thu_vien_tai_lieu @relation(fields: [id_tai_lieu], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tl_media_tai_lieu")
+
+  @@index([id_tai_lieu], map: "idx_tl_media_id_tai_lieu")
+  @@map("thu_vien_tai_lieu_media")
 }
 
 // Thẻ phân loại tài liệu

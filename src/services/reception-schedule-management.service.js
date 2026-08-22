@@ -111,6 +111,126 @@ const normalizeImportRow = (item, index) => {
   };
 };
 
+const shuffle = (items, random) => {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+  return result;
+};
+
+const getImportSessionKey = (row) => {
+  const periodKey = row.periods
+    .map(({ startTime, endTime }) => `${startTime}-${endTime}`)
+    .join("|");
+  const startsInMorning = row.periods.every(
+    ({ startTime }) => toMinutes(startTime) < 12 * 60
+  );
+  const endsInMorning = row.periods.every(
+    ({ endTime }) => toMinutes(endTime) <= 12 * 60
+  );
+  const startsInAfternoon = row.periods.every(
+    ({ startTime }) => toMinutes(startTime) >= 12 * 60
+  );
+  const session = startsInMorning && endsInMorning
+    ? "MORNING"
+    : startsInAfternoon
+      ? "AFTERNOON"
+      : `CUSTOM:${periodKey}`;
+  return [
+    row.receptionDate,
+    row.location.toLocaleLowerCase("vi"),
+    session,
+  ].join("::");
+};
+
+export const randomizeImportOfficerAssignments = (
+  rows,
+  random = Math.random
+) => {
+  const randomizedRows = rows.map((row) => ({ ...row }));
+  const groups = new Map();
+
+  randomizedRows.forEach((row, index) => {
+    const groupKey = getImportSessionKey(row);
+    const indexes = groups.get(groupKey) || [];
+    indexes.push(index);
+    groups.set(groupKey, indexes);
+  });
+
+  groups.forEach((indexes) => {
+    const officers = shuffle(
+      indexes.map((index) => ({
+        officerUsername: randomizedRows[index].officerUsername,
+        officerDisplayName: randomizedRows[index].officerDisplayName,
+      })),
+      random
+    );
+
+    indexes.forEach((rowIndex, officerIndex) => {
+      randomizedRows[rowIndex].officerUsername =
+        officers[officerIndex].officerUsername;
+      randomizedRows[rowIndex].officerDisplayName =
+        officers[officerIndex].officerDisplayName;
+    });
+  });
+
+  return randomizedRows;
+};
+
+export const expandImportRowsForAllSessionCounters = (
+  { rows, users, counters },
+  random = Math.random
+) => {
+  if (users.length < counters.length) {
+    throw new BaseError(
+      400,
+      `File chỉ có ${users.length} cán bộ hợp lệ nhưng cần ít nhất ${counters.length} cán bộ để xếp đủ các quầy trong mỗi buổi`
+    );
+  }
+
+  const groups = new Map();
+  rows.forEach((row) => {
+    const key = getImportSessionKey(row);
+    const groupRows = groups.get(key) || [];
+    groupRows.push(row);
+    groups.set(key, groupRows);
+  });
+
+  return [...groups.values()].flatMap((groupRows) => {
+    const shuffledUsers = shuffle(users, random).slice(0, counters.length);
+    const starts = groupRows.flatMap((row) =>
+      row.periods.map(({ startTime }) => startTime)
+    );
+    const ends = groupRows.flatMap((row) =>
+      row.periods.map(({ endTime }) => endTime)
+    );
+    const period = {
+      startTime: starts.sort((left, right) => toMinutes(left) - toMinutes(right))[0],
+      endTime: ends.sort((left, right) => toMinutes(right) - toMinutes(left))[0],
+    };
+    const baseRow = groupRows[0];
+
+    return counters.map((counter, index) => {
+      const sourceRow = groupRows.find(
+        (row) => row.counterCode === counter.ma_quay
+      );
+      const officer = shuffledUsers[index];
+      return {
+        ...baseRow,
+        rowNumber: sourceRow?.rowNumber ?? null,
+        counterCode: counter.ma_quay,
+        officerUsername: officer.ten_dang_nhap,
+        officerDisplayName: officer.ho_va_ten || officer.ten_dang_nhap,
+        capacity: sourceRow?.capacity ?? null,
+        note: sourceRow?.note ?? baseRow.note,
+        periods: [period],
+      };
+    });
+  });
+};
+
 const hasPermission = (user, permissionCode) =>
   user.user_roles?.some(
     ({ roles }) =>
@@ -231,6 +351,38 @@ const buildImportRecords = ({ rows, users, counters, currentUser }) => {
       },
       slotRows: group.slotRows,
       assignmentRows: group.assignmentRows,
+    };
+  });
+};
+
+const buildImportedRowDetails = ({ rows, users, counters }) => {
+  const userMap = new Map(
+    users.map((user) => [user.ten_dang_nhap.toLocaleLowerCase("vi"), user])
+  );
+  const counterMap = new Map(
+    counters.map((counter) => [counter.ma_quay.toUpperCase(), counter])
+  );
+
+  return rows.map((row) => {
+    const user = userMap.get(row.officerUsername.toLocaleLowerCase("vi"));
+    const counter = counterMap.get(row.counterCode);
+    const period = row.periods[0];
+
+    return {
+      rowNumber: row.rowNumber,
+      receptionDate: row.receptionDate,
+      startTime: period.startTime,
+      endTime: period.endTime,
+      counterCode: counter.ma_quay,
+      counterName: counter.ten_quay,
+      officerUsername: user.ten_dang_nhap,
+      officerFullName: user.ho_va_ten || user.ten_dang_nhap,
+      capacity:
+        row.capacity ??
+        counter.suc_chua_mac_dinh ??
+        DEFAULT_RECEPTION_COUNTER_CAPACITY,
+      location: row.location,
+      note: row.note,
     };
   });
 };
@@ -477,7 +629,7 @@ const ReceptionScheduleManagementService = {
     return RECEPTION_TEMPLATE_URL;
   },
 
-  async handleImport(files = [], currentUser) {
+  async handleImport(files = [], currentUser, overwrite = false) {
     if (!files?.length) {
       throw new BaseError(400, "File không được để trống");
     }
@@ -489,38 +641,71 @@ const ReceptionScheduleManagementService = {
       throw new BaseError(400, "File import không có dữ liệu");
     }
 
-    const rows = nonEmptyRows.map((row, index) =>
+    const sourceRows = nonEmptyRows.map((row, index) =>
       normalizeImportRow(row, index)
     );
     const [users, counters] = await Promise.all([
       UserRepository.findActiveByUsernames([
-        ...new Set(rows.map((row) => row.officerUsername)),
+        ...new Set(sourceRows.map((row) => row.officerUsername)),
       ]),
       ReceptionScheduleManagementRepository.findActiveCountersByCodes([
-        ...new Set(rows.map((row) => row.counterCode)),
+        ...new Set(sourceRows.map((row) => row.counterCode)),
       ]),
     ]);
+    buildImportRecords({ rows: sourceRows, users, counters, currentUser });
+    const rows = expandImportRowsForAllSessionCounters({
+      rows: sourceRows,
+      users,
+      counters: [...counters].sort((left, right) =>
+        left.ma_quay.localeCompare(right.ma_quay, "vi", { numeric: true })
+      ),
+    });
     const records = buildImportRecords({ rows, users, counters, currentUser });
+    const importedRows = buildImportedRowDetails({ rows, users, counters });
 
-    const conflicts =
-      await ReceptionScheduleManagementRepository.findImportConflicts(records);
-    if (conflicts.length > 0) {
-      throw new BaseError(409, "Lịch của cán bộ trong ngày tiếp dân đã tồn tại");
+    let overwrittenCount = 0;
+    if (overwrite) {
+      const overwriteResult =
+        await ReceptionScheduleManagementRepository.overwriteManyWithSlots(records);
+      if (overwriteResult.status === "HAS_REGISTRATIONS") {
+        throw new BaseError(
+          409,
+          "Không thể ghi đè lịch tiếp dân đã có đơn đăng ký"
+        );
+      }
+      overwrittenCount = overwriteResult.overwrittenCount;
+    } else {
+      const conflicts =
+        await ReceptionScheduleManagementRepository.findImportConflicts(records);
+      if (conflicts.length > 0) {
+        throw new BaseError(409, "Lịch của cán bộ trong ngày tiếp dân đã tồn tại");
+      }
+      await ReceptionScheduleManagementRepository.createManyWithSlots(records);
     }
-
-    await ReceptionScheduleManagementRepository.createManyWithSlots(records);
     const totalCounterSlots = records.reduce(
       (total, record) => total + record.slotRows.length,
       0
     );
+    const importedDates = [
+      ...new Set(importedRows.map((row) => row.receptionDate)),
+    ].sort();
     return {
+      assignmentMode: "RANDOM",
+      assignmentScope: "SESSION",
+      overwriteApplied: overwrite,
+      overwrittenCount,
       importedCount: records.length,
-      importedRowCount: rows.length,
+      importedRowCount: sourceRows.length,
+      generatedAssignmentRowCount: rows.length,
       totalCounterSlots,
       totalAssignments: records.reduce(
         (total, record) => total + record.assignmentRows.length,
         0
       ),
+      dateFrom: importedDates[0],
+      dateTo: importedDates[importedDates.length - 1],
+      importedDates,
+      importedRows,
     };
   },
 

@@ -1,4 +1,17 @@
 export const PERMISSION = {
+  // Tài liệu (Thư viện)
+  TL_CREATE: "TL_CREATE",
+  TL_UPDATE: "TL_UPDATE",
+  TL_DELETE: "TL_DELETE",
+  TL_UPDATE_STATUS: "TL_UPDATE_STATUS",
+  TL_GET_ALL: "TL_GET_ALL",
+  TL_GET_DETAIL: "TL_GET_DETAIL",
+  TL_AI_LEARN: "TL_AI_LEARN",
+  TL_DOWNLOAD: "TL_DOWNLOAD",
+  TL_EXPORT: "TL_EXPORT",
+  TL_APPROVE: "TL_APPROVE",
+  TL_REJECT: "TL_REJECT",
+
   // Cơ sở dịch vụ công
   CSV_CREATE: "CSV_CREATE",
   CSV_UPDATE: "CSV_UPDATE",
@@ -121,6 +134,18 @@ export const PERMISSION = {
 };
 
 export const PERMISSION_DESC = {
+  TL_CREATE: "Tạo tài liệu",
+  TL_UPDATE: "Cập nhật tài liệu",
+  TL_DELETE: "Xóa tài liệu",
+  TL_UPDATE_STATUS: "Cập nhật trạng thái tài liệu",
+  TL_GET_ALL: "Xem danh sách tài liệu",
+  TL_GET_DETAIL: "Xem chi tiết tài liệu",
+  TL_AI_LEARN: "Đồng bộ AI tài liệu",
+  TL_DOWNLOAD: "Tải xuống tài liệu",
+  TL_EXPORT: "Xuất danh sách tài liệu",
+  TL_APPROVE: "Phê duyệt tài liệu",
+  TL_REJECT: "Từ chối tài liệu",
+
   CSV_CREATE: "Tạo cơ sở dịch vụ công",
   CSV_UPDATE: "Cập nhật cơ sở dịch vụ công",
   CSV_DELETE: "Xóa cơ sở dịch vụ công",
@@ -224,6 +249,7 @@ export const PERMISSION_DESC = {
 };
 
 export const PERMISSION_CATEGORIES = {
+  TL: "Tài liệu (Thư viện)",
   CSV: "Cơ sở dịch vụ công",
   DMTT: "Danh mục tin tức",
   LTD: "Lịch tiếp dân",
@@ -262,4 +288,7 @@ export const PERMISSION_TYPE = {
   CANCEL: "Hủy",
   GET_EXCEL: "Xuất Excel",
   THUONG_TRUC: "Thường trực",
+  AI_LEARN: "Đồng bộ AI",
+  DOWNLOAD: "Tải xuống",
+  EXPORT: "Xuất danh sách",
 };

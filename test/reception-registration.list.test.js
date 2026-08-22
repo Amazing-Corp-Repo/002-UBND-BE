@@ -9,6 +9,7 @@ import jwtUtils from "../src/utils/jwt.util.js";
 import DangKyTiepDanSwagger from "../src/swagger/dang-ky-tiep-dan.swagger.js";
 
 const originalFindAllForStaff = DangKyTiepDanRepository.findAllForStaff;
+let capturedFilters;
 
 const registration = {
   id: "123e4567-e89b-42d3-a456-426614174000",
@@ -47,10 +48,14 @@ const tokenWithPermissions = (permissions) =>
   );
 
 beforeEach(() => {
-  DangKyTiepDanRepository.findAllForStaff = async () => ({
-    data: [registration],
-    totalItems: 1,
-  });
+  capturedFilters = null;
+  DangKyTiepDanRepository.findAllForStaff = async (filters) => {
+    capturedFilters = filters;
+    return {
+      data: [registration],
+      totalItems: 1,
+    };
+  };
 });
 
 afterEach(() => {
@@ -64,6 +69,9 @@ describe("GET /api/reception-registrations", () => {
     const statusParameter = operation.parameters.find(
       (parameter) => parameter.name === "approvalStatus"
     );
+    const scopeParameter = operation.parameters.find(
+      (parameter) => parameter.name === "scope"
+    );
 
     assert.deepEqual(statusParameter.schema.enum, [
       "PENDING",
@@ -71,6 +79,7 @@ describe("GET /api/reception-registrations", () => {
       "COMPLETED",
       "REJECTED",
     ]);
+    assert.deepEqual(scopeParameter.schema.enum, ["ALL", "MY"]);
     assert.ok(operation.responses[400]);
   });
 
@@ -91,6 +100,30 @@ describe("GET /api/reception-registrations", () => {
       assert.equal(response.status, 200);
       assert.equal(body.data[0].ratingStatus, "RATED");
       assert.equal(body.pagination.totalItems, 1);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("filters my handled registrations from the authenticated user", async () => {
+    const server = createTestServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/reception-registrations?scope=MY`,
+        {
+          headers: {
+            authorization: `Bearer ${tokenWithPermissions([PERMISSION.RR_GET_ALL])}`,
+          },
+        }
+      );
+
+      assert.equal(response.status, 200);
+      assert.equal(capturedFilters.scope, "MY");
+      assert.equal(
+        capturedFilters.handledByUserId,
+        "223e4567-e89b-42d3-a456-426614174000"
+      );
     } finally {
       server.close();
     }

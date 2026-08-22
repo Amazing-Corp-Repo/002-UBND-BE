@@ -30,6 +30,8 @@ import receptionShiftAssignmentRouter from './reception-shift-assignment.route.j
 import leaderMeetingScheduleRouter from './leader-meeting-schedule.route.js';
 import leaderMeetingRegistrationRouter from './leader-meeting-registration.route.js';
 import leaderMeetingRatingRouter from './leader-meeting-rating.route.js';
+import taiLieuVanHoaRouter from './tai-lieu-van-hoa.route.js';
+import taiLieuPhapLuatRouter from './tai-lieu-phap-luat.route.js';
 
 const rootRouter = express.Router();
 
@@ -65,6 +67,8 @@ rootRouter.use('/reception-shifts', receptionShiftAssignmentRouter);
 rootRouter.use('/leader-meeting-schedules', leaderMeetingScheduleRouter);
 rootRouter.use('/leader-meeting-registrations', leaderMeetingRegistrationRouter);
 rootRouter.use('/leader-meeting-ratings', leaderMeetingRatingRouter);
+rootRouter.use('/tai-lieu-van-hoa', taiLieuVanHoaRouter);
+rootRouter.use('/tai-lieu-phap-luat', taiLieuPhapLuatRouter);
 
 export default rootRouter;
 

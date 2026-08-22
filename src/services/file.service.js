@@ -5,6 +5,7 @@ import { buildContentTxt, toSnakeCaseNonAccent, toVNDateFolder } from "../utils/
 import VideoProcessingService from "./video-processing.service.js";
 import archiver from "archiver";
 import XLSX from "../utils/xlsx.util.js";
+import { BaseError } from "../utils/base-error.util.js";
 
 const PUBLIC_DIR = path.join(process.cwd(), "src", "public");
 
@@ -81,39 +82,35 @@ const FileService = {
   },
 
   async readSpreadsheetFile(filePath) {
-    let rows = [];
-    if (path.extname(filePath).toLowerCase() === ".xls") {
-      const workbook = XLSX.readFile(filePath, { cellDates: true });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      rows = XLSX.utils.sheet_to_json(worksheet, { defval: null, raw: true });
-    } else {
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.readFile(filePath);
-      const worksheet = workbook.worksheets[0];
-      let headers = [];
-
-      worksheet.eachRow((row, rowNumber) => {
-        const values = row.values.slice(1);
-        if (rowNumber === 1) {
-          headers = values.map((v) => String(v || "").trim());
-        } else {
-          const obj = {};
-          headers.forEach((key, i) => {
-            obj[key] = values[i] ?? null;
-          });
-          rows.push(obj);
-        }
-      });
-    }
     try {
-      const parentDir = path.dirname(filePath);
-      await fs.remove(parentDir);
-      console.log(`Đã xóa file sau khi đọc: ${filePath}`);
-    } catch (err) {
-      console.error("Lỗi khi xóa file sau khi đọc:", err.message);
-    }
+      const workbook = XLSX.readFile(filePath, { cellDates: true });
+      const firstSheetName = workbook.SheetNames?.[0];
+      const worksheet = firstSheetName ? workbook.Sheets?.[firstSheetName] : null;
+      if (!worksheet) {
+        throw new BaseError(400, "File Excel không có sheet dữ liệu hợp lệ");
+      }
 
-    return rows;
+      return XLSX.utils.sheet_to_json(worksheet, {
+        defval: null,
+        raw: true,
+      });
+    } catch (error) {
+      if (error instanceof BaseError) throw error;
+      throw new BaseError(
+        400,
+        "Không thể đọc file Excel. Vui lòng dùng file .xlsx hoặc .xls hợp lệ",
+      );
+    } finally {
+      const parentDir = path.dirname(filePath);
+      try {
+        await fs.remove(filePath);
+        const remainingFiles = await fs.readdir(parentDir).catch(() => []);
+        if (remainingFiles.length === 0) await fs.remove(parentDir);
+        console.log(`Đã xóa file sau khi đọc: ${filePath}`);
+      } catch (cleanupError) {
+        console.error("Lỗi khi xóa file sau khi đọc:", cleanupError.message);
+      }
+    }
   },
 
   excelStyles: {

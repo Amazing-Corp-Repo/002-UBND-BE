@@ -14,7 +14,8 @@ const DangKyTiepDanController = {
 
   async getAll(req, res) {
     const result = await DangKyTiepDanService.getAllForStaff(
-      req.validatedQuery
+      req.validatedQuery,
+      req.payload
     );
     return successResponse(
       res,
