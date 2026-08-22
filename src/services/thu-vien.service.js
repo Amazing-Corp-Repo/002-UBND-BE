@@ -25,6 +25,29 @@ const ThuVienService = {
     return { data, pagination };
   },
 
+  async getPublic({ loai, page = 1, size = 10, search, idDanhMuc, sortBy, sortOrder }) {
+    const { data, totalItems } = await ThuVienRepository.getPublic({
+      page: parseInt(page),
+      size: parseInt(size),
+      search,
+      idDanhMuc,
+      loai,
+      sortBy,
+      sortOrder,
+    });
+
+    const pagination = createPagination(parseInt(page), parseInt(size), totalItems);
+    return { data, pagination };
+  },
+
+  async getPublicById(id) {
+    const result = await ThuVienRepository.getPublicById(id);
+    if (!result) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    return result;
+  },
+
   async getById(id, currentUser) {
     const result = await ThuVienRepository.getById(id);
     if (!result) {
