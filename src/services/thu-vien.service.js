@@ -3,7 +3,7 @@ import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
 
 const ThuVienService = {
-  async getAll({ loai, page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh }) {
+  async getAll({ loai, page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser }) {
     const { data, totalItems } = await ThuVienRepository.getAll({
       loai,
       page: parseInt(page),
@@ -18,15 +18,20 @@ const ThuVienService = {
       sortBy,
       sortOrder,
       coQuanBanHanh,
+      currentUser,
     });
 
     const pagination = createPagination(parseInt(page), parseInt(size), totalItems);
     return { data, pagination };
   },
 
-  async getById(id) {
+  async getById(id, currentUser) {
     const result = await ThuVienRepository.getById(id);
     if (!result) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    // NHAP chỉ hiển thị với người tạo
+    if (result.trang_thai === "NHAP" && result.nguoi_tao !== currentUser) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
     return result;
@@ -39,7 +44,7 @@ const ThuVienService = {
       id_danh_muc: data.idDanhMuc || null,
       mo_ta: data.moTa || null,
       pham_vi: data.phamVi || "CONG_KHAI",
-      trang_thai: "CHO_DUYET",
+      trang_thai: data.trangThai || "CHO_DUYET",
       nguoi_tao: currentUser,
       ngay_ban_hanh: data.ngayBanHanh ? new Date(data.ngayBanHanh) : null,
     };
@@ -48,6 +53,7 @@ const ThuVienService = {
     if (loai === "VAN_HOA") {
       createData.ten_di_tich = data.tenDiTich || null;
       createData.dia_chi = data.diaChi || null;
+      createData.noi_dung = data.noiDung || null;
     }
 
     // Pháp luật fields
@@ -108,6 +114,7 @@ const ThuVienService = {
     if (existing.loai === "VAN_HOA") {
       if (data.tenDiTich !== undefined) updateData.ten_di_tich = data.tenDiTich || null;
       if (data.diaChi !== undefined) updateData.dia_chi = data.diaChi || null;
+      if (data.noiDung !== undefined) updateData.noi_dung = data.noiDung || null;
     }
 
     if (existing.loai === "PHAP_LUAT") {

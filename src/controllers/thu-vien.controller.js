@@ -7,13 +7,15 @@ const ThuVienController = {
   async getAll(req, res) {
     const { page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh } = req.query;
     const loai = req.loai;
-    const result = await ThuVienService.getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh });
+    const currentUser = req.payload.userId;
+    const result = await ThuVienService.getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser });
     return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
   },
 
   async getById(req, res) {
     const { id } = req.params;
-    const result = await ThuVienService.getById(id);
+    const currentUser = req.payload.userId;
+    const result = await ThuVienService.getById(id, currentUser);
     return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
   },
 

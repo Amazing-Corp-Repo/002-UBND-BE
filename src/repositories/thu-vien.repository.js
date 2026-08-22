@@ -25,18 +25,36 @@ const ThuVienRepository = {
     }));
   },
 
-  async getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, isDelete = false }) {
+  async getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, isDelete = false, currentUser }) {
     const skip = (page - 1) * size;
-    const where = {
-      loai,
-      is_delete: isDelete,
-      ...(search ? {
+
+    // Xây dựng mảng AND để tránh xung đột multiple OR
+    const andConditions = [];
+
+    // NHAP (nháp) chỉ hiển thị với người tạo
+    if (currentUser) {
+      andConditions.push({
+        OR: [
+          { trang_thai: { not: "NHAP" } },
+          { trang_thai: "NHAP", nguoi_tao: currentUser },
+        ],
+      });
+    }
+
+    // Search OR
+    if (search) {
+      andConditions.push({
         OR: [
           { tieu_de: { contains: search, mode: "insensitive" } },
           { mo_ta: { contains: search, mode: "insensitive" } },
           { so_hieu: { contains: search, mode: "insensitive" } },
         ],
-      } : {}),
+      });
+    }
+
+    const where = {
+      loai,
+      is_delete: isDelete,
       ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
       ...(trangThai ? { trang_thai: trangThai } : {}),
       ...(phamVi ? { pham_vi: phamVi } : {}),
@@ -48,6 +66,7 @@ const ThuVienRepository = {
           ...(dateTo ? { lte: new Date(dateTo) } : {}),
         },
       } : {}),
+      ...(andConditions.length > 0 ? { AND: andConditions } : {}),
     };
 
     const orderBy = {};

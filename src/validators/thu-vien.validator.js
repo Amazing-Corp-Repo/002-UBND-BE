@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+// Tạo mới tài liệu Văn hóa
 export const CreateVanHoaRequest = Joi.object({
   tieuDe: Joi.string().trim().max(255).required().messages({
     "string.max": "Tiêu đề không được vượt quá 255 ký tự",
@@ -27,6 +28,15 @@ export const CreateVanHoaRequest = Joi.object({
     "string.base": "Mô tả phải là chuỗi ký tự",
   }),
   tags: Joi.string().trim().optional().allow(null, ""),
+  noiDung: Joi.string().trim().optional().allow(null, "").messages({
+    "string.base": "Nội dung phải là chuỗi ký tự",
+  }),
+  trangThai: Joi.string()
+    .valid("NHAP", "CHO_DUYET")
+    .optional()
+    .messages({
+      "any.only": "Trạng thái phải là NHAP (nháp) hoặc CHO_DUYET (chờ duyệt)",
+    }),
 });
 
 export const UpdateVanHoaRequest = Joi.object({
@@ -55,6 +65,9 @@ export const UpdateVanHoaRequest = Joi.object({
     "string.base": "Mô tả phải là chuỗi ký tự",
   }),
   tags: Joi.string().trim().optional().allow(null, ""),
+  noiDung: Joi.string().trim().optional().allow(null, "").messages({
+    "string.base": "Nội dung phải là chuỗi ký tự",
+  }),
 });
 
 export const CreatePhapLuatRequest = Joi.object({
@@ -94,6 +107,12 @@ export const CreatePhapLuatRequest = Joi.object({
     "string.base": "Mô tả phải là chuỗi ký tự",
   }),
   tags: Joi.string().trim().optional().allow(null, ""),
+  trangThai: Joi.string()
+    .valid("NHAP", "CHO_DUYET")
+    .optional()
+    .messages({
+      "any.only": "Trạng thái phải là NHAP (nháp) hoặc CHO_DUYET (chờ duyệt)",
+    }),
 });
 
 export const UpdatePhapLuatRequest = Joi.object({
