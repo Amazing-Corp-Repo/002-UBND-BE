@@ -28,6 +28,22 @@ export const CreatePhanAnhRequest = Joi.object({
     .messages({
       "string.pattern.base": "Số điện thoại không hợp lệ",
     }),
+  cccd: Joi.string()
+    .trim()
+    .pattern(/^\d{12}$/)
+    .optional()
+    .allow(null, "")
+    .messages({
+      "string.pattern.base": "CCCD phải gồm đúng 12 chữ số",
+    }),
+  khuPho: Joi.string().trim().max(255).required().messages({
+    "string.empty": "Khu phố là bắt buộc",
+    "any.required": "Khu phố là bắt buộc",
+    "string.max": "Khu phố không được vượt quá 255 ký tự",
+  }),
+  moTaViTri: Joi.string().trim().max(2000).optional().allow(null, "").messages({
+    "string.max": "Mô tả vị trí không được vượt quá 2000 ký tự",
+  }),
   userId: Joi.string().trim().uuid().optional().allow(null, "").messages({
     "string.uuid": "userId must be a valid UUID",
   }),
@@ -107,7 +123,23 @@ export const CreatePhanAnhPublicRequest = Joi.object({
     .messages({
       "string.pattern.base": "Số điện thoại không hợp lệ",
     }),
-  idVideo: Joi.array().items(Joi.string().trim()).optional().messages({
+  cccd: Joi.string()
+    .trim()
+    .pattern(/^\d{12}$/)
+    .optional()
+    .allow(null, "")
+    .messages({
+      "string.pattern.base": "CCCD phải gồm đúng 12 chữ số",
+    }),
+  khuPho: Joi.string().trim().max(255).required().messages({
+    "string.empty": "Khu phố là bắt buộc",
+    "any.required": "Khu phố là bắt buộc",
+    "string.max": "Khu phố không được vượt quá 255 ký tự",
+  }),
+  moTaViTri: Joi.string().trim().max(2000).optional().allow(null, "").messages({
+    "string.max": "Mô tả vị trí không được vượt quá 2000 ký tự",
+  }),
+  idVideo: Joi.array().items(Joi.string().trim()).single().optional().messages({
     "array.base": "idVideo phải là một mảng",
   }),
 });

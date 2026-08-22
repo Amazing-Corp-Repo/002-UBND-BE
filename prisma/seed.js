@@ -115,6 +115,7 @@ async function main() {
         mo_ta: tieuDe,
         muc_do: mucDo,
         vi_tri: 'Xã Tăng Nhơn Phú',
+        khu_pho: 'Chưa xác định',
         ten_nguoi_phan_anh: 'Người dân',
         sdt_nguoi_phan_anh: '0900000000',
         id_video: [],
