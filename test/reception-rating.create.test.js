@@ -26,7 +26,6 @@ const validBody = {
   timeSlot: "08:30 - 09:30",
   workingContent: "Hướng dẫn thủ tục hành chính",
   score: 5,
-  selectedSuggestions: ["Cán bộ rất tận tình và chuyên nghiệp"],
   comment: "Cán bộ hướng dẫn rõ ràng và dễ hiểu.",
 };
 
@@ -65,6 +64,8 @@ describe("POST /api/reception-ratings", () => {
     assert.ok(operation.description.includes("không đối chiếu"));
     assert.ok(requestSchema.required.includes("officerName"));
     assert.ok(requestSchema.required.includes("workingContent"));
+    assert.equal(requestSchema.required.includes("selectedSuggestions"), false);
+    assert.equal(requestSchema.properties.selectedSuggestions, undefined);
     assert.equal(operation.responses[404], undefined);
     assert.ok(operation.responses[409].description.includes("Mã tiếp dân"));
     assert.ok(operation.responses[429]);
@@ -101,6 +102,7 @@ describe("POST /api/reception-ratings", () => {
       assert.equal(body.data.receptionDate, validBody.receptionDate);
       assert.equal(createdData.id_dang_ky_tiep_dan, null);
       assert.equal(createdData.nguoi_tao, null);
+      assert.equal(createdData.ly_do, null);
     } finally {
       server.close();
     }
@@ -167,27 +169,6 @@ describe("POST /api/reception-ratings", () => {
         }
       );
       assert.equal(response.status, 409);
-    } finally {
-      server.close();
-    }
-  });
-
-  it("rejects a suggestion from another score", async () => {
-    const server = createTestServer();
-    const { port } = server.address();
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:${port}/api/reception-ratings`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            ...validBody,
-            selectedSuggestions: ["Cán bộ giao tiếp lịch sự"],
-          }),
-        }
-      );
-      assert.equal(response.status, 400);
     } finally {
       server.close();
     }

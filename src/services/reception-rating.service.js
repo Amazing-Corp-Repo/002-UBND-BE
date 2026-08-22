@@ -2,7 +2,6 @@ import {
   RECEPTION_RATING_COMMENT_MAX_LENGTH,
   RECEPTION_RATING_COUNTER_CODES,
   RECEPTION_RATING_SCALE,
-  RECEPTION_RATING_SUGGESTIONS,
 } from "../constants/reception-rating.constant.js";
 import ReceptionRatingRepository from "../repositories/reception-rating.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
@@ -28,7 +27,6 @@ const mapRatingFields = (rating) => ({
   workingContent: rating.noi_dung_lam_viec,
   topic: rating.noi_dung_lam_viec,
   score: rating.diem_tong,
-  selectedSuggestions: rating.ly_do || [],
   comment: rating.nhan_xet || "",
   ratedAt: rating.thoi_gian_tao,
   createdAt: rating.thoi_gian_tao,
@@ -97,22 +95,6 @@ const normalizeDateFilters = (filters) => {
   return normalized;
 };
 
-const validateSuggestions = (input) => {
-  const allowedSuggestions = new Set(
-    RECEPTION_RATING_SUGGESTIONS[input.score] || []
-  );
-  if (
-    input.selectedSuggestions.some(
-      (suggestion) => !allowedSuggestions.has(suggestion)
-    )
-  ) {
-    throw new BaseError(
-      400,
-      "Gợi ý đã chọn không phù hợp với số sao đánh giá"
-    );
-  }
-};
-
 const roundToTwoDecimals = (value) =>
   value === null || value === undefined ? 0 : Math.round(value * 100) / 100;
 
@@ -125,7 +107,6 @@ const ReceptionRatingService = {
         code,
         name: `Quầy ${index + 1}`,
       })),
-      suggestionsByScore: RECEPTION_RATING_SUGGESTIONS,
     };
   },
 
@@ -136,8 +117,6 @@ const ReceptionRatingService = {
     if (existing) {
       throw new BaseError(409, "Mã tiếp dân đã được đánh giá");
     }
-    validateSuggestions(input);
-
     try {
       const rating = await ReceptionRatingRepository.create({
         id_dang_ky_tiep_dan: null,
@@ -150,7 +129,7 @@ const ReceptionRatingService = {
         noi_dung_lam_viec: input.workingContent,
         diem_tong: input.score,
         tieu_chi: null,
-        ly_do: input.selectedSuggestions,
+        ly_do: null,
         nhan_xet: input.comment,
         nguoi_tao: null,
       });

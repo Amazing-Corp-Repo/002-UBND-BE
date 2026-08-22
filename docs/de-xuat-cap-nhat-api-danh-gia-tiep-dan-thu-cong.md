@@ -117,9 +117,6 @@ API công khai, không yêu cầu access token và không có permission `RRT_CR
   "timeSlot": "08:30 - 09:30",
   "workingContent": "Hướng dẫn thủ tục hành chính",
   "score": 5,
-  "selectedSuggestions": [
-    "Cán bộ rất tận tình và chuyên nghiệp"
-  ],
   "comment": "Cán bộ hướng dẫn rõ ràng và dễ hiểu."
 }
 ```
@@ -134,7 +131,6 @@ API công khai, không yêu cầu access token và không có permission `RRT_CR
 - `timeSlot`
 - `workingContent`
 - `score`
-- `selectedSuggestions`
 - `comment`
 
 ### 4.3. Validate đề xuất
@@ -149,10 +145,7 @@ API công khai, không yêu cầu access token và không có permission `RRT_CR
 | `timeSlot` | `HH:mm - HH:mm`, giờ bắt đầu nhỏ hơn giờ kết thúc |
 | `workingContent` | Bắt buộc, không chỉ chứa khoảng trắng |
 | `score` | Số nguyên từ 1–5 |
-| `selectedSuggestions` | Từ 1–5 gợi ý, không trùng |
 | `comment` | Bắt buộc, tối đa 2.000 ký tự |
-
-Gợi ý vẫn phải thuộc đúng cấu hình của số sao đã chọn.
 
 ### 4.4. Điều kiện bị loại bỏ
 
@@ -193,9 +186,6 @@ Không còn kiểm tra:
     "timeSlot": "08:30 - 09:30",
     "workingContent": "Hướng dẫn thủ tục hành chính",
     "score": 5,
-    "selectedSuggestions": [
-      "Cán bộ rất tận tình và chuyên nghiệp"
-    ],
     "comment": "Cán bộ hướng dẫn rõ ràng và dễ hiểu.",
     "ratedAt": "2026-08-22T09:30:00+07:00"
   }
@@ -213,7 +203,6 @@ GET /api/reception-ratings/configuration
 Trả:
 
 - Thang điểm 1–5.
-- Gợi ý theo từng số sao.
 - Giới hạn nhận xét 2.000 ký tự.
 - Danh sách quầy `QUAY_1` đến `QUAY_8` có thể được bổ sung vào response để iPad dựng lựa chọn.
 
@@ -268,7 +257,6 @@ RRT_GET_ALL
   "timeSlot": "08:30 - 09:30",
   "workingContent": "Hướng dẫn thủ tục hành chính",
   "score": 5,
-  "selectedSuggestions": [],
   "comment": "Cán bộ hướng dẫn rõ ràng.",
   "ratedAt": "2026-08-22T09:30:00+07:00"
 }
@@ -298,7 +286,6 @@ Response trả đầy đủ:
 - Khung giờ.
 - Nội dung làm việc.
 - Điểm.
-- Gợi ý.
 - Nhận xét.
 - Thời gian đánh giá.
 - ID đăng ký cũ nếu đây là dữ liệu lịch sử.
@@ -392,7 +379,6 @@ Toàn bộ API `reception-registrations`:
 - Sai quầy → `400`.
 - Sai ngày/giờ → `400`.
 - Sai số sao → `400`.
-- Gợi ý không đúng số sao → `400`.
 - Mã trùng → `409`.
 - Gửi đồng thời cùng mã → chỉ một request thành công.
 - Vượt rate limit → `429`.

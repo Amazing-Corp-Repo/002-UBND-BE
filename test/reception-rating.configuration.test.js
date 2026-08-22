@@ -25,17 +25,11 @@ describe("GET /api/reception-ratings/configuration", () => {
       dataSchema.properties.comment.properties.maxLength.enum,
       [2000]
     );
-    assert.deepEqual(dataSchema.properties.suggestionsByScore.required, [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-    ]);
+    assert.equal(dataSchema.properties.suggestionsByScore, undefined);
     assert.equal(dataSchema.properties.counters.minItems, 8);
   });
 
-  it("returns the 1-5 scale, comment limit and suggestions for every score", async () => {
+  it("returns the 1-5 scale, comment limit and counters without suggestions", async () => {
     const server = createTestServer();
     const { port } = server.address();
     try {
@@ -51,16 +45,7 @@ describe("GET /api/reception-ratings/configuration", () => {
         body.data.counters.map((counter) => counter.code),
         Array.from({ length: 8 }, (_, index) => `QUAY_${index + 1}`)
       );
-      assert.deepEqual(Object.keys(body.data.suggestionsByScore), [
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-      ]);
-      for (const suggestions of Object.values(body.data.suggestionsByScore)) {
-        assert.ok(suggestions.length > 0);
-      }
+      assert.equal(body.data.suggestionsByScore, undefined);
     } finally {
       server.close();
     }
