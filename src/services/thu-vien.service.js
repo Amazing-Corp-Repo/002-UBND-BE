@@ -267,6 +267,7 @@ const ThuVienService = {
 
     const updateData = {
       trang_thai: "NHAP",
+      ly_do_tu_choi: lyDoTuChoi || null,
       nguoi_cap_nhat: currentUser,
       thoi_gian_cap_nhat: new Date().toISOString(),
     };

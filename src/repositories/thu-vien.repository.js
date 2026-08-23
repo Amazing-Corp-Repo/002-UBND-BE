@@ -289,13 +289,17 @@ const ThuVienRepository = {
 
   async getSubCategories(loai) {
     const result = await prisma.thu_vien_danh_muc.findMany({
-      where: { is_delete: false, is_active: true },
+      where: {
+        is_delete: false,
+        is_active: true,
+        thu_tu: { lt: 10 },
+      },
       select: {
         id: true,
         ten: true,
         thu_tu: true,
         _count: {
-          select: { thu_vien_tai_lieu: { where: { loai, is_delete: false } } },
+          select: { thu_vien_tai_lieu: { where: { loai: loai || "VAN_HOA", is_delete: false } } },
         },
       },
       orderBy: { thu_tu: "asc" },
@@ -311,7 +315,11 @@ const ThuVienRepository = {
 
   async getDocTypes() {
     const result = await prisma.thu_vien_danh_muc.findMany({
-      where: { is_delete: false, is_active: true },
+      where: {
+        is_delete: false,
+        is_active: true,
+        thu_tu: { gte: 10 },
+      },
       select: {
         id: true,
         ten: true,
