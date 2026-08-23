@@ -1035,6 +1035,7 @@ model thu_vien_tai_lieu {
   nguon                  String?
   nguoi_duyet            String?                   @db.Uuid
   thoi_gian_duyet        DateTime?                 @db.Timestamp(6)
+  ly_do_tu_choi          String?                   @db.VarChar(500) // lý do từ chối — khi reject
   ngay_dang              Int?
   ngon_ngu               String?                   @db.VarChar(10)
   // === THÊM MỚI — Task 4: Kho tư liệu & Tra cứu văn bản ===

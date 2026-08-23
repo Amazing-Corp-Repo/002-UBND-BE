@@ -2,6 +2,20 @@ import ThuVienService from "../services/thu-vien.service.js";
 import { successResponse } from "../utils/response.util.js";
 
 const ThuVienController = {
+  // ========== PUBLIC (không cần auth) ==========
+
+  async getPublic(req, res) {
+    const { page = 1, size = 10, search, idDanhMuc, loai, sortBy, sortOrder } = req.query;
+    const result = await ThuVienService.getPublic({ loai, page, size, search, idDanhMuc, sortBy, sortOrder });
+    return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
+  },
+
+  async getPublicById(req, res) {
+    const { id } = req.params;
+    const result = await ThuVienService.getPublicById(id);
+    return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
+  },
+
   // ========== VĂN HÓA & PHÁP LUẬT (dùng chung) ==========
 
   async getAll(req, res) {
