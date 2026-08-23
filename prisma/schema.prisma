@@ -349,6 +349,9 @@ model phan_anh {
   vi_tri                                         String?
   ten_nguoi_phan_anh                             String?              @db.VarChar(255)
   sdt_nguoi_phan_anh                             String?              @db.VarChar(20)
+  cccd                                           String?              @db.VarChar(20)
+  khu_pho                                        String               @db.VarChar(255)
+  mo_ta_vi_tri                                   String?
   is_approve                                     Boolean?             @default(false)
   thoi_gian_tiep_nhan                            DateTime?            @db.Timestamp(6)
   thoi_gian_phan_hoi_du_kien                     DateTime?            @db.Timestamp(6)
