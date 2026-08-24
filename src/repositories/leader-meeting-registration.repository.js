@@ -379,7 +379,7 @@ const LeaderMeetingRegistrationRepository = {
     const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
       where: {
         id,
-        trang_thai: "IN_PROGRESS",
+        trang_thai: { in: ["APPROVED", "IN_PROGRESS"] },
         is_active: true,
         is_delete: false,
         khung_gio_gap_lanh_dao: {
