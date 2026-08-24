@@ -1,5 +1,6 @@
 export const BUILT_IN_CORS_ORIGINS = Object.freeze([
   "https://cong-dan-tangnhonphu-git-update-digital-map-long-d139.vercel.app",
+  "https://sos-tnp-longlo.vercel.app",
 ]);
 
 const normalizeOrigin = (origin) =>
