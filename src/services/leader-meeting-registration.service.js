@@ -490,10 +490,13 @@ const LeaderMeetingRegistrationService = {
         "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn"
       );
     }
-    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS) {
+    if (
+      registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS &&
+      registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.APPROVED
+    ) {
       throw new BaseError(
         409,
-        "Chỉ đăng ký đang xử lý mới được hoàn thành"
+        "Chỉ đăng ký đã được phê duyệt hoặc đang xử lý mới được hoàn thành"
       );
     }
 

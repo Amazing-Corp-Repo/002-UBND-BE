@@ -193,20 +193,26 @@ const LeaderMeetingScheduleRepository = {
           },
         },
       });
-      if (!schedule) return { conflict: "NOT_FOUND" };
-
-      const registrationCount = await tx.dang_ky_gap_lanh_dao.count({
-        where: {
-          khung_gio_gap_lanh_dao: { id_lich_gap: id },
-          is_active: true,
-          is_delete: false,
-        },
-      });
-      if (registrationCount > 0) return { conflict: "HAS_REGISTRATIONS" };
-
       const desiredKeys = new Set(
         data.slots.map((slot) => `${slot.startTime}|${slot.endTime}`)
       );
+
+      // Chỉ chặn nếu ca bị tắt/xóa đã có công dân đăng ký giữ chỗ
+      for (const slot of schedule.khung_gio_gap_lanh_dao) {
+        const key = `${slot.gio_bat_dau}|${slot.gio_ket_thuc}`;
+        if (!desiredKeys.has(key) && !slot.is_delete) {
+          const regCount = await tx.dang_ky_gap_lanh_dao.count({
+            where: {
+              id_khung_gio_gap: slot.id,
+              is_active: true,
+              is_delete: false,
+            },
+          });
+          if (regCount > 0) {
+            return { conflict: "HAS_REGISTRATIONS" };
+          }
+        }
+      }
       const existingByKey = new Map(
         schedule.khung_gio_gap_lanh_dao.map((slot) => [
           `${slot.gio_bat_dau}|${slot.gio_ket_thuc}`,
