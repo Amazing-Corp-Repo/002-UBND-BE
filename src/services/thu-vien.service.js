@@ -1,9 +1,10 @@
 import ThuVienRepository from "../repositories/thu-vien.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import prisma from "../config/database.config.js";
 
 const ThuVienService = {
-  async getAll({ loai, page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser }) {
+  async getAll({ loai, page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions = [] }) {
     const { data, totalItems } = await ThuVienRepository.getAll({
       loai,
       page: parseInt(page),
@@ -19,6 +20,7 @@ const ThuVienService = {
       sortOrder,
       coQuanBanHanh,
       currentUser,
+      permissions,
     });
 
     const pagination = createPagination(parseInt(page), parseInt(size), totalItems);
@@ -164,7 +166,13 @@ const ThuVienService = {
 
     // Xử lý file mới (nếu có)
     if (files && files.file && files.file.length > 0) {
-      // Đánh dấu file cũ không còn hiện tại
+      // Đánh dấu tất cả file cũ không còn hiện tại
+      await prisma.thu_vien_tai_lieu_file.updateMany({
+        where: { id_tai_lieu: id, la_phien_ban_hien_tai: true, is_delete: false },
+        data: { la_phien_ban_hien_tai: false },
+      });
+
+      // Tạo file mới
       await ThuVienRepository.update(id, {
         thu_vien_tai_lieu_file: {
           create: {
@@ -266,7 +274,7 @@ const ThuVienService = {
     }
 
     const updateData = {
-      trang_thai: "NHAP",
+      trang_thai: "TU_CHOI",
       ly_do_tu_choi: lyDoTuChoi || null,
       nguoi_cap_nhat: currentUser,
       thoi_gian_cap_nhat: new Date().toISOString(),
@@ -276,8 +284,29 @@ const ThuVienService = {
     return ThuVienRepository.getById(id);
   },
 
-  async getStatistics(loai) {
-    return ThuVienRepository.getStatistics(loai);
+  async unapprove(id, currentUser) {
+    const existing = await ThuVienRepository.findById(id);
+    if (!existing) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    if (existing.trang_thai !== "DA_DUYET") {
+      throw new BaseError(400, "Chỉ có thể hoàn tác phê duyệt tài liệu đã được duyệt");
+    }
+
+    const updateData = {
+      trang_thai: "CHO_DUYET",
+      nguoi_duyet: null,
+      thoi_gian_duyet: null,
+      nguoi_cap_nhat: currentUser,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    };
+
+    await ThuVienRepository.update(id, updateData);
+    return ThuVienRepository.getById(id);
+  },
+
+  async getStatistics(loai, currentUser, permissions) {
+    return ThuVienRepository.getStatistics(loai, currentUser, permissions);
   },
 
   async getSubCategories(loai) {

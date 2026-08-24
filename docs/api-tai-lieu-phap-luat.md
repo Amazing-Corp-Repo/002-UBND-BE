@@ -287,7 +287,7 @@ Authorization: Bearer <token>
 
 | Field | Kiểu | Bắt buộc | Mô tả |
 |---|---|---|---|
-| `trangThai` | string | ✅ | `NHAP` (bản nháp) → `CHO_DUYET` (chờ duyệt) → `DA_DUYET` (đã duyệt) → `LUU_TRU` (lưu trữ) |
+| `trangThai` | string | ✅ | `NHAP` (bản nháp) → `CHO_DUYET` (chờ duyệt) → `DA_DUYET` (đã duyệt) → `TU_CHOI` (từ chối) → `LUU_TRU` (lưu trữ) |
 
 ---
 
@@ -331,7 +331,7 @@ Chỉ duyệt được tài liệu đang ở trạng thái `CHO_DUYET`.
 |---|---|---|---|
 | `lyDoTuChoi` | string | ❌ | Lý do từ chối (max 500 ký tự) |
 
-Từ chối sẽ đưa tài liệu về trạng thái `NHAP`.
+Từ chối sẽ đưa tài liệu về trạng thái `TU_CHOI`.
 
 ---
 
@@ -481,6 +481,7 @@ Trả về thông tin file để FE tạo link download.
 | Đổi trạng thái | `PUT` | `/tai-lieu-phap-luat/update-status/{id}` | `TL_UPDATE_STATUS` | `{ "trangThai": "..." }` |
 | Phê duyệt | `PUT` | `/tai-lieu-phap-luat/approve/{id}` | `TL_APPROVE` | — |
 | Từ chối | `PUT` | `/tai-lieu-phap-luat/reject/{id}` | `TL_REJECT` | `{ "lyDoTuChoi": "..." }` |
+| Hoàn tác duyệt | `PUT` | `/tai-lieu-phap-luat/unapprove/{id}` | `TL_UNAPPROVE` | — |
 | Đồng bộ AI | `POST` | `/tai-lieu-phap-luat/ai-learn/{id}` | `TL_AI_LEARN` | `{ "action": "learn" }` |
 | Thống kê | `GET` | `/tai-lieu-phap-luat/statistics` | — | — |
 | Loại văn bản | `GET` | `/tai-lieu-phap-luat/doc-types` | — | — |
@@ -491,6 +492,6 @@ Trả về thông tin file để FE tạo link download.
 
 | Field | Giá trị |
 |---|---|
-| `trangThai` | `NHAP` → `CHO_DUYET` → `DA_DUYET` → `LUU_TRU` |
+| `trangThai` | `NHAP` → `CHO_DUYET` → `DA_DUYET` → `TU_CHOI` → `LUU_TRU` |
 | `phamVi` | `CONG_KHAI` / `NOI_BO` / `HAN_CHE` |
 | `action` (AI) | `learn` / `unlearn` |

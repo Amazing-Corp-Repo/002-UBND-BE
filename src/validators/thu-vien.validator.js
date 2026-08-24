@@ -156,10 +156,10 @@ export const UpdatePhapLuatRequest = Joi.object({
 
 export const UpdateStatusTaiLieuRequest = Joi.object({
   trangThai: Joi.string()
-    .valid("NHAP", "CHO_DUYET", "DA_DUYET", "LUU_TRU")
+    .valid("NHAP", "CHO_DUYET", "DA_DUYET", "TU_CHOI", "LUU_TRU")
     .required()
     .messages({
-      "any.only": "Trạng thái phải là NHAP, CHO_DUYET, DA_DUYET hoặc LUU_TRU",
+      "any.only": "Trạng thái phải là NHAP, CHO_DUYET, DA_DUYET, TU_CHOI hoặc LUU_TRU",
       "any.required": "Trạng thái là bắt buộc",
     }),
 });

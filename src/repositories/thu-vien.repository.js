@@ -25,20 +25,26 @@ const ThuVienRepository = {
     }));
   },
 
-  async getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, isDelete = false, currentUser }) {
+  async getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, isDelete = false, currentUser, permissions = [] }) {
     const skip = (page - 1) * size;
 
     // Xây dựng mảng AND để tránh xung đột multiple OR
     const andConditions = [];
 
-    // NHAP (nháp) chỉ hiển thị với người tạo
+    // Nếu KHÔNG có quyền TL_GET_ALL → chỉ xem tài liệu mình tạo
+    // Nếu CÓ quyền TL_GET_ALL → xem tất cả (như cũ, NHAP chỉ người tạo thấy)
     if (currentUser) {
-      andConditions.push({
-        OR: [
-          { trang_thai: { not: "NHAP" } },
-          { trang_thai: "NHAP", nguoi_tao: currentUser },
-        ],
-      });
+      const hasGetAll = permissions.includes("TL_GET_ALL");
+      if (!hasGetAll) {
+        andConditions.push({ nguoi_tao: currentUser });
+      } else {
+        andConditions.push({
+          OR: [
+            { trang_thai: { not: "NHAP" } },
+            { trang_thai: "NHAP", nguoi_tao: currentUser },
+          ],
+        });
+      }
     }
 
     // Search OR
@@ -151,6 +157,10 @@ const ThuVienRepository = {
             select: { id: true, ten_file: true, duong_dan: true, kich_thuoc_mb: true, dinh_dang: true },
             take: 1,
           },
+          thu_vien_tai_lieu_media: {
+            where: { is_delete: false },
+            select: { id: true, loai: true, ten_file_goc: true, url: true, kich_thuoc: true, mime_type: true },
+          },
           thu_vien_tai_lieu_tag: {
             where: { thu_vien_tag: { is_delete: false } },
             select: {
@@ -159,16 +169,12 @@ const ThuVienRepository = {
               },
             },
           },
-          _count: {
-            select: { thu_vien_tai_lieu_media: true },
-          },
         },
       }),
       prisma.thu_vien_tai_lieu.count({ where }),
     ]);
 
-    const mappedData = await this._mapUserNames(data);
-    return { data: mappedData, totalItems };
+    return { data, totalItems };
   },
 
   async getPublicById(id) {
@@ -199,8 +205,7 @@ const ThuVienRepository = {
     });
 
     if (!result) return null;
-    const mapped = await this._mapUserNames([result]);
-    return mapped[0];
+    return result;
   },
 
   async getById(id) {
@@ -263,8 +268,28 @@ const ThuVienRepository = {
     });
   },
 
-  async getStatistics(loai) {
-    const where = { loai, is_delete: false };
+  async getStatistics(loai, currentUser, permissions = []) {
+    const baseWhere = { loai, is_delete: false };
+
+    // Áp dụng quyền xem — giống logic trong getAll
+    const andConditions = [];
+    if (currentUser) {
+      const hasGetAll = permissions.includes("TL_GET_ALL");
+      if (!hasGetAll) {
+        // Không có quyền TL_GET_ALL → chỉ xem tài liệu mình tạo
+        andConditions.push({ nguoi_tao: currentUser });
+      } else {
+        // Có quyền TL_GET_ALL → xem tất cả, NHAP chỉ người tạo thấy
+        andConditions.push({
+          OR: [
+            { trang_thai: { not: "NHAP" } },
+            { trang_thai: "NHAP", nguoi_tao: currentUser },
+          ],
+        });
+      }
+    }
+
+    const where = andConditions.length > 0 ? { ...baseWhere, AND: andConditions } : baseWhere;
 
     const [total, approved, pending, revoked, aiLearned, viewAgg, downloadAgg] = await Promise.all([
       prisma.thu_vien_tai_lieu.count({ where }),

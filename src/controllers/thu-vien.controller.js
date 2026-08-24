@@ -22,7 +22,8 @@ const ThuVienController = {
     const { page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh } = req.query;
     const loai = req.loai;
     const currentUser = req.payload.userId;
-    const result = await ThuVienService.getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser });
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions });
     return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
   },
 
@@ -87,9 +88,18 @@ const ThuVienController = {
     return successResponse(res, result, "Từ chối tài liệu thành công");
   },
 
+  async unapprove(req, res) {
+    const { id } = req.params;
+    const currentUser = req.payload.userId;
+    const result = await ThuVienService.unapprove(id, currentUser);
+    return successResponse(res, result, "Hoàn tác phê duyệt thành công");
+  },
+
   async getStatistics(req, res) {
     const loai = req.loai;
-    const result = await ThuVienService.getStatistics(loai);
+    const currentUser = req.payload.userId;
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getStatistics(loai, currentUser, permissions);
     return successResponse(res, result, "Lấy thống kê thành công");
   },
 

@@ -1033,7 +1033,7 @@ model thu_vien_tai_lieu {
   ngay_hieu_luc          DateTime?                 @db.Date
   trang_thai_hieu_luc    String?                   @db.VarChar(50)
   chuong                 Json?
-  trang_thai             String?                   @default("NHAP") @db.VarChar(30) // NHAP|CHO_DUYET|DA_DUYET|LUU_TRU
+  trang_thai             String?                   @default("NHAP") @db.VarChar(30) // NHAP|CHO_DUYET|DA_DUYET|TU_CHOI|LUU_TRU
   pham_vi                String?                   @default("CONG_KHAI") @db.VarChar(30) // CONG_KHAI|NOI_BO|HAN_CHE
   nguon                  String?
   nguoi_duyet            String?                   @db.Uuid

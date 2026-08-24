@@ -11,6 +11,7 @@ export const PERMISSION = {
   TL_EXPORT: "TL_EXPORT",
   TL_APPROVE: "TL_APPROVE",
   TL_REJECT: "TL_REJECT",
+  TL_UNAPPROVE: "TL_UNAPPROVE",
 
   // Cơ sở dịch vụ công
   CSV_CREATE: "CSV_CREATE",
@@ -145,6 +146,7 @@ export const PERMISSION_DESC = {
   TL_EXPORT: "Xuất danh sách tài liệu",
   TL_APPROVE: "Phê duyệt tài liệu",
   TL_REJECT: "Từ chối tài liệu",
+  TL_UNAPPROVE: "Hoàn tác phê duyệt tài liệu",
 
   CSV_CREATE: "Tạo cơ sở dịch vụ công",
   CSV_UPDATE: "Cập nhật cơ sở dịch vụ công",

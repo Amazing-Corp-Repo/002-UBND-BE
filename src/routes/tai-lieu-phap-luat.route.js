@@ -36,7 +36,7 @@ taiLieuPhapLuatRouter.get("/doc-types", authenticate, ThuVienController.getDocTy
 taiLieuPhapLuatRouter.get("/issuing-agencies", authenticate, ThuVienController.getIssuingAgencies);
 
 // Lấy danh sách (phân trang)
-taiLieuPhapLuatRouter.get("/paging", authenticate, authorize([PERMISSION.TL_GET_ALL]), ThuVienController.getAll);
+taiLieuPhapLuatRouter.get("/paging", authenticate, ThuVienController.getAll);
 
 // Cập nhật trạng thái
 taiLieuPhapLuatRouter.put(
@@ -78,6 +78,15 @@ taiLieuPhapLuatRouter.put(
   ThuVienController.reject,
 );
 
+// Hoàn tác phê duyệt tài liệu
+taiLieuPhapLuatRouter.put(
+  "/unapprove/:id",
+  authenticate,
+  authorize([PERMISSION.TL_UNAPPROVE]),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_UNAPPROVE),
+  ThuVienController.unapprove,
+);
+
 // === PARAM ROUTES (có :id) ===
 
 // Lấy chi tiết
@@ -93,10 +102,9 @@ taiLieuPhapLuatRouter.post(
   authorize([PERMISSION.TL_CREATE]),
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "file",
-    maxCount: 1,
-    maxSizeMB: 50,
-    allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+    fields: [
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+    ],
   }),
   validate(CreatePhapLuatRequest),
   audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.TL_CREATE),
@@ -110,10 +118,9 @@ taiLieuPhapLuatRouter.put(
   authorize([PERMISSION.TL_UPDATE]),
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
-    fieldName: "file",
-    maxCount: 1,
-    maxSizeMB: 50,
-    allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+    fields: [
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+    ],
   }),
   validate(UpdatePhapLuatRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_UPDATE),

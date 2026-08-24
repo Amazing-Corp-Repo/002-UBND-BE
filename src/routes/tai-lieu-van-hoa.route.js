@@ -33,7 +33,7 @@ taiLieuVanHoaRouter.get("/statistics", authenticate, ThuVienController.getStatis
 taiLieuVanHoaRouter.get("/sub-categories", authenticate, ThuVienController.getSubCategories);
 
 // Lấy danh sách (phân trang)
-taiLieuVanHoaRouter.get("/paging", authenticate, authorize([PERMISSION.TL_GET_ALL]), ThuVienController.getAll);
+taiLieuVanHoaRouter.get("/paging", authenticate, ThuVienController.getAll);
 
 // Cập nhật trạng thái
 taiLieuVanHoaRouter.put(
@@ -73,6 +73,15 @@ taiLieuVanHoaRouter.put(
   validate(RejectTaiLieuRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_REJECT),
   ThuVienController.reject,
+);
+
+// Hoàn tác phê duyệt tài liệu
+taiLieuVanHoaRouter.put(
+  "/unapprove/:id",
+  authenticate,
+  authorize([PERMISSION.TL_UNAPPROVE]),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_UNAPPROVE),
+  ThuVienController.unapprove,
 );
 
 // === PARAM ROUTES (có :id) ===
