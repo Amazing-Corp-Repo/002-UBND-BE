@@ -115,7 +115,7 @@ const ThuVienSwagger = {
     put: {
       tags: ["TaiLieuVanHoa"],
       summary: "Từ chối tài liệu văn hóa",
-      description: "Chuyển trạng thái từ CHO_DUYET về NHAP. Có thể ghi lý do từ chối.",
+      description: "Chuyển trạng thái từ CHO_DUYET về TU_CHOI. Ghi lý do từ chối (nếu có). Người đăng thấy rõ là bị từ chối và có thể chỉnh sửa → gửi duyệt lại.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
@@ -124,6 +124,18 @@ const ThuVienSwagger = {
         content: { "application/json": { schema: ThuVienSchemas.RejectTaiLieuRequest } },
         required: false,
       },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/unapprove/{id}": {
+    put: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Hoàn tác phê duyệt tài liệu văn hóa",
+      description: "Chuyển trạng thái từ DA_DUYET về CHO_DUYET. Xóa thông tin người duyệt và thời gian duyệt.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
       responses: {},
     },
   },
@@ -282,7 +294,7 @@ const ThuVienSwagger = {
     put: {
       tags: ["TaiLieuPhapLuat"],
       summary: "Từ chối tài liệu pháp luật",
-      description: "Chuyển trạng thái từ CHO_DUYET về NHAP. Có thể ghi lý do từ chối.",
+      description: "Chuyển trạng thái từ CHO_DUYET về TU_CHOI. Ghi lý do từ chối (nếu có). Người đăng thấy rõ là bị từ chối và có thể chỉnh sửa → gửi duyệt lại.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
@@ -291,6 +303,18 @@ const ThuVienSwagger = {
         content: { "application/json": { schema: ThuVienSchemas.RejectTaiLieuRequest } },
         required: false,
       },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/unapprove/{id}": {
+    put: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Hoàn tác phê duyệt tài liệu pháp luật",
+      description: "Chuyển trạng thái từ DA_DUYET về CHO_DUYET. Xóa thông tin người duyệt và thời gian duyệt.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
       responses: {},
     },
   },
