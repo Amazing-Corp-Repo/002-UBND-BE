@@ -1,7 +1,39 @@
 import ThuVienRepository from "../repositories/thu-vien.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
+import { convertBigInt } from "../utils/number.util.js";
 import prisma from "../config/database.config.js";
+import ExcelJS from "exceljs";
+import FileService from "./file.service.js";
+
+// Ánh xạ cột FE gửi lên → header hiển thị + cách lấy giá trị
+const COLUMN_MAP = {
+  stt:              { label: "STT", getValue: (item, idx) => idx + 1 },
+  tieuDe:           { label: "Tên tài liệu", getValue: (item) => item.tieu_de ?? "" },
+  soHieu:           { label: "Số hiệu", getValue: (item) => item.so_hieu ?? "" },
+  tenDiTich:        { label: "Di tích / Địa danh", getValue: (item) => item.ten_di_tich ?? "" },
+  diaChi:           { label: "Địa chỉ", getValue: (item) => item.dia_chi ?? "" },
+  danhMuc:          { label: "Phân nhóm", getValue: (item) => item.thu_vien_danh_muc?.ten ?? "" },
+  coQuanBanHanh:    { label: "Cơ quan ban hành", getValue: (item) => item.co_quan_ban_hanh ?? "" },
+  phamVi:           { label: "Phạm vi", getValue: (item) => {
+    const map = { CONG_KHAI: "Công khai", NOI_BO: "Nội bộ", HAN_CHE: "Hạn chế" };
+    return map[item.pham_vi] || item.pham_vi || "";
+  }},
+  trangThai:        { label: "Trạng thái", getValue: (item) => {
+    const map = { NHAP: "Nháp", CHO_DUYET: "Chờ duyệt", DA_DUYET: "Đã duyệt", TU_CHOI: "Từ chối", LUU_TRU: "Lưu trữ" };
+    return map[item.trang_thai] || item.trang_thai || "";
+  }},
+  ngayBanHanh:      { label: "Ngày ban hành", getValue: (item) => item.ngay_ban_hanh ? new Date(item.ngay_ban_hanh).toISOString().split("T")[0] : "" },
+  ngayHieuLuc:      { label: "Ngày hiệu lực", getValue: (item) => item.ngay_hieu_luc ? new Date(item.ngay_hieu_luc).toISOString().split("T")[0] : "" },
+  ngayHetHan:       { label: "Ngày hết hạn", getValue: (item) => item.ngay_het_han ? new Date(item.ngay_het_han).toISOString().split("T")[0] : "" },
+  trangThaiHieuLuc: { label: "Trạng thái hiệu lực", getValue: (item) => item.trang_thai_hieu_luc ?? "" },
+  aiDaHoc:          { label: "Trợ lý AI", getValue: (item) => item.ai_da_hoc ? "Đã học" : "Chưa học" },
+  luotXem:          { label: "Lượt xem", getValue: (item) => item.luot_xem ?? 0 },
+  luotTai:          { label: "Lượt tải", getValue: (item) => item.so_luot_tai ?? 0 },
+  nguoiTao:         { label: "Người tạo", getValue: (item) => item.ten_nguoi_tao ?? "" },
+  nguoiDuyet:       { label: "Người duyệt", getValue: (item) => item.ten_nguoi_duyet ?? "" },
+  thoiGianTao:      { label: "Ngày tạo", getValue: (item) => item.thoi_gian_tao ? new Date(item.thoi_gian_tao).toISOString().split("T")[0] : "" },
+};
 
 const ThuVienService = {
   async getAll({ loai, page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions = [] }) {
@@ -25,6 +57,60 @@ const ThuVienService = {
 
     const pagination = createPagination(parseInt(page), parseInt(size), totalItems);
     return { data, pagination };
+  },
+
+  async exportExcel({ loai, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions = [], columns }) {
+    // Lấy tất cả dữ liệu (không phân trang) — dùng lại getAll không parse page
+    const { data } = await this.getAll({
+      loai, page: 1, size: 999999, search, idDanhMuc, trangThai, phamVi, aiDaHoc,
+      dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions,
+    });
+
+    // Convert BigInt → Number tránh lỗi JSON serialization
+    const cleanData = convertBigInt(data);
+
+    // Parse danh sách cột FE gửi lên: JSON array hoặc CSV
+    let selectedColumns = [];
+    if (columns) {
+      try {
+        selectedColumns = JSON.parse(columns);
+      } catch {
+        selectedColumns = columns.split(",").map((c) => c.trim()).filter(Boolean);
+      }
+    }
+    // Nếu không gửi columns → xuất tất cả cột
+    if (selectedColumns.length === 0) {
+      selectedColumns = Object.keys(COLUMN_MAP);
+    }
+
+    // Lọc cột hợp lệ, giữ thứ tự FE gửi
+    const colDefs = selectedColumns.map((key) => COLUMN_MAP[key]).filter(Boolean);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(loai === "VAN_HOA" ? "Tài liệu văn hóa" : "Tài liệu pháp luật");
+
+    // Header row
+    const headerRow = sheet.addRow(colDefs.map((c) => c.label));
+    FileService.excelStyles.tableHeader(headerRow);
+
+    // Data rows
+    cleanData.forEach((item, idx) => {
+      const rowValues = colDefs.map((col) => col.getValue(item, idx));
+      const row = sheet.addRow(rowValues);
+      FileService.excelStyles.tableRow(row);
+    });
+
+    // Auto-fit columns
+    sheet.columns.forEach((col, i) => {
+      let maxLen = colDefs[i]?.label.length || 10;
+      col.eachCell({ includeEmpty: true }, (cell) => {
+        const len = cell.value ? String(cell.value).length : 0;
+        if (len > maxLen) maxLen = len;
+      });
+      col.width = Math.min(maxLen + 4, 60);
+    });
+
+    return await workbook.xlsx.writeBuffer();
   },
 
   async getPublic({ loai, page = 1, size = 10, search, idDanhMuc, sortBy, sortOrder }) {
