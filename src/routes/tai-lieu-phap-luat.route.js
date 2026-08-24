@@ -38,6 +38,14 @@ taiLieuPhapLuatRouter.get("/issuing-agencies", authenticate, ThuVienController.g
 // Lấy danh sách (phân trang)
 taiLieuPhapLuatRouter.get("/paging", authenticate, ThuVienController.getAll);
 
+// Xuất Excel
+taiLieuPhapLuatRouter.get(
+  "/export",
+  authenticate,
+  authorize([PERMISSION.TL_EXPORT]),
+  ThuVienController.export,
+);
+
 // Cập nhật trạng thái
 taiLieuPhapLuatRouter.put(
   "/update-status/:id",

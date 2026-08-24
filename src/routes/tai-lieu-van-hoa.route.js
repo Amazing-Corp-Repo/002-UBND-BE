@@ -35,6 +35,14 @@ taiLieuVanHoaRouter.get("/sub-categories", authenticate, ThuVienController.getSu
 // Lấy danh sách (phân trang)
 taiLieuVanHoaRouter.get("/paging", authenticate, ThuVienController.getAll);
 
+// Xuất Excel
+taiLieuVanHoaRouter.get(
+  "/export",
+  authenticate,
+  authorize([PERMISSION.TL_EXPORT]),
+  ThuVienController.export,
+);
+
 // Cập nhật trạng thái
 taiLieuVanHoaRouter.put(
   "/update-status/:id",

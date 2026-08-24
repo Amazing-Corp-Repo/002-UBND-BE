@@ -3,6 +3,7 @@ export const AUDIT_LOGS = {
     UPDATE: 'UPDATE',
     CREATE: 'CREATE',
     DELETE: 'DELETE',
+    EXPORT: 'EXPORT',
 }
 
 export const AUDIT_LOG_ACTIONS = {

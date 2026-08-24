@@ -19,12 +19,35 @@ const ThuVienController = {
   // ========== VĂN HÓA & PHÁP LUẬT (dùng chung) ==========
 
   async getAll(req, res) {
-    const { page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh } = req.query;
+    let { page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, from, fromDate, tuNgay, ngayBanHanhFrom, to, toDate, denNgay, ngayBanHanhTo } = req.query;
+
+    // Hỗ trợ nhiều tên tham số cho ngày bắt đầu và ngày kết thúc
+    if (!dateFrom) dateFrom = from || fromDate || tuNgay || ngayBanHanhFrom;
+    if (!dateTo) dateTo = to || toDate || denNgay || ngayBanHanhTo;
+
     const loai = req.loai;
     const currentUser = req.payload.userId;
     const permissions = req.payload.permissions || [];
     const result = await ThuVienService.getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions });
     return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
+  },
+
+  async export(req, res) {
+    let { search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, from, fromDate, tuNgay, ngayBanHanhFrom, to, toDate, denNgay, ngayBanHanhTo, columns } = req.query;
+
+    // Hỗ trợ nhiều tên tham số cho ngày
+    if (!dateFrom) dateFrom = from || fromDate || tuNgay || ngayBanHanhFrom;
+    if (!dateTo) dateTo = to || toDate || denNgay || ngayBanHanhTo;
+
+    const loai = req.loai;
+    const currentUser = req.payload.userId;
+    const permissions = req.payload.permissions || [];
+
+    const buffer = await ThuVienService.exportExcel({ loai, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions, columns });
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=tai_lieu_${loai.toLowerCase()}_${Date.now()}.xlsx`);
+    return res.send(buffer);
   },
 
   async getById(req, res) {
