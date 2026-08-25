@@ -13,6 +13,7 @@ import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
 import "./utils/logger.util.js";
+import { isCorsOriginAllowed } from "./config/cors.config.js";
 
 const app = express();
 const PORT = env.PORT;
@@ -26,16 +27,7 @@ const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD;
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Nếu không có origin (ví dụ: từ Postman), cho phép tất cả
-      if (!origin) return callback(null, true);
-
-      // Nếu CORS_ORIGIN là '*' thì cho phép tất cả các domain
-      if (ALLOWED_CORS_ORIGIN.includes("*")) {
-        return callback(null, true);
-      }
-
-      // Kiểm tra xem origin có trong whitelist không
-      if (ALLOWED_CORS_ORIGIN.includes(origin)) {
+      if (isCorsOriginAllowed(origin, ALLOWED_CORS_ORIGIN)) {
         console.log(`Allowed by CORS: ${origin}`); // Log các domain được phép
         return callback(null, true);
       }

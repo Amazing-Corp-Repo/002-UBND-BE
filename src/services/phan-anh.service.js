@@ -37,6 +37,9 @@ const PhanAnhService = {
     mucDo,
     tenNguoiPhanAnh,
     soDienThoaiNguoiPhanAnh,
+    cccd,
+    khuPho,
+    moTaViTri,
     userId,
     file,
     idVideo = [],
@@ -64,6 +67,9 @@ const PhanAnhService = {
       muc_do: mucDo,
       ten_nguoi_phan_anh: tenNguoiPhanAnh,
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
+      cccd: cccd || null,
+      khu_pho: khuPho,
+      mo_ta_vi_tri: moTaViTri || null,
       id_video: idVideo,
       id_video_giai_quyet: [],
       is_approve: true,
@@ -81,24 +87,19 @@ const PhanAnhService = {
 
     data.ma_phan_anh = maPhanAnh;
 
-    let createdPhanAnh = await PhanAnhRepository.create(data);
-
-    let trangThai = await PhanAnhRepository.createLichSuTrangThaiPhanAnh({
-      id_phan_anh: createdPhanAnh.id,
-      ten: PHAN_ANH_STATUS.DA_GUI,
-    });
-
     const attachments = (file || []).map((f) => ({
-      id_phan_anh: createdPhanAnh.id,
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
       loai: DINH_KEM_LOAI.PHAN_ANH,
     }));
 
-    if (attachments.length > 0) {
-      await PhanAnhRepository.addFileToPhanAnh(attachments);
-    }
+    const { createdPhanAnh, trangThai } =
+      await PhanAnhRepository.createWithInitialState(
+        data,
+        { ten: PHAN_ANH_STATUS.DA_GUI },
+        attachments,
+      );
 
     let managerMailList =
       await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
@@ -120,6 +121,9 @@ const PhanAnhService = {
       muc_do: createdPhanAnh.muc_do,
       ten_nguoi_phan_anh: createdPhanAnh.ten_nguoi_phan_anh,
       sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
+      cccd: createdPhanAnh.cccd,
+      khu_pho: createdPhanAnh.khu_pho,
+      mo_ta_vi_tri: createdPhanAnh.mo_ta_vi_tri,
       trang_thai: trangThai.ten,
       nguoi_tao: createdPhanAnh.nguoi_tao,
       hinh_anh_dinh_kems: (file || []).map((f) => ({
@@ -596,6 +600,9 @@ const PhanAnhService = {
     mucDo,
     tenNguoiPhanAnh,
     soDienThoaiNguoiPhanAnh,
+    cccd,
+    khuPho,
+    moTaViTri,
     file,
     idVideo = [],
   ) {
@@ -625,32 +632,28 @@ const PhanAnhService = {
       muc_do: mucDo,
       ten_nguoi_phan_anh: tenNguoiPhanAnh,
       sdt_nguoi_phan_anh: soDienThoaiNguoiPhanAnh,
+      cccd: cccd || null,
+      khu_pho: khuPho,
+      mo_ta_vi_tri: moTaViTri || null,
       id_video: idVideo,
       id_video_giai_quyet: [],
       ma_phan_anh: generateUniqueCode(),
       is_approve: true,
     };
 
-    let createdPhanAnh = await PhanAnhRepository.create(data);
-
-    // Create initial status
-    let trangThai = await PhanAnhRepository.createLichSuTrangThaiPhanAnh({
-      id_phan_anh: createdPhanAnh.id,
-      ten: PHAN_ANH_STATUS.DA_GUI,
-    });
-
-    // Add file attachments
     const attachments = (file || []).map((f) => ({
-      id_phan_anh: createdPhanAnh.id,
       dinh_dang_file: f.mimetype,
       url_file: f.relativeUrl,
       kich_thuoc_file_mb: f.sizeMB,
       loai: DINH_KEM_LOAI.PHAN_ANH,
     }));
 
-    if (attachments.length > 0) {
-      await PhanAnhRepository.addFileToPhanAnh(attachments);
-    }
+    const { createdPhanAnh, trangThai } =
+      await PhanAnhRepository.createWithInitialState(
+        data,
+        { ten: PHAN_ANH_STATUS.DA_GUI },
+        attachments,
+      );
 
     let managerMailList =
       await LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId(
@@ -697,6 +700,9 @@ const PhanAnhService = {
       muc_do: createdPhanAnh.muc_do,
       ten_nguoi_phan_anh: createdPhanAnh.ten_nguoi_phan_anh,
       sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
+      cccd: createdPhanAnh.cccd,
+      khu_pho: createdPhanAnh.khu_pho,
+      mo_ta_vi_tri: createdPhanAnh.mo_ta_vi_tri,
       trang_thai: trangThai.ten,
       is_approve: createdPhanAnh.is_approve,
       hinh_anh_dinh_kems: (file || []).map((f) => ({

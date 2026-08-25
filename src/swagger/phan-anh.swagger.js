@@ -4,7 +4,9 @@ const PhanAnhSwagger = {
   "/api/phan-anh": {
     post: {
       tags: ["PhanAnh"],
-      summary: "Táº¡o pháº£n Ă¡nh má»›i",
+      summary: "Tạo phản ánh mới (yêu cầu đăng nhập)",
+      description:
+        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Khu phố là bắt buộc; CCCD và mô tả vị trí/mốc nhận diện không bắt buộc. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 5 MB, hoặc danh sách idVideo đã tải lên trước đó.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -14,7 +16,15 @@ const PhanAnhSwagger = {
         },
         required: true,
       },
-      responses: {},
+      responses: {
+        200: { description: "Tạo phản ánh thành công" },
+        400: {
+          description:
+            "Dữ liệu không hợp lệ, thiếu khu phố, CCCD sai định dạng, không có ảnh/video hoặc lĩnh vực không tồn tại",
+        },
+        401: { description: "Chưa đăng nhập hoặc token hết hạn" },
+        403: { description: "Không có quyền PA_CREATE" },
+      },
     },
     get: {
       tags: ["PhanAnh"],
@@ -348,7 +358,8 @@ const PhanAnhSwagger = {
     post: {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới từ công dân (không cần đăng nhập)",
-      description: "API công khai để người dân tạo phản ánh",
+      description:
+        "API công khai để người dân tạo phản ánh. Khu phố là bắt buộc; CCCD và mô tả vị trí/mốc nhận diện không bắt buộc. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 5 MB, hoặc danh sách idVideo đã tải lên trước đó.",
       requestBody: {
         content: {
           "multipart/form-data": {
@@ -362,7 +373,8 @@ const PhanAnhSwagger = {
           description: "Tạo phản ánh thành công",
         },
         400: {
-          description: "Dữ liệu không hợp lệ hoặc lĩnh vực không tồn tại",
+          description:
+            "Dữ liệu không hợp lệ, thiếu khu phố, CCCD sai định dạng, không có ảnh/video hoặc lĩnh vực không tồn tại",
         },
       },
     },

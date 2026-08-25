@@ -1,0 +1,43 @@
+export const LEADER_MEETING_SWAGGER_DEMO = Object.freeze({
+  auth: {
+    username: "swagger_leader_meeting",
+    password: "Swagger@Leader2026",
+  },
+  leaders: [
+    { id: "123e4567-e89b-42d3-a456-426614174001", username: "swagger_leader_meeting", name: "Lãnh đạo Demo Swagger" },
+    { id: "123e4567-e89b-42d3-a456-426614174002", username: "swagger_leader_meeting_2", name: "Lãnh đạo Demo Swagger 2" },
+    { id: "123e4567-e89b-42d3-a456-426614174003", username: "swagger_leader_meeting_3", name: "Lãnh đạo Demo Swagger 3" },
+  ],
+  schedules: {
+    main: "223e4567-e89b-42d3-a456-426614174001",
+    update: "223e4567-e89b-42d3-a456-426614174002",
+    status: "223e4567-e89b-42d3-a456-426614174003",
+    deletion: "223e4567-e89b-42d3-a456-426614174004",
+    leader2: "223e4567-e89b-42d3-a456-426614174005",
+    leader3: "223e4567-e89b-42d3-a456-426614174006",
+  },
+  slots: {
+    publicCreate: "323e4567-e89b-42d3-a456-426614174001",
+    approve: "323e4567-e89b-42d3-a456-426614174002",
+    reject: "323e4567-e89b-42d3-a456-426614174003",
+    process: "323e4567-e89b-42d3-a456-426614174004",
+    complete: "323e4567-e89b-42d3-a456-426614174005",
+    cancel: "323e4567-e89b-42d3-a456-426614174006",
+    detail: "323e4567-e89b-42d3-a456-426614174007",
+    rated: "323e4567-e89b-42d3-a456-426614174008",
+    ratingCreate: "323e4567-e89b-42d3-a456-426614174009",
+  },
+  registrations: {
+    approve: { id: "423e4567-e89b-42d3-a456-426614174001", code: "LD000123", status: "PENDING" },
+    reject: { id: "423e4567-e89b-42d3-a456-426614174002", code: "LD000124", status: "PENDING" },
+    process: { id: "423e4567-e89b-42d3-a456-426614174003", code: "LD000125", status: "APPROVED" },
+    complete: { id: "423e4567-e89b-42d3-a456-426614174004", code: "LD000126", status: "IN_PROGRESS" },
+    cancel: { id: "423e4567-e89b-42d3-a456-426614174005", code: "LD000127", status: "APPROVED" },
+    detail: { id: "423e4567-e89b-42d3-a456-426614174006", code: "LD000128", status: "COMPLETED" },
+    rated: { id: "423e4567-e89b-42d3-a456-426614174007", code: "LD000129", status: "COMPLETED" },
+    ratingCreate: { id: "423e4567-e89b-42d3-a456-426614174008", code: "LD000130", status: "COMPLETED" },
+  },
+  attachmentId: "623e4567-e89b-42d3-a456-426614174001",
+  ratingId: "723e4567-e89b-42d3-a456-426614174001",
+  appointmentDate: "2099-08-25",
+});
