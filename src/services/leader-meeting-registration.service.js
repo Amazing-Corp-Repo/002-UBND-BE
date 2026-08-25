@@ -148,7 +148,8 @@ const mapManagementListItem = (registration) => {
       phoneNumber: registration.sdt,
       citizenId: registration.cccd,
     },
-    topic: registration.chu_de,
+    topic: registration.chu_de || registration.ly_do || "",
+    reason: registration.ly_do || "",
     status: registration.trang_thai,
     receptionDate: vietnamDate(registration.ngay_hen),
     timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
@@ -157,6 +158,7 @@ const mapManagementListItem = (registration) => {
       id: schedule.lanh_dao.id,
       fullName: schedule.lanh_dao.ho_va_ten,
     },
+    processingResult: registration.ghi_chu_hoan_thanh || registration.ghi_chu_xu_ly || null,
     ratingStatus: registration.danh_gia_gap_lanh_dao ? "RATED" : "NOT_RATED",
     approvedAt: registration.thoi_gian_phe_duyet,
     processingAt: registration.thoi_gian_bat_dau_xu_ly,
@@ -341,11 +343,11 @@ const LeaderMeetingRegistrationService = {
     }
     const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+      ["ADMIN", "APPROVER", "PHE_DUYET", "LANH_DAO", "LEADER"].includes(role)
     );
     const result = await LeaderMeetingRegistrationRepository.findManagement({
       ...filters,
-      leaderId: canViewAll ? filters.leaderId : currentUser.userId,
+      leaderId: canViewAll ? (filters.leaderId || undefined) : currentUser.userId,
     });
     return {
       data: result.data.map(mapManagementListItem),
@@ -497,6 +499,10 @@ const LeaderMeetingRegistrationService = {
       );
     }
 
+    if (!input.note || !input.note.trim()) {
+      throw new BaseError(400, "Vui lòng nhập kết quả xử lý của buổi gặp lãnh đạo");
+    }
+
     const now = new Date();
     const updated =
       await LeaderMeetingRegistrationRepository.completeInProgress(
@@ -504,7 +510,7 @@ const LeaderMeetingRegistrationService = {
         currentUser.userId,
         {
           trang_thai: TRANG_THAI_GAP_LANH_DAO.COMPLETED,
-          ghi_chu_hoan_thanh: input.note || null,
+          ghi_chu_hoan_thanh: input.note.trim(),
           nguoi_hoan_thanh: currentUser.userId,
           nguoi_cap_nhat: currentUser.userId,
           thoi_gian_hoan_thanh: now,
