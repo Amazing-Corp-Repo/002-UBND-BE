@@ -99,28 +99,18 @@ const mapCreated = ({ registration, slot }) => ({
   leaderName: slot.lich_gap_lanh_dao.lanh_dao.ho_va_ten,
 });
 
-const maskValue = (value, suffixLength = 4) => {
-  if (!value) return null;
-  const suffix = value.slice(-suffixLength);
-  return `${"*".repeat(Math.max(0, value.length - suffixLength))}${suffix}`;
-};
-
 const mapCitizenLookup = (registration) => {
   const slot = registration.khung_gio_gap_lanh_dao;
   const schedule = slot.lich_gap_lanh_dao;
+  const rating = registration.danh_gia_gap_lanh_dao;
   return {
     id: registration.id,
     registrationCode: registration.ma_dang_ky,
     status: registration.trang_thai,
     receptionDate: vietnamDate(registration.ngay_hen),
     timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
-    topic: registration.chu_de,
-    reason: registration.ly_do,
     applicant: {
       fullName: registration.ho_ten,
-      phoneNumber: maskValue(registration.sdt),
-      citizenId: maskValue(registration.cccd),
-      address: registration.dia_chi,
     },
     leader: {
       id: schedule.lanh_dao.id,
@@ -134,7 +124,14 @@ const mapCitizenLookup = (registration) => {
     approvedAt: registration.thoi_gian_phe_duyet,
     processingAt: registration.thoi_gian_bat_dau_xu_ly,
     completedAt: registration.thoi_gian_hoan_thanh,
-    ratingStatus: registration.danh_gia_gap_lanh_dao ? "RATED" : "NOT_RATED",
+    ratingStatus: rating ? "RATED" : "NOT_RATED",
+    rating: rating
+      ? {
+          score: rating.diem_tong,
+          comment: rating.nhan_xet || "",
+          createdAt: rating.thoi_gian_tao,
+        }
+      : null,
     createdAt: registration.thoi_gian_tao,
     updatedAt: registration.thoi_gian_cap_nhat,
   };

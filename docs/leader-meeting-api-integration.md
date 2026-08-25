@@ -47,18 +47,19 @@ Phạm vi:
 - Chỉ đúng lãnh đạo sở hữu lịch được duyệt, từ chối, bắt đầu xử lý, hoàn thành hoặc hủy đơn.
 - Chỉ lãnh đạo được hủy; admin/approver không hủy thay.
 
-## 3. Contract 22 API
+## 3. Contract 23 API
 
 ### 3.1. Lịch gặp lãnh đạo
 
 | API | Quyền | Đầu vào chính | Đầu ra/chức năng |
 |---|---|---|---|
 | `GET /leader-meeting-schedules` | Công khai | `fromDate`, `toDate`, `leaderId` | Lịch và slot còn hiệu lực, sức chứa, số chỗ đã giữ/còn lại |
-| `GET /leader-meeting-schedules/management` | `LMS_GET_ALL` | `fromDate`, `toDate`, `isActive`, `search`, `page`, `size` | Danh sách lịch theo phạm vi token |
+| `GET /leader-meeting-schedules/management` | `LMS_GET_ALL` | Danh sách: `fromDate`, `toDate`, `isActive`, `search`, `page`, `size`; lưới ca: `date` | Không có `date`: danh sách cũ; có `date`: trả đủ 15 ca cố định của lãnh đạo đăng nhập |
 | `GET /leader-meeting-schedules/management/{id}` | `LMS_GET_DETAIL` | UUID lịch | Chi tiết lãnh đạo, ngày, địa điểm, slot và tổng hợp trạng thái đơn |
-| `POST /leader-meeting-schedules/management` | `LMS_CREATE` | `receptionDate`, `location`, `note`, `slots[]` | Lãnh đạo tự tạo lịch của mình; slot mặc định sức chứa 1 |
-| `PUT /leader-meeting-schedules/management/{id}` | `LMS_UPDATE` | Toàn bộ thông tin lịch và `slots[]` | Sửa lịch chưa có đơn giữ chỗ |
+| `POST /leader-meeting-schedules/management` | `LMS_CREATE` | Contract cũ `slots[]` hoặc lưới mới `openSlots[]` | Lãnh đạo tự tạo lịch của mình; slot mặc định sức chứa 1 |
+| `PUT /leader-meeting-schedules/management/{id}` | `LMS_UPDATE` | Contract cũ `slots[]` hoặc lưới mới `openSlots[]` | Đồng bộ ca mở; không đóng ca đã có người giữ chỗ |
 | `PUT /leader-meeting-schedules/management/{id}/status` | `LMS_UPDATE_STATUS` | `{ "isActive": false }` | Bật/tắt lịch chưa có đơn giữ chỗ |
+| `PATCH /leader-meeting-schedules/management/daily-slots/status` | `LMS_UPDATE_STATUS` | `receptionDate`, `startTime`, `endTime`, `isOpen` | Bật/tắt một ca 30 phút; tự tạo hoặc khôi phục lịch khi mở ca đầu tiên |
 | `DELETE /leader-meeting-schedules/management/{id}` | `LMS_DELETE` | UUID lịch | Xóa mềm lịch chưa có đơn giữ chỗ |
 
 Body tạo/cập nhật lịch:
@@ -113,8 +114,8 @@ Client không gửi `leaderId`, `applicationDate`, `status`, `registrationCode` 
 
 | API | Quyền | Đầu vào chính | Đầu ra/chức năng |
 |---|---|---|---|
-| `GET /leader-meeting-ratings/configuration` | Công khai | Không | Thang 1–5, gợi ý tích cực theo số sao, giới hạn 2.000 ký tự |
-| `POST /leader-meeting-ratings` | Công khai, rate limit | `registrationCode`, `score`, `suggestions`, `comment` | Gửi một đánh giá cho đơn `COMPLETED`; gửi trùng trả `409` |
+| `GET /leader-meeting-ratings/configuration` | Công khai | Không | Thang 1–5 và giới hạn nhận xét 2.000 ký tự |
+| `POST /leader-meeting-ratings` | Công khai, rate limit | `registrationCode`, `score`, `comment` | Gửi một đánh giá cho đơn `COMPLETED`; gửi trùng trả `409` |
 | `GET /leader-meeting-ratings` | `LMRT_GET_ALL` | `search`, `score`, `leaderId`, `fromDate`, `toDate`, `page`, `limit` | Danh sách đánh giá theo phạm vi token |
 | `GET /leader-meeting-ratings/statistics` | `LMRT_GET_STATS` | `leaderId`, `fromDate`, `toDate` | Tổng lượt, điểm trung bình, tỷ lệ hài lòng, phân bố sao, theo lãnh đạo |
 | `GET /leader-meeting-ratings/{id}` | `LMRT_GET_DETAIL` | UUID đánh giá | Chi tiết đánh giá, người dân, lịch và lãnh đạo |

@@ -61,16 +61,21 @@ afterEach(() => {
 });
 
 describe("POST /api/leader-meeting-registrations/lookup", () => {
-  it("documents masked public output and anti-enumeration limit", () => {
+  it("documents privacy-safe public output and anti-enumeration limit", () => {
     const operation =
       LeaderMeetingRegistrationSwagger["/api/leader-meeting-registrations/lookup"].post;
     const example = operation.responses[200].content["application/json"].examples.success.value;
-    assert.match(operation.description, /che số điện thoại và CCCD/);
+    assert.match(operation.description, /kết quả đánh giá đã gửi/);
     assert.match(operation.description, /60 yêu cầu\/10 phút/);
     assert.equal("attachments" in example.data[0], false);
+    assert.equal("phoneNumber" in example.data[0].applicant, false);
+    assert.equal("citizenId" in example.data[0].applicant, false);
+    assert.equal("address" in example.data[0].applicant, false);
+    assert.equal(example.data[0].ratingStatus, "RATED");
+    assert.equal(example.data[0].rating.score, 5);
   });
 
-  it("looks up by code and masks sensitive citizen values", async () => {
+  it("looks up by code and omits sensitive citizen values", async () => {
     let lookupInput;
     LeaderMeetingRegistrationRepository.findForCitizenLookup = async (input) => {
       lookupInput = input;
@@ -91,9 +96,49 @@ describe("POST /api/leader-meeting-registrations/lookup", () => {
 
       assert.equal(response.status, 200);
       assert.equal(lookupInput.registrationCode, "LD000123");
-      assert.equal(body.data[0].applicant.phoneNumber, "******4567");
-      assert.equal(body.data[0].applicant.citizenId, "********8901");
+      assert.equal(body.data[0].applicant.fullName, "Nguyễn Văn Bình");
+      assert.equal("phoneNumber" in body.data[0].applicant, false);
+      assert.equal("citizenId" in body.data[0].applicant, false);
+      assert.equal("address" in body.data[0].applicant, false);
+      assert.equal("topic" in body.data[0], false);
+      assert.equal("reason" in body.data[0], false);
       assert.equal("attachments" in body.data[0], false);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns the saved rating so the citizen cannot rate the same ticket again", async () => {
+    LeaderMeetingRegistrationRepository.findForCitizenLookup = async () => [
+      {
+        ...fixture,
+        trang_thai: "COMPLETED",
+        danh_gia_gap_lanh_dao: {
+          id: "523e4567-e89b-42d3-a456-426614174001",
+          diem_tong: 4,
+          nhan_xet: "Lãnh đạo hướng dẫn rõ ràng.",
+          thoi_gian_tao: new Date("2099-08-25T04:15:00.000Z"),
+        },
+      },
+    ];
+    const server = createServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/leader-meeting-registrations/lookup`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ registrationCode: "LD000123" }),
+        }
+      );
+      const body = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.equal(body.data[0].ratingStatus, "RATED");
+      assert.equal(body.data[0].rating.score, 4);
+      assert.equal(body.data[0].rating.comment, "Lãnh đạo hướng dẫn rõ ràng.");
+      assert.equal("selectedSuggestions" in body.data[0].rating, false);
     } finally {
       server.close();
     }

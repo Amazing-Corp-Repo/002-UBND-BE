@@ -21,7 +21,6 @@ const eligible = {
 const validBody = {
   registrationCode: "LD000126",
   score: 5,
-  selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
   comment: "Tôi rất hài lòng",
 };
 const createServer = () => {
@@ -70,13 +69,14 @@ describe("POST /api/leader-meeting-ratings", () => {
       assert.equal(response.status, 200);
       assert.equal(body.data.registrationCode, "LD000126");
       assert.equal(body.data.score, 5);
-      assert.deepEqual(body.data.selectedSuggestions, validBody.selectedSuggestions);
+      assert.equal(body.data.comment, validBody.comment);
+      assert.equal("selectedSuggestions" in body.data, false);
     } finally {
       server.close();
     }
   });
 
-  it("returns 400 for missing data or a suggestion from another score", async () => {
+  it("returns 400 for missing required data", async () => {
     const server = createServer();
     const { port } = server.address();
     const url = `http://127.0.0.1:${port}/api/leader-meeting-ratings`;
@@ -86,16 +86,7 @@ describe("POST /api/leader-meeting-ratings", () => {
         headers: { "content-type": "application/json" },
         body: "{}",
       });
-      const invalidSuggestion = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...validBody,
-          selectedSuggestions: ["Lãnh đạo giao tiếp lịch sự"],
-        }),
-      });
       assert.equal(missing.status, 400);
-      assert.equal(invalidSuggestion.status, 400);
     } finally {
       server.close();
     }

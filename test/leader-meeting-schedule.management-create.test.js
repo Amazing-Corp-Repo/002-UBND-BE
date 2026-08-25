@@ -112,6 +112,61 @@ describe("POST /api/leader-meeting-schedules/management", () => {
     }
   });
 
+  it("accepts openSlots from the fixed 30-minute daily grid", async () => {
+    const server = createServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/leader-meeting-schedules/management`,
+        {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${token()}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            receptionDate: "2099-08-29",
+            openSlots: [
+              { startTime: "08:30", endTime: "09:00" },
+              { startTime: "11:00", endTime: "11:30" },
+            ],
+          }),
+        }
+      );
+
+      assert.equal(response.status, 200);
+      assert.equal(createInput.slots.length, 2);
+      assert.equal(createInput.location, "Phòng tiếp công dân");
+      assert.equal(createInput.slots[0].endTime, "09:00");
+    } finally {
+      server.close();
+    }
+  });
+
+  it("rejects openSlots outside the fixed daily grid", async () => {
+    const server = createServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/leader-meeting-schedules/management`,
+        {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${token()}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            receptionDate: "2099-08-29",
+            openSlots: [{ startTime: "08:30", endTime: "10:00" }],
+          }),
+        }
+      );
+      assert.equal(response.status, 400);
+    } finally {
+      server.close();
+    }
+  });
+
   it("rejects overlapping slots and a non-leader role", async () => {
     const server = createServer();
     const { port } = server.address();

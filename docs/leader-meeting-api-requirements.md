@@ -4,7 +4,7 @@
 
 Tài liệu này tổng hợp module **Đăng ký gặp lãnh đạo**, thuộc chức năng **Quản lý lịch tiếp công dân** của role lãnh đạo.
 
-Tổng cộng cần xây dựng **22 API**.
+Tổng cộng đã xây dựng **23 API**.
 
 ### 1.1. Ranh giới với tiếp dân tại quầy
 
@@ -45,7 +45,7 @@ Quy tắc:
 - Chỉ đánh giá khi đơn ở trạng thái `COMPLETED`.
 - Đánh giá được thực hiện trên iPad, không thực hiện trên Mobile người dân.
 
-## 3. Danh sách 22 API
+## 3. Danh sách 23 API
 
 ### 3.1. API công khai cho Mobile — 3 API
 
@@ -118,7 +118,7 @@ Hoặc theo số điện thoại:
 
 API phải áp dụng rate limit, che dữ liệu nhạy cảm và không trả đường dẫn file lưu trữ thật.
 
-### 3.2. API quản lý lịch của lãnh đạo — 6 API
+### 3.2. API quản lý lịch của lãnh đạo — 7 API
 
 | STT | API | Chức năng |
 |---:|---|---|
@@ -127,7 +127,8 @@ API phải áp dụng rate limit, che dữ liệu nhạy cảm và không trả 
 | 6 | `POST /api/leader-meeting-schedules/management` | Lãnh đạo tạo lịch cho chính mình |
 | 7 | `PUT /api/leader-meeting-schedules/management/{id}` | Sửa lịch khi chưa có đơn giữ chỗ |
 | 8 | `PUT /api/leader-meeting-schedules/management/{id}/status` | Bật hoặc tắt lịch |
-| 9 | `DELETE /api/leader-meeting-schedules/management/{id}` | Soft delete lịch chưa có đăng ký |
+| 9 | `PATCH /api/leader-meeting-schedules/management/daily-slots/status` | Bật hoặc tắt một trong 15 ca cố định của ngày làm việc |
+| 10 | `DELETE /api/leader-meeting-schedules/management/{id}` | Soft delete lịch chưa có đăng ký |
 
 Request tạo lịch:
 
@@ -148,20 +149,20 @@ Request tạo lịch:
 Quy tắc:
 
 - BE lấy `leaderId` từ access token, không tin `leaderId` từ request.
-- Khung giờ có thể là khung 90 phút mặc định hoặc khoảng thời gian do lãnh đạo tự chọn.
-- Không cho sửa, vô hiệu hóa hoặc xóa lịch nếu lịch đã có đơn giữ chỗ, trừ trường hợp nghiệp vụ được bổ sung riêng.
+- Contract `slots` cũ vẫn hỗ trợ khoảng thời gian tùy chọn để không phá API hiện hữu; UI mới sử dụng `openSlots` với 15 ca cố định, mỗi ca 30 phút.
+- Không cho đổi ngày hoặc đóng ca đã có đơn giữ chỗ; API bật/tắt từng ca không ảnh hưởng các ca khác.
 
 ### 3.3. API quản lý đơn — 7 API
 
 | STT | API | Chức năng |
 |---:|---|---|
-| 10 | `GET /api/leader-meeting-registrations` | Danh sách đơn theo quyền |
-| 11 | `GET /api/leader-meeting-registrations/{id}` | Xem chi tiết hồ sơ, lịch và tài liệu |
-| 12 | `PATCH /api/leader-meeting-registrations/{id}/approve` | Chuyển `PENDING → APPROVED` |
-| 13 | `PATCH /api/leader-meeting-registrations/{id}/reject` | Chuyển `PENDING → REJECTED` |
-| 14 | `PATCH /api/leader-meeting-registrations/{id}/process` | Chuyển `APPROVED → IN_PROGRESS` |
-| 15 | `PATCH /api/leader-meeting-registrations/{id}/complete` | Chuyển `IN_PROGRESS → COMPLETED` |
-| 16 | `PATCH /api/leader-meeting-registrations/{id}/cancel` | Chuyển `APPROVED → CANCELED` |
+| 11 | `GET /api/leader-meeting-registrations` | Danh sách đơn theo quyền |
+| 12 | `GET /api/leader-meeting-registrations/{id}` | Xem chi tiết hồ sơ, lịch và tài liệu |
+| 13 | `PATCH /api/leader-meeting-registrations/{id}/approve` | Chuyển `PENDING → APPROVED` |
+| 14 | `PATCH /api/leader-meeting-registrations/{id}/reject` | Chuyển `PENDING → REJECTED` |
+| 15 | `PATCH /api/leader-meeting-registrations/{id}/process` | Chuyển `APPROVED → IN_PROGRESS` |
+| 16 | `PATCH /api/leader-meeting-registrations/{id}/complete` | Chuyển `IN_PROGRESS → COMPLETED` |
+| 17 | `PATCH /api/leader-meeting-registrations/{id}/cancel` | Chuyển `APPROVED → CANCELED` |
 
 API danh sách hỗ trợ các bộ lọc:
 
@@ -213,7 +214,7 @@ Chỉ đúng lãnh đạo của lịch hẹn được gọi API hủy.
 
 | STT | API | Chức năng |
 |---:|---|---|
-| 17 | `GET /api/leader-meeting-registrations/{id}/attachments/{attachmentId}` | Xem ảnh CCCD hoặc xem/tải tài liệu |
+| 18 | `GET /api/leader-meeting-registrations/{id}/attachments/{attachmentId}` | Xem ảnh CCCD hoặc xem/tải tài liệu |
 
 Quy tắc:
 
@@ -228,11 +229,11 @@ Quy tắc:
 
 | STT | API | Chức năng |
 |---:|---|---|
-| 18 | `GET /api/leader-meeting-ratings/configuration` | Trả thang điểm và gợi ý đánh giá |
-| 19 | `POST /api/leader-meeting-ratings` | Gửi đánh giá sau khi đơn hoàn thành |
-| 20 | `GET /api/leader-meeting-ratings` | Danh sách đánh giá theo quyền |
-| 21 | `GET /api/leader-meeting-ratings/statistics` | Thống kê theo lãnh đạo và thời gian |
-| 22 | `GET /api/leader-meeting-ratings/{id}` | Xem chi tiết đánh giá |
+| 19 | `GET /api/leader-meeting-ratings/configuration` | Trả thang điểm và giới hạn nhận xét tự nhập |
+| 20 | `POST /api/leader-meeting-ratings` | Gửi đánh giá sau khi đơn hoàn thành |
+| 21 | `GET /api/leader-meeting-ratings` | Danh sách đánh giá theo quyền |
+| 22 | `GET /api/leader-meeting-ratings/statistics` | Thống kê theo lãnh đạo và thời gian |
+| 23 | `GET /api/leader-meeting-ratings/{id}` | Xem chi tiết đánh giá |
 
 Điều kiện gửi đánh giá:
 
@@ -491,7 +492,7 @@ Cần seed tối thiểu:
 ## 12. Trạng thái tài liệu
 
 - Nghiệp vụ đã được chốt theo trao đổi hiện tại.
-- Đã triển khai đủ 22 API theo cấu trúc route-controller-service-repository, validator, phân quyền, audit và Swagger.
+- Đã triển khai đủ 23 API theo cấu trúc route-controller-service-repository, validator, phân quyền, audit và Swagger.
 - Đã có migration schema/workflow, chống trùng theo ngày hẹn và backfill idempotent có dry-run.
 - Hai migration gặp lãnh đạo đã được deploy trên DB DEV ngày 20/08/2026.
 - Bản ghi `LEADER_MEETING` cũ trên DB DEV đã được backfill và đối soát đúng một đăng ký/một đánh giá; chạy apply lần hai không nhân đôi.

@@ -16,7 +16,6 @@ const token = (roles = ["LANH_DAO"], permissions = [PERMISSION.LMRT_GET_ALL]) =>
 const fixture = {
   id: "723e4567-e89b-42d3-a456-426614174001",
   diem_tong: 5,
-  ly_do: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
   nhan_xet: "Tôi rất hài lòng",
   thoi_gian_tao: new Date(),
   dang_ky_gap_lanh_dao: {

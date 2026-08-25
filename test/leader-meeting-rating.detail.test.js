@@ -18,7 +18,6 @@ const fixture = {
   id: ratingId,
   diem_tong: 5,
   tieu_chi: null,
-  ly_do: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
   nhan_xet: "Tôi rất hài lòng",
   thoi_gian_tao: new Date(),
   dang_ky_gap_lanh_dao: {

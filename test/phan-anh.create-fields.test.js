@@ -17,9 +17,7 @@ import {
 const original = {
   findLinhVuc: LinhVucPhanAnhRepository.findById,
   getManagerEmails: LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId,
-  createPhanAnh: PhanAnhRepository.create,
-  createHistory: PhanAnhRepository.createLichSuTrangThaiPhanAnh,
-  addFiles: PhanAnhRepository.addFileToPhanAnh,
+  createWithInitialState: PhanAnhRepository.createWithInitialState,
   getAllAdmin: UserRepository.getAllAdmin,
   findUser: UserRepository.findById,
   sendMail: MailService.sendMailCC,
@@ -40,6 +38,8 @@ const commonInput = {
 };
 
 let capturedData;
+let capturedInitialStatus;
+let capturedAttachments;
 
 function createTestServer() {
   const app = express();
@@ -72,19 +72,22 @@ function toPublicFormData(overrides = {}) {
 
 beforeEach(() => {
   capturedData = null;
+  capturedInitialStatus = null;
+  capturedAttachments = null;
   LinhVucPhanAnhRepository.findById = async () => ({
     id: commonInput.idLinhVucPhanAnh,
     is_active: true,
   });
   LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId = async () => [];
-  PhanAnhRepository.create = async (data) => {
+  PhanAnhRepository.createWithInitialState = async (data, initialStatus, attachments) => {
     capturedData = data;
-    return { id: "complaint-id", ...data };
+    capturedInitialStatus = initialStatus;
+    capturedAttachments = attachments;
+    return {
+      createdPhanAnh: { id: "complaint-id", ...data },
+      trangThai: { ten: initialStatus.ten },
+    };
   };
-  PhanAnhRepository.createLichSuTrangThaiPhanAnh = async () => ({
-    ten: "Đã gửi",
-  });
-  PhanAnhRepository.addFileToPhanAnh = async () => ({});
   UserRepository.getAllAdmin = async () => [];
   UserRepository.findById = async (id) => ({ id });
   MailService.sendMailCC = async () => ({});
@@ -93,9 +96,7 @@ beforeEach(() => {
 afterEach(() => {
   LinhVucPhanAnhRepository.findById = original.findLinhVuc;
   LinhVucPhanAnhRepository.getManagerEmailsByLinhVucId = original.getManagerEmails;
-  PhanAnhRepository.create = original.createPhanAnh;
-  PhanAnhRepository.createLichSuTrangThaiPhanAnh = original.createHistory;
-  PhanAnhRepository.addFileToPhanAnh = original.addFiles;
+  PhanAnhRepository.createWithInitialState = original.createWithInitialState;
   UserRepository.getAllAdmin = original.getAllAdmin;
   UserRepository.findById = original.findUser;
   MailService.sendMailCC = original.sendMail;
@@ -133,6 +134,8 @@ describe("Hai API tạo phản ánh", () => {
     assert.equal(capturedData.cccd, commonInput.cccd);
     assert.equal(capturedData.khu_pho, commonInput.khuPho);
     assert.equal(capturedData.mo_ta_vi_tri, commonInput.moTaViTri);
+    assert.equal(capturedInitialStatus.ten, "Đã gửi");
+    assert.deepEqual(capturedAttachments, []);
     assert.equal(result.cccd, commonInput.cccd);
     assert.equal(result.khu_pho, commonInput.khuPho);
     assert.equal(result.mo_ta_vi_tri, commonInput.moTaViTri);
@@ -157,6 +160,8 @@ describe("Hai API tạo phản ánh", () => {
     );
 
     assert.equal(capturedData.nguoi_tao, userId);
+    assert.equal(capturedInitialStatus.ten, "Đã gửi");
+    assert.deepEqual(capturedAttachments, []);
     assert.equal(result.cccd, commonInput.cccd);
     assert.equal(result.khu_pho, commonInput.khuPho);
     assert.equal(result.mo_ta_vi_tri, commonInput.moTaViTri);
