@@ -98,7 +98,7 @@ userRoute.get(
 
 userRoute.post(
   "/create-admin-account",
-  // logAuthMiddleware,
+   logAuthMiddleware,
   validate(CreateAdminAccountRequest),
   UserController.createAdminAccount,
 );
