@@ -35,6 +35,7 @@ export const GetLeaderMeetingScheduleManagementQuery = Joi.object({
   toDate: dateSchema("Ngày kết thúc").optional(),
   isActive: Joi.boolean().truthy("true").falsy("false").optional(),
   search: Joi.string().trim().max(100).allow("").optional(),
+  date: dateSchema("Ngày làm việc").optional(),
 });
 
 export const LeaderMeetingScheduleIdParams = Joi.object({
@@ -67,18 +68,56 @@ export const CreateLeaderMeetingScheduleRequest = Joi.object({
   }),
   location: Joi.string().trim().max(255).optional().allow("", null),
   note: Joi.string().trim().max(2000).optional().allow("", null),
-  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).required().messages({
+  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).optional().messages({
     "array.min": "Phải có ít nhất một khung giờ",
     "array.max": "Một lịch chỉ được có tối đa 20 khung giờ",
-    "any.required": "Danh sách khung giờ là bắt buộc",
   }),
-});
+  openSlots: Joi.array()
+    .items(leaderMeetingSlotSchema)
+    .min(1)
+    .max(15)
+    .optional()
+    .messages({
+      "array.min": "Phải mở ít nhất một ca tiếp công dân",
+      "array.max": "Một ngày chỉ có tối đa 15 ca tiếp công dân",
+    }),
+})
+  .xor("slots", "openSlots")
+  .messages({
+    "object.missing": "Danh sách khung giờ là bắt buộc",
+    "object.xor": "Chỉ được gửi một trong hai trường slots hoặc openSlots",
+  });
 
-export const UpdateLeaderMeetingScheduleRequest = CreateLeaderMeetingScheduleRequest;
+export const UpdateLeaderMeetingScheduleRequest = Joi.object({
+  receptionDate: dateSchema("Ngày gặp lãnh đạo").required().messages({
+    "any.required": "Ngày gặp lãnh đạo là bắt buộc",
+  }),
+  location: Joi.string().trim().max(255).optional().allow("", null),
+  note: Joi.string().trim().max(2000).optional().allow("", null),
+  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).optional(),
+  openSlots: Joi.array().items(leaderMeetingSlotSchema).min(0).max(15).optional(),
+})
+  .xor("slots", "openSlots")
+  .messages({
+    "object.missing": "Danh sách khung giờ là bắt buộc",
+    "object.xor": "Chỉ được gửi một trong hai trường slots hoặc openSlots",
+  });
 
 export const UpdateLeaderMeetingScheduleStatusRequest = Joi.object({
   isActive: Joi.boolean().required().messages({
     "boolean.base": "Trạng thái hoạt động phải là true hoặc false",
     "any.required": "Trạng thái hoạt động là bắt buộc",
+  }),
+});
+
+export const UpdateLeaderMeetingDailySlotStatusRequest = Joi.object({
+  receptionDate: dateSchema("Ngày làm việc").required().messages({
+    "any.required": "Ngày làm việc là bắt buộc",
+  }),
+  startTime: leaderMeetingSlotSchema.extract("startTime"),
+  endTime: leaderMeetingSlotSchema.extract("endTime"),
+  isOpen: Joi.boolean().required().messages({
+    "boolean.base": "Trạng thái mở ca phải là true hoặc false",
+    "any.required": "Trạng thái mở ca là bắt buộc",
   }),
 });

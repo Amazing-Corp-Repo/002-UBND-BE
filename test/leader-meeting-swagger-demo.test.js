@@ -15,8 +15,8 @@ const operations = Object.entries(swagger).flatMap(([path, pathItem]) =>
 const parameterExample = (operation, name) =>
   operation.parameters.find((parameter) => parameter.name === name).schema.example;
 
-test("Swagger documents all 22 leader meeting APIs in Vietnamese", () => {
-  assert.equal(operations.length, 22);
+test("Swagger documents all 23 leader meeting APIs in Vietnamese", () => {
+  assert.equal(operations.length, 23);
   for (const { operation } of operations) {
     assert.ok(operation.summary?.length > 5);
     assert.ok(operation.description?.length > 20);

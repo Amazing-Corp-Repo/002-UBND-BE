@@ -104,6 +104,62 @@ describe("PUT /api/leader-meeting-schedules/management/:id", () => {
     }
   });
 
+  it("synchronizes openSlots from the fixed 30-minute daily grid", async () => {
+    const server = createServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/leader-meeting-schedules/management/${scheduleId}`,
+        {
+          method: "PUT",
+          headers: {
+            authorization: `Bearer ${token()}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            receptionDate: "2099-08-26",
+            openSlots: [
+              { startTime: "13:30", endTime: "14:00" },
+              { startTime: "14:00", endTime: "14:30" },
+            ],
+          }),
+        }
+      );
+
+      assert.equal(response.status, 200);
+      assert.equal(updateArgs[2].slots.length, 2);
+      assert.equal(updateArgs[2].location, "Phòng tiếp công dân");
+    } finally {
+      server.close();
+    }
+  });
+
+  it("allows synchronizing the day to zero open slots", async () => {
+    const server = createServer();
+    const { port } = server.address();
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${port}/api/leader-meeting-schedules/management/${scheduleId}`,
+        {
+          method: "PUT",
+          headers: {
+            authorization: `Bearer ${token()}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            receptionDate: "2099-08-26",
+            openSlots: [],
+          }),
+        }
+      );
+
+      assert.equal(response.status, 200);
+      assert.deepEqual(updateArgs[2].slots, []);
+    } finally {
+      server.close();
+    }
+  });
+
   it("returns 409 when the schedule has registrations", async () => {
     LeaderMeetingScheduleRepository.updateManagement = async () => ({
       conflict: "HAS_REGISTRATIONS",

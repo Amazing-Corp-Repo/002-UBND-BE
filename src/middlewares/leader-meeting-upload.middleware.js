@@ -86,6 +86,15 @@ export const leaderMeetingRegistrationUpload = (req, res, next) => {
     }
 
     const files = getFiles(req);
+    const hasCitizenIdFront = Boolean(req.files?.citizenIdFront?.[0]);
+    const hasCitizenIdBack = Boolean(req.files?.citizenIdBack?.[0]);
+    if (!hasCitizenIdFront || !hasCitizenIdBack) {
+      await cleanupFiles(files);
+      return next(
+        new BaseError(400, "Ảnh mặt trước và mặt sau CCCD là bắt buộc")
+      );
+    }
+
     const oversizedCitizenImage = files.find(
       (file) =>
         file.fieldname !== "supportingDocuments" &&

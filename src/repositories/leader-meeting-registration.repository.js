@@ -105,12 +105,7 @@ const LeaderMeetingRegistrationRepository = {
         id: true,
         ma_dang_ky: true,
         ngay_hen: true,
-        chu_de: true,
-        ly_do: true,
         ho_ten: true,
-        sdt: true,
-        cccd: true,
-        dia_chi: true,
         trang_thai: true,
         ly_do_tu_choi: true,
         thoi_gian_tu_choi: true,
@@ -136,7 +131,12 @@ const LeaderMeetingRegistrationRepository = {
           },
         },
         danh_gia_gap_lanh_dao: {
-          select: { id: true },
+          select: {
+            id: true,
+            diem_tong: true,
+            nhan_xet: true,
+            thoi_gian_tao: true,
+          },
         },
       },
     });

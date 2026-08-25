@@ -34,7 +34,6 @@ const LeaderMeetingRatingSwagger = {
                       timeSlot: "09:00 - 10:30",
                       leader: { id: "123e4567-e89b-42d3-a456-426614174001", fullName: "Nguyễn Văn An" },
                       score: 5,
-                      selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
                       comment: "Tôi rất hài lòng",
                     }],
                     pagination: { currentPage: 1, pageSize: 10, totalPages: 1, totalItems: 1 },
@@ -53,7 +52,7 @@ const LeaderMeetingRatingSwagger = {
       tags: ["LeaderMeetingRating"],
       summary: "Gửi đánh giá buổi gặp lãnh đạo từ iPad",
       description:
-        "API công khai nhận đánh giá 1-5 sao theo mã đăng ký. Chỉ đơn COMPLETED được đánh giá, mỗi đơn chỉ một lần, gợi ý phải thuộc đúng mức sao và nhận xét tối đa 2000 ký tự. Giới hạn 20 yêu cầu/10 phút/IP; unique DB chống gửi trùng đồng thời.",
+        "API công khai nhận đánh giá 1-5 sao và nhận xét tự nhập theo mã đăng ký. Chỉ đơn COMPLETED được đánh giá, mỗi đơn chỉ một lần và nhận xét tối đa 2000 ký tự. Giới hạn 20 yêu cầu/10 phút/IP; unique DB chống gửi trùng đồng thời.",
       requestBody: {
         required: true,
         content: {
@@ -64,11 +63,6 @@ const LeaderMeetingRatingSwagger = {
               properties: {
                 registrationCode: { type: "string", example: "LD000130" },
                 score: { type: "integer", minimum: 1, maximum: 5, example: 5 },
-                selectedSuggestions: {
-                  type: "array",
-                  maxItems: 5,
-                  items: { type: "string" },
-                },
                 comment: { type: "string", maxLength: 2000 },
               },
             },
@@ -78,10 +72,6 @@ const LeaderMeetingRatingSwagger = {
                 value: {
                   registrationCode: "LD000130",
                   score: 5,
-                  selectedSuggestions: [
-                    "Lãnh đạo rất tận tình và chuyên nghiệp",
-                    "Tôi rất hài lòng với buổi gặp lãnh đạo",
-                  ],
                   comment: "Buổi gặp giải quyết đúng nội dung tôi quan tâm.",
                 },
               },
@@ -105,7 +95,6 @@ const LeaderMeetingRatingSwagger = {
                       id: "723e4567-e89b-42d3-a456-426614174001",
                       registrationCode: "LD000130",
                       score: 5,
-                      selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
                       comment: "Buổi gặp giải quyết đúng nội dung tôi quan tâm.",
                     },
                   },
@@ -114,7 +103,7 @@ const LeaderMeetingRatingSwagger = {
             },
           },
         },
-        400: { description: "Thiếu/sai dữ liệu hoặc gợi ý không thuộc mức sao" },
+        400: { description: "Thiếu hoặc sai dữ liệu đánh giá" },
         404: { description: "Không tìm thấy mã đăng ký gặp lãnh đạo" },
         409: { description: "Buổi gặp chưa COMPLETED hoặc đơn đã được đánh giá" },
         429: { description: "Vượt quá 20 yêu cầu trong 10 phút trên một IP" },
@@ -126,7 +115,7 @@ const LeaderMeetingRatingSwagger = {
       tags: ["LeaderMeetingRating"],
       summary: "Lấy cấu hình đánh giá gặp lãnh đạo trên iPad",
       description:
-        "API công khai trả thang điểm 1-5 sao, giới hạn nhận xét 2000 ký tự và các gợi ý tích cực tương ứng từng mức sao. Đơn chỉ được gửi đánh giá khi đã ở trạng thái COMPLETED.",
+        "API công khai trả thang điểm 1-5 sao và giới hạn nhận xét tự nhập 2000 ký tự. Đơn chỉ được gửi đánh giá khi đã ở trạng thái COMPLETED.",
       responses: {
         200: {
           description: "Lấy cấu hình đánh giá gặp lãnh đạo thành công",
@@ -141,13 +130,6 @@ const LeaderMeetingRatingSwagger = {
                     data: {
                       scale: { min: 1, max: 5 },
                       comment: { maxLength: 2000 },
-                      suggestionsByScore: {
-                        1: ["Lãnh đạo đã tiếp nhận ý kiến của tôi"],
-                        2: ["Lãnh đạo có lắng nghe ý kiến"],
-                        3: ["Lãnh đạo giao tiếp lịch sự"],
-                        4: ["Lãnh đạo nhiệt tình và tôn trọng"],
-                        5: ["Tôi rất hài lòng với buổi gặp lãnh đạo"],
-                      },
                       eligibility: { requiredRegistrationStatus: "COMPLETED" },
                     },
                   },
@@ -237,7 +219,6 @@ const LeaderMeetingRatingSwagger = {
                     data: {
                       id: "723e4567-e89b-42d3-a456-426614174001",
                       score: 5,
-                      selectedSuggestions: ["Lãnh đạo rất tận tình và chuyên nghiệp"],
                       comment: "Tôi rất hài lòng",
                       registration: {
                         id: "423e4567-e89b-42d3-a456-426614174007",

@@ -16,15 +16,6 @@ export const CreateLeaderMeetingRatingRequest = Joi.object({
     "number.max": "Điểm đánh giá phải từ 1 đến 5",
     "any.required": "Điểm đánh giá là bắt buộc",
   }),
-  selectedSuggestions: Joi.array()
-    .items(Joi.string().trim().max(200))
-    .unique()
-    .max(5)
-    .default([])
-    .messages({
-      "array.unique": "Gợi ý đánh giá không được trùng nhau",
-      "array.max": "Chỉ được chọn tối đa 5 gợi ý",
-    }),
   comment: Joi.string()
     .trim()
     .max(LEADER_MEETING_RATING_COMMENT_MAX_LENGTH)

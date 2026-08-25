@@ -21,7 +21,7 @@ describe("GET /api/leader-meeting-ratings/configuration", () => {
     assert.match(operation.description, /COMPLETED/);
   });
 
-  it("returns positive suggestions for every score", async () => {
+  it("returns only the star scale, comment limit and eligibility", async () => {
     const server = createServer();
     const { port } = server.address();
     try {
@@ -33,10 +33,7 @@ describe("GET /api/leader-meeting-ratings/configuration", () => {
       assert.deepEqual(body.data.scale, { min: 1, max: 5 });
       assert.equal(body.data.comment.maxLength, 2000);
       assert.equal(body.data.eligibility.requiredRegistrationStatus, "COMPLETED");
-      assert.deepEqual(Object.keys(body.data.suggestionsByScore), ["1", "2", "3", "4", "5"]);
-      for (const suggestions of Object.values(body.data.suggestionsByScore)) {
-        assert.ok(suggestions.length > 0);
-      }
+      assert.equal("suggestionsByScore" in body.data, false);
     } finally {
       server.close();
     }

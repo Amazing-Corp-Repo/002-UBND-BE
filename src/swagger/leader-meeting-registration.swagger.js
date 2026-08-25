@@ -4,7 +4,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Tra cứu đăng ký gặp lãnh đạo",
       description:
-        "Tra cứu bằng đúng một trong hai giá trị: mã đăng ký hoặc số điện thoại. Kết quả che số điện thoại và CCCD, không trả đường dẫn file lưu trữ. Giới hạn 60 yêu cầu/10 phút/IP để chống dò mã.",
+        "Tra cứu bằng đúng một trong hai giá trị: mã đăng ký hoặc số điện thoại. Kết quả chỉ trả thông tin phiếu hẹn, họ tên người hẹn và kết quả đánh giá đã gửi; không trả số điện thoại, CCCD, địa chỉ, chủ đề, nội dung kiến nghị hoặc file đính kèm. Giới hạn 60 yêu cầu/10 phút/IP để chống dò mã.",
       requestBody: {
         required: true,
         content: {
@@ -36,26 +36,29 @@ const LeaderMeetingRegistrationSwagger = {
             "application/json": {
               examples: {
                 success: {
-                  summary: "Demo thành công - đơn đang chờ duyệt",
+                  summary: "Demo thành công - phiếu đã đánh giá",
                   value: {
                     success: true,
                     message: "Tra cứu đăng ký gặp lãnh đạo thành công",
                     data: [{
                       id: "423e4567-e89b-42d3-a456-426614174001",
                       registrationCode: "LD000123",
-                      status: "PENDING",
+                      status: "COMPLETED",
                       receptionDate: "2099-08-25",
                       timeSlot: "09:00 - 10:30",
                       applicant: {
                         fullName: "Nguyễn Văn Bình",
-                        phoneNumber: "******4567",
-                        citizenId: "********8901",
                       },
                       leader: {
                         id: "123e4567-e89b-42d3-a456-426614174001",
                         fullName: "Nguyễn Văn An",
                       },
-                      ratingStatus: "NOT_RATED",
+                      ratingStatus: "RATED",
+                      rating: {
+                        score: 5,
+                        comment: "Lãnh đạo tiếp công dân chu đáo và hướng dẫn rõ ràng.",
+                        createdAt: "2099-08-25T04:15:00.000Z",
+                      },
                     }],
                   },
                 },
@@ -141,6 +144,8 @@ const LeaderMeetingRegistrationSwagger = {
                 "fullName",
                 "phoneNumber",
                 "citizenId",
+                "citizenIdFront",
+                "citizenIdBack",
                 "address",
                 "reason",
               ],
@@ -171,12 +176,12 @@ const LeaderMeetingRegistrationSwagger = {
                 citizenIdFront: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt trước CCCD, không bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt trước CCCD, bắt buộc, tối đa 5MB",
                 },
                 citizenIdBack: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt sau CCCD, không bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt sau CCCD, bắt buộc, tối đa 5MB",
                 },
                 supportingDocuments: {
                   type: "array",

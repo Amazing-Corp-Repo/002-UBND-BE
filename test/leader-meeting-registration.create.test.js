@@ -39,9 +39,23 @@ const validInput = {
   reason: "Tôi đề nghị được hướng dẫn giải quyết hồ sơ đất đai.",
 };
 
-const toFormData = (input) => {
+const toFormData = (input, { front = true, back = true } = {}) => {
   const form = new FormData();
   for (const [key, value] of Object.entries(input)) form.append(key, value);
+  if (front) {
+    form.append(
+      "citizenIdFront",
+      new Blob(["front"], { type: "image/jpeg" }),
+      "cccd-front.jpg"
+    );
+  }
+  if (back) {
+    form.append(
+      "citizenIdBack",
+      new Blob(["back"], { type: "image/jpeg" }),
+      "cccd-back.jpg"
+    );
+  }
   return form;
 };
 
@@ -70,12 +84,14 @@ describe("POST /api/leader-meeting-registrations", () => {
 
     assert.match(operation.description, /ngày hẹn/);
     assert.match(operation.description, /30 yêu cầu\/10 phút/);
-    assert.equal(schema.properties.citizenIdFront.description.includes("không bắt buộc"), true);
+    assert.equal(schema.required.includes("citizenIdFront"), true);
+    assert.equal(schema.required.includes("citizenIdBack"), true);
+    assert.equal(schema.properties.citizenIdFront.description.includes("bắt buộc"), true);
     assert.equal(schema.properties.supportingDocuments.maxItems, 3);
     assert.equal(operation.responses[200].content["application/json"].examples.success.value.data.status, "PENDING");
   });
 
-  it("creates a valid registration without requiring CCCD images", async () => {
+  it("creates a valid registration with both required CCCD images", async () => {
     let repositoryInput;
     LeaderMeetingRegistrationRepository.createWithGuards = async (input) => {
       repositoryInput = input;
@@ -96,7 +112,30 @@ describe("POST /api/leader-meeting-registrations", () => {
       assert.equal(repositoryInput.data.trang_thai, "PENDING");
       assert.ok(repositoryInput.data.ngay_lam_don instanceof Date);
       assert.equal("leaderId" in repositoryInput.data, false);
-      assert.deepEqual(repositoryInput.attachments, []);
+      assert.deepEqual(
+        repositoryInput.attachments.map((item) => item.loai_dinh_kem).sort(),
+        ["CCCD_BACK", "CCCD_FRONT"]
+      );
+    } finally {
+      server.close();
+    }
+  });
+
+  it("returns 400 when either side of the CCCD image is missing", async () => {
+    const server = createServer();
+    const { port } = server.address();
+    try {
+      const missingFront = await fetch(
+        `http://127.0.0.1:${port}/api/leader-meeting-registrations`,
+        { method: "POST", body: toFormData(validInput, { front: false }) }
+      );
+      const missingBack = await fetch(
+        `http://127.0.0.1:${port}/api/leader-meeting-registrations`,
+        { method: "POST", body: toFormData(validInput, { back: false }) }
+      );
+
+      assert.equal(missingFront.status, 400);
+      assert.equal(missingBack.status, 400);
     } finally {
       server.close();
     }
