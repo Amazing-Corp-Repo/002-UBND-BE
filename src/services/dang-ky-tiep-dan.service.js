@@ -9,6 +9,14 @@ import {
   RECEPTION_COUNTER_CODES,
 } from "../constants/reception-schedule.constant.js";
 import UserRepository from "../repositories/user.repository.js";
+import {
+  hasAssignedReceptionCounter,
+  resolveReceptionDepartment,
+} from "../mapper/reception-registration-v2.mapper.js";
+import {
+  formatVietnamDate,
+  normalizeReceptionTimes,
+} from "../utils/vietnam-time.util.js";
 
 const MAX_CODE_RETRIES = 10;
 
@@ -80,7 +88,7 @@ const maskValue = (value, visibleSuffix = 4) => {
   return `${"*".repeat(Math.max(0, value.length - visibleSuffix))}${suffix}`;
 };
 
-const mapCitizenRegistration = (item) => ({
+const mapCitizenRegistration = (item) => normalizeReceptionTimes({
   id: item.id,
   receptionCode: item.ma_tiep_dan,
   receptionType: item.loai,
@@ -92,7 +100,7 @@ const mapCitizenRegistration = (item) => ({
   phoneNumber: maskValue(item.sdt, 4),
   citizenId: maskValue(item.cccd, 4),
   address: item.dia_chi,
-  department: item.bo_phan,
+  department: resolveReceptionDepartment(item),
   leaderName: item.ten_lanh_dao,
   leaderTitle: item.chuc_vu_lanh_dao,
   status: item.trang_thai,
@@ -102,14 +110,14 @@ const mapCitizenRegistration = (item) => ({
   updatedAt: item.thoi_gian_cap_nhat,
 });
 
-const mapCreatedRegistration = (item, slotId) => ({
+const mapCreatedRegistration = (item, slotId) => normalizeReceptionTimes({
   ...item,
   ...mapCitizenRegistration(item),
   scheduleId: item.id_lich_tiep_dan,
   slotId,
 });
 
-const mapStaffRegistration = (item) => ({
+const mapStaffRegistration = (item) => normalizeReceptionTimes({
   id: item.id,
   receptionCode: item.ma_tiep_dan,
   applicantName: item.ho_ten,
@@ -118,7 +126,7 @@ const mapStaffRegistration = (item) => ({
   timeSlot: item.slot,
   topic: item.chu_de,
   workingContent: item.ly_do,
-  department: item.bo_phan,
+  department: resolveReceptionDepartment(item),
   approvalStatus: item.trang_thai,
   ratingStatus:
     item.danh_gia_tiep_dan?.length > 0 ? "RATED" : "NOT_RATED",
@@ -135,7 +143,7 @@ const mapStaffRegistration = (item) => ({
 
 const mapStaffRegistrationDetail = (item) => {
   const rating = item.danh_gia_tiep_dan?.[0] || null;
-  return {
+  return normalizeReceptionTimes({
     id: item.id,
     receptionCode: item.ma_tiep_dan,
     receptionType: item.loai,
@@ -159,7 +167,7 @@ const mapStaffRegistrationDetail = (item) => {
       citizenId: item.cccd,
       address: item.dia_chi,
     },
-    department: item.bo_phan,
+    department: resolveReceptionDepartment(item),
     approvalStatus: item.trang_thai,
     approver: item.ten_lanh_dao
       ? {
@@ -183,10 +191,10 @@ const mapStaffRegistrationDetail = (item) => {
       : null,
     createdAt: item.thoi_gian_tao,
     updatedAt: item.thoi_gian_cap_nhat,
-  };
+  });
 };
 
-const mapRatingLookup = (item) => ({
+const mapRatingLookup = (item) => normalizeReceptionTimes({
   registrationId: item.id,
   receptionCode: item.ma_tiep_dan,
   receptionDate: item.ngay,
@@ -199,7 +207,7 @@ const mapRatingLookup = (item) => ({
     citizenId: maskValue(item.cccd, 4),
     address: item.dia_chi,
   },
-  department: item.bo_phan,
+  department: resolveReceptionDepartment(item),
   approvalStatus: item.trang_thai,
   ratingStatus: "NOT_RATED",
 });
@@ -214,9 +222,7 @@ const DangKyTiepDanService = {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại hoặc đã ngừng hoạt động");
     }
 
-    const scheduleDate = new Date(schedule.ngay_tiep_dan)
-      .toISOString()
-      .slice(0, 10);
+    const scheduleDate = formatVietnamDate(schedule.ngay_tiep_dan);
     if (scheduleDate < getVietnamDate()) {
       throw new BaseError(400, "Không thể đăng ký lịch tiếp dân đã qua");
     }
@@ -331,11 +337,13 @@ const DangKyTiepDanService = {
     return registrations.map(mapCitizenRegistration);
   },
 
-  async getAllForStaff(filters) {
+  async getAllForStaff(filters, currentUser) {
     const normalizedFilters = {
       ...filters,
+      handledByUserId:
+        filters.scope === "MY" ? currentUser?.userId : undefined,
       receptionDate: filters.receptionDate
-        ? new Date(filters.receptionDate).toISOString().slice(0, 10)
+        ? formatVietnamDate(filters.receptionDate)
         : undefined,
     };
     const { data, totalItems } =
@@ -376,11 +384,12 @@ const DangKyTiepDanService = {
         result = await DangKyTiepDanRepository.approvePendingWithCounterGuard(
           id,
           department,
+          currentUser.userId,
           {
-            bo_phan: department,
             trang_thai: TIEP_DAN_STATUS.APPROVED,
             ten_lanh_dao: approver.ho_va_ten || currentUser.username,
             chuc_vu_lanh_dao: approverTitle,
+            nguoi_duyet_don: currentUser.userId,
             nguoi_cap_nhat: currentUser.userId,
             thoi_gian_cap_nhat: new Date().toISOString(),
             thoi_gian_phe_duyet: new Date().toISOString(),
@@ -402,6 +411,12 @@ const DangKyTiepDanService = {
     if (result?.conflict === "COUNTER_FULL") {
       throw new BaseError(409, "Quầy tiếp nhận đã đủ sức chứa trong ca này");
     }
+    if (result?.conflict === "ASSIGNMENT_NOT_FOUND") {
+      throw new BaseError(403, "Cán bộ chưa được phân công quầy trong ca này");
+    }
+    if (result?.conflict === "ASSIGNMENT_MISMATCH") {
+      throw new BaseError(403, "Cán bộ không được phân công tại quầy này trong ca này");
+    }
     if (result?.conflict === "ALREADY_PROCESSED" || !result?.registration) {
       throw new BaseError(409, "Đăng ký đã được xử lý bởi người khác");
     }
@@ -417,7 +432,7 @@ const DangKyTiepDanService = {
     if (registration.trang_thai !== TIEP_DAN_STATUS.APPROVED) {
       throw new BaseError(409, "Chỉ đăng ký đã phê duyệt mới được hoàn thành");
     }
-    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
+    if (!hasAssignedReceptionCounter(registration)) {
       throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
     }
 
@@ -469,7 +484,7 @@ const DangKyTiepDanService = {
     if (registration.trang_thai !== TIEP_DAN_STATUS.COMPLETED) {
       throw new BaseError(409, "Buổi tiếp dân chưa hoàn thành để đánh giá");
     }
-    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
+    if (!hasAssignedReceptionCounter(registration)) {
       throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
     }
     if (registration.danh_gia_tiep_dan?.length > 0) {

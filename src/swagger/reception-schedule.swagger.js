@@ -11,46 +11,34 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Lấy lịch tiếp dân đang hoạt động dành cho Mobile",
       description:
-        "Trả về các lịch tiếp dân đang hoạt động, chưa bị xóa và còn ít nhất một khung giờ chưa qua. Khung giờ đã bắt đầu trong ngày hiện tại không được trả về. Mỗi ca có slotId đại diện, giờ bắt đầu, giờ kết thúc, sức chứa, số chỗ đã giữ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. availableSlots và openSlots vẫn được giữ nguyên để tương thích API cũ; client mới nên gửi slotId khi đăng ký.",
+        "Trả lịch tiếp dân công khai trong cửa sổ động 7 ngày theo giờ Việt Nam, gồm ngày hiện tại và 6 ngày tiếp theo. Người dân chỉ xem ngày và khoảng thời gian chung của buổi tiếp dân để đến trực tiếp; API không trả ca 1 giờ, slot, sức chứa hoặc tình trạng giữ chỗ. fromDate/toDate chỉ có thể lọc hẹp hơn bên trong cửa sổ này, không thể mở rộng quá 7 ngày.",
       parameters: [
         {
           name: "fromDate",
           in: "query",
           required: false,
+          description: "Ngày bắt đầu lọc; backend không cho nhỏ hơn ngày hiện tại theo giờ Việt Nam",
           schema: { type: "string", format: "date" },
         },
         {
           name: "toDate",
           in: "query",
           required: false,
+          description: "Ngày kết thúc lọc; backend không cho vượt quá ngày thứ 7 của cửa sổ hiển thị",
           schema: { type: "string", format: "date" },
         },
       ],
       responses: {
         200: {
-          description: "Lấy danh sách lịch tiếp dân và tình trạng chỗ thành công",
+          description: "Lấy danh sách ngày và thời gian tiếp dân thành công",
           content: {
             "application/json": {
               example: {
                 success: true,
                 data: [{
                   id: "123e4567-e89b-12d3-a456-426614174000",
-                  officerName: "Nguyễn Văn An",
-                  location: "Bộ phận tiếp công dân",
                   receptionDate: "2026-08-26",
-                  availableSlots: ["07:30 - 08:30"],
-                  openSlots: ["07:30 - 08:30"],
-                  slots: [{
-                    slotId: "223e4567-e89b-12d3-a456-426614174000",
-                    startTime: "07:30",
-                    endTime: "08:30",
-                    timeSlot: "07:30 - 08:30",
-                    totalCapacity: 16,
-                    heldCount: 3,
-                    remainingCapacity: 13,
-                    status: "AVAILABLE",
-                    isFull: false,
-                  }],
+                  timeRange: "07:30 - 11:30, 13:30 - 16:30",
                 }],
               },
             },
@@ -68,7 +56,7 @@ const ReceptionScheduleSwagger = {
       tags: ["ReceptionSchedule"],
       summary: "Cập nhật sức chứa của một quầy trong ca tiếp dân",
       description:
-        "Cán bộ có quyền LTD_UPDATE được đặt sức chứa là số nguyên từ 1 trở lên và không giới hạn tối đa. Không được giảm thấp hơn số đơn đã gán vào quầy hoặc làm tổng sức chứa của ca thấp hơn tổng số đơn đã giữ chỗ.",
+        "Cán bộ có quyền LTD_UPDATE được đặt sức chứa là số nguyên từ 1 trở lên và không giới hạn tối đa. Backend đếm đơn theo quan hệ id_cau_hinh_quay, đồng thời hỗ trợ dữ liệu cũ bằng bo_phan. Không được giảm thấp hơn số đơn đã gán vào quầy hoặc làm tổng sức chứa của ca thấp hơn tổng số đơn đã giữ chỗ.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "scheduleId", in: "path", required: true, schema: { type: "string", format: "uuid" } },
@@ -100,7 +88,7 @@ const ReceptionScheduleSwagger = {
 
 applyReceptionDemoExamples(ReceptionScheduleSwagger, {
   "GET /api/reception-schedules": {
-    parameters: { fromDate: DEMO.dates.main, toDate: "2099-08-31" },
+    parameters: { fromDate: null, toDate: null },
     responses: {
       400: errorDemo(
         "Demo 400 - Khoảng ngày không hợp lệ",

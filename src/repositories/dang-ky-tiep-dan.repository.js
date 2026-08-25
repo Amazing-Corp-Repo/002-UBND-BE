@@ -1,5 +1,8 @@
 import prisma from "../config/database.config.js";
-import { DEFAULT_RECEPTION_COUNTER_CAPACITY } from "../constants/reception-schedule.constant.js";
+import {
+  buildReceptionDepartmentFilter,
+  receptionCounterRelation,
+} from "../mapper/reception-registration-v2.mapper.js";
 
 const DangKyTiepDanRepository = {
   async findScheduleById(id) {
@@ -180,6 +183,7 @@ const DangKyTiepDanRepository = {
         is_active: true,
         is_delete: false,
       },
+      include: { cau_hinh_quay: receptionCounterRelation },
       orderBy: { thoi_gian_tao: "desc" },
       take: 50,
     });
@@ -187,19 +191,24 @@ const DangKyTiepDanRepository = {
 
   async findAllForStaff(filters) {
     const skip = (filters.page - 1) * filters.size;
+    const andFilters = [];
+    if (filters.search) {
+      andFilters.push({
+        OR: [
+          { ma_tiep_dan: { contains: filters.search, mode: "insensitive" } },
+          { ho_ten: { contains: filters.search, mode: "insensitive" } },
+          { sdt: { contains: filters.search } },
+        ],
+      });
+    }
+    const departmentFilter = buildReceptionDepartmentFilter(filters.department);
+    if (departmentFilter) andFilters.push(departmentFilter);
+
     const where = {
       loai: "COUNTER_RECEPTION",
       is_active: true,
       is_delete: false,
-      ...(filters.search
-        ? {
-            OR: [
-              { ma_tiep_dan: { contains: filters.search, mode: "insensitive" } },
-              { ho_ten: { contains: filters.search, mode: "insensitive" } },
-              { sdt: { contains: filters.search } },
-            ],
-          }
-        : {}),
+      ...(andFilters.length > 0 ? { AND: andFilters } : {}),
       ...(filters.receptionDate
         ? {
             ngay: {
@@ -211,12 +220,20 @@ const DangKyTiepDanRepository = {
       ...(filters.approvalStatus
         ? { trang_thai: filters.approvalStatus }
         : {}),
-      ...(filters.department ? { bo_phan: filters.department } : {}),
       ...(filters.ratingStatus === "RATED"
         ? { danh_gia_tiep_dan: { some: { is_delete: false } } }
         : {}),
       ...(filters.ratingStatus === "NOT_RATED"
         ? { danh_gia_tiep_dan: { none: { is_delete: false } } }
+        : {}),
+      ...(filters.handledByUserId
+        ? {
+            OR: [
+              { nguoi_duyet_don: filters.handledByUserId },
+              { nguoi_hoan_thanh: filters.handledByUserId },
+              { nguoi_tu_choi: filters.handledByUserId },
+            ],
+          }
         : {}),
     };
 
@@ -224,6 +241,7 @@ const DangKyTiepDanRepository = {
       prisma.dang_ky_tiep_dan.findMany({
         where,
         include: {
+          cau_hinh_quay: receptionCounterRelation,
           danh_gia_tiep_dan: {
             where: { is_delete: false },
             select: { id: true },
@@ -272,6 +290,8 @@ const DangKyTiepDanRepository = {
             ma_quay: true,
             khung_gio: true,
             suc_chua: true,
+            id_ca_tiep_dan: true,
+            quay_tiep_dan: receptionCounterRelation.select.quay_tiep_dan,
           },
         },
         danh_gia_tiep_dan: {
@@ -297,6 +317,7 @@ const DangKyTiepDanRepository = {
         is_active: true,
         is_delete: false,
       },
+      include: { cau_hinh_quay: receptionCounterRelation },
     });
   },
 
@@ -314,7 +335,7 @@ const DangKyTiepDanRepository = {
     return DangKyTiepDanRepository.findDetailById(id);
   },
 
-  async approvePendingWithCounterGuard(id, department, data) {
+  async approvePendingWithCounterGuard(id, department, currentUserId, data) {
     const outcome = await prisma.$transaction(async (tx) => {
       const registration = await tx.dang_ky_tiep_dan.findFirst({
         where: {
@@ -327,35 +348,57 @@ const DangKyTiepDanRepository = {
       });
       if (!registration) return { conflict: "ALREADY_PROCESSED" };
 
-      const counterSlots = await tx.khung_gio_tiep_dan.findMany({
+      const assignment = await tx.phan_cong_quay_tiep_dan.findFirst({
         where: {
-          id_lich_tiep_dan: registration.id_lich_tiep_dan,
-          khung_gio: registration.slot,
-          ma_quay: department,
+          id_can_bo: currentUserId,
           is_active: true,
           is_delete: false,
+          cau_hinh_quay: {
+            ...(registration.id_ca_tiep_dan
+              ? { id_ca_tiep_dan: registration.id_ca_tiep_dan }
+              : {
+                  id_lich_tiep_dan: registration.id_lich_tiep_dan,
+                  khung_gio: registration.slot,
+                }),
+            is_active: true,
+            is_delete: false,
+          },
         },
-        select: { id: true, suc_chua: true, id_ca_tiep_dan: true },
+        include: {
+          cau_hinh_quay: {
+            include: {
+              quay_tiep_dan: {
+                select: { id: true, ma_quay: true, ten_quay: true },
+              },
+            },
+          },
+        },
       });
-      const capacity = counterSlots.length > 0
-        ? counterSlots.reduce((total, slot) => total + slot.suc_chua, 0)
-        : DEFAULT_RECEPTION_COUNTER_CAPACITY;
+      if (!assignment) return { conflict: "ASSIGNMENT_NOT_FOUND" };
+
+      const counterConfiguration = assignment.cau_hinh_quay;
+      const assignedDepartment =
+        counterConfiguration.quay_tiep_dan?.ma_quay || counterConfiguration.ma_quay;
+      if (department && department !== assignedDepartment) {
+        return { conflict: "ASSIGNMENT_MISMATCH" };
+      }
+
       const assignedCount = await tx.dang_ky_tiep_dan.count({
         where: {
-          id_lich_tiep_dan: registration.id_lich_tiep_dan,
-          slot: registration.slot,
-          bo_phan: department,
+          id_cau_hinh_quay: assignment.id_cau_hinh_quay,
+          is_delete: false,
         },
       });
-      if (assignedCount >= capacity) return { conflict: "COUNTER_FULL" };
+      if (assignedCount >= counterConfiguration.suc_chua) {
+        return { conflict: "COUNTER_FULL" };
+      }
 
-      // Resolve id_cau_hinh_quay and id_ca_tiep_dan from the first matching counter slot (V2)
-      const firstCounterSlot = counterSlots[0];
       const updateData = {
         ...data,
-        ...(firstCounterSlot?.id ? { id_cau_hinh_quay: firstCounterSlot.id } : {}),
-        ...(firstCounterSlot?.id_ca_tiep_dan && !registration.id_ca_tiep_dan
-          ? { id_ca_tiep_dan: firstCounterSlot.id_ca_tiep_dan }
+        bo_phan: assignedDepartment,
+        id_cau_hinh_quay: assignment.id_cau_hinh_quay,
+        ...(!registration.id_ca_tiep_dan && counterConfiguration.id_ca_tiep_dan
+          ? { id_ca_tiep_dan: counterConfiguration.id_ca_tiep_dan }
           : {}),
       };
 
@@ -416,6 +459,7 @@ const DangKyTiepDanRepository = {
         is_delete: false,
       },
       include: {
+        cau_hinh_quay: receptionCounterRelation,
         danh_gia_tiep_dan: {
           where: { is_delete: false },
           select: { id: true },

@@ -23,7 +23,6 @@ const phanAnhRouter = express.Router();
 // API công khai - Tạo phản ánh không cần đăng nhập
 phanAnhRouter.post(
   "/public/create",
-  validate(CreatePhanAnhPublicRequest),
   createUploader({
     type: UPLOAD_TYPE.PHAN_ANH,
     fieldName: "file",
@@ -31,6 +30,7 @@ phanAnhRouter.post(
     maxSizeMB: 5,
     allowed_types: ["image/jpeg", "image/png"],
   }),
+  validate(CreatePhanAnhPublicRequest),
   PhanAnhController.createPhanAnhPublic,
 );
 
@@ -39,7 +39,6 @@ phanAnhRouter.post(
   "/",
   authenticate,
   authorize([PERMISSION.PA_CREATE]),
-  validate(CreatePhanAnhRequest),
   createUploader({
     type: UPLOAD_TYPE.PHAN_ANH,
     fieldName: "file",
@@ -47,6 +46,7 @@ phanAnhRouter.post(
     maxSizeMB: 5,
     allowed_types: ["image/jpeg", "image/png"],
   }),
+  validate(CreatePhanAnhRequest),
   audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.PA_CREATE),
   PhanAnhController.createPhanAnh,
 );
@@ -88,8 +88,6 @@ phanAnhRouter.get(
   "/muc-do-trang-thai-linh-vuc",
   PhanAnhController.getMucDoAndTrangThaiAndLinhVuc,
 );
-
-phanAnhRouter.get("/search-by-tieu-de", PhanAnhController.searhByTieuDe);
 
 phanAnhRouter.get("/search-by-tieu-de", PhanAnhController.searhByTieuDe);
 

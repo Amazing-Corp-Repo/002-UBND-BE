@@ -1,4 +1,18 @@
 export const PERMISSION = {
+  // Tài liệu (Thư viện)
+  TL_CREATE: "TL_CREATE",
+  TL_UPDATE: "TL_UPDATE",
+  TL_DELETE: "TL_DELETE",
+  TL_UPDATE_STATUS: "TL_UPDATE_STATUS",
+  TL_GET_ALL: "TL_GET_ALL",
+  TL_GET_DETAIL: "TL_GET_DETAIL",
+  TL_AI_LEARN: "TL_AI_LEARN",
+  TL_DOWNLOAD: "TL_DOWNLOAD",
+  TL_EXPORT: "TL_EXPORT",
+  TL_APPROVE: "TL_APPROVE",
+  TL_REJECT: "TL_REJECT",
+  TL_UNAPPROVE: "TL_UNAPPROVE",
+
   // Cơ sở dịch vụ công
   CSV_CREATE: "CSV_CREATE",
   CSV_UPDATE: "CSV_UPDATE",
@@ -30,6 +44,28 @@ export const PERMISSION = {
   RRT_GET_ALL: "RRT_GET_ALL",
   RRT_GET_DETAIL: "RRT_GET_DETAIL",
   RRT_GET_STATS: "RRT_GET_STATS",
+
+  // Lịch gặp lãnh đạo
+  LMS_GET_ALL: "LMS_GET_ALL",
+  LMS_GET_DETAIL: "LMS_GET_DETAIL",
+  LMS_CREATE: "LMS_CREATE",
+  LMS_UPDATE: "LMS_UPDATE",
+  LMS_UPDATE_STATUS: "LMS_UPDATE_STATUS",
+  LMS_DELETE: "LMS_DELETE",
+
+  // Đăng ký gặp lãnh đạo
+  LMR_GET_ALL: "LMR_GET_ALL",
+  LMR_GET_DETAIL: "LMR_GET_DETAIL",
+  LMR_APPROVE: "LMR_APPROVE",
+  LMR_REJECT: "LMR_REJECT",
+  LMR_PROCESS: "LMR_PROCESS",
+  LMR_COMPLETE: "LMR_COMPLETE",
+  LMR_CANCEL: "LMR_CANCEL",
+
+  // Đánh giá gặp lãnh đạo
+  LMRT_GET_ALL: "LMRT_GET_ALL",
+  LMRT_GET_DETAIL: "LMRT_GET_DETAIL",
+  LMRT_GET_STATS: "LMRT_GET_STATS",
 
   // Lĩnh vực phản ánh
   LVPA_CREATE: "LVPA_CREATE",
@@ -99,6 +135,19 @@ export const PERMISSION = {
 };
 
 export const PERMISSION_DESC = {
+  TL_CREATE: "Tạo tài liệu",
+  TL_UPDATE: "Cập nhật tài liệu",
+  TL_DELETE: "Xóa tài liệu",
+  TL_UPDATE_STATUS: "Cập nhật trạng thái tài liệu",
+  TL_GET_ALL: "Xem danh sách tài liệu",
+  TL_GET_DETAIL: "Xem chi tiết tài liệu",
+  TL_AI_LEARN: "Đồng bộ AI tài liệu",
+  TL_DOWNLOAD: "Tải xuống tài liệu",
+  TL_EXPORT: "Xuất danh sách tài liệu",
+  TL_APPROVE: "Phê duyệt tài liệu",
+  TL_REJECT: "Từ chối tài liệu",
+  TL_UNAPPROVE: "Hoàn tác phê duyệt tài liệu",
+
   CSV_CREATE: "Tạo cơ sở dịch vụ công",
   CSV_UPDATE: "Cập nhật cơ sở dịch vụ công",
   CSV_DELETE: "Xóa cơ sở dịch vụ công",
@@ -125,6 +174,25 @@ export const PERMISSION_DESC = {
   RRT_GET_ALL: "Xem danh sách đánh giá tiếp dân",
   RRT_GET_DETAIL: "Xem chi tiết đánh giá tiếp dân",
   RRT_GET_STATS: "Xem thống kê đánh giá tiếp dân",
+
+  LMS_GET_ALL: "Xem danh sách lịch gặp lãnh đạo",
+  LMS_GET_DETAIL: "Xem chi tiết lịch gặp lãnh đạo",
+  LMS_CREATE: "Tạo lịch gặp lãnh đạo",
+  LMS_UPDATE: "Cập nhật lịch gặp lãnh đạo",
+  LMS_UPDATE_STATUS: "Cập nhật trạng thái lịch gặp lãnh đạo",
+  LMS_DELETE: "Xóa lịch gặp lãnh đạo",
+
+  LMR_GET_ALL: "Xem danh sách đăng ký gặp lãnh đạo",
+  LMR_GET_DETAIL: "Xem chi tiết đăng ký gặp lãnh đạo",
+  LMR_APPROVE: "Phê duyệt đăng ký gặp lãnh đạo",
+  LMR_REJECT: "Từ chối đăng ký gặp lãnh đạo",
+  LMR_PROCESS: "Bắt đầu xử lý đăng ký gặp lãnh đạo",
+  LMR_COMPLETE: "Hoàn thành buổi gặp lãnh đạo",
+  LMR_CANCEL: "Hủy đăng ký gặp lãnh đạo",
+
+  LMRT_GET_ALL: "Xem danh sách đánh giá gặp lãnh đạo",
+  LMRT_GET_DETAIL: "Xem chi tiết đánh giá gặp lãnh đạo",
+  LMRT_GET_STATS: "Xem thống kê đánh giá gặp lãnh đạo",
 
   LVPA_CREATE: "Tạo lĩnh vực phản ánh",
   LVPA_UPDATE: "Cập nhật lĩnh vực phản ánh",
@@ -183,11 +251,15 @@ export const PERMISSION_DESC = {
 };
 
 export const PERMISSION_CATEGORIES = {
+  TL: "Tài liệu (Thư viện)",
   CSV: "Cơ sở dịch vụ công",
   DMTT: "Danh mục tin tức",
   LTD: "Lịch tiếp dân",
   RR: "Đăng ký tiếp dân",
   RRT: "Đánh giá tiếp dân",
+  LMS: "Lịch gặp lãnh đạo",
+  LMR: "Đăng ký gặp lãnh đạo",
+  LMRT: "Đánh giá gặp lãnh đạo",
   LVPA: "Lĩnh vực phản ánh",
   LVTTHC: "Lĩnh vực thủ tục hành chính",
   MD: "Mẫu đơn",
@@ -211,9 +283,15 @@ export const PERMISSION_TYPE = {
   GET_TEMPLATE: "Lấy mẫu",
   GET_DETAIL: "Xem chi tiết",
   GET_ALL: "Xem tất cả",
+  GET_STATS: "Xem thống kê",
   APPROVE: "Phê duyệt",
   COMPLETE: "Hoàn thành",
   REJECT: "Từ chối",
+  PROCESS: "Bắt đầu xử lý",
+  CANCEL: "Hủy",
   GET_EXCEL: "Xuất Excel",
   THUONG_TRUC: "Thường trực",
+  AI_LEARN: "Đồng bộ AI",
+  DOWNLOAD: "Tải xuống",
+  EXPORT: "Xuất danh sách",
 };

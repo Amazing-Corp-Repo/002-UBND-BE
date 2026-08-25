@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import { BaseError } from "../utils/base-error.util.js";
 import {
   DEFAULT_RECEPTION_COUNTER_CAPACITY,
@@ -6,8 +5,10 @@ import {
   RECEPTION_COUNTER_CODES,
 } from "../constants/reception-schedule.constant.js";
 import ReceptionScheduleManagementRepository from "../repositories/reception-schedule-management.repository.js";
+import UserRepository from "../repositories/user.repository.js";
 import LichTiepDanService from "./lich-tiep-dan.service.js";
 import FileService from "./file.service.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 import {
   appendDeleteSuffixc,
   toSnakeCaseNonAccent,
@@ -15,6 +16,13 @@ import {
 import { createPagination } from "../utils/response.util.js";
 import { access } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import {
+  formatVietnamDate,
+  normalizeReceptionTimes,
+  parseVietnamImportDate,
+  parseVietnamImportTime,
+  toDatabaseDate,
+} from "../utils/vietnam-time.util.js";
 
 const RECEPTION_TEMPLATE_URL = "/static/template-lich-tiep-dan.xlsx";
 const RECEPTION_TEMPLATE_PATH = fileURLToPath(
@@ -31,65 +39,54 @@ const toTime = (minutes) =>
     minutes % 60
   ).padStart(2, "0")}`;
 
-const isRealCalendarDate = (value) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  );
+const buildHourlyTimeSlots = (periods) =>
+  periods.flatMap(({ startTime, endTime }) => {
+    const slots = [];
+    const end = toMinutes(endTime);
+    for (let current = toMinutes(startTime); current < end; current += 60) {
+      slots.push(`${toTime(current)} - ${toTime(current + 60)}`);
+    }
+    return slots;
+  });
+
+const normalizeImportCapacity = (value, rowNumber) => {
+  if (value === null || value === undefined || String(value).trim() === "") {
+    return null;
+  }
+  const capacity = Number(value);
+  if (!Number.isInteger(capacity) || capacity < 1) {
+    throw new BaseError(
+      400,
+      `Dòng ${rowNumber}: Sức chứa / ca phải là số nguyên từ 1 trở lên`
+    );
+  }
+  return capacity;
 };
 
-const parseImportDate = (value) => {
-  if (typeof value === "number") {
-    const date = new Date(Date.UTC(1899, 11, 30) + Math.floor(value) * 86400000);
-    return date.toISOString().slice(0, 10);
-  }
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-  if (typeof value !== "string") return null;
-
-  const normalized = value.trim();
-  if (isRealCalendarDate(normalized)) return normalized;
-  const vietnameseDate = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(normalized);
-  if (!vietnameseDate) return null;
-  const [, day, month, year] = vietnameseDate;
-  const result = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  return isRealCalendarDate(result) ? result : null;
-};
-
-const parseImportTime = (value) => {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return `${String(value.getUTCHours()).padStart(2, "0")}:${String(
-      value.getUTCMinutes()
-    ).padStart(2, "0")}`;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    const minutes = Math.round((value - Math.floor(value)) * 1440) % 1440;
-    return toTime(minutes);
-  }
-  if (typeof value !== "string") return null;
-  const normalized = value.trim();
-  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(normalized)) return normalized;
-  const parsed = new Date(normalized);
-  return Number.isNaN(parsed.getTime()) ? null : parseImportTime(parsed);
-};
-
-const normalizeImportRow = (item, index, currentUser) => {
+const normalizeImportRow = (item, index) => {
   const row = Object.fromEntries(
     Object.entries(item).map(([key, value]) => [toSnakeCaseNonAccent(key), value])
   );
   const rowNumber = index + 2;
-  const officerName = String(row.ten_can_bo || "").trim();
+  const officerUsername = String(row.tai_khoan_can_bo || "").trim();
+  const officerDisplayName = String(row.ho_ten_can_bo || "").trim();
+  const counterCode = String(row.ma_quay || "").trim().toUpperCase();
   const location = String(row.dia_diem || "").trim();
-  const receptionDate = parseImportDate(row.ngay_tiep_dan);
-  const startTime = parseImportTime(row.tu);
-  const endTime = parseImportTime(row.den);
+  const receptionDate = parseVietnamImportDate(row.ngay_tiep_dan);
+  const startTime = parseVietnamImportTime(row.tu);
+  const endTime = parseVietnamImportTime(row.den);
 
-  if (!officerName || !location || !receptionDate || !startTime || !endTime) {
+  if (
+    !officerUsername ||
+    !counterCode ||
+    !location ||
+    !receptionDate ||
+    !startTime ||
+    !endTime
+  ) {
     throw new BaseError(
       400,
-      `Dòng ${rowNumber} thiếu hoặc sai địa điểm, cán bộ, ngày, giờ bắt đầu hoặc giờ kết thúc`
+      `Dòng ${rowNumber} thiếu hoặc sai địa điểm, mã quầy, tài khoản cán bộ, ngày hoặc thời gian trực`
     );
   }
 
@@ -101,23 +98,293 @@ const normalizeImportRow = (item, index, currentUser) => {
   } catch (error) {
     throw new BaseError(400, `Dòng ${rowNumber}: ${error.message}`);
   }
-  const timeRange = periods
-    .map((period) => `${period.startTime} - ${period.endTime}`)
-    .join(", ");
-
   return {
-    officerName,
+    rowNumber,
+    officerUsername,
+    officerDisplayName,
+    counterCode,
+    capacity: normalizeImportCapacity(row.suc_chua_ca, rowNumber),
+    location,
     receptionDate,
-    scheduleData: {
-      ten_can_bo: officerName,
-      dia_diem: location,
-      ngay_tiep_dan: new Date(`${receptionDate}T00:00:00.000Z`),
-      thoi_gian: timeRange,
-      ghi_chu: row.ghi_chu ? String(row.ghi_chu).trim() : null,
-      nguoi_tao: currentUser,
-    },
-    slotRows: buildScheduleSlotRows(periods, currentUser),
+    periods,
+    note: row.ghi_chu ? String(row.ghi_chu).trim() : null,
   };
+};
+
+const shuffle = (items, random) => {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+  return result;
+};
+
+const getImportSessionKey = (row) => {
+  const periodKey = row.periods
+    .map(({ startTime, endTime }) => `${startTime}-${endTime}`)
+    .join("|");
+  const startsInMorning = row.periods.every(
+    ({ startTime }) => toMinutes(startTime) < 12 * 60
+  );
+  const endsInMorning = row.periods.every(
+    ({ endTime }) => toMinutes(endTime) <= 12 * 60
+  );
+  const startsInAfternoon = row.periods.every(
+    ({ startTime }) => toMinutes(startTime) >= 12 * 60
+  );
+  const session = startsInMorning && endsInMorning
+    ? "MORNING"
+    : startsInAfternoon
+      ? "AFTERNOON"
+      : `CUSTOM:${periodKey}`;
+  return [
+    row.receptionDate,
+    row.location.toLocaleLowerCase("vi"),
+    session,
+  ].join("::");
+};
+
+export const randomizeImportOfficerAssignments = (
+  rows,
+  random = Math.random
+) => {
+  const randomizedRows = rows.map((row) => ({ ...row }));
+  const groups = new Map();
+
+  randomizedRows.forEach((row, index) => {
+    const groupKey = getImportSessionKey(row);
+    const indexes = groups.get(groupKey) || [];
+    indexes.push(index);
+    groups.set(groupKey, indexes);
+  });
+
+  groups.forEach((indexes) => {
+    const officers = shuffle(
+      indexes.map((index) => ({
+        officerUsername: randomizedRows[index].officerUsername,
+        officerDisplayName: randomizedRows[index].officerDisplayName,
+      })),
+      random
+    );
+
+    indexes.forEach((rowIndex, officerIndex) => {
+      randomizedRows[rowIndex].officerUsername =
+        officers[officerIndex].officerUsername;
+      randomizedRows[rowIndex].officerDisplayName =
+        officers[officerIndex].officerDisplayName;
+    });
+  });
+
+  return randomizedRows;
+};
+
+export const expandImportRowsForAllSessionCounters = (
+  { rows, users, counters },
+  random = Math.random
+) => {
+  if (users.length < counters.length) {
+    throw new BaseError(
+      400,
+      `File chỉ có ${users.length} cán bộ hợp lệ nhưng cần ít nhất ${counters.length} cán bộ để xếp đủ các quầy trong mỗi buổi`
+    );
+  }
+
+  const groups = new Map();
+  rows.forEach((row) => {
+    const key = getImportSessionKey(row);
+    const groupRows = groups.get(key) || [];
+    groupRows.push(row);
+    groups.set(key, groupRows);
+  });
+
+  return [...groups.values()].flatMap((groupRows) => {
+    const shuffledUsers = shuffle(users, random).slice(0, counters.length);
+    const starts = groupRows.flatMap((row) =>
+      row.periods.map(({ startTime }) => startTime)
+    );
+    const ends = groupRows.flatMap((row) =>
+      row.periods.map(({ endTime }) => endTime)
+    );
+    const period = {
+      startTime: starts.sort((left, right) => toMinutes(left) - toMinutes(right))[0],
+      endTime: ends.sort((left, right) => toMinutes(right) - toMinutes(left))[0],
+    };
+    const baseRow = groupRows[0];
+
+    return counters.map((counter, index) => {
+      const sourceRow = groupRows.find(
+        (row) => row.counterCode === counter.ma_quay
+      );
+      const officer = shuffledUsers[index];
+      return {
+        ...baseRow,
+        rowNumber: sourceRow?.rowNumber ?? null,
+        counterCode: counter.ma_quay,
+        officerUsername: officer.ten_dang_nhap,
+        officerDisplayName: officer.ho_va_ten || officer.ten_dang_nhap,
+        capacity: sourceRow?.capacity ?? null,
+        note: sourceRow?.note ?? baseRow.note,
+        periods: [period],
+      };
+    });
+  });
+};
+
+const hasPermission = (user, permissionCode) =>
+  user.user_roles?.some(
+    ({ roles }) =>
+      roles?.is_active !== false &&
+      roles?.is_delete !== true &&
+      roles?.role_permissions?.some(
+        ({ permission_code: code }) => code === permissionCode
+      )
+  );
+
+const buildImportRecords = ({ rows, users, counters, currentUser }) => {
+  const userMap = new Map(
+    users.map((user) => [user.ten_dang_nhap.toLocaleLowerCase("vi"), user])
+  );
+  const counterMap = new Map(
+    counters.map((counter) => [counter.ma_quay.toUpperCase(), counter])
+  );
+  const groups = new Map();
+
+  for (const row of rows) {
+    const user = userMap.get(row.officerUsername.toLocaleLowerCase("vi"));
+    if (!user) {
+      throw new BaseError(
+        400,
+        `Dòng ${row.rowNumber}: Tài khoản cán bộ '${row.officerUsername}' không tồn tại hoặc đã ngừng hoạt động`
+      );
+    }
+    if (!hasPermission(user, PERMISSION.RR_APPROVE)) {
+      throw new BaseError(
+        400,
+        `Dòng ${row.rowNumber}: Tài khoản '${row.officerUsername}' chưa có quyền RR_APPROVE`
+      );
+    }
+
+    const counter = counterMap.get(row.counterCode);
+    if (!counter) {
+      throw new BaseError(
+        400,
+        `Dòng ${row.rowNumber}: Mã quầy '${row.counterCode}' không tồn tại hoặc đã ngừng hoạt động`
+      );
+    }
+
+    const groupKey = `${row.receptionDate}::${row.location.toLocaleLowerCase("vi")}`;
+    const group = groups.get(groupKey) || {
+      location: row.location,
+      receptionDate: row.receptionDate,
+      periods: new Map(),
+      notes: new Set(),
+      officers: new Map(),
+      counterSlots: new Map(),
+      officerSlots: new Map(),
+      slotRows: [],
+      assignmentRows: [],
+    };
+    if (row.note) group.notes.add(row.note);
+    group.officers.set(user.id, user.ho_va_ten || user.ten_dang_nhap);
+
+    for (const period of row.periods) {
+      group.periods.set(
+        `${period.startTime}-${period.endTime}`,
+        period
+      );
+    }
+
+    for (const timeSlot of buildHourlyTimeSlots(row.periods)) {
+      const counterSlotKey = `${timeSlot}::${counter.ma_quay}`;
+      if (group.counterSlots.has(counterSlotKey)) {
+        throw new BaseError(
+          409,
+          `Dòng ${row.rowNumber}: Quầy ${counter.ma_quay} đã có cán bộ trực trong ca ${timeSlot}`
+        );
+      }
+      const officerSlotKey = `${timeSlot}::${user.id}`;
+      const existingCounter = group.officerSlots.get(officerSlotKey);
+      if (existingCounter) {
+        throw new BaseError(
+          409,
+          `Dòng ${row.rowNumber}: Cán bộ '${user.ten_dang_nhap}' đã được phân công ${existingCounter} trong ca ${timeSlot}`
+        );
+      }
+
+      group.counterSlots.set(counterSlotKey, row.rowNumber);
+      group.officerSlots.set(officerSlotKey, counter.ma_quay);
+      group.slotRows.push({
+        khung_gio: timeSlot,
+        ma_quay: counter.ma_quay,
+        suc_chua:
+          row.capacity ??
+          counter.suc_chua_mac_dinh ??
+          DEFAULT_RECEPTION_COUNTER_CAPACITY,
+        nguoi_tao: currentUser,
+      });
+      group.assignmentRows.push({
+        khung_gio: timeSlot,
+        ma_quay: counter.ma_quay,
+        officerId: user.id,
+      });
+    }
+    groups.set(groupKey, group);
+  }
+
+  return [...groups.values()].map((group) => {
+    const periods = [...group.periods.values()].sort(
+      (left, right) => toMinutes(left.startTime) - toMinutes(right.startTime)
+    );
+    return {
+      location: group.location,
+      receptionDate: group.receptionDate,
+      scheduleData: {
+        ten_can_bo: [...group.officers.values()].join(", ").slice(0, 255),
+        dia_diem: group.location,
+        ngay_tiep_dan: toDatabaseDate(group.receptionDate),
+        thoi_gian: periods
+          .map(({ startTime, endTime }) => `${startTime} - ${endTime}`)
+          .join(", "),
+        ghi_chu: [...group.notes].join("; ").slice(0, 255) || null,
+        nguoi_tao: currentUser,
+      },
+      slotRows: group.slotRows,
+      assignmentRows: group.assignmentRows,
+    };
+  });
+};
+
+const buildImportedRowDetails = ({ rows, users, counters }) => {
+  const userMap = new Map(
+    users.map((user) => [user.ten_dang_nhap.toLocaleLowerCase("vi"), user])
+  );
+  const counterMap = new Map(
+    counters.map((counter) => [counter.ma_quay.toUpperCase(), counter])
+  );
+
+  return rows.map((row) => {
+    const user = userMap.get(row.officerUsername.toLocaleLowerCase("vi"));
+    const counter = counterMap.get(row.counterCode);
+    const period = row.periods[0];
+
+    return {
+      rowNumber: row.rowNumber,
+      receptionDate: row.receptionDate,
+      startTime: period.startTime,
+      endTime: period.endTime,
+      counterCode: counter.ma_quay,
+      counterName: counter.ten_quay,
+      officerUsername: user.ten_dang_nhap,
+      officerFullName: user.ho_va_ten || user.ten_dang_nhap,
+      capacity:
+        row.capacity ??
+        counter.suc_chua_mac_dinh ??
+        DEFAULT_RECEPTION_COUNTER_CAPACITY,
+      location: row.location,
+      note: row.note,
+    };
+  });
 };
 
 export const normalizeWorkingPeriods = ({
@@ -153,14 +420,7 @@ export const normalizeWorkingPeriods = ({
 };
 
 export const buildScheduleSlotRows = (periods, currentUser) => {
-  const timeSlots = periods.flatMap(({ startTime, endTime }) => {
-    const slots = [];
-    const end = toMinutes(endTime);
-    for (let current = toMinutes(startTime); current < end; current += 60) {
-      slots.push(`${toTime(current)} - ${toTime(current + 60)}`);
-    }
-    return slots;
-  });
+  const timeSlots = buildHourlyTimeSlots(periods);
 
   return timeSlots.flatMap((khungGio) =>
     RECEPTION_COUNTER_CODES.map((maQuay) => ({
@@ -186,7 +446,10 @@ const mapCreatedSchedule = (schedule) => {
     current.totalCapacity += slot.suc_chua;
     current.counters.push({
       id: slot.id,
-      counterCode: slot.ma_quay,
+      shiftId: slot.id_ca_tiep_dan || null,
+      counterId: slot.quay_tiep_dan?.id || slot.id_quay || null,
+      counterCode: slot.quay_tiep_dan?.ma_quay || slot.ma_quay,
+      counterName: slot.quay_tiep_dan?.ten_quay || null,
       capacity: slot.suc_chua,
       heldCount: 0,
       remainingCapacity: slot.suc_chua,
@@ -200,9 +463,9 @@ const mapCreatedSchedule = (schedule) => {
     const slot = groupedSlots.get(registration.slot);
     if (!slot) return;
 
-    const counter = slot.counters.find(
-      (item) => item.counterCode === registration.bo_phan
-    );
+    const counter = registration.id_cau_hinh_quay
+      ? slot.counters.find((item) => item.id === registration.id_cau_hinh_quay)
+      : slot.counters.find((item) => item.counterCode === registration.bo_phan);
     if (counter) {
       counter.heldCount += 1;
       counter.remainingCapacity = Math.max(0, counter.capacity - counter.heldCount);
@@ -226,7 +489,10 @@ const mapCreatedSchedule = (schedule) => {
     dang_ky_tiep_dan: _registrations,
     ...scheduleData
   } = schedule;
-  return { ...scheduleData, slots: [...groupedSlots.values()] };
+  return normalizeReceptionTimes({
+    ...scheduleData,
+    slots: [...groupedSlots.values()],
+  });
 };
 
 const ReceptionScheduleManagementService = {
@@ -241,7 +507,7 @@ const ReceptionScheduleManagementService = {
       isActive:
         typeof isActive === "boolean" ? String(isActive) : isActive,
     });
-    return data.sort((left, right) => {
+    return normalizeReceptionTimes(data.sort((left, right) => {
       const dateDifference =
         new Date(left.ngay_tiep_dan).getTime() -
         new Date(right.ngay_tiep_dan).getTime();
@@ -249,7 +515,7 @@ const ReceptionScheduleManagementService = {
       return String(left.thoi_gian || "").localeCompare(
         String(right.thoi_gian || "")
       );
-    });
+    }));
   },
 
   async getLichTiepDanWithPagination(filters) {
@@ -273,7 +539,10 @@ const ReceptionScheduleManagementService = {
         String(right.thoi_gian || "")
       );
     });
-    return { data, pagination: createPagination(page, size, totalItems) };
+    return normalizeReceptionTimes({
+      data,
+      pagination: createPagination(page, size, totalItems),
+    });
   },
 
   async countLichTiepDan(filters) {
@@ -348,7 +617,7 @@ const ReceptionScheduleManagementService = {
         "Không thể ngừng lịch tiếp dân đã có đăng ký giữ chỗ"
       );
     }
-    return result.data;
+    return normalizeReceptionTimes(result.data);
   },
 
   async getTemplateLichTiepDan() {
@@ -360,7 +629,7 @@ const ReceptionScheduleManagementService = {
     return RECEPTION_TEMPLATE_URL;
   },
 
-  async handleImport(files = [], currentUser) {
+  async handleImport(files = [], currentUser, overwrite = false) {
     if (!files?.length) {
       throw new BaseError(400, "File không được để trống");
     }
@@ -372,32 +641,71 @@ const ReceptionScheduleManagementService = {
       throw new BaseError(400, "File import không có dữ liệu");
     }
 
-    const records = nonEmptyRows.map((row, index) =>
-      normalizeImportRow(row, index, currentUser)
+    const sourceRows = nonEmptyRows.map((row, index) =>
+      normalizeImportRow(row, index)
     );
-    const seen = new Set();
-    for (const record of records) {
-      const key = `${record.officerName.toLocaleLowerCase("vi")}::${record.receptionDate}`;
-      if (seen.has(key)) {
-        throw new BaseError(409, "File có lịch trùng cán bộ và ngày tiếp dân");
+    const [users, counters] = await Promise.all([
+      UserRepository.findActiveByUsernames([
+        ...new Set(sourceRows.map((row) => row.officerUsername)),
+      ]),
+      ReceptionScheduleManagementRepository.findActiveCountersByCodes([
+        ...new Set(sourceRows.map((row) => row.counterCode)),
+      ]),
+    ]);
+    buildImportRecords({ rows: sourceRows, users, counters, currentUser });
+    const rows = expandImportRowsForAllSessionCounters({
+      rows: sourceRows,
+      users,
+      counters: [...counters].sort((left, right) =>
+        left.ma_quay.localeCompare(right.ma_quay, "vi", { numeric: true })
+      ),
+    });
+    const records = buildImportRecords({ rows, users, counters, currentUser });
+    const importedRows = buildImportedRowDetails({ rows, users, counters });
+
+    let overwrittenCount = 0;
+    if (overwrite) {
+      const overwriteResult =
+        await ReceptionScheduleManagementRepository.overwriteManyWithSlots(records);
+      if (overwriteResult.status === "HAS_REGISTRATIONS") {
+        throw new BaseError(
+          409,
+          "Không thể ghi đè lịch tiếp dân đã có đơn đăng ký"
+        );
       }
-      seen.add(key);
+      overwrittenCount = overwriteResult.overwrittenCount;
+    } else {
+      const conflicts =
+        await ReceptionScheduleManagementRepository.findImportConflicts(records);
+      if (conflicts.length > 0) {
+        throw new BaseError(409, "Lịch của cán bộ trong ngày tiếp dân đã tồn tại");
+      }
+      await ReceptionScheduleManagementRepository.createManyWithSlots(records);
     }
-
-    const conflicts =
-      await ReceptionScheduleManagementRepository.findImportConflicts(records);
-    if (conflicts.length > 0) {
-      throw new BaseError(409, "Lịch của cán bộ trong ngày tiếp dân đã tồn tại");
-    }
-
-    await ReceptionScheduleManagementRepository.createManyWithSlots(records);
     const totalCounterSlots = records.reduce(
       (total, record) => total + record.slotRows.length,
       0
     );
+    const importedDates = [
+      ...new Set(importedRows.map((row) => row.receptionDate)),
+    ].sort();
     return {
+      assignmentMode: "RANDOM",
+      assignmentScope: "SESSION",
+      overwriteApplied: overwrite,
+      overwrittenCount,
       importedCount: records.length,
+      importedRowCount: sourceRows.length,
+      generatedAssignmentRowCount: rows.length,
       totalCounterSlots,
+      totalAssignments: records.reduce(
+        (total, record) => total + record.assignmentRows.length,
+        0
+      ),
+      dateFrom: importedDates[0],
+      dateTo: importedDates[importedDates.length - 1],
+      importedDates,
+      importedRows,
     };
   },
 
@@ -492,8 +800,8 @@ const ReceptionScheduleManagementService = {
           .map(({ startTime, endTime }) => `${startTime} - ${endTime}`)
           .join(", ")
       : existing.thoi_gian;
-    const requestedDate = dayjs(ngayTiepDan).format("YYYY-MM-DD");
-    const existingDate = dayjs(existing.ngay_tiep_dan).format("YYYY-MM-DD");
+    const requestedDate = formatVietnamDate(ngayTiepDan);
+    const existingDate = formatVietnamDate(existing.ngay_tiep_dan);
     const scheduleTimeChanged =
       requestedDate !== existingDate || thoiGian !== existing.thoi_gian;
     const workingPeriodsChanged =

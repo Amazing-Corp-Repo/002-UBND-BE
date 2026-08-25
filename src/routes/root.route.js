@@ -24,6 +24,15 @@ import dangKyTiepDanRouter from './dang-ky-tiep-dan.route.js';
 import receptionScheduleRouter from './reception-schedule.route.js';
 import receptionScheduleManagementRouter from './reception-schedule-management.route.js';
 import receptionRatingRouter from './reception-rating.route.js';
+import receptionCounterRouter from './reception-counter.route.js';
+import receptionCounterAssignmentRouter from './reception-counter-assignment.route.js';
+import receptionShiftAssignmentRouter from './reception-shift-assignment.route.js';
+import leaderMeetingScheduleRouter from './leader-meeting-schedule.route.js';
+import leaderMeetingRegistrationRouter from './leader-meeting-registration.route.js';
+import leaderMeetingRatingRouter from './leader-meeting-rating.route.js';
+import taiLieuVanHoaRouter from './tai-lieu-van-hoa.route.js';
+import taiLieuPhapLuatRouter from './tai-lieu-phap-luat.route.js';
+import taiLieuCongKhaiRouter from './tai-lieu-cong-khai.route.js';
 
 const rootRouter = express.Router();
 
@@ -53,6 +62,15 @@ rootRouter.use('/reception-registrations', dangKyTiepDanRouter);
 rootRouter.use('/reception-schedules/management', receptionScheduleManagementRouter);
 rootRouter.use('/reception-schedules', receptionScheduleRouter);
 rootRouter.use('/reception-ratings', receptionRatingRouter);
+rootRouter.use('/reception-counters', receptionCounterRouter);
+rootRouter.use('/reception-counter-assignments', receptionCounterAssignmentRouter);
+rootRouter.use('/reception-shifts', receptionShiftAssignmentRouter);
+rootRouter.use('/leader-meeting-schedules', leaderMeetingScheduleRouter);
+rootRouter.use('/leader-meeting-registrations', leaderMeetingRegistrationRouter);
+rootRouter.use('/leader-meeting-ratings', leaderMeetingRatingRouter);
+rootRouter.use('/tai-lieu-van-hoa', taiLieuVanHoaRouter);
+rootRouter.use('/tai-lieu-phap-luat', taiLieuPhapLuatRouter);
+rootRouter.use('/tai-lieu-cong-khai', taiLieuCongKhaiRouter);
 
 export default rootRouter;
 

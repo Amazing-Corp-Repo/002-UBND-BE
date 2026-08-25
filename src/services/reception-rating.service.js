@@ -1,93 +1,89 @@
 import {
   RECEPTION_RATING_COMMENT_MAX_LENGTH,
+  RECEPTION_RATING_COUNTER_CODES,
   RECEPTION_RATING_SCALE,
-  RECEPTION_RATING_SUGGESTIONS,
 } from "../constants/reception-rating.constant.js";
 import ReceptionRatingRepository from "../repositories/reception-rating.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
-import { TIEP_DAN_STATUS } from "../constants/tiep-dan.constant.js";
 import { createPagination } from "../utils/response.util.js";
+import {
+  formatVietnamDate,
+  normalizeReceptionTimes,
+  toDatabaseDate,
+} from "../utils/vietnam-time.util.js";
 
 const isUniqueConstraintError = (error) => error?.code === "P2002";
 
-const mapRating = (rating, receptionCode) => ({
+const mapRatingFields = (rating) => ({
   id: rating.id,
-  receptionCode,
+  receptionCode: rating.ma_tiep_dan,
+  citizenName: rating.ten_nguoi_dan,
+  applicantName: rating.ten_nguoi_dan,
+  officerName: rating.ten_can_bo,
+  counterCode: rating.ma_quay,
+  department: rating.ma_quay,
+  receptionDate: rating.ngay_tiep_dan,
+  timeSlot: rating.khung_gio,
+  workingContent: rating.noi_dung_lam_viec,
+  topic: rating.noi_dung_lam_viec,
   score: rating.diem_tong,
-  selectedSuggestions: rating.ly_do || [],
   comment: rating.nhan_xet || "",
+  ratedAt: rating.thoi_gian_tao,
   createdAt: rating.thoi_gian_tao,
 });
 
-const mapRatingListItem = (rating) => ({
-  id: rating.id,
-  receptionCode: rating.dang_ky_tiep_dan.ma_tiep_dan,
-  applicantName: rating.dang_ky_tiep_dan.ho_ten,
-  department: rating.dang_ky_tiep_dan.bo_phan,
-  receptionDate: rating.dang_ky_tiep_dan.ngay,
-  timeSlot: rating.dang_ky_tiep_dan.slot,
-  topic: rating.dang_ky_tiep_dan.chu_de,
-  score: rating.diem_tong,
-  selectedSuggestions: rating.ly_do || [],
-  comment: rating.nhan_xet || "",
-  ratedAt: rating.thoi_gian_tao,
-});
+const mapRating = (rating) => normalizeReceptionTimes(mapRatingFields(rating));
 
 const mapRatingDetail = (rating) => {
-  const registration = rating.dang_ky_tiep_dan;
-  return {
-    id: rating.id,
-    score: rating.diem_tong,
-    selectedSuggestions: rating.ly_do || [],
-    comment: rating.nhan_xet || "",
-    ratedAt: rating.thoi_gian_tao,
+  const legacy = rating.dang_ky_tiep_dan;
+  const mapped = mapRatingFields(rating);
+  return normalizeReceptionTimes({
+    ...mapped,
+    legacyRegistrationId: rating.id_dang_ky_tiep_dan,
     registration: {
-      id: registration.id,
-      receptionCode: registration.ma_tiep_dan,
-      receptionDate: registration.ngay,
-      timeSlot: registration.slot,
-      topic: registration.chu_de,
-      workingContent: registration.ly_do,
+      id: rating.id_dang_ky_tiep_dan,
+      receptionCode: rating.ma_tiep_dan,
+      receptionDate: rating.ngay_tiep_dan,
+      timeSlot: rating.khung_gio,
+      topic: rating.noi_dung_lam_viec,
+      workingContent: rating.noi_dung_lam_viec,
       applicant: {
-        fullName: registration.ho_ten,
-        phoneNumber: registration.sdt,
-        citizenId: registration.cccd,
-        address: registration.dia_chi,
+        fullName: rating.ten_nguoi_dan,
+        phoneNumber: legacy?.sdt || null,
+        citizenId: legacy?.cccd || null,
+        address: legacy?.dia_chi || null,
       },
-      department: registration.bo_phan,
-      approvalStatus: registration.trang_thai,
-      approver: registration.ten_lanh_dao
+      department: rating.ma_quay,
+      approvalStatus: legacy?.trang_thai || null,
+      approver: legacy?.ten_lanh_dao
         ? {
-            name: registration.ten_lanh_dao,
-            title: registration.chuc_vu_lanh_dao,
+            name: legacy.ten_lanh_dao,
+            title: legacy.chuc_vu_lanh_dao,
             approvedAt:
-              registration.thoi_gian_phe_duyet ||
-              registration.thoi_gian_cap_nhat,
+              legacy.thoi_gian_phe_duyet || legacy.thoi_gian_cap_nhat,
           }
         : null,
-      schedule: registration.lich_tiep_dan
+      schedule: legacy?.lich_tiep_dan
         ? {
-            id: registration.lich_tiep_dan.id,
-            officerName: registration.lich_tiep_dan.ten_can_bo,
-            location: registration.lich_tiep_dan.dia_diem,
-            receptionDate: registration.lich_tiep_dan.ngay_tiep_dan,
-            timeRange: registration.lich_tiep_dan.thoi_gian,
-            note: registration.lich_tiep_dan.ghi_chu,
+            id: legacy.lich_tiep_dan.id,
+            officerName: legacy.lich_tiep_dan.ten_can_bo,
+            location: legacy.lich_tiep_dan.dia_diem,
+            receptionDate: legacy.lich_tiep_dan.ngay_tiep_dan,
+            timeRange: legacy.lich_tiep_dan.thoi_gian,
+            note: legacy.lich_tiep_dan.ghi_chu,
           }
         : null,
     },
-  };
+  });
 };
 
 const normalizeDateFilters = (filters) => {
   const normalized = {
     ...filters,
     fromDate: filters.fromDate
-      ? new Date(filters.fromDate).toISOString().slice(0, 10)
+      ? formatVietnamDate(filters.fromDate)
       : undefined,
-    toDate: filters.toDate
-      ? new Date(filters.toDate).toISOString().slice(0, 10)
-      : undefined,
+    toDate: filters.toDate ? formatVietnamDate(filters.toDate) : undefined,
   };
   if (
     normalized.fromDate &&
@@ -106,52 +102,38 @@ const ReceptionRatingService = {
   getConfiguration() {
     return {
       scale: RECEPTION_RATING_SCALE,
-      comment: {
-        maxLength: RECEPTION_RATING_COMMENT_MAX_LENGTH,
-      },
-      suggestionsByScore: RECEPTION_RATING_SUGGESTIONS,
+      comment: { maxLength: RECEPTION_RATING_COMMENT_MAX_LENGTH },
+      counters: RECEPTION_RATING_COUNTER_CODES.map((code, index) => ({
+        code,
+        name: `Quầy ${index + 1}`,
+      })),
     };
   },
 
   async create(input) {
-    const registration = await ReceptionRatingRepository.findRegistrationByCode(
+    const existing = await ReceptionRatingRepository.findByReceptionCode(
       input.receptionCode
     );
-    if (!registration) {
-      throw new BaseError(404, "Không tìm thấy mã tiếp dân");
-    }
-    if (registration.trang_thai !== TIEP_DAN_STATUS.COMPLETED) {
-      throw new BaseError(409, "Buổi tiếp dân chưa hoàn thành để đánh giá");
-    }
-    if (!/^QUAY_[1-8]$/.test(registration.bo_phan || "")) {
-      throw new BaseError(409, "Đăng ký chưa được phân quầy tiếp nhận");
-    }
-    if (registration.danh_gia_tiep_dan?.length > 0) {
+    if (existing) {
       throw new BaseError(409, "Mã tiếp dân đã được đánh giá");
     }
-
-    const allowedSuggestions = new Set(
-      RECEPTION_RATING_SUGGESTIONS[input.score] || []
-    );
-    const invalidSuggestion = input.selectedSuggestions.find(
-      (suggestion) => !allowedSuggestions.has(suggestion)
-    );
-    if (invalidSuggestion) {
-      throw new BaseError(
-        400,
-        "Gợi ý đã chọn không phù hợp với số sao đánh giá"
-      );
-    }
-
     try {
       const rating = await ReceptionRatingRepository.create({
-        id_dang_ky_tiep_dan: registration.id,
+        id_dang_ky_tiep_dan: null,
+        ma_tiep_dan: input.receptionCode,
+        ten_nguoi_dan: input.citizenName,
+        ten_can_bo: input.officerName,
+        ma_quay: input.counterCode,
+        ngay_tiep_dan: toDatabaseDate(input.receptionDate),
+        khung_gio: input.timeSlot,
+        noi_dung_lam_viec: input.workingContent,
         diem_tong: input.score,
         tieu_chi: null,
-        ly_do: input.selectedSuggestions,
-        nhan_xet: input.comment || null,
+        ly_do: null,
+        nhan_xet: input.comment,
+        nguoi_tao: null,
       });
-      return mapRating(rating, input.receptionCode);
+      return mapRating(rating);
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         throw new BaseError(409, "Mã tiếp dân đã được đánh giá");
@@ -162,18 +144,21 @@ const ReceptionRatingService = {
 
   async getAllForLeader(filters) {
     const normalized = normalizeDateFilters(filters);
-
     const { data, totalItems } =
       await ReceptionRatingRepository.findAllForLeader(normalized);
     return {
-      data: data.map(mapRatingListItem),
+      data: data.map(mapRating),
       pagination: createPagination(filters.page, filters.size, totalItems),
     };
   },
 
   async getDetailForLeader(id) {
     const rating = await ReceptionRatingRepository.findDetailById(id);
-    if (!rating || rating.dang_ky_tiep_dan?.loai !== "COUNTER_RECEPTION") {
+    if (
+      !rating ||
+      (rating.dang_ky_tiep_dan &&
+        rating.dang_ky_tiep_dan.loai !== "COUNTER_RECEPTION")
+    ) {
       throw new BaseError(404, "Đánh giá tiếp dân không tồn tại");
     }
     return mapRatingDetail(rating);
@@ -181,7 +166,7 @@ const ReceptionRatingService = {
 
   async getStatisticsForLeader(filters) {
     const normalized = normalizeDateFilters(filters);
-    const { overall, scoreGroups, departmentGroups } =
+    const { overall, scoreGroups, counterGroups, officerGroups } =
       await ReceptionRatingRepository.getStatistics(normalized);
     const totalRatings = overall._count._all;
     const countByScore = new Map(
@@ -193,6 +178,11 @@ const ReceptionRatingService = {
     }));
     const satisfiedCount =
       (countByScore.get(4) || 0) + (countByScore.get(5) || 0);
+    const byCounter = counterGroups.map((group) => ({
+      counterCode: group.counterCode,
+      totalRatings: group._count._all,
+      averageScore: roundToTwoDecimals(group._avg.diem_tong),
+    }));
 
     return {
       totalRatings,
@@ -202,8 +192,14 @@ const ReceptionRatingService = {
           ? 0
           : roundToTwoDecimals((satisfiedCount / totalRatings) * 100),
       scoreDistribution,
-      byDepartment: departmentGroups.map((group) => ({
-        department: group.department,
+      byCounter,
+      byDepartment: byCounter.map((item) => ({
+        department: item.counterCode,
+        totalRatings: item.totalRatings,
+        averageScore: item.averageScore,
+      })),
+      byOfficer: officerGroups.map((group) => ({
+        officerName: group.ten_can_bo,
         totalRatings: group._count._all,
         averageScore: roundToTwoDecimals(group._avg.diem_tong),
       })),

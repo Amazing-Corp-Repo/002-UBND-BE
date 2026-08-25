@@ -12,31 +12,10 @@ const ReceptionScheduleRepository = {
         },
       },
       orderBy: [{ ngay_tiep_dan: "asc" }, { thoi_gian: "asc" }],
-      include: {
-        ca_tiep_dan: {
-          where: { is_active: true, is_delete: false },
-          orderBy: [{ gio_bat_dau: "asc" }],
-          select: {
-            id: true,
-            gio_bat_dau: true,
-            gio_ket_thuc: true,
-          },
-        },
-        khung_gio_tiep_dan: {
-          where: { is_active: true, is_delete: false },
-          orderBy: [{ khung_gio: "asc" }, { ma_quay: "asc" }],
-          select: {
-            id: true,
-            khung_gio: true,
-            ma_quay: true,
-            id_quay: true,
-            suc_chua: true,
-            is_active: true,
-          },
-        },
-        dang_ky_tiep_dan: {
-          select: { slot: true },
-        },
+      select: {
+        id: true,
+        ngay_tiep_dan: true,
+        thoi_gian: true,
       },
     });
   },
@@ -64,13 +43,24 @@ const ReceptionScheduleRepository = {
           select: { suc_chua: true },
         }),
         tx.dang_ky_tiep_dan.count({
-          where: { id_lich_tiep_dan: scheduleId, slot: slot.khung_gio },
+          where: {
+            loai: "COUNTER_RECEPTION",
+            id_lich_tiep_dan: scheduleId,
+            slot: slot.khung_gio,
+          },
         }),
         tx.dang_ky_tiep_dan.count({
           where: {
-            id_lich_tiep_dan: scheduleId,
-            slot: slot.khung_gio,
-            bo_phan: slot.ma_quay,
+            loai: "COUNTER_RECEPTION",
+            OR: [
+              { id_cau_hinh_quay: slot.id },
+              {
+                id_cau_hinh_quay: null,
+                id_lich_tiep_dan: scheduleId,
+                slot: slot.khung_gio,
+                bo_phan: slot.ma_quay,
+              },
+            ],
           },
         }),
       ]);

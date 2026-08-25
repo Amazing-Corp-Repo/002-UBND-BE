@@ -12,6 +12,9 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      cccd,
+      khuPho,
+      moTaViTri,
       userId,
       idVideo,
     } = req.body;
@@ -25,6 +28,9 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      cccd,
+      khuPho,
+      moTaViTri,
       userId,
       file,
       idVideo,
@@ -209,6 +215,9 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      cccd,
+      khuPho,
+      moTaViTri,
       idVideo,
     } = req.body;
     const file = req.files;
@@ -221,6 +230,9 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      cccd,
+      khuPho,
+      moTaViTri,
       file,
       idVideo,
     );

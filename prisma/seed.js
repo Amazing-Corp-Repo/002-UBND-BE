@@ -37,14 +37,22 @@ const IDS = {
   dmSach: U('00000000-0000-4000-8000-000000000501'),
   dmVanBan: U('00000000-0000-4000-8000-000000000502'),
   dmBanDo: U('00000000-0000-4000-8000-000000000503'),
+  dmVanHoa: U('00000000-0000-4000-8000-000000000504'), // THÊM MỚI — văn hóa - lịch sử
+  dmDiTich: U('00000000-0000-4000-8000-000000000505'), // THÊM MỚI — di tích lịch sử
   // thu_vien_tag
   tagLichSu: U('00000000-0000-4000-8000-000000000601'),
   tagVanHoa: U('00000000-0000-4000-8000-000000000602'),
   tagDiaChinh: U('00000000-0000-4000-8000-000000000603'),
+  tagPhapLuat: U('00000000-0000-4000-8000-000000000604'), // THÊM MỚI
   // thu_vien_tai_lieu
   tlSach: U('00000000-0000-4000-8000-000000000701'),
   tlLuat: U('00000000-0000-4000-8000-000000000702'),
   tlBanDo: U('00000000-0000-4000-8000-000000000703'),
+  tlVanHoa: U('00000000-0000-4000-8000-000000000704'), // THÊM MỚI — tài liệu văn hóa
+  tlPhapLuat: U('00000000-0000-4000-8000-000000000705'), // THÊM MỚI — tài liệu pháp luật
+  // thu_vien_tai_lieu_media (THÊM MỚI)
+  tlMedia1: U('00000000-0000-4000-8000-000000000b01'),
+  tlMedia2: U('00000000-0000-4000-8000-000000000b02'),
   // dang_ky_tiep_dan
   dkCounter: U('00000000-0000-4000-8000-000000000801'),
   dkLeader: U('00000000-0000-4000-8000-000000000802'),
@@ -107,6 +115,7 @@ async function main() {
         mo_ta: tieuDe,
         muc_do: mucDo,
         vi_tri: 'Xã Tăng Nhơn Phú',
+        khu_pho: 'Chưa xác định',
         ten_nguoi_phan_anh: 'Người dân',
         sdt_nguoi_phan_anh: '0900000000',
         id_video: [],
@@ -248,6 +257,21 @@ async function main() {
     [IDS.dmSach, 'Tủ sách địa phương', 'Sách về lịch sử, văn hóa', 'BookOpen', 'blue', 1],
     [IDS.dmVanBan, 'Văn bản pháp luật', 'Nghị quyết, quyết định, thông tư', 'ScrollText', 'green', 2],
     [IDS.dmBanDo, 'Bản đồ số', 'Bản đồ quy hoạch, ranh giới', 'Map', 'orange', 3],
+    [IDS.dmVanHoa, 'Văn hóa - Lịch sử', 'Tài liệu văn hóa, lịch sử địa phương', 'History', 'red', 4],
+    [IDS.dmDiTich, 'Di tích lịch sử', 'Di tích, danh thắng trên địa bàn', 'Landmark', 'purple', 5],
+    // Danh mục loại văn bản quy phạm pháp luật
+    ['00000000-0000-4000-8000-000000000511', 'Quyết định', 'Quyết định quy phạm pháp luật và cá biệt', 'FileText', 'blue', 10],
+    ['00000000-0000-4000-8000-000000000512', 'Nghị định', 'Nghị định của Chính phủ', 'FileText', 'green', 11],
+    ['00000000-0000-4000-8000-000000000513', 'Thông tư', 'Thông tư của các Bộ, ngành', 'FileText', 'indigo', 12],
+    ['00000000-0000-4000-8000-000000000514', 'Nghị quyết', 'Nghị quyết của Quốc hội, HĐND', 'FileText', 'red', 13],
+    ['00000000-0000-4000-8000-000000000515', 'Luật', 'Luật và Bộ luật', 'Book', 'amber', 14],
+    ['00000000-0000-4000-8000-000000000516', 'Chỉ thị', 'Chỉ thị điều hành', 'AlertCircle', 'orange', 15],
+    ['00000000-0000-4000-8000-000000000517', 'Quy chế / Quy định', 'Quy chế và quy định áp dụng', 'FileCode', 'teal', 16],
+    ['00000000-0000-4000-8000-000000000518', 'Kế hoạch', 'Kế hoạch triển khai, thực hiện', 'Calendar', 'purple', 17],
+    ['00000000-0000-4000-8000-000000000519', 'Báo cáo', 'Báo cáo định kỳ và chuyên đề', 'BarChart', 'cyan', 18],
+    ['00000000-0000-4000-8000-000000000520', 'Công văn', 'Công văn hành chính và hướng dẫn', 'Mail', 'slate', 19],
+    ['00000000-0000-4000-8000-000000000521', 'Hướng dẫn', 'Văn bản hướng dẫn chuyên môn', 'HelpCircle', 'sky', 20],
+    ['00000000-0000-4000-8000-000000000522', 'Thông báo', 'Thông báo triển khai các quy định', 'Bell', 'rose', 21],
   ]) {
     await prisma.thu_vien_danh_muc.upsert({
       where: { id },
@@ -261,6 +285,7 @@ async function main() {
     [IDS.tagLichSu, 'lịch sử'],
     [IDS.tagVanHoa, 'văn hóa'],
     [IDS.tagDiaChinh, 'địa chính'],
+    [IDS.tagPhapLuat, 'pháp luật'],
   ]) {
     await prisma.thu_vien_tag.upsert({ where: { id }, update: {}, create: { id, ten } });
   }
@@ -277,6 +302,7 @@ async function main() {
       tac_gia: 'Ban Tuyên giáo',
       mo_ta: 'Sách lịch sử địa phương.',
       so_luot_tai: 120n,
+      luot_xem: 450n,
       is_featured: true,
       sections: [{ heading: 'Khái quát', content: 'Giới thiệu chung.' }],
       trang_thai: 'DA_DUYET',
@@ -296,6 +322,7 @@ async function main() {
       tac_gia: 'Quốc hội',
       mo_ta: 'Văn bản hiến pháp.',
       so_luot_tai: 500n,
+      luot_xem: 2100n,
       is_featured: true,
       so_hieu: 'Hiến pháp 2013',
       co_quan_ban_hanh: 'Quốc hội',
@@ -319,10 +346,65 @@ async function main() {
       tac_gia: 'Phòng Quy hoạch',
       mo_ta: 'Bản đồ quy hoạch sử dụng đất.',
       so_luot_tai: 80n,
+      luot_xem: 320n,
       is_featured: false,
       trang_thai: 'DA_DUYET',
       pham_vi: 'CONG_KHAI',
       ngay_dang: 1,
+      ngon_ngu: 'vi',
+    },
+  });
+  // THÊM MỚI — Tài liệu Văn hóa - Lịch sử
+  await prisma.thu_vien_tai_lieu.upsert({
+    where: { id: IDS.tlVanHoa },
+    update: {},
+    create: {
+      id: IDS.tlVanHoa,
+      id_danh_muc: IDS.dmVanHoa,
+      loai: 'VAN_HOA',
+      tieu_de: 'Lịch sử hình thành và phát triển Phường Tăng Nhơn Phú',
+      tac_gia: 'UBND Phường Tăng Nhơn Phú',
+      mo_ta: 'Tài liệu tổng quan về lịch sử hình thành và phát triển của phường Tăng Nhơn Phú qua các thời kỳ.',
+      so_luot_tai: 340n,
+      luot_xem: 1250n,
+      is_featured: true,
+      so_hieu: 'N/A',
+      ngay_ban_hanh: new Date('2023-01-15'),
+      ten_di_tich: 'UBND Phường Tăng Nhơn Phú',
+      dia_chi: 'Số 10 Đường số 4, Khu phố 2, Phường Tăng Nhơn Phú',
+      nguon: 'UBND Phường Tăng Nhơn Phú - Phòng Văn hóa',
+      nguoi_duyet: null,
+      thoi_gian_duyet: new Date('2023-01-16T07:30:00Z'),
+      trang_thai: 'DA_DUYET',
+      pham_vi: 'CONG_KHAI',
+      ngon_ngu: 'vi',
+    },
+  });
+  // THÊM MỚI — Tài liệu Pháp luật
+  await prisma.thu_vien_tai_lieu.upsert({
+    where: { id: IDS.tlPhapLuat },
+    update: {},
+    create: {
+      id: IDS.tlPhapLuat,
+      id_danh_muc: IDS.dmVanBan,
+      loai: 'PHAP_LUAT',
+      tieu_de: 'Nghị định quy định về quản lý văn bản pháp luật tại địa phương',
+      tac_gia: 'Chính phủ',
+      mo_ta: 'Nghị định này quy định về quản lý văn bản pháp luật, bao gồm việc soạn thảo, ban hành, lưu trữ và công bố văn bản quy phạm pháp luật tại địa phương.',
+      so_luot_tai: 210n,
+      luot_xem: 890n,
+      is_featured: true,
+      so_hieu: '104/2022/NĐ-CP',
+      co_quan_ban_hanh: 'Chính phủ',
+      ngay_ban_hanh: new Date('2022-12-31'),
+      ngay_hieu_luc: new Date('2023-01-15'),
+      ngay_het_han: null,
+      trang_thai_hieu_luc: 'Đang hiệu lực',
+      nguon: 'Cổng thông tin điện tử Chính phủ',
+      nguoi_duyet: null,
+      thoi_gian_duyet: new Date('2023-01-05T09:00:00Z'),
+      trang_thai: 'DA_DUYET',
+      pham_vi: 'CONG_KHAI',
       ngon_ngu: 'vi',
     },
   });
@@ -333,6 +415,10 @@ async function main() {
     { id_tai_lieu: IDS.tlSach, id_tag: IDS.tagVanHoa },
     { id_tai_lieu: IDS.tlLuat, id_tag: IDS.tagVanHoa },
     { id_tai_lieu: IDS.tlBanDo, id_tag: IDS.tagDiaChinh },
+    { id_tai_lieu: IDS.tlVanHoa, id_tag: IDS.tagLichSu },       // THÊM MỚI
+    { id_tai_lieu: IDS.tlVanHoa, id_tag: IDS.tagVanHoa },       // THÊM MỚI
+    { id_tai_lieu: IDS.tlPhapLuat, id_tag: IDS.tagPhapLuat },   // THÊM MỚI
+    { id_tai_lieu: IDS.tlPhapLuat, id_tag: IDS.tagVanHoa },     // THÊM MỚI
   ];
   for (const lt of lienKetTag) {
     await prisma.thu_vien_tai_lieu_tag.upsert({
@@ -374,6 +460,34 @@ async function main() {
     },
   });
 
+  // ---------- 10. thu_vien_tai_lieu_media (ảnh/video đính kèm — THÊM MỚI) ----------
+  await prisma.thu_vien_tai_lieu_media.upsert({
+    where: { id: IDS.tlMedia1 },
+    update: {},
+    create: {
+      id: IDS.tlMedia1,
+      id_tai_lieu: IDS.tlVanHoa,
+      loai: 'IMAGE',
+      ten_file_goc: 'anh_bia.jpg',
+      url: '/storage/dev/thu_vien_media/anh_bia.jpg',
+      kich_thuoc: 204800n,
+      mime_type: 'image/jpeg',
+    },
+  });
+  await prisma.thu_vien_tai_lieu_media.upsert({
+    where: { id: IDS.tlMedia2 },
+    update: {},
+    create: {
+      id: IDS.tlMedia2,
+      id_tai_lieu: IDS.tlVanHoa,
+      loai: 'VIDEO',
+      ten_file_goc: 'phong_su.mp4',
+      url: '/storage/dev/thu_vien_media/phong_su.mp4',
+      kich_thuoc: 52428800n,
+      mime_type: 'video/mp4',
+    },
+  });
+
   const counts = {
     roles: await prisma.roles.count(),
     lich_tiep_dan: await prisma.lich_tiep_dan.count(),
@@ -388,6 +502,7 @@ async function main() {
     thu_vien_tai_lieu_tag: await prisma.thu_vien_tai_lieu_tag.count(),
     thu_vien_tai_lieu_file: await prisma.thu_vien_tai_lieu_file.count(),
     thu_vien_tai_lieu_quyen: await prisma.thu_vien_tai_lieu_quyen.count(),
+    thu_vien_tai_lieu_media: await prisma.thu_vien_tai_lieu_media.count(), // THÊM MỚI
   };
   console.log('Seed hoàn tất:', JSON.stringify(counts));
 }

@@ -44,7 +44,7 @@ const createdRegistrationSchema = {
     receptionType: { type: "string", example: "COUNTER_RECEPTION" },
     scheduleId: { type: "string", format: "uuid" },
     slotId: { type: "string", format: "uuid", nullable: true },
-    receptionDate: { type: "string", format: "date-time" },
+    receptionDate: { type: "string", format: "date", example: "2026-08-26" },
     timeSlot: { type: "string", example: "08:00 - 09:00" },
     topic: { type: "string", example: "Hướng dẫn thủ tục" },
     description: { type: "string" },
@@ -71,7 +71,7 @@ const createdRegistrationSchema = {
     ma_tiep_dan: { type: "string", deprecated: true },
     loai: { type: "string", deprecated: true },
     id_lich_tiep_dan: { type: "string", format: "uuid", deprecated: true },
-    ngay: { type: "string", format: "date-time", deprecated: true },
+    ngay: { type: "string", format: "date", deprecated: true },
     slot: { type: "string", deprecated: true },
     chu_de: { type: "string", deprecated: true },
     ly_do: { type: "string", deprecated: true },
@@ -96,12 +96,12 @@ const staffRegistrationDetailSchema = {
         id: { type: "string", format: "uuid" },
         officerName: { type: "string" },
         location: { type: "string" },
-        receptionDate: { type: "string", format: "date-time" },
+        receptionDate: { type: "string", format: "date" },
         timeRange: { type: "string" },
         note: { type: "string", nullable: true },
       },
     },
-    receptionDate: { type: "string", format: "date-time" },
+    receptionDate: { type: "string", format: "date" },
     timeSlot: { type: "string" },
     topic: { type: "string" },
     workingContent: { type: "string" },
@@ -160,6 +160,12 @@ const DangKyTiepDanSwagger = {
       parameters: [
         { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
         { name: "size", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+        {
+          name: "scope",
+          in: "query",
+          description: "ALL trả tất cả đơn; MY chỉ trả đơn do chính tài khoản đăng nhập đã phê duyệt, hoàn thành hoặc từ chối.",
+          schema: { type: "string", enum: ["ALL", "MY"], default: "ALL" },
+        },
         { name: "search", in: "query", schema: { type: "string", maxLength: 100 } },
         { name: "receptionDate", in: "query", schema: { type: "string", format: "date" } },
         { name: "approvalStatus", in: "query", schema: { type: "string", enum: ["PENDING", "APPROVED", "COMPLETED", "REJECTED"] } },
@@ -299,7 +305,7 @@ const DangKyTiepDanSwagger = {
       tags: ["ReceptionRegistration"],
       summary: "Phê duyệt đăng ký tiếp dân",
       description:
-        "Cán bộ phê duyệt yêu cầu gặp và gán đăng ký vào một trong tám quầy tiếp nhận. Backend kiểm tra sức chứa riêng của quầy trong đúng ca; nếu quầy đã đầy thì cán bộ phải chọn quầy khác. Hệ thống tự ghi nhận người duyệt và thời điểm duyệt.",
+        "Cán bộ phê duyệt yêu cầu gặp tại quầy đã được phân công cho tài khoản trong đúng ca. Frontend không cần gửi mã quầy; backend tự lấy quầy từ phân công của tài khoản đăng nhập, kiểm tra sức chứa rồi ghi nhận người duyệt và thời điểm duyệt. Trường department cũ vẫn được hỗ trợ để đối chiếu tương thích; nếu gửi khác phân công sẽ bị từ chối.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -310,15 +316,16 @@ const DangKyTiepDanSwagger = {
         },
       ],
       requestBody: {
-        required: true,
+        required: false,
         content: {
           "application/json": {
             schema: {
               type: "object",
-              required: ["department"],
               properties: {
                 department: {
                   type: "string",
+                  nullable: true,
+                  description: "Không bắt buộc; backend tự xác định quầy từ phân công ca trực.",
                   enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"],
                 },
               },
@@ -347,7 +354,7 @@ const DangKyTiepDanSwagger = {
         },
         400: { description: "ID đăng ký hoặc quầy tiếp nhận không hợp lệ" },
         401: { description: "Thiếu hoặc sai access token" },
-        403: { description: "Không có quyền RR_APPROVE" },
+        403: { description: "Không có quyền RR_APPROVE, chưa được phân công trong ca hoặc mã quầy không khớp phân công" },
         404: { description: "Không tìm thấy đăng ký hoặc người phê duyệt" },
         409: { description: "Đăng ký không ở trạng thái chờ duyệt, đã được xử lý hoặc quầy được chọn đã đầy" },
         503: { description: "Nhiều cán bộ đồng thời phê duyệt gây xung đột transaction; client có thể thử lại" },
@@ -456,9 +463,10 @@ const DangKyTiepDanSwagger = {
   "/api/reception-registrations/rating-lookup/{receptionCode}": {
     get: {
       tags: ["ReceptionRegistration"],
-      summary: "Tra cứu đăng ký đã hoàn thành để đánh giá trên iPad",
+      deprecated: true,
+      summary: "[Luồng cũ] Tra cứu đăng ký đã hoàn thành để đánh giá trên iPad",
       description:
-        "API công khai dành cho iPad. Chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá. Giới hạn riêng 60 lượt tra mã trong 10 phút cho mỗi IP.",
+        "API luồng cũ được giữ nguyên để tương thích và không còn được iPad mới sử dụng. Luồng mới nhập thủ công toàn bộ thông tin qua POST /api/reception-ratings. API này vẫn chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá. Giới hạn riêng 60 lượt tra mã trong 10 phút cho mỗi IP.",
       parameters: [
         {
           name: "receptionCode",
@@ -481,7 +489,7 @@ const DangKyTiepDanSwagger = {
                     properties: {
                       registrationId: { type: "string", format: "uuid" },
                       receptionCode: { type: "string", example: "A00123" },
-                      receptionDate: { type: "string", format: "date-time" },
+                      receptionDate: { type: "string", format: "date" },
                       timeSlot: { type: "string" },
                       topic: { type: "string" },
                       workingContent: { type: "string" },
@@ -518,7 +526,7 @@ const registrationDemo = {
   id: "323e4567-e89b-42d3-a456-426614174000",
   receptionCode: "A00123",
   receptionType: "COUNTER_RECEPTION",
-  receptionDate: "2026-08-26T00:00:00.000Z",
+  receptionDate: "2026-08-26",
   timeSlot: "07:30 - 08:30",
   topic: "Hướng dẫn thủ tục hành chính",
   workingContent: "Đề nghị hướng dẫn hồ sơ xác nhận thông tin cư trú",
@@ -651,8 +659,12 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
   "PATCH /api/reception-registrations/{id}/approve": {
     parameters: { id: DEMO.registrations.approve.id },
     request: {
+      automaticCounter: {
+        summary: "Demo hợp lệ - backend tự lấy quầy theo cán bộ đăng nhập",
+        value: {},
+      },
       validCounter: {
-        summary: "Demo hợp lệ - phê duyệt vào quầy 3",
+        summary: "Demo tương thích cũ - gửi quầy 3 để đối chiếu phân công",
         value: { department: "QUAY_3" },
       },
       invalidCounter: {
@@ -666,9 +678,19 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
         approver: {
           name: "Nguyễn Văn Lãnh đạo",
           title: "Lãnh đạo UBND",
-          approvedAt: "2026-08-25T08:00:00.000Z",
+          approvedAt: "2026-08-25T15:00:00.000+07:00",
         },
       }),
+      403: {
+        noAssignment: errorDemo(
+          "Demo 403 - Cán bộ chưa được phân công trong ca",
+          "Cán bộ chưa được phân công quầy trong ca này"
+        ),
+        assignmentMismatch: errorDemo(
+          "Demo 403 - Mã quầy không khớp phân công",
+          "Cán bộ không được phân công tại quầy này trong ca này"
+        ),
+      },
       409: {
         counterIsFull: errorDemo(
           "Demo 409 - Quầy đã đầy",
@@ -687,7 +709,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
       200: successDemo("Hoàn thành buổi tiếp dân thành công", {
         ...registrationDemo,
         approvalStatus: "COMPLETED",
-        completedAt: "2026-08-26T08:30:00.000Z",
+        completedAt: "2026-08-26T15:30:00.000+07:00",
       }),
       409: errorDemo(
         "Demo 409 - Đơn chưa đủ điều kiện hoàn thành",
@@ -712,7 +734,7 @@ applyReceptionDemoExamples(DangKyTiepDanSwagger, {
         ...registrationDemo,
         approvalStatus: "REJECTED",
         rejectionReason: "Nội dung đăng ký không thuộc phạm vi tiếp nhận",
-        rejectedAt: "2026-08-25T08:00:00.000Z",
+        rejectedAt: "2026-08-25T15:00:00.000+07:00",
       }),
       409: errorDemo(
         "Demo 409 - Đơn không còn chờ xử lý",
