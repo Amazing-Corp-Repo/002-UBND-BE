@@ -8,6 +8,7 @@ import {
   CreateLeaderMeetingScheduleRequest,
   UpdateLeaderMeetingScheduleRequest,
   UpdateLeaderMeetingScheduleStatusRequest,
+  UpdateLeaderMeetingDailySlotStatusRequest,
 } from "../validators/leader-meeting-schedule.validator.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
@@ -33,6 +34,15 @@ leaderMeetingScheduleRouter.post(
   validate(CreateLeaderMeetingScheduleRequest),
   receptionAudit(AUDIT_LOGS.CREATE, { tableName: "lich_gap_lanh_dao" }),
   LeaderMeetingScheduleController.createManagement
+);
+
+leaderMeetingScheduleRouter.patch(
+  "/management/daily-slots/status",
+  authenticate,
+  authorize([PERMISSION.LMS_UPDATE_STATUS]),
+  validate(UpdateLeaderMeetingDailySlotStatusRequest),
+  receptionAudit(AUDIT_LOGS.UPDATE, { tableName: "khung_gio_gap_lanh_dao" }),
+  LeaderMeetingScheduleController.updateDailySlotStatus
 );
 
 leaderMeetingScheduleRouter.get(

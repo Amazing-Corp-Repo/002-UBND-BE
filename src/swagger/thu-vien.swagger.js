@@ -115,7 +115,7 @@ const ThuVienSwagger = {
     put: {
       tags: ["TaiLieuVanHoa"],
       summary: "Từ chối tài liệu văn hóa",
-      description: "Chuyển trạng thái từ CHO_DUYET về NHAP. Có thể ghi lý do từ chối.",
+      description: "Chuyển trạng thái từ CHO_DUYET về TU_CHOI. Ghi lý do từ chối (nếu có). Người đăng thấy rõ là bị từ chối và có thể chỉnh sửa → gửi duyệt lại.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
@@ -124,6 +124,18 @@ const ThuVienSwagger = {
         content: { "application/json": { schema: ThuVienSchemas.RejectTaiLieuRequest } },
         required: false,
       },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/unapprove/{id}": {
+    put: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Hoàn tác phê duyệt tài liệu văn hóa",
+      description: "Chuyển trạng thái từ DA_DUYET về CHO_DUYET. Xóa thông tin người duyệt và thời gian duyệt.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
       responses: {},
     },
   },
@@ -282,7 +294,7 @@ const ThuVienSwagger = {
     put: {
       tags: ["TaiLieuPhapLuat"],
       summary: "Từ chối tài liệu pháp luật",
-      description: "Chuyển trạng thái từ CHO_DUYET về NHAP. Có thể ghi lý do từ chối.",
+      description: "Chuyển trạng thái từ CHO_DUYET về TU_CHOI. Ghi lý do từ chối (nếu có). Người đăng thấy rõ là bị từ chối và có thể chỉnh sửa → gửi duyệt lại.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
@@ -291,6 +303,18 @@ const ThuVienSwagger = {
         content: { "application/json": { schema: ThuVienSchemas.RejectTaiLieuRequest } },
         required: false,
       },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/unapprove/{id}": {
+    put: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Hoàn tác phê duyệt tài liệu pháp luật",
+      description: "Chuyển trạng thái từ DA_DUYET về CHO_DUYET. Xóa thông tin người duyệt và thời gian duyệt.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
       responses: {},
     },
   },
@@ -323,6 +347,37 @@ const ThuVienSwagger = {
       tags: ["TaiLieuPhapLuat"],
       summary: "Download tài liệu pháp luật",
       security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
+      responses: {},
+    },
+  },
+
+  // ============ CÔNG KHAI (public, không cần auth) ============
+
+  "/api/tai-lieu-cong-khai/paging": {
+    get: {
+      tags: ["TaiLieuCongKhai"],
+      summary: "Lấy danh sách tài liệu công khai (phân trang)",
+      description: "Public endpoint — không cần token. Chỉ trả về tài liệu DA_DUYET + CONG_KHAI.",
+      parameters: [
+        { name: "page", in: "query", schema: { type: "integer", default: 1 }, description: "Trang hiện tại" },
+        { name: "size", in: "query", schema: { type: "integer", default: 10 }, description: "Số bản ghi mỗi trang" },
+        { name: "search", in: "query", schema: { type: "string" }, description: "Tìm kiếm theo tiêu đề, mô tả, số hiệu" },
+        { name: "idDanhMuc", in: "query", schema: { type: "string", format: "uuid" }, description: "Lọc theo danh mục" },
+        { name: "loai", in: "query", schema: { type: "string" }, description: "Lọc loại: VAN_HOA hoặc PHAP_LUAT. Bỏ qua → trả về cả hai." },
+        { name: "sortBy", in: "query", schema: { type: "string", default: "thoi_gian_tao" }, description: "Trường sắp xếp" },
+        { name: "sortOrder", in: "query", schema: { type: "string", default: "desc" }, description: "Thứ tự sắp xếp (asc, desc)" },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-cong-khai/{id}": {
+    get: {
+      tags: ["TaiLieuCongKhai"],
+      summary: "Lấy chi tiết tài liệu công khai",
+      description: "Public endpoint — không cần token.",
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
       ],

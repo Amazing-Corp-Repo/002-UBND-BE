@@ -2,14 +2,52 @@ import ThuVienService from "../services/thu-vien.service.js";
 import { successResponse } from "../utils/response.util.js";
 
 const ThuVienController = {
+  // ========== PUBLIC (không cần auth) ==========
+
+  async getPublic(req, res) {
+    const { page = 1, size = 10, search, idDanhMuc, loai, sortBy, sortOrder } = req.query;
+    const result = await ThuVienService.getPublic({ loai, page, size, search, idDanhMuc, sortBy, sortOrder });
+    return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
+  },
+
+  async getPublicById(req, res) {
+    const { id } = req.params;
+    const result = await ThuVienService.getPublicById(id);
+    return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
+  },
+
   // ========== VĂN HÓA & PHÁP LUẬT (dùng chung) ==========
 
   async getAll(req, res) {
-    const { page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh } = req.query;
+    let { page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, from, fromDate, tuNgay, ngayBanHanhFrom, to, toDate, denNgay, ngayBanHanhTo } = req.query;
+
+    // Hỗ trợ nhiều tên tham số cho ngày bắt đầu và ngày kết thúc
+    if (!dateFrom) dateFrom = from || fromDate || tuNgay || ngayBanHanhFrom;
+    if (!dateTo) dateTo = to || toDate || denNgay || ngayBanHanhTo;
+
     const loai = req.loai;
     const currentUser = req.payload.userId;
-    const result = await ThuVienService.getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser });
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions });
     return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
+  },
+
+  async export(req, res) {
+    let { search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, from, fromDate, tuNgay, ngayBanHanhFrom, to, toDate, denNgay, ngayBanHanhTo, columns } = req.query;
+
+    // Hỗ trợ nhiều tên tham số cho ngày
+    if (!dateFrom) dateFrom = from || fromDate || tuNgay || ngayBanHanhFrom;
+    if (!dateTo) dateTo = to || toDate || denNgay || ngayBanHanhTo;
+
+    const loai = req.loai;
+    const currentUser = req.payload.userId;
+    const permissions = req.payload.permissions || [];
+
+    const buffer = await ThuVienService.exportExcel({ loai, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions, columns });
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=tai_lieu_${loai.toLowerCase()}_${Date.now()}.xlsx`);
+    return res.send(buffer);
   },
 
   async getById(req, res) {
@@ -73,9 +111,18 @@ const ThuVienController = {
     return successResponse(res, result, "Từ chối tài liệu thành công");
   },
 
+  async unapprove(req, res) {
+    const { id } = req.params;
+    const currentUser = req.payload.userId;
+    const result = await ThuVienService.unapprove(id, currentUser);
+    return successResponse(res, result, "Hoàn tác phê duyệt thành công");
+  },
+
   async getStatistics(req, res) {
     const loai = req.loai;
-    const result = await ThuVienService.getStatistics(loai);
+    const currentUser = req.payload.userId;
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getStatistics(loai, currentUser, permissions);
     return successResponse(res, result, "Lấy thống kê thành công");
   },
 

@@ -154,27 +154,144 @@ const LeaderMeetingScheduleRepository = {
     });
   },
 
-  async createManagement(data) {
-    return prisma.lich_gap_lanh_dao.create({
-      data: {
-        id_lanh_dao: data.leaderId,
-        ngay: data.receptionDate,
-        dia_diem: data.location,
-        ghi_chu: data.note,
-        nguoi_tao: data.leaderId,
-        nguoi_cap_nhat: data.leaderId,
+  async findDailySchedule(leaderId, receptionDate) {
+    return prisma.lich_gap_lanh_dao.findFirst({
+      where: {
+        id_lanh_dao: leaderId,
+        ngay: receptionDate,
+      },
+      select: {
+        id: true,
+        ngay: true,
+        dia_diem: true,
+        ghi_chu: true,
+        is_active: true,
+        is_delete: true,
+        lanh_dao: {
+          select: { id: true, ho_va_ten: true },
+        },
         khung_gio_gap_lanh_dao: {
-          create: data.slots.map((slot) => ({
-            gio_bat_dau: slot.startTime,
-            gio_ket_thuc: slot.endTime,
-            suc_chua: 1,
-            nguoi_tao: data.leaderId,
-            nguoi_cap_nhat: data.leaderId,
-          })),
+          orderBy: [{ gio_bat_dau: "asc" }, { gio_ket_thuc: "asc" }],
+          select: {
+            id: true,
+            gio_bat_dau: true,
+            gio_ket_thuc: true,
+            suc_chua: true,
+            is_active: true,
+            is_delete: true,
+            dang_ky_gap_lanh_dao: {
+              where: { is_active: true, is_delete: false },
+              select: { id: true, trang_thai: true },
+            },
+          },
         },
       },
-      select: { id: true },
     });
+  },
+
+  async findLeaderIdentity(leaderId) {
+    return prisma.nguoi_dung.findFirst({
+      where: { id: leaderId, is_delete: false },
+      select: { id: true, ho_va_ten: true },
+    });
+  },
+
+  async createManagement(data) {
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.lich_gap_lanh_dao.findFirst({
+        where: {
+          id_lanh_dao: data.leaderId,
+          ngay: data.receptionDate,
+        },
+        select: {
+          id: true,
+          is_delete: true,
+          khung_gio_gap_lanh_dao: {
+            select: {
+              id: true,
+              gio_bat_dau: true,
+              gio_ket_thuc: true,
+            },
+          },
+        },
+      });
+
+      if (existing && !existing.is_delete) {
+        const duplicateError = new Error("Leader schedule already exists");
+        duplicateError.code = "P2002";
+        throw duplicateError;
+      }
+
+      if (!existing) {
+        return tx.lich_gap_lanh_dao.create({
+          data: {
+            id_lanh_dao: data.leaderId,
+            ngay: data.receptionDate,
+            dia_diem: data.location,
+            ghi_chu: data.note,
+            nguoi_tao: data.leaderId,
+            nguoi_cap_nhat: data.leaderId,
+            khung_gio_gap_lanh_dao: {
+              create: data.slots.map((slot) => ({
+                gio_bat_dau: slot.startTime,
+                gio_ket_thuc: slot.endTime,
+                suc_chua: 1,
+                nguoi_tao: data.leaderId,
+                nguoi_cap_nhat: data.leaderId,
+              })),
+            },
+          },
+          select: { id: true },
+        });
+      }
+
+      const updatedAt = new Date().toISOString();
+      await tx.lich_gap_lanh_dao.update({
+        where: { id: existing.id },
+        data: {
+          dia_diem: data.location,
+          ghi_chu: data.note,
+          is_active: true,
+          is_delete: false,
+          nguoi_cap_nhat: data.leaderId,
+          thoi_gian_cap_nhat: updatedAt,
+        },
+      });
+
+      const existingByKey = new Map(
+        existing.khung_gio_gap_lanh_dao.map((slot) => [
+          `${slot.gio_bat_dau}|${slot.gio_ket_thuc}`,
+          slot,
+        ])
+      );
+      for (const slot of data.slots) {
+        const stored = existingByKey.get(`${slot.startTime}|${slot.endTime}`);
+        if (stored) {
+          await tx.khung_gio_gap_lanh_dao.update({
+            where: { id: stored.id },
+            data: {
+              is_active: true,
+              is_delete: false,
+              suc_chua: 1,
+              nguoi_cap_nhat: data.leaderId,
+              thoi_gian_cap_nhat: updatedAt,
+            },
+          });
+        } else {
+          await tx.khung_gio_gap_lanh_dao.create({
+            data: {
+              id_lich_gap: existing.id,
+              gio_bat_dau: slot.startTime,
+              gio_ket_thuc: slot.endTime,
+              suc_chua: 1,
+              nguoi_tao: data.leaderId,
+              nguoi_cap_nhat: data.leaderId,
+            },
+          });
+        }
+      }
+      return { id: existing.id };
+    }, { isolationLevel: "Serializable", maxWait: 15000, timeout: 30000 });
   },
 
   async updateManagement(id, leaderId, data) {
@@ -183,6 +300,7 @@ const LeaderMeetingScheduleRepository = {
         where: { id, id_lanh_dao: leaderId, is_delete: false },
         select: {
           id: true,
+          ngay: true,
           khung_gio_gap_lanh_dao: {
             select: {
               id: true,
@@ -195,18 +313,39 @@ const LeaderMeetingScheduleRepository = {
       });
       if (!schedule) return { conflict: "NOT_FOUND" };
 
-      const registrationCount = await tx.dang_ky_gap_lanh_dao.count({
-        where: {
-          khung_gio_gap_lanh_dao: { id_lich_gap: id },
-          is_active: true,
-          is_delete: false,
-        },
-      });
-      if (registrationCount > 0) return { conflict: "HAS_REGISTRATIONS" };
+      if (schedule.ngay.getTime() !== data.receptionDate.getTime()) {
+        const registrationCount = await tx.dang_ky_gap_lanh_dao.count({
+          where: {
+            khung_gio_gap_lanh_dao: { id_lich_gap: id },
+            is_active: true,
+            is_delete: false,
+          },
+        });
+        if (registrationCount > 0) {
+          return { conflict: "HAS_REGISTRATIONS" };
+        }
+      }
 
       const desiredKeys = new Set(
         data.slots.map((slot) => `${slot.startTime}|${slot.endTime}`)
       );
+
+      // Chỉ chặn nếu ca bị tắt/xóa đã có công dân đăng ký giữ chỗ
+      for (const slot of schedule.khung_gio_gap_lanh_dao) {
+        const key = `${slot.gio_bat_dau}|${slot.gio_ket_thuc}`;
+        if (!desiredKeys.has(key) && !slot.is_delete) {
+          const regCount = await tx.dang_ky_gap_lanh_dao.count({
+            where: {
+              id_khung_gio_gap: slot.id,
+              is_active: true,
+              is_delete: false,
+            },
+          });
+          if (regCount > 0) {
+            return { conflict: "HAS_REGISTRATIONS" };
+          }
+        }
+      }
       const existingByKey = new Map(
         schedule.khung_gio_gap_lanh_dao.map((slot) => [
           `${slot.gio_bat_dau}|${slot.gio_ket_thuc}`,
@@ -267,6 +406,119 @@ const LeaderMeetingScheduleRepository = {
         },
       });
       return { updated: true };
+    }, { isolationLevel: "Serializable", maxWait: 15000, timeout: 30000 });
+  },
+
+  async updateDailySlotStatus({
+    leaderId,
+    receptionDate,
+    startTime,
+    endTime,
+    isOpen,
+    location,
+    note,
+  }) {
+    return prisma.$transaction(async (tx) => {
+      let schedule = await tx.lich_gap_lanh_dao.findFirst({
+        where: { id_lanh_dao: leaderId, ngay: receptionDate },
+        select: { id: true, is_delete: true },
+      });
+
+      if (!schedule && !isOpen) {
+        return { unchanged: true };
+      }
+
+      if (!schedule) {
+        schedule = await tx.lich_gap_lanh_dao.create({
+          data: {
+            id_lanh_dao: leaderId,
+            ngay: receptionDate,
+            dia_diem: location,
+            ghi_chu: note,
+            is_active: true,
+            is_delete: false,
+            nguoi_tao: leaderId,
+            nguoi_cap_nhat: leaderId,
+          },
+          select: { id: true, is_delete: true },
+        });
+      } else if (isOpen) {
+        await tx.lich_gap_lanh_dao.update({
+          where: { id: schedule.id },
+          data: {
+            is_active: true,
+            is_delete: false,
+            dia_diem: location,
+            ghi_chu: note,
+            nguoi_cap_nhat: leaderId,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+          },
+        });
+      }
+
+      const slot = await tx.khung_gio_gap_lanh_dao.findFirst({
+        where: {
+          id_lich_gap: schedule.id,
+          gio_bat_dau: startTime,
+          gio_ket_thuc: endTime,
+        },
+        select: { id: true },
+      });
+
+      if (!isOpen) {
+        if (!slot || schedule.is_delete) return { unchanged: true };
+
+        const registrationCount = await tx.dang_ky_gap_lanh_dao.count({
+          where: {
+            id_khung_gio_gap: slot.id,
+            is_active: true,
+            is_delete: false,
+          },
+        });
+        if (registrationCount > 0) {
+          return { conflict: "HAS_REGISTRATIONS" };
+        }
+
+        await tx.khung_gio_gap_lanh_dao.update({
+          where: { id: slot.id },
+          data: {
+            is_active: false,
+            is_delete: false,
+            nguoi_cap_nhat: leaderId,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+          },
+        });
+        return { scheduleId: schedule.id, slotId: slot.id };
+      }
+
+      if (slot) {
+        await tx.khung_gio_gap_lanh_dao.update({
+          where: { id: slot.id },
+          data: {
+            is_active: true,
+            is_delete: false,
+            suc_chua: 1,
+            nguoi_cap_nhat: leaderId,
+            thoi_gian_cap_nhat: new Date().toISOString(),
+          },
+        });
+        return { scheduleId: schedule.id, slotId: slot.id };
+      }
+
+      const createdSlot = await tx.khung_gio_gap_lanh_dao.create({
+        data: {
+          id_lich_gap: schedule.id,
+          gio_bat_dau: startTime,
+          gio_ket_thuc: endTime,
+          suc_chua: 1,
+          is_active: true,
+          is_delete: false,
+          nguoi_tao: leaderId,
+          nguoi_cap_nhat: leaderId,
+        },
+        select: { id: true },
+      });
+      return { scheduleId: schedule.id, slotId: createdSlot.id };
     }, { isolationLevel: "Serializable", maxWait: 15000, timeout: 30000 });
   },
 

@@ -18,6 +18,13 @@ const LeaderMeetingScheduleController = {
       req.validatedQuery,
       req.payload
     );
+    if (result.dailyView) {
+      return successResponse(
+        res,
+        result.data,
+        "Lấy bảng ca tiếp công dân theo ngày thành công"
+      );
+    }
     return successResponse(
       res,
       result.data,
@@ -65,6 +72,20 @@ const LeaderMeetingScheduleController = {
       res,
       data,
       "Cập nhật trạng thái lịch gặp lãnh đạo thành công"
+    );
+  },
+
+  async updateDailySlotStatus(req, res) {
+    const data = await LeaderMeetingScheduleService.updateDailySlotStatus(
+      req.body,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      req.body.isOpen
+        ? "Đã mở ca tiếp công dân"
+        : "Đã đóng ca tiếp công dân"
     );
   },
 

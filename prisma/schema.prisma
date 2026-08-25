@@ -1032,11 +1032,12 @@ model thu_vien_tai_lieu {
   ngay_hieu_luc          DateTime?                 @db.Date
   trang_thai_hieu_luc    String?                   @db.VarChar(50)
   chuong                 Json?
-  trang_thai             String?                   @default("NHAP") @db.VarChar(30) // NHAP|CHO_DUYET|DA_DUYET|LUU_TRU
+  trang_thai             String?                   @default("NHAP") @db.VarChar(30) // NHAP|CHO_DUYET|DA_DUYET|TU_CHOI|LUU_TRU
   pham_vi                String?                   @default("CONG_KHAI") @db.VarChar(30) // CONG_KHAI|NOI_BO|HAN_CHE
   nguon                  String?
   nguoi_duyet            String?                   @db.Uuid
   thoi_gian_duyet        DateTime?                 @db.Timestamp(6)
+  ly_do_tu_choi          String?                   @db.VarChar(500) // lý do từ chối — khi reject
   ngay_dang              Int?
   ngon_ngu               String?                   @db.VarChar(10)
   // === THÊM MỚI — Task 4: Kho tư liệu & Tra cứu văn bản ===

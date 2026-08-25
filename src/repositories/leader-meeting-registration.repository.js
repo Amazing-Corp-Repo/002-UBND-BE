@@ -105,12 +105,7 @@ const LeaderMeetingRegistrationRepository = {
         id: true,
         ma_dang_ky: true,
         ngay_hen: true,
-        chu_de: true,
-        ly_do: true,
         ho_ten: true,
-        sdt: true,
-        cccd: true,
-        dia_chi: true,
         trang_thai: true,
         ly_do_tu_choi: true,
         thoi_gian_tu_choi: true,
@@ -136,7 +131,12 @@ const LeaderMeetingRegistrationRepository = {
           },
         },
         danh_gia_gap_lanh_dao: {
-          select: { id: true },
+          select: {
+            id: true,
+            diem_tong: true,
+            nhan_xet: true,
+            thoi_gian_tao: true,
+          },
         },
       },
     });
@@ -162,19 +162,20 @@ const LeaderMeetingRegistrationRepository = {
               lte: toDate ? new Date(`${toDate}T23:59:59.999Z`) : undefined,
             }
           : undefined,
-      khung_gio_gap_lanh_dao: {
-        lich_gap_lanh_dao: {
-          id_lanh_dao: leaderId || undefined,
-          is_delete: false,
-        },
-      },
+      khung_gio_gap_lanh_dao: leaderId
+        ? {
+            lich_gap_lanh_dao: {
+              id_lanh_dao: leaderId,
+            },
+          }
+        : undefined,
       ...(search
         ? {
             OR: [
               { ma_dang_ky: { contains: search, mode: "insensitive" } },
               { ho_ten: { contains: search, mode: "insensitive" } },
-              { sdt: { contains: search } },
-              { cccd: { contains: search } },
+              { sdt: { contains: search, mode: "insensitive" } },
+              { cccd: { contains: search, mode: "insensitive" } },
               { chu_de: { contains: search, mode: "insensitive" } },
             ],
           }
@@ -192,10 +193,13 @@ const LeaderMeetingRegistrationRepository = {
           ma_dang_ky: true,
           ngay_hen: true,
           chu_de: true,
+          ly_do: true,
           ho_ten: true,
           sdt: true,
           cccd: true,
           trang_thai: true,
+          ghi_chu_hoan_thanh: true,
+          ghi_chu_xu_ly: true,
           thoi_gian_phe_duyet: true,
           thoi_gian_bat_dau_xu_ly: true,
           thoi_gian_hoan_thanh: true,
@@ -379,7 +383,7 @@ const LeaderMeetingRegistrationRepository = {
     const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
       where: {
         id,
-        trang_thai: "IN_PROGRESS",
+        trang_thai: { in: ["APPROVED", "IN_PROGRESS"] },
         is_active: true,
         is_delete: false,
         khung_gio_gap_lanh_dao: {

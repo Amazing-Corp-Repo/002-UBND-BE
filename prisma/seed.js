@@ -259,6 +259,19 @@ async function main() {
     [IDS.dmBanDo, 'Bản đồ số', 'Bản đồ quy hoạch, ranh giới', 'Map', 'orange', 3],
     [IDS.dmVanHoa, 'Văn hóa - Lịch sử', 'Tài liệu văn hóa, lịch sử địa phương', 'History', 'red', 4],
     [IDS.dmDiTich, 'Di tích lịch sử', 'Di tích, danh thắng trên địa bàn', 'Landmark', 'purple', 5],
+    // Danh mục loại văn bản quy phạm pháp luật
+    ['00000000-0000-4000-8000-000000000511', 'Quyết định', 'Quyết định quy phạm pháp luật và cá biệt', 'FileText', 'blue', 10],
+    ['00000000-0000-4000-8000-000000000512', 'Nghị định', 'Nghị định của Chính phủ', 'FileText', 'green', 11],
+    ['00000000-0000-4000-8000-000000000513', 'Thông tư', 'Thông tư của các Bộ, ngành', 'FileText', 'indigo', 12],
+    ['00000000-0000-4000-8000-000000000514', 'Nghị quyết', 'Nghị quyết của Quốc hội, HĐND', 'FileText', 'red', 13],
+    ['00000000-0000-4000-8000-000000000515', 'Luật', 'Luật và Bộ luật', 'Book', 'amber', 14],
+    ['00000000-0000-4000-8000-000000000516', 'Chỉ thị', 'Chỉ thị điều hành', 'AlertCircle', 'orange', 15],
+    ['00000000-0000-4000-8000-000000000517', 'Quy chế / Quy định', 'Quy chế và quy định áp dụng', 'FileCode', 'teal', 16],
+    ['00000000-0000-4000-8000-000000000518', 'Kế hoạch', 'Kế hoạch triển khai, thực hiện', 'Calendar', 'purple', 17],
+    ['00000000-0000-4000-8000-000000000519', 'Báo cáo', 'Báo cáo định kỳ và chuyên đề', 'BarChart', 'cyan', 18],
+    ['00000000-0000-4000-8000-000000000520', 'Công văn', 'Công văn hành chính và hướng dẫn', 'Mail', 'slate', 19],
+    ['00000000-0000-4000-8000-000000000521', 'Hướng dẫn', 'Văn bản hướng dẫn chuyên môn', 'HelpCircle', 'sky', 20],
+    ['00000000-0000-4000-8000-000000000522', 'Thông báo', 'Thông báo triển khai các quy định', 'Bell', 'rose', 21],
   ]) {
     await prisma.thu_vien_danh_muc.upsert({
       where: { id },

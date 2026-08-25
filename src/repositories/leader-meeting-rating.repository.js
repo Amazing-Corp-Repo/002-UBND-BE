@@ -63,7 +63,6 @@ const LeaderMeetingRatingRepository = {
         select: {
           id: true,
           diem_tong: true,
-          ly_do: true,
           nhan_xet: true,
           thoi_gian_tao: true,
           dang_ky_gap_lanh_dao: {
@@ -200,7 +199,6 @@ const LeaderMeetingRatingRepository = {
         id: true,
         diem_tong: true,
         tieu_chi: true,
-        ly_do: true,
         nhan_xet: true,
         thoi_gian_tao: true,
         dang_ky_gap_lanh_dao: {
