@@ -1,4 +1,14 @@
 import Joi from "joi";
+import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
+
+const mucDoSchema = Joi.string()
+  .trim()
+  .valid(...Object.values(PHAN_ANH_MUC_DO))
+  .required()
+  .messages({
+    "any.only": "Mức độ phải là Thấp, Trung bình, Cao hoặc Khẩn cấp",
+    "any.required": "Mức độ là bắt buộc",
+  });
 
 export const CreatePhanAnhRequest = Joi.object({
   idLinhVucPhanAnh: Joi.string().trim().uuid().required().messages({
@@ -16,7 +26,7 @@ export const CreatePhanAnhRequest = Joi.object({
   viTri: Joi.string().required().trim().messages({
     "any.required": "Vị trí là bắt buộc",
   }),
-  mucDo: Joi.string().trim().required(),
+  mucDo: mucDoSchema,
   tenNguoiPhanAnh: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Tên người phản ánh phải là chuỗi ký tự",
   }),
@@ -27,14 +37,6 @@ export const CreatePhanAnhRequest = Joi.object({
     .allow(null, "")
     .messages({
       "string.pattern.base": "Số điện thoại không hợp lệ",
-    }),
-  cccd: Joi.string()
-    .trim()
-    .pattern(/^\d{12}$/)
-    .optional()
-    .allow(null, "")
-    .messages({
-      "string.pattern.base": "CCCD phải gồm đúng 12 chữ số",
     }),
   khuPho: Joi.string().trim().max(255).required().messages({
     "string.empty": "Khu phố là bắt buộc",
@@ -111,7 +113,7 @@ export const CreatePhanAnhPublicRequest = Joi.object({
   viTri: Joi.string().required().trim().messages({
     "any.required": "Vị trí là bắt buộc",
   }),
-  mucDo: Joi.string().trim().required(),
+  mucDo: mucDoSchema,
   tenNguoiPhanAnh: Joi.string().trim().required().messages({
     "any.required": "Tên người phản ánh là bắt buộc",
   }),
@@ -122,14 +124,6 @@ export const CreatePhanAnhPublicRequest = Joi.object({
     .allow(null, "")
     .messages({
       "string.pattern.base": "Số điện thoại không hợp lệ",
-    }),
-  cccd: Joi.string()
-    .trim()
-    .pattern(/^\d{12}$/)
-    .optional()
-    .allow(null, "")
-    .messages({
-      "string.pattern.base": "CCCD phải gồm đúng 12 chữ số",
     }),
   khuPho: Joi.string().trim().max(255).required().messages({
     "string.empty": "Khu phố là bắt buộc",
