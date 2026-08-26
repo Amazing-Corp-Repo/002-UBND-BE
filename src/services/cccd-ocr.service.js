@@ -31,14 +31,10 @@ const parseCccdText = (rawText) => {
   const lines = normalizeText(rawText);
   const text = lines.join(" ");
   const citizenId = text.match(/(?<!\d)\d{12}(?!\d)/)?.[0] || "";
-  const fullName = valueAfterLabel(lines, ["HỌ VÀ TÊN", "HO VA TEN", "FULL NAME"])
-    .replace(/[^\p{L}\s.'-]/gu, "").replace(/\s+/g, " ").trim();
   const issuedDate = parseDate(valueAfterLabel(lines, ["NGÀY CẤP", "NGAY CAP", "DATE OF ISSUE"]));
   const issuedPlace = valueAfterLabel(lines, ["NƠI CẤP", "NOI CAP", "PLACE OF ISSUE"])
     .replace(/\s+/g, " ").trim();
-  const address = valueAfterLabel(lines, ["NƠI THƯỜNG TRÚ", "NOI THUONG TRU", "PLACE OF RESIDENCE", "ĐỊA CHỈ"])
-    .replace(/\s+/g, " ").trim();
-  return { citizenId, fullName, issuedDate, issuedPlace, address, rawText };
+  return { citizenId, issuedDate, issuedPlace };
 };
 
 const CccdOcrService = {

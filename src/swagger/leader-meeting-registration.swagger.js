@@ -33,11 +33,8 @@ const LeaderMeetingRegistrationSwagger = {
                 message: "Đọc thông tin CCCD thành công",
                 data: {
                   citizenId: "012345678901",
-                  fullName: "Nguyễn Văn Bình",
                   issuedDate: "15/02/2021",
                   issuedPlace: "Cục Cảnh sát quản lý hành chính về trật tự xã hội",
-                  address: "Phường Thành Sen, Hà Tĩnh",
-                  rawText: "...",
                 },
               },
             },
