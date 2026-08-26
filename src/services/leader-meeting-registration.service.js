@@ -274,6 +274,17 @@ const mapManagementDetail = (registration) => {
 };
 
 const LeaderMeetingRegistrationService = {
+  async transitionDueApprovedToInProgress(now = new Date()) {
+    const currentDate = new Date(`${vietnamDate(now)}T00:00:00.000Z`);
+    const result =
+      await LeaderMeetingRegistrationRepository.transitionDueApprovedToInProgress({
+        currentDate,
+        currentTime: vietnamTime(now),
+        transitionedAt: now,
+      });
+    return { transitioned: result.count };
+  },
+
   async create(input, files = {}) {
     const now = new Date();
     const attachments = buildAttachments(files);
@@ -501,13 +512,10 @@ const LeaderMeetingRegistrationService = {
         "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn"
       );
     }
-    if (
-      registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS &&
-      registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.APPROVED
-    ) {
+    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS) {
       throw new BaseError(
         409,
-        "Chỉ đăng ký đã được phê duyệt hoặc đang xử lý mới được hoàn thành"
+        "Chỉ đăng ký đang xử lý mới được hoàn thành"
       );
     }
 

@@ -117,6 +117,13 @@ import("./cron/daily-overview-report.cron.js")
   })
   .catch((err) => console.error("Daily overview report cron error:", err));
 
+import("./cron/leader-meeting-status.cron.js")
+  .then((m) => {
+    m.registerLeaderMeetingStatusCron();
+    console.log("Leader meeting status cron started cùng server");
+  })
+  .catch((err) => console.error("Leader meeting status cron error:", err));
+
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
