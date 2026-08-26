@@ -99,7 +99,7 @@ export const GetLeaderMeetingRegistrationsQuery = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(10),
   search: Joi.string().trim().max(100).allow("").optional(),
   status: Joi.string()
-    .valid("PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED")
+    .valid("PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED", "OVERDUE")
     .optional()
     .messages({ "any.only": "Trạng thái đăng ký không hợp lệ" }),
   leaderId: Joi.string().uuid().optional().messages({

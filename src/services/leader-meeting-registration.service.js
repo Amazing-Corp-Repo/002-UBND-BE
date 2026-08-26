@@ -137,12 +137,24 @@ const mapCitizenLookup = (registration) => {
   };
 };
 
+const isItemOverdue = (reg) => {
+  if (reg.trang_thai === "COMPLETED" || reg.trang_thai === "REJECTED" || reg.trang_thai === "CANCELED") return false;
+  const now = new Date();
+  const todayStr = vietnamDate(now);
+  const timeStr = vietnamTime(now);
+  const recDate = reg.ngay_hen ? vietnamDate(reg.ngay_hen) : "";
+  const slotEnd = reg.khung_gio_gap_lanh_dao?.gio_ket_thuc || "23:59";
+  if (!recDate) return false;
+  return recDate < todayStr || (recDate === todayStr && slotEnd <= timeStr);
+};
+
 const mapManagementListItem = (registration) => {
   const slot = registration.khung_gio_gap_lanh_dao;
   const schedule = slot.lich_gap_lanh_dao;
   return {
     id: registration.id,
     registrationCode: registration.ma_dang_ky,
+    isOverdue: isItemOverdue(registration),
     applicant: {
       fullName: registration.ho_ten,
       phoneNumber: registration.sdt,
@@ -504,6 +516,27 @@ const LeaderMeetingRegistrationService = {
     }
 
     const now = new Date();
+    const currentVnDate = vietnamDate(now);
+    const currentVnTime = vietnamTime(now);
+    const meetingDate = registration.ngay_hen
+      ? vietnamDate(registration.ngay_hen)
+      : "";
+    const slotStart =
+      registration.khung_gio_gap_lanh_dao?.gio_bat_dau || "00:00";
+
+    if (
+      meetingDate > currentVnDate ||
+      (meetingDate === currentVnDate && slotStart > currentVnTime)
+    ) {
+      const formattedDate = registration.ngay_hen
+        ? new Date(registration.ngay_hen).toLocaleDateString("vi-VN")
+        : meetingDate;
+      throw new BaseError(
+        400,
+        `Chưa đến thời gian của ca gặp lãnh đạo (${slotStart} ngày ${formattedDate}), không thể xác nhận tiếp xong!`
+      );
+    }
+
     const updated =
       await LeaderMeetingRegistrationRepository.completeInProgress(
         id,
