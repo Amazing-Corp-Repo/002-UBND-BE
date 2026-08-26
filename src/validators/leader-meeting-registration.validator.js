@@ -9,16 +9,29 @@ const optionalDate = Joi.string()
   .custom((value, helpers) => {
     const [year, month, day] = value.split("-").map(Number);
     const date = new Date(Date.UTC(year, month - 1, day));
-    return date.getUTCFullYear() === year &&
+    const isValid = date.getUTCFullYear() === year &&
       date.getUTCMonth() === month - 1 &&
-      date.getUTCDate() === day
-      ? value
-      : helpers.error("date.invalid");
+      date.getUTCDate() === day;
+    if (!isValid) return helpers.error("date.invalid");
+
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    return value <= today ? value : helpers.error("date.future");
   })
   .messages({
     "string.pattern.base": "Ngày cấp CCCD phải có định dạng YYYY-MM-DD",
     "date.invalid": "Ngày cấp CCCD không tồn tại",
+    "date.future": "Ngày cấp CCCD không được lớn hơn ngày hiện tại",
   });
+
+export const EmptyLeaderMeetingRequest = Joi.object({}).max(0).messages({
+  "object.max": "Yêu cầu này không nhận dữ liệu body",
+  "object.unknown": "Trường {#label} không được hỗ trợ",
+});
 
 export const CreateLeaderMeetingRegistrationRequest = Joi.object({
   slotId: Joi.string().uuid().required().messages({
@@ -107,6 +120,13 @@ export const GetLeaderMeetingRegistrationsQuery = Joi.object({
   }),
   fromDate: receptionDateFilter.optional(),
   toDate: receptionDateFilter.optional(),
+}).custom((value, helpers) => {
+  if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({
+  "date.range": "Từ ngày không được lớn hơn đến ngày",
 });
 
 export const LeaderMeetingRegistrationIdParams = Joi.object({
@@ -132,8 +152,11 @@ export const ProcessLeaderMeetingRegistrationRequest = Joi.object({
 });
 
 export const CompleteLeaderMeetingRegistrationRequest = Joi.object({
-  note: Joi.string().trim().max(2000).allow("", null).optional().messages({
+  note: Joi.string().trim().min(1).max(2000).required().messages({
+    "string.empty": "Kết quả xử lý là bắt buộc",
+    "string.min": "Kết quả xử lý là bắt buộc",
     "string.max": "Ghi chú hoàn thành không được vượt quá 2000 ký tự",
+    "any.required": "Kết quả xử lý là bắt buộc",
   }),
 });
 

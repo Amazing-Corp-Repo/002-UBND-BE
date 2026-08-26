@@ -480,7 +480,7 @@ const LeaderMeetingRegistrationRepository = {
     const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
       where: {
         id,
-        trang_thai: { in: ["APPROVED", "IN_PROGRESS"] },
+        trang_thai: "IN_PROGRESS",
         is_active: true,
         is_delete: false,
         khung_gio_gap_lanh_dao: {
@@ -508,6 +508,38 @@ const LeaderMeetingRegistrationRepository = {
     });
     if (result.count === 0) return null;
     return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
+  },
+
+  async transitionDueApprovedToInProgress({ currentDate, currentTime, transitionedAt }) {
+    return prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        trang_thai: "APPROVED",
+        is_active: true,
+        is_delete: false,
+        khung_gio_gap_lanh_dao: {
+          is_active: true,
+          is_delete: false,
+          lich_gap_lanh_dao: {
+            is_active: true,
+            is_delete: false,
+          },
+        },
+        OR: [
+          { ngay_hen: { lt: currentDate } },
+          {
+            ngay_hen: currentDate,
+            khung_gio_gap_lanh_dao: {
+              gio_bat_dau: { lte: currentTime },
+            },
+          },
+        ],
+      },
+      data: {
+        trang_thai: "IN_PROGRESS",
+        thoi_gian_bat_dau_xu_ly: transitionedAt,
+        thoi_gian_cap_nhat: transitionedAt,
+      },
+    });
   },
 
   async findAttachment(registrationId, attachmentId, leaderId) {

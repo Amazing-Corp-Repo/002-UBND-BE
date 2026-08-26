@@ -623,23 +623,20 @@ const LeaderMeetingRegistrationSwagger = {
         },
       ],
       requestBody: {
-        required: false,
+        required: true,
         content: {
           "application/json": {
             schema: {
               type: "object",
+              required: ["note"],
               properties: {
-                note: { type: "string", maxLength: 2000, nullable: true },
+                note: { type: "string", minLength: 1, maxLength: 2000 },
               },
             },
             examples: {
               valid: {
                 summary: "Demo hoàn thành có ghi chú",
                 value: { note: "Đã xử lý xong nội dung kiến nghị" },
-              },
-              withoutNote: {
-                summary: "Demo hoàn thành không ghi chú",
-                value: {},
               },
             },
           },

@@ -241,12 +241,27 @@ const buildDailyManagementView = ({ schedule, leader, receptionDate, now }) => {
 const LeaderMeetingScheduleService = {
   async getAvailableSchedules(filters = {}) {
     const now = new Date();
-    const fromDate = filters.fromDate || formatVietnamDate(now);
-    const toDate = filters.toDate || formatVietnamDate(addDays(now, 90));
+    const visibilityWindow = {
+      fromDate: formatVietnamDate(now),
+      toDate: formatVietnamDate(addDays(now, 6)),
+    };
+    const requestedFromDate = filters.fromDate || visibilityWindow.fromDate;
+    const requestedToDate = filters.toDate || visibilityWindow.toDate;
 
-    if (fromDate > toDate) {
+    if (requestedFromDate > requestedToDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
+
+    const fromDate =
+      requestedFromDate < visibilityWindow.fromDate
+        ? visibilityWindow.fromDate
+        : requestedFromDate;
+    const toDate =
+      requestedToDate > visibilityWindow.toDate
+        ? visibilityWindow.toDate
+        : requestedToDate;
+
+    if (fromDate > toDate) return [];
 
     const schedules =
       await LeaderMeetingScheduleRepository.findAvailableBetweenDates({
