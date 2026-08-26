@@ -169,7 +169,8 @@ const LeaderMeetingRegistrationRepository = {
     let overdueWhere = undefined;
 
     if (status === "OVERDUE") {
-      trangThaiWhere = { in: ["PENDING", "APPROVED", "IN_PROGRESS"] };
+      // Quá hạn duyệt chỉ áp dụng cho đơn PENDING chưa được phê duyệt và đã qua giờ
+      trangThaiWhere = "PENDING";
       overdueWhere = {
         OR: [
           { ngay_hen: { lt: new Date(`${todayStr}T00:00:00.000Z`) } },
@@ -184,8 +185,9 @@ const LeaderMeetingRegistrationRepository = {
           },
         ],
       };
-    } else if (status && ["PENDING", "APPROVED", "IN_PROGRESS"].includes(status)) {
-      trangThaiWhere = status;
+    } else if (status === "PENDING") {
+      // Lọc Chờ phê duyệt: chỉ lấy các đơn PENDING còn hạn trong tương lai
+      trangThaiWhere = "PENDING";
       overdueWhere = {
         OR: [
           { ngay_hen: { gt: new Date(`${todayStr}T23:59:59.999Z`) } },
@@ -200,6 +202,9 @@ const LeaderMeetingRegistrationRepository = {
           },
         ],
       };
+    } else if (status) {
+      trangThaiWhere = status;
+      overdueWhere = undefined;
     }
 
     const where = {

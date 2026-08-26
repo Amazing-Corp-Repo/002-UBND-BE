@@ -138,7 +138,8 @@ const mapCitizenLookup = (registration) => {
 };
 
 const isItemOverdue = (reg) => {
-  if (reg.trang_thai === "COMPLETED" || reg.trang_thai === "REJECTED" || reg.trang_thai === "CANCELED") return false;
+  // Chỉ đơn PENDING (chưa được lãnh đạo phê duyệt) mới có thể bị quá hạn duyệt
+  if (reg.trang_thai !== "PENDING") return false;
   const now = new Date();
   const todayStr = vietnamDate(now);
   const timeStr = vietnamTime(now);
