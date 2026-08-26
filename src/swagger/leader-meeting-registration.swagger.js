@@ -1,4 +1,54 @@
 const LeaderMeetingRegistrationSwagger = {
+  "/api/leader-meeting-registrations/ocr/cccd": {
+    post: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Đọc thông tin CCCD bằng OCR",
+      description:
+        "Nhận một ảnh CCCD và đọc thông tin trực tiếp trên máy chủ bằng Tesseract OCR (vie+eng). Ảnh không được gửi tới dịch vụ OCR bên thứ ba. Giới hạn ảnh 10MB và tối đa 30 yêu cầu trong 10 phút trên một IP.",
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              required: ["image"],
+              properties: {
+                image: {
+                  type: "string",
+                  format: "binary",
+                  description: "Ảnh CCCD mặt trước hoặc mặt sau, tối đa 10MB",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Đọc thông tin CCCD thành công",
+          content: {
+            "application/json": {
+              example: {
+                success: true,
+                message: "Đọc thông tin CCCD thành công",
+                data: {
+                  citizenId: "012345678901",
+                  fullName: "Nguyễn Văn Bình",
+                  issuedDate: "15/02/2021",
+                  issuedPlace: "Cục Cảnh sát quản lý hành chính về trật tự xã hội",
+                  address: "Phường Thành Sen, Hà Tĩnh",
+                  rawText: "...",
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Thiếu ảnh hoặc ảnh không hợp lệ/vượt quá 10MB" },
+        429: { description: "Vượt quá 30 yêu cầu trong 10 phút trên một IP" },
+        502: { description: "Tesseract OCR không thể xử lý ảnh" },
+      },
+    },
+  },
   "/api/leader-meeting-registrations/lookup": {
     post: {
       tags: ["LeaderMeetingRegistration"],
