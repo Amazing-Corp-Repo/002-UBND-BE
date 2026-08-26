@@ -41,8 +41,8 @@ export const CreateLeaderMeetingRegistrationRequest = Joi.object({
     "any.required": "Số điện thoại là bắt buộc",
   }),
   citizenId: Joi.string().trim().pattern(/^\d{12}$/).required().messages({
-    "string.pattern.base": "CCCD phải gồm đúng 12 chữ số",
-    "any.required": "CCCD là bắt buộc",
+    "string.pattern.base": "Số định danh cá nhân phải gồm đúng 12 chữ số",
+    "any.required": "Số định danh cá nhân là bắt buộc",
   }),
   citizenIdIssuedDate: optionalDate.optional().allow(""),
   citizenIdIssuedPlace: Joi.string().trim().max(255).optional().allow(""),

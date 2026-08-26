@@ -98,11 +98,11 @@ export const leaderMeetingRegistrationUpload = (req, res, next) => {
     const oversizedCitizenImage = files.find(
       (file) =>
         file.fieldname !== "supportingDocuments" &&
-        file.size > 5 * 1024 * 1024
+        file.size > 10 * 1024 * 1024
     );
     if (oversizedCitizenImage) {
       await cleanupFiles(files);
-      return next(new BaseError(400, "Ảnh CCCD không được vượt quá 5MB"));
+      return next(new BaseError(400, "Ảnh CCCD không được vượt quá 10MB"));
     }
 
     res.on("finish", () => {
