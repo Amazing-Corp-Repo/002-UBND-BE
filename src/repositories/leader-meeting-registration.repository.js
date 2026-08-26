@@ -184,6 +184,22 @@ const LeaderMeetingRegistrationRepository = {
           },
         ],
       };
+    } else if (status && ["PENDING", "APPROVED", "IN_PROGRESS"].includes(status)) {
+      trangThaiWhere = status;
+      overdueWhere = {
+        OR: [
+          { ngay_hen: { gt: new Date(`${todayStr}T23:59:59.999Z`) } },
+          {
+            ngay_hen: {
+              gte: new Date(`${todayStr}T00:00:00.000Z`),
+              lte: new Date(`${todayStr}T23:59:59.999Z`),
+            },
+            khung_gio_gap_lanh_dao: {
+              gio_ket_thuc: { gt: timeStr },
+            },
+          },
+        ],
+      };
     }
 
     const where = {
