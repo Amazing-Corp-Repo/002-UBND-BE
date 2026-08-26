@@ -157,7 +157,11 @@ const LeaderMeetingRegistrationSwagger = {
                 },
                 fullName: { type: "string", example: "Nguyễn Văn Bình" },
                 phoneNumber: { type: "string", example: "0901234567" },
-                citizenId: { type: "string", example: "012345678901" },
+                  citizenId: {
+                    type: "string",
+                    example: "012345678901",
+                    description: "Số định danh cá nhân, gồm đúng 12 chữ số",
+                  },
                 citizenIdIssuedDate: {
                   type: "string",
                   format: "date",
@@ -176,12 +180,12 @@ const LeaderMeetingRegistrationSwagger = {
                 citizenIdFront: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt trước CCCD, bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt trước CCCD, bắt buộc, tối đa 10MB",
                 },
                 citizenIdBack: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt sau CCCD, bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt sau CCCD, bắt buộc, tối đa 10MB",
                 },
                 supportingDocuments: {
                   type: "array",
