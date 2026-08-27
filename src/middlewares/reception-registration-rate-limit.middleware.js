@@ -1,5 +1,4 @@
-import rateLimit from "express-rate-limit";
-import { errorResponse } from "../utils/response.util.js";
+import { createApiRateLimiter } from "./api-rate-limit.middleware.js";
 
 export const RECEPTION_REGISTRATION_RATE_LIMIT = {
   windowMs: 10 * 60 * 1000,
@@ -17,42 +16,21 @@ export const RECEPTION_RATING_LOOKUP_RATE_LIMIT = {
 };
 
 export const createReceptionRegistrationRateLimiter = () =>
-  rateLimit({
+  createApiRateLimiter({
     ...RECEPTION_REGISTRATION_RATE_LIMIT,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_req, res) =>
-      errorResponse(
-        res,
-        { message: "Bạn đã gửi quá nhiều yêu cầu đăng ký, vui lòng thử lại sau" },
-        429
-      ),
+    message: "Bạn đã gửi quá nhiều yêu cầu đăng ký, vui lòng thử lại sau",
   });
 
 export const createReceptionLookupRateLimiter = () =>
-  rateLimit({
+  createApiRateLimiter({
     ...RECEPTION_LOOKUP_RATE_LIMIT,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_req, res) =>
-      errorResponse(
-        res,
-        { message: "Bạn đã tra cứu quá nhiều lần, vui lòng thử lại sau" },
-        429
-      ),
+    message: "Bạn đã tra cứu quá nhiều lần, vui lòng thử lại sau",
   });
 
 export const createReceptionRatingLookupRateLimiter = () =>
-  rateLimit({
+  createApiRateLimiter({
     ...RECEPTION_RATING_LOOKUP_RATE_LIMIT,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_req, res) =>
-      errorResponse(
-        res,
-        { message: "Bạn đã tra cứu mã đánh giá quá nhiều lần, vui lòng thử lại sau" },
-        429
-      ),
+    message: "Bạn đã tra cứu mã đánh giá quá nhiều lần, vui lòng thử lại sau",
   });
 
 const receptionRegistrationRateLimiter =

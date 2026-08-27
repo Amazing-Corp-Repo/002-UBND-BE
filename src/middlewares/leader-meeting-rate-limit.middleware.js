@@ -1,5 +1,4 @@
-import rateLimit from "express-rate-limit";
-import { errorResponse } from "../utils/response.util.js";
+import { createApiRateLimiter } from "./api-rate-limit.middleware.js";
 
 export const LEADER_MEETING_REGISTRATION_RATE_LIMIT = {
   windowMs: 10 * 60 * 1000,
@@ -12,32 +11,18 @@ export const LEADER_MEETING_LOOKUP_RATE_LIMIT = {
 };
 
 export const createLeaderMeetingRegistrationRateLimiter = () =>
-  rateLimit({
+  createApiRateLimiter({
     ...LEADER_MEETING_REGISTRATION_RATE_LIMIT,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_req, res) =>
-      errorResponse(
-        res,
-        { message: "Bạn đã gửi quá nhiều yêu cầu đăng ký, vui lòng thử lại sau" },
-        429
-      ),
+    message: "Bạn đã gửi quá nhiều yêu cầu đăng ký, vui lòng thử lại sau",
   });
 
 const leaderMeetingRegistrationRateLimiter =
   createLeaderMeetingRegistrationRateLimiter();
 
 export const createLeaderMeetingLookupRateLimiter = () =>
-  rateLimit({
+  createApiRateLimiter({
     ...LEADER_MEETING_LOOKUP_RATE_LIMIT,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_req, res) =>
-      errorResponse(
-        res,
-        { message: "Bạn đã tra cứu quá nhiều lần, vui lòng thử lại sau" },
-        429
-      ),
+    message: "Bạn đã tra cứu quá nhiều lần, vui lòng thử lại sau",
   });
 
 export const leaderMeetingLookupRateLimiter =
