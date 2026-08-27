@@ -9,16 +9,29 @@ const optionalDate = Joi.string()
   .custom((value, helpers) => {
     const [year, month, day] = value.split("-").map(Number);
     const date = new Date(Date.UTC(year, month - 1, day));
-    return date.getUTCFullYear() === year &&
+    const isValid = date.getUTCFullYear() === year &&
       date.getUTCMonth() === month - 1 &&
-      date.getUTCDate() === day
-      ? value
-      : helpers.error("date.invalid");
+      date.getUTCDate() === day;
+    if (!isValid) return helpers.error("date.invalid");
+
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    return value <= today ? value : helpers.error("date.future");
   })
   .messages({
     "string.pattern.base": "Ngày cấp CCCD phải có định dạng YYYY-MM-DD",
     "date.invalid": "Ngày cấp CCCD không tồn tại",
+    "date.future": "Ngày cấp CCCD không được lớn hơn ngày hiện tại",
   });
+
+export const EmptyLeaderMeetingRequest = Joi.object({}).max(0).messages({
+  "object.max": "Yêu cầu này không nhận dữ liệu body",
+  "object.unknown": "Trường {#label} không được hỗ trợ",
+});
 
 export const CreateLeaderMeetingRegistrationRequest = Joi.object({
   slotId: Joi.string().uuid().required().messages({
@@ -27,11 +40,13 @@ export const CreateLeaderMeetingRegistrationRequest = Joi.object({
   }),
   fullName: Joi.string()
     .trim()
+    .min(4)
     .max(150)
     .pattern(vietnameseNameRegex)
     .required()
     .messages({
       "string.pattern.base": "Họ tên chỉ được chứa chữ cái và khoảng trắng",
+      "string.min": "Họ tên phải có ít nhất 4 ký tự",
       "string.max": "Họ tên không được vượt quá 150 ký tự",
       "string.empty": "Họ tên là bắt buộc",
       "any.required": "Họ tên là bắt buộc",
@@ -41,12 +56,16 @@ export const CreateLeaderMeetingRegistrationRequest = Joi.object({
     "any.required": "Số điện thoại là bắt buộc",
   }),
   citizenId: Joi.string().trim().pattern(/^\d{12}$/).required().messages({
-    "string.pattern.base": "CCCD phải gồm đúng 12 chữ số",
-    "any.required": "CCCD là bắt buộc",
+    "string.pattern.base": "Số định danh cá nhân phải gồm đúng 12 chữ số",
+    "any.required": "Số định danh cá nhân là bắt buộc",
   }),
   citizenIdIssuedDate: optionalDate.optional().allow(""),
-  citizenIdIssuedPlace: Joi.string().trim().max(255).optional().allow(""),
-  address: Joi.string().trim().max(500).required().messages({
+  citizenIdIssuedPlace: Joi.string().trim().min(3).max(255).optional().allow("").messages({
+    "string.min": "Nơi cấp CCCD phải có ít nhất 3 ký tự",
+    "string.max": "Nơi cấp CCCD không được vượt quá 255 ký tự",
+  }),
+  address: Joi.string().trim().min(6).max(500).required().messages({
+    "string.min": "Địa chỉ phải có ít nhất 6 ký tự",
     "string.max": "Địa chỉ không được vượt quá 500 ký tự",
     "string.empty": "Địa chỉ là bắt buộc",
     "any.required": "Địa chỉ là bắt buộc",
@@ -99,7 +118,7 @@ export const GetLeaderMeetingRegistrationsQuery = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(10),
   search: Joi.string().trim().max(100).allow("").optional(),
   status: Joi.string()
-    .valid("PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED")
+    .valid("PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED", "OVERDUE")
     .optional()
     .messages({ "any.only": "Trạng thái đăng ký không hợp lệ" }),
   leaderId: Joi.string().uuid().optional().messages({
@@ -107,6 +126,13 @@ export const GetLeaderMeetingRegistrationsQuery = Joi.object({
   }),
   fromDate: receptionDateFilter.optional(),
   toDate: receptionDateFilter.optional(),
+}).custom((value, helpers) => {
+  if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({
+  "date.range": "Từ ngày không được lớn hơn đến ngày",
 });
 
 export const LeaderMeetingRegistrationIdParams = Joi.object({
@@ -132,8 +158,11 @@ export const ProcessLeaderMeetingRegistrationRequest = Joi.object({
 });
 
 export const CompleteLeaderMeetingRegistrationRequest = Joi.object({
-  note: Joi.string().trim().max(2000).allow("", null).optional().messages({
+  note: Joi.string().trim().min(1).max(2000).required().messages({
+    "string.empty": "Kết quả xử lý là bắt buộc",
+    "string.min": "Kết quả xử lý là bắt buộc",
     "string.max": "Ghi chú hoàn thành không được vượt quá 2000 ký tự",
+    "any.required": "Kết quả xử lý là bắt buộc",
   }),
 });
 

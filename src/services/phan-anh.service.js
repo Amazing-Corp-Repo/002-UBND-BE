@@ -279,8 +279,6 @@ const PhanAnhService = {
 
   async updateStatusPhanAnh(
     idPhanAnh,
-    thoiGianPhanHoiDuKien,
-    ngayDuKienHoanThanh,
     trangThai,
     ghiChu,
     currentUser,
@@ -358,8 +356,6 @@ const PhanAnhService = {
       ...(videoGiaiQuyet.length > 0 && {
         id_video_giai_quyet: videoGiaiQuyet,
       }),
-      // thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
-      // ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
     };
 
     const historyData = {
@@ -700,7 +696,6 @@ const PhanAnhService = {
       muc_do: createdPhanAnh.muc_do,
       ten_nguoi_phan_anh: createdPhanAnh.ten_nguoi_phan_anh,
       sdt_nguoi_phan_anh: createdPhanAnh.sdt_nguoi_phan_anh,
-      cccd: createdPhanAnh.cccd,
       khu_pho: createdPhanAnh.khu_pho,
       mo_ta_vi_tri: createdPhanAnh.mo_ta_vi_tri,
       trang_thai: trangThai.ten,

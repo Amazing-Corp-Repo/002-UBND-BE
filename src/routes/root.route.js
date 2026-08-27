@@ -33,6 +33,7 @@ import leaderMeetingRatingRouter from './leader-meeting-rating.route.js';
 import taiLieuVanHoaRouter from './tai-lieu-van-hoa.route.js';
 import taiLieuPhapLuatRouter from './tai-lieu-phap-luat.route.js';
 import taiLieuCongKhaiRouter from './tai-lieu-cong-khai.route.js';
+import cccdOcrRouter from './cccd-ocr.route.js';
 
 const rootRouter = express.Router();
 
@@ -53,7 +54,6 @@ rootRouter.use('/logs', logRouter);
 rootRouter.use('/report', reportRouter);
 rootRouter.use('/permission', permissionRouter);
 rootRouter.use('/role', roleRouter);
-rootRouter.use('/report', reportRouter);
 rootRouter.use('/notifications', notificationRouter);
 rootRouter.use('/audit-logs', auditLogRouter);
 rootRouter.use('/export', exportRouter);
@@ -71,6 +71,7 @@ rootRouter.use('/leader-meeting-ratings', leaderMeetingRatingRouter);
 rootRouter.use('/tai-lieu-van-hoa', taiLieuVanHoaRouter);
 rootRouter.use('/tai-lieu-phap-luat', taiLieuPhapLuatRouter);
 rootRouter.use('/tai-lieu-cong-khai', taiLieuCongKhaiRouter);
+rootRouter.use('/leader-meeting-registrations/ocr', cccdOcrRouter);
 
 export default rootRouter;
 

@@ -1,4 +1,51 @@
 const LeaderMeetingRegistrationSwagger = {
+  "/api/leader-meeting-registrations/ocr/cccd": {
+    post: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Đọc thông tin CCCD bằng OCR",
+      description:
+        "Nhận một ảnh CCCD và đọc thông tin trực tiếp trên máy chủ bằng Tesseract OCR (vie+eng). Ảnh không được gửi tới dịch vụ OCR bên thứ ba. Giới hạn ảnh 10MB và tối đa 30 yêu cầu trong 10 phút trên một IP.",
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              required: ["image"],
+              properties: {
+                image: {
+                  type: "string",
+                  format: "binary",
+                  description: "Ảnh CCCD mặt trước hoặc mặt sau, tối đa 10MB",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Đọc thông tin CCCD thành công",
+          content: {
+            "application/json": {
+              example: {
+                success: true,
+                message: "Đọc thông tin CCCD thành công",
+                data: {
+                  citizenId: "012345678901",
+                  issuedDate: "15/02/2021",
+                  issuedPlace: "Cục Cảnh sát quản lý hành chính về trật tự xã hội",
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Thiếu ảnh hoặc ảnh không hợp lệ/vượt quá 10MB" },
+        429: { description: "Vượt quá 30 yêu cầu trong 10 phút trên một IP" },
+        502: { description: "Tesseract OCR không thể xử lý ảnh" },
+      },
+    },
+  },
   "/api/leader-meeting-registrations/lookup": {
     post: {
       tags: ["LeaderMeetingRegistration"],
@@ -155,9 +202,18 @@ const LeaderMeetingRegistrationSwagger = {
                   format: "uuid",
                   example: "323e4567-e89b-42d3-a456-426614174001",
                 },
-                fullName: { type: "string", example: "Nguyễn Văn Bình" },
+                fullName: {
+                  type: "string",
+                  minLength: 4,
+                  maxLength: 150,
+                  example: "Nguyễn Văn Bình",
+                },
                 phoneNumber: { type: "string", example: "0901234567" },
-                citizenId: { type: "string", example: "012345678901" },
+                  citizenId: {
+                    type: "string",
+                    example: "012345678901",
+                    description: "Số định danh cá nhân, gồm đúng 12 chữ số",
+                  },
                 citizenIdIssuedDate: {
                   type: "string",
                   format: "date",
@@ -165,9 +221,16 @@ const LeaderMeetingRegistrationSwagger = {
                 },
                 citizenIdIssuedPlace: {
                   type: "string",
+                  minLength: 3,
+                  maxLength: 255,
                   example: "Cục Cảnh sát quản lý hành chính về trật tự xã hội",
                 },
-                address: { type: "string", example: "Phường Thành Sen, Hà Tĩnh" },
+                address: {
+                  type: "string",
+                  minLength: 6,
+                  maxLength: 500,
+                  example: "Phường Thành Sen, Hà Tĩnh",
+                },
                 topic: { type: "string", example: "Kiến nghị về đất đai" },
                 reason: {
                   type: "string",
@@ -176,12 +239,12 @@ const LeaderMeetingRegistrationSwagger = {
                 citizenIdFront: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt trước CCCD, bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt trước CCCD, bắt buộc, tối đa 10MB",
                 },
                 citizenIdBack: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt sau CCCD, bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt sau CCCD, bắt buộc, tối đa 10MB",
                 },
                 supportingDocuments: {
                   type: "array",
@@ -572,23 +635,20 @@ const LeaderMeetingRegistrationSwagger = {
         },
       ],
       requestBody: {
-        required: false,
+        required: true,
         content: {
           "application/json": {
             schema: {
               type: "object",
+              required: ["note"],
               properties: {
-                note: { type: "string", maxLength: 2000, nullable: true },
+                note: { type: "string", minLength: 1, maxLength: 2000 },
               },
             },
             examples: {
               valid: {
                 summary: "Demo hoàn thành có ghi chú",
                 value: { note: "Đã xử lý xong nội dung kiến nghị" },
-              },
-              withoutNote: {
-                summary: "Demo hoàn thành không ghi chú",
-                value: {},
               },
             },
           },
