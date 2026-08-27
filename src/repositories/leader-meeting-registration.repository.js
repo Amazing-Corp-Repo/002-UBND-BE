@@ -202,6 +202,10 @@ const LeaderMeetingRegistrationRepository = {
           },
         ],
       };
+    } else if (status === "APPROVED" || status === "IN_PROGRESS") {
+      // Lọc Đang xử lý: lấy cả các đơn đã duyệt (APPROVED) và các đơn đang tiếp dân (IN_PROGRESS)
+      trangThaiWhere = { in: ["APPROVED", "IN_PROGRESS"] };
+      overdueWhere = undefined;
     } else if (status) {
       trangThaiWhere = status;
       overdueWhere = undefined;
@@ -254,7 +258,7 @@ const LeaderMeetingRegistrationRepository = {
     });
 
     const isMatchOverdue = (item) => {
-      if (item.trang_thai !== "PENDING" && item.trang_thai !== "APPROVED" && item.trang_thai !== "IN_PROGRESS") return false;
+      if (item.trang_thai !== "PENDING") return false;
       const recDate = item.ngay_hen ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(item.ngay_hen) : "";
       const slotEnd = item.khung_gio_gap_lanh_dao?.gio_ket_thuc || "23:59";
       if (!recDate) return false;
