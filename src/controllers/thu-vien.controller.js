@@ -80,6 +80,29 @@ const ThuVienController = {
     return successResponse(res, null, "Xóa tài liệu thành công");
   },
 
+  async getDeleted(req, res) {
+    const { page = 1, size = 10, search } = req.query;
+    const loai = req.loai;
+    const currentUser = req.payload.userId;
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getDeleted({ loai, page, size, search, currentUser, permissions });
+    return successResponse(res, result.data, "Lấy danh sách tài liệu đã xóa thành công", result.pagination);
+  },
+
+  async restore(req, res) {
+    const { id } = req.params;
+    const currentUser = req.payload.userId;
+    const result = await ThuVienService.restore(id, currentUser);
+    return successResponse(res, result, "Khôi phục tài liệu thành công");
+  },
+
+  async forceDelete(req, res) {
+    const { id } = req.params;
+    const currentUser = req.payload.userId;
+    await ThuVienService.forceDelete(id, currentUser);
+    return successResponse(res, null, "Xóa vĩnh viễn tài liệu thành công");
+  },
+
   async updateStatus(req, res) {
     const { id } = req.params;
     const { trangThai } = req.body;

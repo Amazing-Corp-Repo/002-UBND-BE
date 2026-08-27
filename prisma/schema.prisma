@@ -1050,6 +1050,8 @@ model thu_vien_tai_lieu {
   ten_di_tich            String?                   @db.VarChar(255) // relicName — cho văn hóa
   is_active              Boolean?                  @default(true)
   is_delete              Boolean?                  @default(false)
+  thoi_gian_xoa          DateTime?                 @db.Timestamp(6) // thời điểm xóa (đếm ngược 30 ngày)
+  is_cleaned_up          Boolean?                  @default(false)  // đã dọn file vật lý chưa
   nguoi_tao              String?                   @db.Uuid
   nguoi_cap_nhat         String?                   @db.Uuid
   thoi_gian_tao          DateTime?                 @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)

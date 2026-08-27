@@ -110,6 +110,13 @@ import("./cron/leader-meeting-status.cron.js")
   })
   .catch((err) => console.error("Leader meeting status cron error:", err));
 
+import("./cron/cleanup-thu-vien.cron.js")
+  .then((m) => {
+    m.registerCleanupThuVienCron();
+    console.log("Thu vien cleanup cron started cùng server");
+  })
+  .catch((err) => console.error("Thu vien cleanup cron error:", err));
+
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
