@@ -6,7 +6,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới (yêu cầu đăng nhập)",
       description:
-        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Có thể gửi CCCD gồm 12 chữ số; khu phố là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 5 MB, hoặc tối đa 5 idVideo đã tải lên trước đó.",
+        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Có thể gửi CCCD gồm 12 chữ số; khu phố là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB, hoặc tối đa 5 idVideo đã tải lên trước đó.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -365,7 +365,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới từ công dân (không cần đăng nhập)",
       description:
-        "API công khai để người dân tạo phản ánh. Có thể gửi CCCD gồm 12 chữ số; khu phố là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 5 MB, hoặc tối đa 5 idVideo đã tải lên trước đó.",
+        "API công khai để người dân tạo phản ánh. Có thể gửi CCCD gồm 12 chữ số; khu phố là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB, hoặc tối đa 5 idVideo đã tải lên trước đó.",
       requestBody: {
         content: {
           "multipart/form-data": {

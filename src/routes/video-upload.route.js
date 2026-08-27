@@ -3,7 +3,11 @@ import VideoUploadController from "../controllers/video-upload.controller.js";
 import UPLOAD_TYPE from "../constants/upload.constant.js";
 import { createUploader } from "../middlewares/upload.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
-import { VideoUploadRequest } from "../validators/video-upload.validator.js";
+import validateParams from "../middlewares/validate-params.middleware.js";
+import {
+  VideoUploadParams,
+  VideoUploadRequest,
+} from "../validators/video-upload.validator.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import rateLimit from "express-rate-limit";
@@ -36,7 +40,7 @@ videoUploadRouter.post(
     type: UPLOAD_TYPE.PHAN_ANH,
     fieldName: "file",
     maxCount: 1,
-    maxSizeMB: 300,
+    maxSizeMB: 150,
     allowed_types: ["video/mp4", "video/mov", "video/avi", "video/mkv"],
     basePathSegments: ["src", "private", "uploads", "videos"],
     isPublic: false,
@@ -45,6 +49,10 @@ videoUploadRouter.post(
   VideoUploadController.uploadVideo
 );
 
-videoUploadRouter.get("/:idVideo", VideoUploadController.getVideoUpload);
+videoUploadRouter.get(
+  "/:idVideo",
+  validateParams(VideoUploadParams),
+  VideoUploadController.getVideoUpload
+);
 
 export default videoUploadRouter;

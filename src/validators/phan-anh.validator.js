@@ -4,6 +4,11 @@ import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 
 const vietnamesePhoneRegex = /^(03|05|07|08|09)\d{8}$/;
 const complaintCodeRegex = /^[A-Z0-9]{8}$/;
+const COMPLAINT_TITLE_MAX_LENGTH = 200;
+const COMPLAINT_DESCRIPTION_MAX_LENGTH = 2000;
+const COMPLAINT_REPORTER_NAME_MAX_LENGTH = 150;
+const COMPLAINT_NEIGHBORHOOD_MAX_LENGTH = 100;
+const COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH = 500;
 const sortFields = [
   "thoi_gian_tao",
   "ma_phan_anh",
@@ -42,6 +47,16 @@ const phoneSchema = Joi.string()
     "string.pattern.base": "Số điện thoại Việt Nam không hợp lệ",
   });
 
+const requiredPhoneSchema = Joi.string()
+  .trim()
+  .pattern(vietnamesePhoneRegex)
+  .required()
+  .messages({
+    "string.pattern.base": "Số điện thoại Việt Nam không hợp lệ",
+    "string.empty": "Số điện thoại người phản ánh là bắt buộc",
+    "any.required": "Số điện thoại người phản ánh là bắt buộc",
+  });
+
 const mucDoSchema = Joi.string()
   .trim()
   .valid(...Object.values(PHAN_ANH_MUC_DO))
@@ -56,14 +71,14 @@ export const CreatePhanAnhRequest = Joi.object({
     "string.uuid": "idLinhVucPhanAnh must be a valid UUID",
     "any.required": "Lĩnh vực phản ánh là bắt buộc",
   }),
-  tieuDe: Joi.string().trim().min(10).max(255).required().messages({
+  tieuDe: Joi.string().trim().min(10).max(COMPLAINT_TITLE_MAX_LENGTH).required().messages({
     "string.min": "Tiêu đề phải có ít nhất 10 ký tự",
-    "string.max": "Tiêu đề không được vượt quá 255 ký tự",
+    "string.max": `Tiêu đề không được vượt quá ${COMPLAINT_TITLE_MAX_LENGTH} ký tự`,
     "any.required": "Tiêu đề là bắt buộc",
   }),
-  moTa: Joi.string().min(20).max(5000).trim().required().messages({
+  moTa: Joi.string().min(20).max(COMPLAINT_DESCRIPTION_MAX_LENGTH).trim().required().messages({
     "string.min": "Mô tả phải có ít nhất 20 ký tự",
-    "string.max": "Mô tả không được vượt quá 5000 ký tự",
+    "string.max": `Mô tả không được vượt quá ${COMPLAINT_DESCRIPTION_MAX_LENGTH} ký tự`,
     "any.required": "Mô tả là bắt buộc",
   }),
   viTri: Joi.string().trim().max(500).required().messages({
@@ -71,19 +86,19 @@ export const CreatePhanAnhRequest = Joi.object({
     "any.required": "Vị trí là bắt buộc",
   }),
   mucDo: mucDoSchema,
-  tenNguoiPhanAnh: Joi.string().trim().max(255).optional().allow(null, "").messages({
+  tenNguoiPhanAnh: Joi.string().trim().max(COMPLAINT_REPORTER_NAME_MAX_LENGTH).optional().allow(null, "").messages({
     "string.base": "Tên người phản ánh phải là chuỗi ký tự",
-    "string.max": "Tên người phản ánh không được vượt quá 255 ký tự",
+    "string.max": `Tên người phản ánh không được vượt quá ${COMPLAINT_REPORTER_NAME_MAX_LENGTH} ký tự`,
   }),
   soDienThoaiNguoiPhanAnh: phoneSchema,
   cccd: citizenIdSchema,
-  khuPho: Joi.string().trim().max(255).required().messages({
+  khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
     "string.empty": "Khu phố là bắt buộc",
     "any.required": "Khu phố là bắt buộc",
-    "string.max": "Khu phố không được vượt quá 255 ký tự",
+    "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,
   }),
-  moTaViTri: Joi.string().trim().max(2000).optional().allow(null, "").messages({
-    "string.max": "Mô tả vị trí không được vượt quá 2000 ký tự",
+  moTaViTri: Joi.string().trim().max(COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH).optional().allow(null, "").messages({
+    "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
   userId: Joi.string().trim().uuid().optional().allow(null, "").messages({
     "string.uuid": "userId must be a valid UUID",
@@ -134,14 +149,14 @@ export const CreatePhanAnhPublicRequest = Joi.object({
     "string.uuid": "idLinhVucPhanAnh must be a valid UUID",
     "any.required": "Lĩnh vực phản ánh là bắt buộc",
   }),
-  tieuDe: Joi.string().trim().min(10).max(255).required().messages({
+  tieuDe: Joi.string().trim().min(10).max(COMPLAINT_TITLE_MAX_LENGTH).required().messages({
     "string.min": "Tiêu đề phải có ít nhất 10 ký tự",
-    "string.max": "Tiêu đề không được vượt quá 255 ký tự",
+    "string.max": `Tiêu đề không được vượt quá ${COMPLAINT_TITLE_MAX_LENGTH} ký tự`,
     "any.required": "Tiêu đề là bắt buộc",
   }),
-  moTa: Joi.string().min(20).max(5000).trim().required().messages({
+  moTa: Joi.string().min(20).max(COMPLAINT_DESCRIPTION_MAX_LENGTH).trim().required().messages({
     "string.min": "Mô tả phải có ít nhất 20 ký tự",
-    "string.max": "Mô tả không được vượt quá 5000 ký tự",
+    "string.max": `Mô tả không được vượt quá ${COMPLAINT_DESCRIPTION_MAX_LENGTH} ký tự`,
     "any.required": "Mô tả là bắt buộc",
   }),
   viTri: Joi.string().trim().max(500).required().messages({
@@ -149,19 +164,19 @@ export const CreatePhanAnhPublicRequest = Joi.object({
     "any.required": "Vị trí là bắt buộc",
   }),
   mucDo: mucDoSchema,
-  tenNguoiPhanAnh: Joi.string().trim().max(255).required().messages({
-    "string.max": "Tên người phản ánh không được vượt quá 255 ký tự",
+  tenNguoiPhanAnh: Joi.string().trim().max(COMPLAINT_REPORTER_NAME_MAX_LENGTH).required().messages({
+    "string.max": `Tên người phản ánh không được vượt quá ${COMPLAINT_REPORTER_NAME_MAX_LENGTH} ký tự`,
     "any.required": "Tên người phản ánh là bắt buộc",
   }),
-  soDienThoaiNguoiPhanAnh: phoneSchema,
+  soDienThoaiNguoiPhanAnh: requiredPhoneSchema,
   cccd: citizenIdSchema,
-  khuPho: Joi.string().trim().max(255).required().messages({
+  khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
     "string.empty": "Khu phố là bắt buộc",
     "any.required": "Khu phố là bắt buộc",
-    "string.max": "Khu phố không được vượt quá 255 ký tự",
+    "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,
   }),
-  moTaViTri: Joi.string().trim().max(2000).optional().allow(null, "").messages({
-    "string.max": "Mô tả vị trí không được vượt quá 2000 ký tự",
+  moTaViTri: Joi.string().trim().max(COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH).optional().allow(null, "").messages({
+    "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
   idVideo: videoIdsSchema,
 });
