@@ -169,7 +169,8 @@ const LeaderMeetingRegistrationRepository = {
     let overdueWhere = undefined;
 
     if (status === "OVERDUE") {
-      trangThaiWhere = { in: ["PENDING", "APPROVED", "IN_PROGRESS"] };
+      // Quá hạn duyệt chỉ áp dụng cho đơn PENDING chưa được phê duyệt và đã qua giờ
+      trangThaiWhere = "PENDING";
       overdueWhere = {
         OR: [
           { ngay_hen: { lt: new Date(`${todayStr}T00:00:00.000Z`) } },
@@ -184,8 +185,9 @@ const LeaderMeetingRegistrationRepository = {
           },
         ],
       };
-    } else if (status && ["PENDING", "APPROVED", "IN_PROGRESS"].includes(status)) {
-      trangThaiWhere = status;
+    } else if (status === "PENDING") {
+      // Lọc Chờ phê duyệt: chỉ lấy các đơn PENDING còn hạn trong tương lai
+      trangThaiWhere = "PENDING";
       overdueWhere = {
         OR: [
           { ngay_hen: { gt: new Date(`${todayStr}T23:59:59.999Z`) } },
@@ -200,6 +202,13 @@ const LeaderMeetingRegistrationRepository = {
           },
         ],
       };
+    } else if (status === "APPROVED" || status === "IN_PROGRESS") {
+      // Lọc Đang xử lý: lấy cả các đơn đã duyệt (APPROVED) và các đơn đang tiếp dân (IN_PROGRESS)
+      trangThaiWhere = { in: ["APPROVED", "IN_PROGRESS"] };
+      overdueWhere = undefined;
+    } else if (status) {
+      trangThaiWhere = status;
+      overdueWhere = undefined;
     }
 
     const where = {
@@ -249,7 +258,7 @@ const LeaderMeetingRegistrationRepository = {
     });
 
     const isMatchOverdue = (item) => {
-      if (item.trang_thai !== "PENDING" && item.trang_thai !== "APPROVED" && item.trang_thai !== "IN_PROGRESS") return false;
+      if (item.trang_thai !== "PENDING") return false;
       const recDate = item.ngay_hen ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(item.ngay_hen) : "";
       const slotEnd = item.khung_gio_gap_lanh_dao?.gio_ket_thuc || "23:59";
       if (!recDate) return false;
