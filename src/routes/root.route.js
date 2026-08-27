@@ -54,7 +54,6 @@ rootRouter.use('/logs', logRouter);
 rootRouter.use('/report', reportRouter);
 rootRouter.use('/permission', permissionRouter);
 rootRouter.use('/role', roleRouter);
-rootRouter.use('/report', reportRouter);
 rootRouter.use('/notifications', notificationRouter);
 rootRouter.use('/audit-logs', auditLogRouter);
 rootRouter.use('/export', exportRouter);
