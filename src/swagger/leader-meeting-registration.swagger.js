@@ -202,7 +202,12 @@ const LeaderMeetingRegistrationSwagger = {
                   format: "uuid",
                   example: "323e4567-e89b-42d3-a456-426614174001",
                 },
-                fullName: { type: "string", example: "Nguyễn Văn Bình" },
+                fullName: {
+                  type: "string",
+                  minLength: 4,
+                  maxLength: 150,
+                  example: "Nguyễn Văn Bình",
+                },
                 phoneNumber: { type: "string", example: "0901234567" },
                   citizenId: {
                     type: "string",
@@ -216,9 +221,16 @@ const LeaderMeetingRegistrationSwagger = {
                 },
                 citizenIdIssuedPlace: {
                   type: "string",
+                  minLength: 3,
+                  maxLength: 255,
                   example: "Cục Cảnh sát quản lý hành chính về trật tự xã hội",
                 },
-                address: { type: "string", example: "Phường Thành Sen, Hà Tĩnh" },
+                address: {
+                  type: "string",
+                  minLength: 6,
+                  maxLength: 500,
+                  example: "Phường Thành Sen, Hà Tĩnh",
+                },
                 topic: { type: "string", example: "Kiến nghị về đất đai" },
                 reason: {
                   type: "string",

@@ -40,11 +40,13 @@ export const CreateLeaderMeetingRegistrationRequest = Joi.object({
   }),
   fullName: Joi.string()
     .trim()
+    .min(4)
     .max(150)
     .pattern(vietnameseNameRegex)
     .required()
     .messages({
       "string.pattern.base": "Họ tên chỉ được chứa chữ cái và khoảng trắng",
+      "string.min": "Họ tên phải có ít nhất 4 ký tự",
       "string.max": "Họ tên không được vượt quá 150 ký tự",
       "string.empty": "Họ tên là bắt buộc",
       "any.required": "Họ tên là bắt buộc",
@@ -58,8 +60,12 @@ export const CreateLeaderMeetingRegistrationRequest = Joi.object({
     "any.required": "Số định danh cá nhân là bắt buộc",
   }),
   citizenIdIssuedDate: optionalDate.optional().allow(""),
-  citizenIdIssuedPlace: Joi.string().trim().max(255).optional().allow(""),
-  address: Joi.string().trim().max(500).required().messages({
+  citizenIdIssuedPlace: Joi.string().trim().min(3).max(255).optional().allow("").messages({
+    "string.min": "Nơi cấp CCCD phải có ít nhất 3 ký tự",
+    "string.max": "Nơi cấp CCCD không được vượt quá 255 ký tự",
+  }),
+  address: Joi.string().trim().min(6).max(500).required().messages({
+    "string.min": "Địa chỉ phải có ít nhất 6 ký tự",
     "string.max": "Địa chỉ không được vượt quá 500 ký tự",
     "string.empty": "Địa chỉ là bắt buộc",
     "any.required": "Địa chỉ là bắt buộc",
