@@ -35,6 +35,14 @@ taiLieuPhapLuatRouter.get("/doc-types", authenticate, ThuVienController.getDocTy
 // Danh sách cơ quan ban hành
 taiLieuPhapLuatRouter.get("/issuing-agencies", authenticate, ThuVienController.getIssuingAgencies);
 
+// Danh sách đã xóa
+taiLieuPhapLuatRouter.get(
+  "/deleted",
+  authenticate,
+  authorize([PERMISSION.TL_GET_ALL]),
+  ThuVienController.getDeleted,
+);
+
 // Lấy danh sách (phân trang)
 taiLieuPhapLuatRouter.get("/paging", authenticate, ThuVienController.getAll);
 
@@ -142,6 +150,24 @@ taiLieuPhapLuatRouter.delete(
   authorize([PERMISSION.TL_DELETE]),
   audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.TL_DELETE),
   ThuVienController.delete,
+);
+
+// Khôi phục
+taiLieuPhapLuatRouter.put(
+  "/restore/:id",
+  authenticate,
+  authorize([PERMISSION.TL_UPDATE]),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_RESTORE),
+  ThuVienController.restore,
+);
+
+// Xóa vĩnh viễn ngay
+taiLieuPhapLuatRouter.delete(
+  "/force/:id",
+  authenticate,
+  authorize([PERMISSION.TL_DELETE]),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.TL_FORCE_DELETE),
+  ThuVienController.forceDelete,
 );
 
 export default taiLieuPhapLuatRouter;

@@ -276,8 +276,6 @@ const PhanAnhService = {
 
   async updateStatusPhanAnh(
     idPhanAnh,
-    thoiGianPhanHoiDuKien,
-    ngayDuKienHoanThanh,
     trangThai,
     ghiChu,
     currentUser,
@@ -355,8 +353,6 @@ const PhanAnhService = {
       ...(videoGiaiQuyet.length > 0 && {
         id_video_giai_quyet: videoGiaiQuyet,
       }),
-      // thoi_gian_phan_hoi_du_kien: thoiGianPhanHoiDuKien,
-      // ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
     };
 
     const historyData = {

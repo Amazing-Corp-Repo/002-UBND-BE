@@ -1,4 +1,51 @@
 const LeaderMeetingRegistrationSwagger = {
+  "/api/leader-meeting-registrations/ocr/cccd": {
+    post: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Đọc thông tin CCCD bằng OCR",
+      description:
+        "Nhận một ảnh CCCD và đọc thông tin trực tiếp trên máy chủ bằng Tesseract OCR (vie+eng). Ảnh không được gửi tới dịch vụ OCR bên thứ ba. Giới hạn ảnh 10MB và tối đa 30 yêu cầu trong 10 phút trên một IP.",
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              required: ["image"],
+              properties: {
+                image: {
+                  type: "string",
+                  format: "binary",
+                  description: "Ảnh CCCD mặt trước hoặc mặt sau, tối đa 10MB",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Đọc thông tin CCCD thành công",
+          content: {
+            "application/json": {
+              example: {
+                success: true,
+                message: "Đọc thông tin CCCD thành công",
+                data: {
+                  citizenId: "012345678901",
+                  issuedDate: "15/02/2021",
+                  issuedPlace: "Cục Cảnh sát quản lý hành chính về trật tự xã hội",
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Thiếu ảnh hoặc ảnh không hợp lệ/vượt quá 10MB" },
+        429: { description: "Vượt quá 30 yêu cầu trong 10 phút trên một IP" },
+        502: { description: "Tesseract OCR không thể xử lý ảnh" },
+      },
+    },
+  },
   "/api/leader-meeting-registrations/lookup": {
     post: {
       tags: ["LeaderMeetingRegistration"],
@@ -132,7 +179,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Gửi đăng ký gặp lãnh đạo từ Mobile",
       description:
-        "Người dân chọn một khung giờ còn chỗ và gửi hồ sơ dạng multipart/form-data. Backend tự xác định lãnh đạo, ngày hẹn, ngày làm đơn, mã đăng ký và trạng thái PENDING. Mỗi số điện thoại hoặc CCCD chỉ được giữ một đăng ký trong cùng ngày hẹn ở các trạng thái PENDING, APPROVED, IN_PROGRESS hoặc COMPLETED. Đơn REJECTED/CANCELED được đăng ký lại ở khung giờ khác; khung giờ cũ không được hoàn chỗ. Giới hạn 30 yêu cầu/10 phút/IP.",
+        "Người dân chọn một khung giờ còn chỗ và gửi hồ sơ dạng multipart/form-data. Mobile gửi ngày làm đơn từ phần ngày/tháng/năm trên biểu mẫu; Backend tự xác định lãnh đạo, ngày hẹn, mã đăng ký và trạng thái PENDING. Mỗi số điện thoại hoặc CCCD chỉ được giữ một đăng ký trong cùng ngày hẹn ở các trạng thái PENDING, APPROVED, IN_PROGRESS hoặc COMPLETED. Đơn REJECTED/CANCELED được đăng ký lại ở khung giờ khác; khung giờ cũ không được hoàn chỗ. Giới hạn 30 yêu cầu/10 phút/IP.",
       requestBody: {
         required: true,
         content: {
@@ -141,6 +188,7 @@ const LeaderMeetingRegistrationSwagger = {
               type: "object",
               required: [
                 "slotId",
+                "applicationDate",
                 "fullName",
                 "phoneNumber",
                 "citizenId",
@@ -155,9 +203,24 @@ const LeaderMeetingRegistrationSwagger = {
                   format: "uuid",
                   example: "323e4567-e89b-42d3-a456-426614174001",
                 },
-                fullName: { type: "string", example: "Nguyễn Văn Bình" },
+                applicationDate: {
+                  type: "string",
+                  format: "date",
+                  example: "2026-08-28",
+                  description: "Ngày làm đơn nhập từ ba ô ngày/tháng/năm, không được ở tương lai",
+                },
+                fullName: {
+                  type: "string",
+                  minLength: 4,
+                  maxLength: 150,
+                  example: "Nguyễn Văn Bình",
+                },
                 phoneNumber: { type: "string", example: "0901234567" },
-                citizenId: { type: "string", example: "012345678901" },
+                  citizenId: {
+                    type: "string",
+                    example: "012345678901",
+                    description: "Số định danh cá nhân, gồm đúng 12 chữ số",
+                  },
                 citizenIdIssuedDate: {
                   type: "string",
                   format: "date",
@@ -165,10 +228,16 @@ const LeaderMeetingRegistrationSwagger = {
                 },
                 citizenIdIssuedPlace: {
                   type: "string",
+                  minLength: 3,
+                  maxLength: 255,
                   example: "Cục Cảnh sát quản lý hành chính về trật tự xã hội",
                 },
-                address: { type: "string", example: "Phường Thành Sen, Hà Tĩnh" },
-                topic: { type: "string", example: "Kiến nghị về đất đai" },
+                address: {
+                  type: "string",
+                  minLength: 6,
+                  maxLength: 500,
+                  example: "Phường Thành Sen, Hà Tĩnh",
+                },
                 reason: {
                   type: "string",
                   example: "Tôi đề nghị được hướng dẫn giải quyết hồ sơ đất đai.",
@@ -176,12 +245,12 @@ const LeaderMeetingRegistrationSwagger = {
                 citizenIdFront: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt trước CCCD, bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt trước CCCD, bắt buộc, tối đa 10MB",
                 },
                 citizenIdBack: {
                   type: "string",
                   format: "binary",
-                  description: "Ảnh mặt sau CCCD, bắt buộc, tối đa 5MB",
+                  description: "Ảnh mặt sau CCCD, bắt buộc, tối đa 10MB",
                 },
                 supportingDocuments: {
                   type: "array",
@@ -209,6 +278,9 @@ const LeaderMeetingRegistrationSwagger = {
                       id: "423e4567-e89b-42d3-a456-426614174001",
                       registrationCode: "LD000123",
                       status: "PENDING",
+                      applicationDate: "2026-08-28",
+                      address: "Phường Thành Sen, Hà Tĩnh",
+                      reason: "Tôi đề nghị được hướng dẫn giải quyết hồ sơ đất đai.",
                       receptionDate: "2099-08-25",
                       timeSlot: "09:00 - 10:30",
                       leaderName: "Nguyễn Văn An",
@@ -283,7 +355,6 @@ const LeaderMeetingRegistrationSwagger = {
                         citizenId: "012345678901",
                         address: "Phường Thành Sen, Hà Tĩnh",
                       },
-                      topic: "Kiến nghị về đất đai",
                       reason: "Đề nghị hướng dẫn giải quyết hồ sơ.",
                       workflow: {
                         approver: null,
@@ -572,23 +643,20 @@ const LeaderMeetingRegistrationSwagger = {
         },
       ],
       requestBody: {
-        required: false,
+        required: true,
         content: {
           "application/json": {
             schema: {
               type: "object",
+              required: ["note"],
               properties: {
-                note: { type: "string", maxLength: 2000, nullable: true },
+                note: { type: "string", minLength: 1, maxLength: 2000 },
               },
             },
             examples: {
               valid: {
                 summary: "Demo hoàn thành có ghi chú",
                 value: { note: "Đã xử lý xong nội dung kiến nghị" },
-              },
-              withoutNote: {
-                summary: "Demo hoàn thành không ghi chú",
-                value: {},
               },
             },
           },

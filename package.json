@@ -31,6 +31,7 @@
     "pg": "^8.16.0",
     "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
+    "tesseract.js": "^7.0.0",
     "ua-parser-js": "^2.0.5",
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0",
@@ -43,14 +44,7 @@
   "type": "module",
   "scripts": {
     "build": "npm run check && prisma generate",
-    "test": "node --experimental-strip-types --test --test-concurrency=1",
     "check": "prisma validate",
-    "backfill:reception-v2": "node --experimental-strip-types scripts/backfill-reception-v2.js",
-    "backfill:leader-meetings": "node --experimental-strip-types scripts/backfill-leader-meetings.js",
-    "generate:reception-template": "node scripts/generate-reception-schedule-template.js",
-    "seed:reception-swagger-demo": "node --experimental-strip-types scripts/seed-reception-swagger-demo.js",
-    "seed:leader-meeting-swagger-demo": "node --experimental-strip-types scripts/seed-leader-meeting-swagger-demo.js",
-    "seed:reception-users": "node --experimental-strip-types scripts/seed-reception-user-accounts.js",
     "dev": "node --watch --experimental-strip-types src/app.js",
     "start": "node --experimental-strip-types src/app.js",
     "postinstall": "prisma generate"
