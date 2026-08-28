@@ -56,14 +56,16 @@ const LichTiepDanService = {
         record.ngay_tiep_dan = toDatabaseDate(receptionDate);
         const thoi_gian = `${tu} - ${den}`;
 
+        const officerName = String(record.ten_can_bo || record.ho_ten_can_bo || "Cán bộ tiếp dân").trim();
+        const location = String(record.dia_diem || "Phòng tiếp công dân").trim();
         const existing = await LichTiepDanRepository.findByCanBoAndNgay(
-          record.ten_can_bo,
+          officerName,
           record.ngay_tiep_dan
         );
 
         if (existing) {
           await LichTiepDanRepository.update(existing.id, {
-            dia_diem: record.dia_diem,
+            dia_diem: location,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
             nguoi_cap_nhat: currentUser,
@@ -71,10 +73,10 @@ const LichTiepDanService = {
           });
         } else {
           await LichTiepDanRepository.create({
-            dia_diem: record.dia_diem,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
-            ten_can_bo: record.ten_can_bo,
+            ten_can_bo: officerName,
+            dia_diem: location,
             ngay_tiep_dan: record.ngay_tiep_dan,
             nguoi_tao: currentUser,
           });
@@ -194,6 +196,8 @@ const LichTiepDanService = {
     ghiChu,
     currentUser
   ) {
+    tenCanBo = String(tenCanBo || "Cán bộ tiếp dân").trim();
+    diaDiem = String(diaDiem || "Phòng tiếp công dân").trim();
     const existing = await LichTiepDanRepository.findByCanBoAndNgay(
       tenCanBo,
       ngayTiepDan
@@ -234,7 +238,7 @@ const LichTiepDanService = {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại");
     }
     const duplicate = await LichTiepDanRepository.findByCanBoAndNgayExcludeId(
-      tenCanBo,
+      tenCanBo || existing.ten_can_bo,
       ngayTiepDan,
       id
     );
@@ -246,8 +250,8 @@ const LichTiepDanService = {
     }
     let thoiGian = `${batDau} - ${ketThuc}`;
     const data = await LichTiepDanRepository.update(id, {
-      ten_can_bo: tenCanBo,
-      dia_diem: diaDiem,
+      ten_can_bo: tenCanBo || existing.ten_can_bo,
+      dia_diem: diaDiem || existing.dia_diem || "Phòng tiếp công dân",
       ngay_tiep_dan: ngayTiepDan,
       thoi_gian: thoiGian,
       ghi_chu: ghiChu,
