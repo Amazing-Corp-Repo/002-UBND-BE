@@ -95,6 +95,8 @@ const mapCreated = ({ registration, slot }) => ({
   registrationCode: registration.ma_dang_ky,
   status: registration.trang_thai,
   applicationDate: vietnamDate(registration.ngay_lam_don),
+  address: registration.dia_chi,
+  reason: registration.ly_do,
   receptionDate: vietnamDate(slot.lich_gap_lanh_dao.ngay),
   timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
   leaderName: slot.lich_gap_lanh_dao.lanh_dao.ho_va_ten,

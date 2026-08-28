@@ -279,6 +279,8 @@ const LeaderMeetingRegistrationSwagger = {
                       registrationCode: "LD000123",
                       status: "PENDING",
                       applicationDate: "2026-08-28",
+                      address: "Phường Thành Sen, Hà Tĩnh",
+                      reason: "Tôi đề nghị được hướng dẫn giải quyết hồ sơ đất đai.",
                       receptionDate: "2099-08-25",
                       timeSlot: "09:00 - 10:30",
                       leaderName: "Nguyễn Văn An",
