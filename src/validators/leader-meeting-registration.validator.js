@@ -28,6 +28,34 @@ const optionalDate = Joi.string()
     "date.future": "Ngày cấp CCCD không được lớn hơn ngày hiện tại",
   });
 
+const applicationDate = Joi.string()
+  .trim()
+  .pattern(/^\d{4}-\d{2}-\d{2}$/)
+  .custom((value, helpers) => {
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const isValid = date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day;
+    if (!isValid) return helpers.error("date.invalid");
+
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    return value <= today ? value : helpers.error("date.future");
+  })
+  .required()
+  .messages({
+    "string.pattern.base": "Ngày làm đơn phải có định dạng YYYY-MM-DD",
+    "string.empty": "Ngày làm đơn là bắt buộc",
+    "any.required": "Ngày làm đơn là bắt buộc",
+    "date.invalid": "Ngày làm đơn không tồn tại",
+    "date.future": "Ngày làm đơn không được lớn hơn ngày hiện tại",
+  });
+
 export const EmptyLeaderMeetingRequest = Joi.object({}).max(0).messages({
   "object.max": "Yêu cầu này không nhận dữ liệu body",
   "object.unknown": "Trường {#label} không được hỗ trợ",
@@ -64,13 +92,13 @@ export const CreateLeaderMeetingRegistrationRequest = Joi.object({
     "string.min": "Nơi cấp CCCD phải có ít nhất 3 ký tự",
     "string.max": "Nơi cấp CCCD không được vượt quá 255 ký tự",
   }),
+  applicationDate,
   address: Joi.string().trim().min(6).max(500).required().messages({
     "string.min": "Địa chỉ phải có ít nhất 6 ký tự",
     "string.max": "Địa chỉ không được vượt quá 500 ký tự",
     "string.empty": "Địa chỉ là bắt buộc",
     "any.required": "Địa chỉ là bắt buộc",
   }),
-  topic: Joi.string().trim().max(255).optional().allow(""),
   reason: Joi.string().trim().min(10).max(2000).required().messages({
     "string.min": "Lý do gặp phải có ít nhất 10 ký tự",
     "string.max": "Lý do gặp không được vượt quá 2000 ký tự",
