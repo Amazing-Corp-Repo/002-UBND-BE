@@ -55,17 +55,16 @@ const LichTiepDanService = {
         }
         record.ngay_tiep_dan = toDatabaseDate(receptionDate);
         const thoi_gian = `${tu} - ${den}`;
-        const tenCanBo = (record.ten_can_bo && record.ten_can_bo.trim()) || "Cán bộ tiếp dân";
-        const diaDiem = (record.dia_diem && record.dia_diem.trim()) || "Phòng tiếp công dân";
-
+        const officerName = String(record.ten_can_bo || record.ho_ten_can_bo || "Cán bộ tiếp dân").trim();
+        const location = String(record.dia_diem || "Phòng tiếp công dân").trim();
         const existing = await LichTiepDanRepository.findByCanBoAndNgay(
-          tenCanBo,
+          officerName,
           record.ngay_tiep_dan
         );
 
         if (existing) {
           await LichTiepDanRepository.update(existing.id, {
-            dia_diem: diaDiem,
+            dia_diem: location,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
             nguoi_cap_nhat: currentUser,
@@ -73,10 +72,10 @@ const LichTiepDanService = {
           });
         } else {
           await LichTiepDanRepository.create({
-            dia_diem: diaDiem,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
-            ten_can_bo: tenCanBo,
+            ten_can_bo: officerName,
+            dia_diem: location,
             ngay_tiep_dan: record.ngay_tiep_dan,
             nguoi_tao: currentUser,
           });
@@ -198,7 +197,6 @@ const LichTiepDanService = {
   ) {
     const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || "Cán bộ tiếp dân";
     const finalDiaDiem = (diaDiem && diaDiem.trim()) || "Phòng tiếp công dân";
-
     const existing = await LichTiepDanRepository.findByCanBoAndNgay(
       finalTenCanBo,
       ngayTiepDan
