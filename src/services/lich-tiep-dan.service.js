@@ -55,15 +55,17 @@ const LichTiepDanService = {
         }
         record.ngay_tiep_dan = toDatabaseDate(receptionDate);
         const thoi_gian = `${tu} - ${den}`;
+        const tenCanBo = (record.ten_can_bo && record.ten_can_bo.trim()) || "Cán bộ tiếp dân";
+        const diaDiem = (record.dia_diem && record.dia_diem.trim()) || "Phòng tiếp công dân";
 
         const existing = await LichTiepDanRepository.findByCanBoAndNgay(
-          record.ten_can_bo,
+          tenCanBo,
           record.ngay_tiep_dan
         );
 
         if (existing) {
           await LichTiepDanRepository.update(existing.id, {
-            dia_diem: record.dia_diem,
+            dia_diem: diaDiem,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
             nguoi_cap_nhat: currentUser,
@@ -71,10 +73,10 @@ const LichTiepDanService = {
           });
         } else {
           await LichTiepDanRepository.create({
-            dia_diem: record.dia_diem,
+            dia_diem: diaDiem,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
-            ten_can_bo: record.ten_can_bo,
+            ten_can_bo: tenCanBo,
             ngay_tiep_dan: record.ngay_tiep_dan,
             nguoi_tao: currentUser,
           });
@@ -194,20 +196,23 @@ const LichTiepDanService = {
     ghiChu,
     currentUser
   ) {
+    const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || "Cán bộ tiếp dân";
+    const finalDiaDiem = (diaDiem && diaDiem.trim()) || "Phòng tiếp công dân";
+
     const existing = await LichTiepDanRepository.findByCanBoAndNgay(
-      tenCanBo,
+      finalTenCanBo,
       ngayTiepDan
     );
     if (existing) {
       throw new BaseError(
         400,
-        "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại"
+        "Lịch tiếp dân vào ngày này đã tồn tại"
       );
     }
     let thoiGian = `${batDau} - ${ketThuc}`;
     const data = await LichTiepDanRepository.create({
-      ten_can_bo: tenCanBo,
-      dia_diem: diaDiem,
+      ten_can_bo: finalTenCanBo,
+      dia_diem: finalDiaDiem,
       ngay_tiep_dan: ngayTiepDan,
       thoi_gian: thoiGian,
       ghi_chu: ghiChu,
@@ -233,21 +238,24 @@ const LichTiepDanService = {
     if (!existing || existing.is_delete) {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại");
     }
+    const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || existing.ten_can_bo || "Cán bộ tiếp dân";
+    const finalDiaDiem = (diaDiem && diaDiem.trim()) || existing.dia_diem || "Phòng tiếp công dân";
+
     const duplicate = await LichTiepDanRepository.findByCanBoAndNgayExcludeId(
-      tenCanBo,
+      finalTenCanBo,
       ngayTiepDan,
       id
     );
     if (duplicate) {
       throw new BaseError(
         400,
-        "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại"
+        "Lịch tiếp dân vào ngày này đã tồn tại"
       );
     }
     let thoiGian = `${batDau} - ${ketThuc}`;
     const data = await LichTiepDanRepository.update(id, {
-      ten_can_bo: tenCanBo,
-      dia_diem: diaDiem,
+      ten_can_bo: finalTenCanBo,
+      dia_diem: finalDiaDiem,
       ngay_tiep_dan: ngayTiepDan,
       thoi_gian: thoiGian,
       ghi_chu: ghiChu,
