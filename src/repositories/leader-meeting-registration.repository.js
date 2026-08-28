@@ -237,7 +237,6 @@ const LeaderMeetingRegistrationRepository = {
               { ho_ten: { contains: search, mode: "insensitive" } },
               { sdt: { contains: search, mode: "insensitive" } },
               { cccd: { contains: search, mode: "insensitive" } },
-              { chu_de: { contains: search, mode: "insensitive" } },
               { ly_do: { contains: search, mode: "insensitive" } },
             ],
           }
@@ -296,7 +295,6 @@ const LeaderMeetingRegistrationRepository = {
         id: true,
         ma_dang_ky: true,
         ngay_hen: true,
-        chu_de: true,
         ly_do: true,
         ho_ten: true,
         sdt: true,
@@ -351,7 +349,6 @@ const LeaderMeetingRegistrationRepository = {
         id: true,
         ma_dang_ky: true,
         ngay_hen: true,
-        chu_de: true,
         ly_do: true,
         ho_ten: true,
         sdt: true,

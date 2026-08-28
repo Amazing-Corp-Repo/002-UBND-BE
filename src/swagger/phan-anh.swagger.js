@@ -6,7 +6,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới (yêu cầu đăng nhập)",
       description:
-        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Có thể gửi CCCD gồm 12 chữ số; khu phố là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB, hoặc tối đa 5 idVideo đã tải lên trước đó.",
+        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -20,7 +20,7 @@ const PhanAnhSwagger = {
         200: { description: "Tạo phản ánh thành công" },
         400: {
           description:
-            "Dữ liệu không hợp lệ, thiếu khu phố, không có ảnh/video hoặc lĩnh vực không tồn tại",
+            "Dữ liệu không hợp lệ, thiếu khu phố, thiếu hình ảnh hoặc lĩnh vực không tồn tại",
         },
         401: { description: "Chưa đăng nhập hoặc token hết hạn" },
         403: { description: "Không có quyền PA_CREATE" },
@@ -365,7 +365,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới từ công dân (không cần đăng nhập)",
       description:
-        "API công khai để người dân tạo phản ánh. Có thể gửi CCCD gồm 12 chữ số; khu phố là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB, hoặc tối đa 5 idVideo đã tải lên trước đó.",
+        "API công khai để người dân tạo phản ánh. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
       requestBody: {
         content: {
           "multipart/form-data": {
@@ -380,7 +380,7 @@ const PhanAnhSwagger = {
         },
         400: {
           description:
-            "Dữ liệu không hợp lệ, thiếu khu phố, không có ảnh/video hoặc lĩnh vực không tồn tại",
+            "Dữ liệu không hợp lệ, thiếu khu phố, thiếu hình ảnh hoặc lĩnh vực không tồn tại",
         },
       },
     },
