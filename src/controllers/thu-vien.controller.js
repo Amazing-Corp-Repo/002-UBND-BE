@@ -53,7 +53,8 @@ const ThuVienController = {
   async getById(req, res) {
     const { id } = req.params;
     const currentUser = req.payload.userId;
-    const result = await ThuVienService.getById(id, currentUser);
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getById(id, currentUser, permissions);
     return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
   },
 
@@ -76,7 +77,9 @@ const ThuVienController = {
   async delete(req, res) {
     const { id } = req.params;
     const currentUser = req.payload.userId;
-    await ThuVienService.delete(id, currentUser);
+    const permissions = req.payload.permissions || [];
+    const { lyDoXoa } = req.body;
+    await ThuVienService.delete(id, currentUser, permissions, lyDoXoa);
     return successResponse(res, null, "Xóa tài liệu thành công");
   },
 
@@ -92,7 +95,8 @@ const ThuVienController = {
   async restore(req, res) {
     const { id } = req.params;
     const currentUser = req.payload.userId;
-    const result = await ThuVienService.restore(id, currentUser);
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.restore(id, currentUser, permissions);
     return successResponse(res, result, "Khôi phục tài liệu thành công");
   },
 

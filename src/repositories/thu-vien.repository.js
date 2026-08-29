@@ -31,13 +31,15 @@ const ThuVienRepository = {
     // Xây dựng mảng AND để tránh xung đột multiple OR
     const andConditions = [];
 
-    // Nếu KHÔNG có quyền TL_APPROVE → chỉ xem tài liệu mình tạo
-    // Nếu CÓ quyền TL_APPROVE → xem tất cả, NHAP chỉ người tạo thấy
+    // ADMIN → xem tất cả (kể cả NHAP người khác) — check bằng permissions
+    // TL_APPROVE → xem tất cả, NHAP chỉ người tạo
+    // Không có quyền → chỉ xem tài liệu mình tạo
     if (currentUser) {
-      const canViewAll = permissions.includes("TL_APPROVE");
+      const isAdmin = permissions.includes("TL_ADMIN_DELETE");
+      const canViewAll = permissions.includes("TL_APPROVE") || isAdmin;
       if (!canViewAll) {
         andConditions.push({ nguoi_tao: currentUser });
-      } else {
+      } else if (!isAdmin) {
         andConditions.push({
           OR: [
             { trang_thai: { not: "NHAP" } },
@@ -45,6 +47,7 @@ const ThuVienRepository = {
           ],
         });
       }
+      // isAdmin: không thêm filter → thấy ALL kể cả NHAP
     }
 
     // Search OR
@@ -251,7 +254,7 @@ const ThuVienRepository = {
     });
   },
 
-  async softDelete(id, nguoiCapNhat) {
+  async softDelete(id, nguoiCapNhat, lyDoXoa) {
     return prisma.thu_vien_tai_lieu.update({
       where: { id },
       data: {
@@ -260,6 +263,7 @@ const ThuVienRepository = {
         thoi_gian_xoa: new Date().toISOString(),
         is_cleaned_up: false,
         nguoi_cap_nhat: nguoiCapNhat,
+        ly_do_xoa: lyDoXoa || null,
         thoi_gian_cap_nhat: new Date().toISOString(),
       },
     });
@@ -274,8 +278,8 @@ const ThuVienRepository = {
     const andConditions = [{ trang_thai: "DA_XOA", is_delete: true }];
 
     if (currentUser) {
-      // Chỉ người có quyền duyệt (TL_APPROVE) mới được xem tất cả tài liệu đã xóa
-      const canViewAll = permissions.includes("TL_APPROVE");
+      const isAdmin = permissions.includes("TL_ADMIN_DELETE");
+      const canViewAll = permissions.includes("TL_APPROVE") || isAdmin;
       if (!canViewAll) {
         andConditions.push({ nguoi_tao: currentUser });
       }
@@ -395,12 +399,11 @@ const ThuVienRepository = {
     // Áp dụng quyền xem — giống logic trong getAll
     const andConditions = [];
     if (currentUser) {
-      const canViewAll = permissions.includes("TL_APPROVE");
+      const isAdmin = permissions.includes("TL_ADMIN_DELETE");
+      const canViewAll = permissions.includes("TL_APPROVE") || isAdmin;
       if (!canViewAll) {
-        // Không có quyền TL_APPROVE → chỉ xem tài liệu mình tạo
         andConditions.push({ nguoi_tao: currentUser });
-      } else {
-        // Có quyền TL_APPROVE → xem tất cả, NHAP chỉ người tạo thấy
+      } else if (!isAdmin) {
         andConditions.push({
           OR: [
             { trang_thai: { not: "NHAP" } },
@@ -408,6 +411,7 @@ const ThuVienRepository = {
           ],
         });
       }
+      // isAdmin: không thêm filter → thống kê ALL
     }
 
     const where = andConditions.length > 0 ? { ...baseWhere, AND: andConditions } : baseWhere;

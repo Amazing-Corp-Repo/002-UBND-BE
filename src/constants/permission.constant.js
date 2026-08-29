@@ -14,6 +14,7 @@ export const PERMISSION = {
   TL_UNAPPROVE: "TL_UNAPPROVE",
   TL_RESTORE: "TL_RESTORE",
   TL_FORCE_DELETE: "TL_FORCE_DELETE",
+  TL_ADMIN_DELETE: "TL_ADMIN_DELETE",
 
   // Cơ sở dịch vụ công
   CSV_CREATE: "CSV_CREATE",
@@ -151,6 +152,7 @@ export const PERMISSION_DESC = {
   TL_UNAPPROVE: "Hoàn tác phê duyệt tài liệu",
   TL_RESTORE: "Khôi phục tài liệu",
   TL_FORCE_DELETE: "Xóa vĩnh viễn tài liệu",
+  TL_ADMIN_DELETE: "Quyền admin tài liệu (xem/xóa NHAP của người khác)",
 
   CSV_CREATE: "Tạo cơ sở dịch vụ công",
   CSV_UPDATE: "Cập nhật cơ sở dịch vụ công",
