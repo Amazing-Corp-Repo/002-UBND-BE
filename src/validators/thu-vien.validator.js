@@ -225,3 +225,10 @@ export const RejectTaiLieuRequest = Joi.object({
     "string.max": "Lý do từ chối không được vượt quá 500 ký tự",
   }),
 });
+
+export const DeleteTaiLieuRequest = Joi.object({
+  lyDoXoa: Joi.string().trim().max(500).allow("", null).optional()
+    .messages({
+      "string.max": "Lý do xóa không được vượt quá 500 ký tự",
+    }),
+});

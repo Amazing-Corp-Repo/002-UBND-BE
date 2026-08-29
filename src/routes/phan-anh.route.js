@@ -8,6 +8,7 @@ import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
+import { requirePhanAnhImage } from "../middlewares/phan-anh-upload-validation.middleware.js";
 import {
   CreatePhanAnhRequest,
   UpdatePhanAnhStatusRequest,
@@ -37,6 +38,7 @@ phanAnhRouter.post(
     maxSizeMB: 3,
     allowed_types: ["image/jpeg", "image/png"],
   }),
+  requirePhanAnhImage,
   validate(CreatePhanAnhPublicRequest),
   PhanAnhController.createPhanAnhPublic,
 );
@@ -53,6 +55,7 @@ phanAnhRouter.post(
     maxSizeMB: 3,
     allowed_types: ["image/jpeg", "image/png"],
   }),
+  requirePhanAnhImage,
   validate(CreatePhanAnhRequest),
   audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.PA_CREATE),
   PhanAnhController.createPhanAnh,

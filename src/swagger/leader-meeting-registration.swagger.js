@@ -179,7 +179,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Gửi đăng ký gặp lãnh đạo từ Mobile",
       description:
-        "Người dân chọn một khung giờ còn chỗ và gửi hồ sơ dạng multipart/form-data. Backend tự xác định lãnh đạo, ngày hẹn, ngày làm đơn, mã đăng ký và trạng thái PENDING. Mỗi số điện thoại hoặc CCCD chỉ được giữ một đăng ký trong cùng ngày hẹn ở các trạng thái PENDING, APPROVED, IN_PROGRESS hoặc COMPLETED. Đơn REJECTED/CANCELED được đăng ký lại ở khung giờ khác; khung giờ cũ không được hoàn chỗ. Giới hạn 30 yêu cầu/10 phút/IP.",
+        "Người dân chọn một khung giờ còn chỗ và gửi hồ sơ dạng multipart/form-data. Mobile gửi ngày làm đơn từ phần ngày/tháng/năm trên biểu mẫu; Backend tự xác định lãnh đạo, ngày hẹn, mã đăng ký và trạng thái PENDING. Mỗi số điện thoại hoặc CCCD chỉ được giữ một đăng ký trong cùng ngày hẹn ở các trạng thái PENDING, APPROVED, IN_PROGRESS hoặc COMPLETED. Đơn REJECTED/CANCELED được đăng ký lại ở khung giờ khác; khung giờ cũ không được hoàn chỗ. Giới hạn 30 yêu cầu/10 phút/IP.",
       requestBody: {
         required: true,
         content: {
@@ -188,6 +188,7 @@ const LeaderMeetingRegistrationSwagger = {
               type: "object",
               required: [
                 "slotId",
+                "applicationDate",
                 "fullName",
                 "phoneNumber",
                 "citizenId",
@@ -201,6 +202,12 @@ const LeaderMeetingRegistrationSwagger = {
                   type: "string",
                   format: "uuid",
                   example: "323e4567-e89b-42d3-a456-426614174001",
+                },
+                applicationDate: {
+                  type: "string",
+                  format: "date",
+                  example: "2026-08-28",
+                  description: "Ngày làm đơn nhập từ ba ô ngày/tháng/năm, không được ở tương lai",
                 },
                 fullName: {
                   type: "string",
@@ -231,7 +238,6 @@ const LeaderMeetingRegistrationSwagger = {
                   maxLength: 500,
                   example: "Phường Thành Sen, Hà Tĩnh",
                 },
-                topic: { type: "string", example: "Kiến nghị về đất đai" },
                 reason: {
                   type: "string",
                   example: "Tôi đề nghị được hướng dẫn giải quyết hồ sơ đất đai.",
@@ -272,6 +278,9 @@ const LeaderMeetingRegistrationSwagger = {
                       id: "423e4567-e89b-42d3-a456-426614174001",
                       registrationCode: "LD000123",
                       status: "PENDING",
+                      applicationDate: "2026-08-28",
+                      address: "Phường Thành Sen, Hà Tĩnh",
+                      reason: "Tôi đề nghị được hướng dẫn giải quyết hồ sơ đất đai.",
                       receptionDate: "2099-08-25",
                       timeSlot: "09:00 - 10:30",
                       leaderName: "Nguyễn Văn An",
@@ -346,7 +355,6 @@ const LeaderMeetingRegistrationSwagger = {
                         citizenId: "012345678901",
                         address: "Phường Thành Sen, Hà Tĩnh",
                       },
-                      topic: "Kiến nghị về đất đai",
                       reason: "Đề nghị hướng dẫn giải quyết hồ sơ.",
                       workflow: {
                         approver: null,

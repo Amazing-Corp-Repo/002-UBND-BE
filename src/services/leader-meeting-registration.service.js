@@ -94,6 +94,9 @@ const mapCreated = ({ registration, slot }) => ({
   id: registration.id,
   registrationCode: registration.ma_dang_ky,
   status: registration.trang_thai,
+  applicationDate: vietnamDate(registration.ngay_lam_don),
+  address: registration.dia_chi,
+  reason: registration.ly_do,
   receptionDate: vietnamDate(slot.lich_gap_lanh_dao.ngay),
   timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
   leaderName: slot.lich_gap_lanh_dao.lanh_dao.ho_va_ten,
@@ -161,7 +164,6 @@ const mapManagementListItem = (registration) => {
       phoneNumber: registration.sdt,
       citizenId: registration.cccd,
     },
-    topic: registration.chu_de || registration.ly_do || "",
     reason: registration.ly_do || "",
     status: registration.trang_thai,
     receptionDate: vietnamDate(registration.ngay_hen),
@@ -221,7 +223,6 @@ const mapManagementDetail = (registration) => {
       citizenIdIssuedPlace: registration.noi_cap_cccd,
       address: registration.dia_chi,
     },
-    topic: registration.chu_de,
     reason: registration.ly_do,
     workflow: {
       approver: mapOperator(
@@ -301,7 +302,6 @@ const LeaderMeetingRegistrationService = {
           attachments,
           data: {
             ma_dang_ky: createCode(),
-            chu_de: input.topic || null,
             ho_ten: input.fullName,
             sdt: input.phoneNumber,
             cccd: input.citizenId,
@@ -310,7 +310,7 @@ const LeaderMeetingRegistrationService = {
               : null,
             noi_cap_cccd: input.citizenIdIssuedPlace || null,
             dia_chi: input.address,
-            ngay_lam_don: new Date(`${vietnamDate(now)}T00:00:00.000Z`),
+            ngay_lam_don: new Date(`${input.applicationDate}T00:00:00.000Z`),
             ly_do: input.reason,
             trang_thai: "PENDING",
           },

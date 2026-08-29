@@ -17,6 +17,11 @@ import "./utils/logger.util.js";
 import { isCorsOriginAllowed } from "./config/cors.config.js";
 
 const app = express();
+// Render đứng trước ứng dụng một lớp proxy và gửi X-Forwarded-For.
+// Chỉ tin đúng số hop được cấu hình để rate-limit lấy đúng IP client.
+const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS || "1", 10);
+app.set("trust proxy", Number.isInteger(trustProxyHops) && trustProxyHops >= 0 ? trustProxyHops : 1);
+
 const PORT = env.PORT;
 const ALLOWED_CORS_ORIGIN = env.CORS_ORIGIN;
 const PREFIX_API = env.PREFIX_API;

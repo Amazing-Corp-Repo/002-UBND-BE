@@ -11,6 +11,7 @@ import {
   AiLearnRequest,
   ApproveTaiLieuRequest,
   RejectTaiLieuRequest,
+  DeleteTaiLieuRequest,
 } from "../validators/thu-vien.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
@@ -149,6 +150,7 @@ taiLieuVanHoaRouter.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.TL_DELETE]),
+  validate(DeleteTaiLieuRequest),
   audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.TL_DELETE),
   ThuVienController.delete,
 );
