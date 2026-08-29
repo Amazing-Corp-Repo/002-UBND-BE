@@ -136,14 +136,16 @@ const ThuVienService = {
     return result;
   },
 
-  async getById(id, currentUser) {
+  async getById(id, currentUser, permissions) {
     const result = await ThuVienRepository.getById(id);
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // NHAP chỉ hiển thị với người tạo
+    // NHAP: admin (có TL_ADMIN_DELETE) bypass, non-admin throw
     if (result.trang_thai === "NHAP" && result.nguoi_tao !== currentUser) {
-      throw new BaseError(404, "Không tìm thấy tài liệu");
+      if (!permissions.includes("TL_ADMIN_DELETE")) {
+        throw new BaseError(404, "Không tìm thấy tài liệu");
+      }
     }
     return result;
   },
@@ -277,16 +279,22 @@ const ThuVienService = {
     return ThuVienRepository.getById(id);
   },
 
-  async delete(id, currentUser) {
+  async delete(id, currentUser, permissions, lyDoXoa) {
     const existing = await ThuVienRepository.findById(id);
     if (!existing) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // Chỉ cho phép xóa tài liệu do chính mình tạo
+    // ADMIN (có TL_ADMIN_DELETE) xóa tài liệu người khác
     if (existing.nguoi_tao !== currentUser) {
-      throw new BaseError(403, "Bạn không có quyền xóa tài liệu do người khác tạo");
+      if (!permissions.includes("TL_ADMIN_DELETE")) {
+        throw new BaseError(403, "Bạn không có quyền xóa tài liệu do người khác tạo");
+      }
+      // Admin xóa bắt buộc có lý do
+      if (!lyDoXoa || !lyDoXoa.trim()) {
+        throw new BaseError(400, "Vui lòng nhập lý do xóa tài liệu");
+      }
     }
-    await ThuVienRepository.softDelete(id, currentUser);
+    await ThuVienRepository.softDelete(id, currentUser, lyDoXoa);
   },
 
   async getDeleted({ loai, page = 1, size = 10, search, currentUser, permissions = [] }) {
@@ -312,7 +320,7 @@ const ThuVienService = {
     return { data: enrichedData, pagination };
   },
 
-  async restore(id, currentUser) {
+  async restore(id, currentUser, permissions) {
     const existing = await ThuVienRepository.findByIdEvenDeleted(id);
     if (!existing) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
@@ -323,6 +331,14 @@ const ThuVienService = {
     if (existing.is_cleaned_up) {
       throw new BaseError(400, "Không thể khôi phục tài liệu đã xóa vĩnh viễn");
     }
+
+    // Nếu không phải người đã xóa → chỉ user có TL_ADMIN_DELETE mới được restore
+    if (existing.nguoi_cap_nhat !== currentUser) {
+      if (!permissions.includes("TL_ADMIN_DELETE")) {
+        throw new BaseError(403, "Chỉ admin mới có thể khôi phục tài liệu này");
+      }
+    }
+
     await ThuVienRepository.restore(id, currentUser);
     return ThuVienRepository.getById(id);
   },
