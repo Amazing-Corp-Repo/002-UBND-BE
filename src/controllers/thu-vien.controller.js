@@ -5,13 +5,13 @@ const ThuVienController = {
   // ========== PUBLIC (không cần auth) ==========
 
   async getPublic(req, res) {
-    const { page = 1, size = 10, search, idDanhMuc, loai, sortBy, sortOrder } = req.query;
+    const { page = 1, size = 10, search, idDanhMuc, loai, sortBy, sortOrder } = req.validatedQuery || req.query;
     const result = await ThuVienService.getPublic({ loai, page, size, search, idDanhMuc, sortBy, sortOrder });
     return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
   },
 
   async getPublicById(req, res) {
-    const { id } = req.params;
+    const { id } = req.validatedParams || req.params;
     const result = await ThuVienService.getPublicById(id);
     return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
   },
@@ -53,7 +53,8 @@ const ThuVienController = {
   async getById(req, res) {
     const { id } = req.params;
     const currentUser = req.payload.userId;
-    const result = await ThuVienService.getById(id, currentUser);
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getById(id, currentUser, permissions);
     return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
   },
 
@@ -76,8 +77,34 @@ const ThuVienController = {
   async delete(req, res) {
     const { id } = req.params;
     const currentUser = req.payload.userId;
-    await ThuVienService.delete(id, currentUser);
+    const permissions = req.payload.permissions || [];
+    const { lyDoXoa } = req.body;
+    await ThuVienService.delete(id, currentUser, permissions, lyDoXoa);
     return successResponse(res, null, "Xóa tài liệu thành công");
+  },
+
+  async getDeleted(req, res) {
+    const { page = 1, size = 10, search } = req.query;
+    const loai = req.loai;
+    const currentUser = req.payload.userId;
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.getDeleted({ loai, page, size, search, currentUser, permissions });
+    return successResponse(res, result.data, "Lấy danh sách tài liệu đã xóa thành công", result.pagination);
+  },
+
+  async restore(req, res) {
+    const { id } = req.params;
+    const currentUser = req.payload.userId;
+    const permissions = req.payload.permissions || [];
+    const result = await ThuVienService.restore(id, currentUser, permissions);
+    return successResponse(res, result, "Khôi phục tài liệu thành công");
+  },
+
+  async forceDelete(req, res) {
+    const { id } = req.params;
+    const currentUser = req.payload.userId;
+    await ThuVienService.forceDelete(id, currentUser);
+    return successResponse(res, null, "Xóa vĩnh viễn tài liệu thành công");
   },
 
   async updateStatus(req, res) {

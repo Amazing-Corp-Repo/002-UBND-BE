@@ -6,21 +6,25 @@ import swaggerDocument from "./swagger/index.js";
 import swaggerUi from "swagger-ui-express";
 import { errorHandler } from "./middlewares/error-handle.middleware.js";
 import { CreateAccountSeed } from "./seeds/create-account.seed.js";
-import rateLimit from "express-rate-limit";
-import { errorResponse } from "./utils/response.util.js";
+import {
+  apiMutationRateLimiter,
+  apiRequestRateLimiter,
+} from "./middlewares/api-rate-limit.middleware.js";
 import http from "http";
-import { initSocket } from "./realtime/socket/index.js";
 import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
 import "./utils/logger.util.js";
 import { isCorsOriginAllowed } from "./config/cors.config.js";
 
 const app = express();
+// Render đứng trước ứng dụng một lớp proxy và gửi X-Forwarded-For.
+// Chỉ tin đúng số hop được cấu hình để rate-limit lấy đúng IP client.
+const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS || "1", 10);
+app.set("trust proxy", Number.isInteger(trustProxyHops) && trustProxyHops >= 0 ? trustProxyHops : 1);
+
 const PORT = env.PORT;
 const ALLOWED_CORS_ORIGIN = env.CORS_ORIGIN;
 const PREFIX_API = env.PREFIX_API;
-const RATE_LIMIT_MAX = parseInt(env.RATE_LIMIT_MAX);
-const RATE_LIMIT_WINDOW_MS = parseInt(env.RATE_LIMIT_WINDOW_MS);
 const SWAGGER_USERNAME = env.SWAGGER_USERNAME;
 const SWAGGER_PASSWORD = env.SWAGGER_PASSWORD;
 
@@ -43,24 +47,12 @@ app.use(
 app.use(express.json());
 app.use(express.static("src/public"));
 
-const apiLimiter = rateLimit({
-  windowMs: RATE_LIMIT_WINDOW_MS, // 1 phút
-  max: RATE_LIMIT_MAX, // tối đa 100 request trong 1 phút
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    return req.path.includes("/video/upload");
-  },
-  handler: (req, res, next) => {
-    return errorResponse(
-      res,
-      { message: "Too many requests, please try again later." },
-      429
-    );
-  },
-});
-
-app.use(PREFIX_API, apiLimiter, rootRouter);
+app.use(
+  PREFIX_API,
+  apiRequestRateLimiter,
+  apiMutationRateLimiter,
+  rootRouter
+);
 CreateAccountSeed();
 app.use(errorHandler);
 
@@ -76,7 +68,6 @@ app.use(
 
 const server = http.createServer(app);
 
-// initSocket(server);
 try {
   const { channel } = await connectRabbitMQ();
   console.log("RabbitMQ ready — starting Express server...");
@@ -116,6 +107,20 @@ import("./cron/daily-overview-report.cron.js")
     console.log("Daily overview report cron started cùng server");
   })
   .catch((err) => console.error("Daily overview report cron error:", err));
+
+import("./cron/leader-meeting-status.cron.js")
+  .then((m) => {
+    m.registerLeaderMeetingStatusCron();
+    console.log("Leader meeting status cron started cùng server");
+  })
+  .catch((err) => console.error("Leader meeting status cron error:", err));
+
+import("./cron/cleanup-thu-vien.cron.js")
+  .then((m) => {
+    m.registerCleanupThuVienCron();
+    console.log("Thu vien cleanup cron started cùng server");
+  })
+  .catch((err) => console.error("Thu vien cleanup cron error:", err));
 
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);

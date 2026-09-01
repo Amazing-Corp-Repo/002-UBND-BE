@@ -1,5 +1,47 @@
 import Joi from "joi";
 
+const PUBLIC_LIBRARY_SORT_FIELDS = [
+  "thoi_gian_tao",
+  "tieu_de",
+  "ngay_ban_hanh",
+  "luot_xem",
+  "so_luot_tai",
+];
+
+export const GetPublicLibraryQuery = Joi.object({
+  page: Joi.number().integer().min(1).default(1).messages({
+    "number.base": "Trang phải là số nguyên",
+    "number.min": "Trang phải lớn hơn hoặc bằng 1",
+  }),
+  size: Joi.number().integer().min(1).max(100).default(10).messages({
+    "number.base": "Kích thước trang phải là số nguyên",
+    "number.min": "Kích thước trang phải lớn hơn hoặc bằng 1",
+    "number.max": "Kích thước trang không được vượt quá 100",
+  }),
+  search: Joi.string().trim().max(100).allow("").optional().messages({
+    "string.max": "Từ khóa tìm kiếm không được vượt quá 100 ký tự",
+  }),
+  idDanhMuc: Joi.string().trim().uuid().optional().messages({
+    "string.uuid": "ID danh mục không hợp lệ",
+  }),
+  loai: Joi.string().valid("VAN_HOA", "PHAP_LUAT").optional().messages({
+    "any.only": "Loại tài liệu phải là VAN_HOA hoặc PHAP_LUAT",
+  }),
+  sortBy: Joi.string().valid(...PUBLIC_LIBRARY_SORT_FIELDS).optional().messages({
+    "any.only": "Trường sắp xếp không hợp lệ",
+  }),
+  sortOrder: Joi.string().valid("asc", "desc").default("desc").messages({
+    "any.only": "Thứ tự sắp xếp phải là asc hoặc desc",
+  }),
+});
+
+export const PublicLibraryDocumentParams = Joi.object({
+  id: Joi.string().trim().uuid().required().messages({
+    "string.uuid": "ID tài liệu không hợp lệ",
+    "any.required": "ID tài liệu là bắt buộc",
+  }),
+});
+
 // Tạo mới tài liệu Văn hóa
 export const CreateVanHoaRequest = Joi.object({
   tieuDe: Joi.string().trim().max(255).required().messages({
@@ -182,4 +224,11 @@ export const RejectTaiLieuRequest = Joi.object({
   lyDoTuChoi: Joi.string().trim().max(500).optional().allow(null, "").messages({
     "string.max": "Lý do từ chối không được vượt quá 500 ký tự",
   }),
+});
+
+export const DeleteTaiLieuRequest = Joi.object({
+  lyDoXoa: Joi.string().trim().max(500).allow("", null).optional()
+    .messages({
+      "string.max": "Lý do xóa không được vượt quá 500 ký tự",
+    }),
 });

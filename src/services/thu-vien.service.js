@@ -136,14 +136,16 @@ const ThuVienService = {
     return result;
   },
 
-  async getById(id, currentUser) {
+  async getById(id, currentUser, permissions) {
     const result = await ThuVienRepository.getById(id);
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // NHAP chỉ hiển thị với người tạo
+    // NHAP: admin (có TL_ADMIN_DELETE) bypass, non-admin throw
     if (result.trang_thai === "NHAP" && result.nguoi_tao !== currentUser) {
-      throw new BaseError(404, "Không tìm thấy tài liệu");
+      if (!permissions.includes("TL_ADMIN_DELETE")) {
+        throw new BaseError(404, "Không tìm thấy tài liệu");
+      }
     }
     return result;
   },
@@ -277,16 +279,104 @@ const ThuVienService = {
     return ThuVienRepository.getById(id);
   },
 
-  async delete(id, currentUser) {
+  async delete(id, currentUser, permissions, lyDoXoa) {
     const existing = await ThuVienRepository.findById(id);
     if (!existing) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    if (existing.trang_thai === "DA_DUYET") {
-      throw new BaseError(400, "Không thể xóa tài liệu đã được duyệt");
+    // ADMIN (có TL_ADMIN_DELETE) xóa tài liệu người khác
+    if (existing.nguoi_tao !== currentUser) {
+      if (!permissions.includes("TL_ADMIN_DELETE")) {
+        throw new BaseError(403, "Bạn không có quyền xóa tài liệu do người khác tạo");
+      }
+      // Admin xóa bắt buộc có lý do
+      if (!lyDoXoa || !lyDoXoa.trim()) {
+        throw new BaseError(400, "Vui lòng nhập lý do xóa tài liệu");
+      }
+    }
+    await ThuVienRepository.softDelete(id, currentUser, lyDoXoa);
+  },
+
+  async getDeleted({ loai, page = 1, size = 10, search, currentUser, permissions = [] }) {
+    const { data, totalItems } = await ThuVienRepository.getDeleted({
+      loai, page: parseInt(page), size: parseInt(size), search, currentUser, permissions,
+    });
+    const pagination = createPagination(parseInt(page), parseInt(size), totalItems);
+    // Tính toán thêm thông tin: còn bao nhiêu ngày, file đã dọn chưa
+    const now = new Date();
+    const enrichedData = data.map((item) => {
+      const daysSinceDeleted = item.thoi_gian_xoa
+        ? Math.floor((now - new Date(item.thoi_gian_xoa)) / (1000 * 60 * 60 * 24))
+        : 0;
+      const remainingDays = Math.max(0, 30 - daysSinceDeleted);
+      return {
+        ...item,
+        is_cleaned_up: item.is_cleaned_up || daysSinceDeleted >= 30,
+        remaining_days: item.is_cleaned_up ? 0 : remainingDays,
+        can_force_delete: !item.is_cleaned_up,
+        can_restore: !item.is_cleaned_up,
+      };
+    });
+    return { data: enrichedData, pagination };
+  },
+
+  async restore(id, currentUser, permissions) {
+    const existing = await ThuVienRepository.findByIdEvenDeleted(id);
+    if (!existing) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    if (!existing.is_delete || existing.trang_thai !== "DA_XOA") {
+      throw new BaseError(400, "Chỉ có thể khôi phục tài liệu đã xóa");
+    }
+    if (existing.is_cleaned_up) {
+      throw new BaseError(400, "Không thể khôi phục tài liệu đã xóa vĩnh viễn");
     }
 
-    await ThuVienRepository.softDelete(id, currentUser);
+    // Nếu không phải người đã xóa → chỉ user có TL_ADMIN_DELETE mới được restore
+    if (existing.nguoi_cap_nhat !== currentUser) {
+      if (!permissions.includes("TL_ADMIN_DELETE")) {
+        throw new BaseError(403, "Chỉ admin mới có thể khôi phục tài liệu này");
+      }
+    }
+
+    await ThuVienRepository.restore(id, currentUser);
+    return ThuVienRepository.getById(id);
+  },
+
+  async forceDelete(id, currentUser) {
+    const existing = await ThuVienRepository.findByIdEvenDeleted(id);
+    if (!existing) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    if (!existing.is_delete || existing.trang_thai !== "DA_XOA") {
+      throw new BaseError(400, "Chỉ có thể xóa vĩnh viễn tài liệu đã xóa");
+    }
+    if (existing.is_cleaned_up) {
+      throw new BaseError(400, "Tài liệu này đã được xóa vĩnh viễn trước đó");
+    }
+
+    // Xóa file vật lý
+    await this._deletePhysicalFiles(id);
+
+    // Cập nhật DB
+    await ThuVienRepository.forceDelete(id, currentUser);
+  },
+
+  async _deletePhysicalFiles(id) {
+    const doc = await ThuVienRepository.getByIdFull(id);
+    if (!doc) return;
+
+    // Xóa file chính
+    for (const file of doc.thu_vien_tai_lieu_file || []) {
+      const absPath = await FileService.resolvePublicPath(file.duong_dan);
+      if (absPath) await FileService.deleteFileByAbsolutePath(absPath);
+    }
+
+    // Xóa media
+    for (const media of doc.thu_vien_tai_lieu_media || []) {
+      const absPath = await FileService.resolvePublicPath(media.url);
+      if (absPath) await FileService.deleteFileByAbsolutePath(absPath);
+    }
   },
 
   async updateStatus(id, trangThai, currentUser) {

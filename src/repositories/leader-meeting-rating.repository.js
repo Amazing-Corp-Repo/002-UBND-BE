@@ -71,7 +71,6 @@ const LeaderMeetingRatingRepository = {
               ma_dang_ky: true,
               ho_ten: true,
               ngay_hen: true,
-              chu_de: true,
               khung_gio_gap_lanh_dao: {
                 select: {
                   gio_bat_dau: true,
@@ -207,7 +206,6 @@ const LeaderMeetingRatingRepository = {
             ma_dang_ky: true,
             ngay_hen: true,
             ngay_lam_don: true,
-            chu_de: true,
             ly_do: true,
             ho_ten: true,
             sdt: true,

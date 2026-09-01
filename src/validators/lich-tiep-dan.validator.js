@@ -13,18 +13,18 @@ export const CreateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()
         .trim()
         .max(255)
-        .required()
+        .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Địa điểm không được vượt quá 255 ký tự',
-            'any.required': 'Địa điểm là bắt buộc',
         }),
     tenCanBo: Joi.string()
         .trim()
         .max(255)
-        .required()
+        .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Tên cán bộ không được vượt quá 255 ký tự',
-            'any.required': 'Tên cán bộ là bắt buộc',
         }),
     batDau: Joi.string()
         .pattern(timeRegex)
@@ -62,18 +62,18 @@ export const UpdateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()
         .trim()
         .max(255)
-        .required()
+        .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Địa điểm không được vượt quá 255 ký tự',
-            'any.required': 'Địa điểm là bắt buộc',
         }),
     tenCanBo: Joi.string()
         .trim()
         .max(255)
-        .required()
+        .optional()
+        .allow(null, '')
         .messages({
             'string.max': 'Tên cán bộ không được vượt quá 255 ký tự',
-            'any.required': 'Tên cán bộ là bắt buộc',
         }),
     batDau: Joi.string()
         .pattern(timeRegex)

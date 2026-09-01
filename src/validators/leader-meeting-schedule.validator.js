@@ -26,7 +26,12 @@ export const GetLeaderMeetingSchedulesQuery = Joi.object({
   leaderId: Joi.string().uuid().optional().messages({
     "string.guid": "ID lãnh đạo không hợp lệ",
   }),
-});
+}).custom((value, helpers) => {
+  if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({ "date.range": "Ngày bắt đầu không được lớn hơn ngày kết thúc" });
 
 export const GetLeaderMeetingScheduleManagementQuery = Joi.object({
   page: Joi.number().integer().min(1).default(1),
@@ -36,7 +41,12 @@ export const GetLeaderMeetingScheduleManagementQuery = Joi.object({
   isActive: Joi.boolean().truthy("true").falsy("false").optional(),
   search: Joi.string().trim().max(100).allow("").optional(),
   date: dateSchema("Ngày làm việc").optional(),
-});
+}).custom((value, helpers) => {
+  if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({ "date.range": "Ngày bắt đầu không được lớn hơn ngày kết thúc" });
 
 export const LeaderMeetingScheduleIdParams = Joi.object({
   id: Joi.string().uuid().required().messages({
@@ -60,7 +70,21 @@ const leaderMeetingSlotSchema = Joi.object({
       "string.pattern.base": "Giờ kết thúc phải có định dạng HH:mm",
       "any.required": "Giờ kết thúc là bắt buộc",
     }),
+}).custom((value, helpers) => {
+  if (value.startTime >= value.endTime) {
+    return helpers.error("time.range");
+  }
+  return value;
+}).messages({
+  "time.range": "Giờ bắt đầu phải nhỏ hơn giờ kết thúc",
 });
+
+const uniqueSlots = (value, helpers) => {
+  const keys = value.map((slot) => `${slot.startTime}-${slot.endTime}`);
+  return new Set(keys).size === keys.length
+    ? value
+    : helpers.error("array.duplicateSlot");
+};
 
 export const CreateLeaderMeetingScheduleRequest = Joi.object({
   receptionDate: dateSchema("Ngày gặp lãnh đạo").required().messages({
@@ -68,18 +92,21 @@ export const CreateLeaderMeetingScheduleRequest = Joi.object({
   }),
   location: Joi.string().trim().max(255).optional().allow("", null),
   note: Joi.string().trim().max(2000).optional().allow("", null),
-  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).optional().messages({
+  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).custom(uniqueSlots).optional().messages({
     "array.min": "Phải có ít nhất một khung giờ",
     "array.max": "Một lịch chỉ được có tối đa 20 khung giờ",
+    "array.duplicateSlot": "Danh sách không được chứa khung giờ trùng nhau",
   }),
   openSlots: Joi.array()
     .items(leaderMeetingSlotSchema)
     .min(1)
     .max(15)
+    .custom(uniqueSlots)
     .optional()
     .messages({
       "array.min": "Phải mở ít nhất một ca tiếp công dân",
       "array.max": "Một ngày chỉ có tối đa 15 ca tiếp công dân",
+      "array.duplicateSlot": "Danh sách không được chứa khung giờ trùng nhau",
     }),
 })
   .xor("slots", "openSlots")
@@ -94,8 +121,8 @@ export const UpdateLeaderMeetingScheduleRequest = Joi.object({
   }),
   location: Joi.string().trim().max(255).optional().allow("", null),
   note: Joi.string().trim().max(2000).optional().allow("", null),
-  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).optional(),
-  openSlots: Joi.array().items(leaderMeetingSlotSchema).min(0).max(15).optional(),
+  slots: Joi.array().items(leaderMeetingSlotSchema).min(1).max(20).custom(uniqueSlots).optional(),
+  openSlots: Joi.array().items(leaderMeetingSlotSchema).min(0).max(15).custom(uniqueSlots).optional(),
 })
   .xor("slots", "openSlots")
   .messages({

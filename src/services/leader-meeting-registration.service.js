@@ -94,6 +94,9 @@ const mapCreated = ({ registration, slot }) => ({
   id: registration.id,
   registrationCode: registration.ma_dang_ky,
   status: registration.trang_thai,
+  applicationDate: vietnamDate(registration.ngay_lam_don),
+  address: registration.dia_chi,
+  reason: registration.ly_do,
   receptionDate: vietnamDate(slot.lich_gap_lanh_dao.ngay),
   timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
   leaderName: slot.lich_gap_lanh_dao.lanh_dao.ho_va_ten,
@@ -137,18 +140,31 @@ const mapCitizenLookup = (registration) => {
   };
 };
 
+const isItemOverdue = (reg) => {
+  // Chỉ đơn PENDING (chưa được lãnh đạo phê duyệt) mới có thể bị quá hạn duyệt
+  if (reg.trang_thai !== "PENDING") return false;
+  const now = new Date();
+  const todayStr = vietnamDate(now);
+  const timeStr = vietnamTime(now);
+  const recDate = reg.ngay_hen ? vietnamDate(reg.ngay_hen) : "";
+  const slotEnd = reg.khung_gio_gap_lanh_dao?.gio_ket_thuc || "23:59";
+  if (!recDate) return false;
+  return recDate < todayStr || (recDate === todayStr && slotEnd <= timeStr);
+};
+
 const mapManagementListItem = (registration) => {
   const slot = registration.khung_gio_gap_lanh_dao;
   const schedule = slot.lich_gap_lanh_dao;
   return {
     id: registration.id,
     registrationCode: registration.ma_dang_ky,
+    isOverdue: isItemOverdue(registration),
     applicant: {
       fullName: registration.ho_ten,
       phoneNumber: registration.sdt,
       citizenId: registration.cccd,
     },
-    topic: registration.chu_de,
+    reason: registration.ly_do || "",
     status: registration.trang_thai,
     receptionDate: vietnamDate(registration.ngay_hen),
     timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
@@ -157,6 +173,7 @@ const mapManagementListItem = (registration) => {
       id: schedule.lanh_dao.id,
       fullName: schedule.lanh_dao.ho_va_ten,
     },
+    processingResult: registration.ghi_chu_hoan_thanh || registration.ghi_chu_xu_ly || null,
     ratingStatus: registration.danh_gia_gap_lanh_dao ? "RATED" : "NOT_RATED",
     approvedAt: registration.thoi_gian_phe_duyet,
     processingAt: registration.thoi_gian_bat_dau_xu_ly,
@@ -206,7 +223,6 @@ const mapManagementDetail = (registration) => {
       citizenIdIssuedPlace: registration.noi_cap_cccd,
       address: registration.dia_chi,
     },
-    topic: registration.chu_de,
     reason: registration.ly_do,
     workflow: {
       approver: mapOperator(
@@ -260,6 +276,17 @@ const mapManagementDetail = (registration) => {
 };
 
 const LeaderMeetingRegistrationService = {
+  async transitionDueApprovedToInProgress(now = new Date()) {
+    const currentDate = new Date(`${vietnamDate(now)}T00:00:00.000Z`);
+    const result =
+      await LeaderMeetingRegistrationRepository.transitionDueApprovedToInProgress({
+        currentDate,
+        currentTime: vietnamTime(now),
+        transitionedAt: now,
+      });
+    return { transitioned: result.count };
+  },
+
   async create(input, files = {}) {
     const now = new Date();
     const attachments = buildAttachments(files);
@@ -275,7 +302,6 @@ const LeaderMeetingRegistrationService = {
           attachments,
           data: {
             ma_dang_ky: createCode(),
-            chu_de: input.topic || null,
             ho_ten: input.fullName,
             sdt: input.phoneNumber,
             cccd: input.citizenId,
@@ -284,7 +310,7 @@ const LeaderMeetingRegistrationService = {
               : null,
             noi_cap_cccd: input.citizenIdIssuedPlace || null,
             dia_chi: input.address,
-            ngay_lam_don: new Date(`${vietnamDate(now)}T00:00:00.000Z`),
+            ngay_lam_don: new Date(`${input.applicationDate}T00:00:00.000Z`),
             ly_do: input.reason,
             trang_thai: "PENDING",
           },
@@ -341,11 +367,11 @@ const LeaderMeetingRegistrationService = {
     }
     const roles = normalizeRoleNames(currentUser.roles);
     const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
+      ["ADMIN", "APPROVER", "PHE_DUYET", "LANH_DAO", "LEADER"].includes(role)
     );
     const result = await LeaderMeetingRegistrationRepository.findManagement({
       ...filters,
-      leaderId: canViewAll ? filters.leaderId : currentUser.userId,
+      leaderId: canViewAll ? (filters.leaderId || undefined) : currentUser.userId,
     });
     return {
       data: result.data.map(mapManagementListItem),
@@ -487,24 +513,46 @@ const LeaderMeetingRegistrationService = {
         "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn"
       );
     }
-    if (
-      registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS &&
-      registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.APPROVED
-    ) {
+    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS) {
       throw new BaseError(
         409,
-        "Chỉ đăng ký đã được phê duyệt hoặc đang xử lý mới được hoàn thành"
+        "Chỉ đăng ký đang xử lý mới được hoàn thành"
       );
     }
 
+    if (!input.note || !input.note.trim()) {
+      throw new BaseError(400, "Vui lòng nhập kết quả xử lý của buổi gặp lãnh đạo");
+    }
+
     const now = new Date();
+    const currentVnDate = vietnamDate(now);
+    const currentVnTime = vietnamTime(now);
+    const meetingDate = registration.ngay_hen
+      ? vietnamDate(registration.ngay_hen)
+      : "";
+    const slotStart =
+      registration.khung_gio_gap_lanh_dao?.gio_bat_dau || "00:00";
+
+    if (
+      meetingDate > currentVnDate ||
+      (meetingDate === currentVnDate && slotStart > currentVnTime)
+    ) {
+      const formattedDate = registration.ngay_hen
+        ? new Date(registration.ngay_hen).toLocaleDateString("vi-VN")
+        : meetingDate;
+      throw new BaseError(
+        400,
+        `Chưa đến thời gian của ca gặp lãnh đạo (${slotStart} ngày ${formattedDate}), không thể xác nhận tiếp xong!`
+      );
+    }
+
     const updated =
       await LeaderMeetingRegistrationRepository.completeInProgress(
         id,
         currentUser.userId,
         {
           trang_thai: TRANG_THAI_GAP_LANH_DAO.COMPLETED,
-          ghi_chu_hoan_thanh: input.note || null,
+          ghi_chu_hoan_thanh: input.note.trim(),
           nguoi_hoan_thanh: currentUser.userId,
           nguoi_cap_nhat: currentUser.userId,
           thoi_gian_hoan_thanh: now,

@@ -11,6 +11,7 @@ import {
   AiLearnRequest,
   ApproveTaiLieuRequest,
   RejectTaiLieuRequest,
+  DeleteTaiLieuRequest,
 } from "../validators/thu-vien.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
@@ -31,6 +32,14 @@ taiLieuVanHoaRouter.get("/statistics", authenticate, ThuVienController.getStatis
 
 // Danh sách tiểu mục
 taiLieuVanHoaRouter.get("/sub-categories", authenticate, ThuVienController.getSubCategories);
+
+// Danh sách đã xóa
+taiLieuVanHoaRouter.get(
+  "/deleted",
+  authenticate,
+  authorize([PERMISSION.TL_GET_ALL]),
+  ThuVienController.getDeleted,
+);
 
 // Lấy danh sách (phân trang)
 taiLieuVanHoaRouter.get("/paging", authenticate, ThuVienController.getAll);
@@ -141,8 +150,27 @@ taiLieuVanHoaRouter.delete(
   "/:id",
   authenticate,
   authorize([PERMISSION.TL_DELETE]),
+  validate(DeleteTaiLieuRequest),
   audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.TL_DELETE),
   ThuVienController.delete,
+);
+
+// Khôi phục
+taiLieuVanHoaRouter.put(
+  "/restore/:id",
+  authenticate,
+  authorize([PERMISSION.TL_UPDATE]),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.TL_RESTORE),
+  ThuVienController.restore,
+);
+
+// Xóa vĩnh viễn ngay
+taiLieuVanHoaRouter.delete(
+  "/force/:id",
+  authenticate,
+  authorize([PERMISSION.TL_DELETE]),
+  audit_logs(AUDIT_LOGS.DELETE, PERMISSION_DESC.TL_FORCE_DELETE),
+  ThuVienController.forceDelete,
 );
 
 // Xóa media

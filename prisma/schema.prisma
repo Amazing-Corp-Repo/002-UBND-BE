@@ -349,7 +349,6 @@ model phan_anh {
   vi_tri                                         String?
   ten_nguoi_phan_anh                             String?              @db.VarChar(255)
   sdt_nguoi_phan_anh                             String?              @db.VarChar(20)
-  cccd                                           String?              @db.VarChar(20)
   khu_pho                                        String               @db.VarChar(255)
   mo_ta_vi_tri                                   String?
   is_approve                                     Boolean?             @default(false)
@@ -815,7 +814,6 @@ model dang_ky_gap_lanh_dao {
   ma_dang_ky                String  @unique(map: "uq_dang_ky_gap_lanh_dao_ma") @db.VarChar(50)
   id_khung_gio_gap          String  @db.Uuid
   ngay_hen                  DateTime @db.Date
-  chu_de                    String? @db.VarChar(255)   // THÊM MỚI V2 — Chủ đề gặp lãnh đạo
   ho_ten                    String  @db.VarChar(150)
   sdt                       String  @db.VarChar(20)
   cccd                      String  @db.VarChar(20)
@@ -1039,6 +1037,7 @@ model thu_vien_tai_lieu {
   nguoi_duyet            String?                   @db.Uuid
   thoi_gian_duyet        DateTime?                 @db.Timestamp(6)
   ly_do_tu_choi          String?                   @db.VarChar(500) // lý do từ chối — khi reject
+  ly_do_xoa              String?                   @db.VarChar(500) // lý do xóa — khi admin xóa tài liệu người khác
   ngay_dang              Int?
   ngon_ngu               String?                   @db.VarChar(10)
   // === THÊM MỚI — Task 4: Kho tư liệu & Tra cứu văn bản ===
@@ -1050,6 +1049,8 @@ model thu_vien_tai_lieu {
   ten_di_tich            String?                   @db.VarChar(255) // relicName — cho văn hóa
   is_active              Boolean?                  @default(true)
   is_delete              Boolean?                  @default(false)
+  thoi_gian_xoa          DateTime?                 @db.Timestamp(6) // thời điểm xóa (đếm ngược 30 ngày)
+  is_cleaned_up          Boolean?                  @default(false)  // đã dọn file vật lý chưa
   nguoi_tao              String?                   @db.Uuid
   nguoi_cap_nhat         String?                   @db.Uuid
   thoi_gian_tao          DateTime?                 @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)

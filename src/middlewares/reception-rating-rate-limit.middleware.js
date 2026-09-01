@@ -1,5 +1,4 @@
-import rateLimit from "express-rate-limit";
-import { errorResponse } from "../utils/response.util.js";
+import { createApiRateLimiter } from "./api-rate-limit.middleware.js";
 
 export const RECEPTION_RATING_SUBMISSION_RATE_LIMIT = {
   windowMs: 10 * 60 * 1000,
@@ -7,16 +6,9 @@ export const RECEPTION_RATING_SUBMISSION_RATE_LIMIT = {
 };
 
 export const createReceptionRatingSubmissionRateLimiter = () =>
-  rateLimit({
+  createApiRateLimiter({
     ...RECEPTION_RATING_SUBMISSION_RATE_LIMIT,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_req, res) =>
-      errorResponse(
-        res,
-        { message: "Bạn đã gửi quá nhiều yêu cầu đánh giá, vui lòng thử lại sau" },
-        429
-      ),
+    message: "Bạn đã gửi quá nhiều yêu cầu đánh giá, vui lòng thử lại sau",
   });
 
 const receptionRatingSubmissionRateLimiter =

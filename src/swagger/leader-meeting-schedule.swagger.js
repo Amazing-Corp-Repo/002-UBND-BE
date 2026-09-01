@@ -495,20 +495,20 @@ const LeaderMeetingScheduleSwagger = {
       tags: ["LeaderMeetingSchedule"],
       summary: "Lấy lịch gặp lãnh đạo khả dụng cho Mobile",
       description:
-        "Trả về lịch và khung giờ gặp lãnh đạo đang hoạt động trong khoảng ngày yêu cầu. Mỗi khung giờ có sức chứa độc lập, số đơn đã giữ chỗ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. Lịch gặp lãnh đạo không gắn với quầy tiếp dân.",
+        "Trả về lịch và khung giờ gặp lãnh đạo đang hoạt động trong tối đa 7 ngày, tính từ hôm nay. Khoảng ngày client gửi sẽ được giới hạn trong cửa sổ này. Mỗi khung giờ có sức chứa độc lập, số đơn đã giữ chỗ, số chỗ còn lại và trạng thái AVAILABLE hoặc FULL. Lịch gặp lãnh đạo không gắn với quầy tiếp dân.",
       parameters: [
         {
           name: "fromDate",
           in: "query",
           required: false,
-          description: "Ngày bắt đầu, định dạng YYYY-MM-DD",
+          description: "Ngày bắt đầu, định dạng YYYY-MM-DD; không thể trước hôm nay",
           schema: { type: "string", format: "date", example: "2099-08-25" },
         },
         {
           name: "toDate",
           in: "query",
           required: false,
-          description: "Ngày kết thúc, định dạng YYYY-MM-DD",
+          description: "Ngày kết thúc, định dạng YYYY-MM-DD; tối đa ngày thứ 7 tính từ hôm nay",
           schema: { type: "string", format: "date", example: "2099-08-31" },
         },
         {

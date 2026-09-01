@@ -39,6 +39,13 @@ const ratingDate = Joi.string()
     "date.invalid": "Ngày lọc không tồn tại",
   });
 
+const validateRatingDateRange = (value, helpers) => {
+  if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+};
+
 export const GetLeaderMeetingRatingsQuery = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
@@ -49,6 +56,8 @@ export const GetLeaderMeetingRatingsQuery = Joi.object({
   }),
   fromDate: ratingDate.optional(),
   toDate: ratingDate.optional(),
+}).custom(validateRatingDateRange).messages({
+  "date.range": "Từ ngày không được lớn hơn đến ngày",
 });
 
 export const GetLeaderMeetingRatingStatisticsQuery = Joi.object({
@@ -57,6 +66,8 @@ export const GetLeaderMeetingRatingStatisticsQuery = Joi.object({
   }),
   fromDate: ratingDate.optional(),
   toDate: ratingDate.optional(),
+}).custom(validateRatingDateRange).messages({
+  "date.range": "Từ ngày không được lớn hơn đến ngày",
 });
 
 export const LeaderMeetingRatingIdParams = Joi.object({
