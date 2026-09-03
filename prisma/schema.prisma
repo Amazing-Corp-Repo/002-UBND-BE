@@ -814,6 +814,7 @@ model dang_ky_gap_lanh_dao {
   ma_dang_ky                String  @unique(map: "uq_dang_ky_gap_lanh_dao_ma") @db.VarChar(50)
   id_khung_gio_gap          String  @db.Uuid
   ngay_hen                  DateTime @db.Date
+  chu_de                    String? @db.VarChar(255)
   ho_ten                    String  @db.VarChar(150)
   sdt                       String  @db.VarChar(20)
   cccd                      String  @db.VarChar(20)
