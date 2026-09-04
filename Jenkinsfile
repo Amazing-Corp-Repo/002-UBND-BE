@@ -152,6 +152,24 @@ pipeline {
             --network proxy \
             ${IMAGE_NAME}:${IMAGE_TAG}
         '''
+
+       sh '''
+          sleep 10
+
+          echo "== UBND API container status =="
+          docker ps -a --filter "name=ubnd_api_staging"
+
+          echo "== UBND API container logs =="
+          docker logs --tail 200 ubnd_api_staging || true
+
+          echo "== UBND API inspect =="
+          docker inspect ubnd_api_staging \
+            --format='status={{.State.Status}} exit={{.State.ExitCode}} restart={{.RestartCount}} error={{.State.Error}}' \
+            || true
+
+          echo "== API check from deployment server =="
+          curl -v --max-time 10 http://127.0.0.1:8882/api-docs/ || true
+        '''
       }
     }
     stage('Cleanup Old Images') {
