@@ -77,6 +77,8 @@ phanAnhRouter.get(
 
 phanAnhRouter.get(
   "/:idPhanAnh/lich-su-trang-thai",
+  authenticate,
+  authorize([PERMISSION.PA_GET_DETAIL]),
   validateParams(PhanAnhIdParams),
   PhanAnhController.getLichSuTrangThaiPhanAnh,
 );
@@ -95,6 +97,7 @@ phanAnhRouter.get("/trang-thai", PhanAnhController.getTrangThaiPhanAnh);
 phanAnhRouter.get(
   "/tong-quan",
   authenticate,
+  authorize([PERMISSION.PA_GET_STATS]),
   PhanAnhController.getTongQuanPhanAnh,
 );
 
@@ -105,6 +108,8 @@ phanAnhRouter.get(
 
 phanAnhRouter.get(
   "/search-by-tieu-de",
+  authenticate,
+  authorize([PERMISSION.PA_GET_ALL]),
   validateQuery(SearchPhanAnhQuery),
   PhanAnhController.searhByTieuDe,
 );
@@ -147,7 +152,7 @@ phanAnhRouter.put(
 phanAnhRouter.put(
   "/update-linh-vuc/:idPhanAnh",
   authenticate,
-  authorize([PERMISSION.PA_UPDATE_STATUS]),
+  authorize([PERMISSION.PA_UPDATE_LINH_VUC]),
   validateParams(PhanAnhIdParams),
   validate(UpdatePhanAnhLinhVucRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_LINH_VUC),

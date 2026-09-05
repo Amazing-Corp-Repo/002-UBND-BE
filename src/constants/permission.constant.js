@@ -95,6 +95,10 @@ export const PERMISSION = {
   PA_GET_ALL: "PA_GET_ALL",
   PA_THUONG_TRUC: "PA_THUONG_TRUC",
   PA_ASSIGN: "PA_ASSIGN",
+  PA_APPROVE: "PA_APPROVE",
+  PA_REJECT: "PA_REJECT",
+  PA_UPDATE_LINH_VUC: "PA_UPDATE_LINH_VUC",
+  PA_GET_STATS: "PA_GET_STATS",
 
   // Report
   RPT_GET_DETAIL: "RPT_GET_DETAIL",
@@ -222,6 +226,9 @@ export const PERMISSION_DESC = {
   PA_THUONG_TRUC: "Thường trực - nhận báo cáo thống kê phản ánh hằng ngày",
   PA_UPDATE_LINH_VUC: "Cập nhật lĩnh vực phản ánh",
   PA_ASSIGN: "Phân công chuyên viên xử lý phản ánh",
+  PA_APPROVE: "Phê duyệt phản ánh",
+  PA_REJECT: "Từ chối phản ánh",
+  PA_GET_STATS: "Xem thống kê phản ánh",
 
   RPT_GET_DETAIL: "Xem báo cáo",
   RPT_GET_EXCEL: "Xuất báo cáo Excel",

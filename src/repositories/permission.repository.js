@@ -21,27 +21,12 @@ const PermissionRepository = {
     const existMap = new Map(exist.map((p) => [p.code, p]));
 
     const toInsert = [];
-    const toUpdate = [];
-    const keepCodes = new Set(permissionList);
-
     for (const item of permissionData) {
       const existing = existMap.get(item.code);
 
       if (!existing) {
         toInsert.push(item);
-      } else if (existing.description !== item.description) {
-        toUpdate.push(item);
       }
-    }
-
-    const toDelete = exist
-      .filter((p) => !keepCodes.has(p.code))
-      .map((p) => p.code);
-
-    if (toDelete.length > 0) {
-      await prisma.permissions.deleteMany({
-        where: { code: { in: toDelete } },
-      });
     }
 
     if (toInsert.length > 0) {
@@ -51,19 +36,12 @@ const PermissionRepository = {
       });
     }
 
-    for (const item of toUpdate) {
-      await prisma.permissions.update({
-        where: { code: item.code },
-        data: { description: item.description },
-      });
-    }
-
     return {
       total: permissionList.length,
       inserted: toInsert.length,
-      updated: toUpdate.length,
-      deleted: toDelete.length,
-      unchanged: permissionList.length - toInsert.length - toUpdate.length,
+      updated: 0,
+      deleted: 0,
+      unchanged: permissionList.length - toInsert.length,
     };
   },
 
