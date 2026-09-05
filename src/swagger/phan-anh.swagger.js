@@ -152,6 +152,18 @@ const PhanAnhSwagger = {
             default: "desc",
           },
         },
+        {
+          name: "sortTime",
+          in: "query",
+          deprecated: true,
+          description:
+            "Tham số tương thích với client cũ để sắp xếp theo thời gian tạo. Khi có sortBy, hệ thống ưu tiên sortBy và sortOrder.",
+          schema: {
+            type: "string",
+            enum: ["asc", "desc"],
+            default: "desc",
+          },
+        },
       ],
       responses: {
         200: {

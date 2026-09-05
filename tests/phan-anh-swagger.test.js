@@ -33,6 +33,19 @@ test("Swagger documents response media and neighborhood statistics", () => {
   );
 });
 
+test("complaint list documents legacy sortTime compatibility", () => {
+  const operation = PhanAnhSwagger["/api/phan-anh"].get;
+  const sortTime = operation.parameters.find(
+    (parameter) => parameter.name === "sortTime",
+  );
+
+  assert.ok(sortTime);
+  assert.equal(sortTime.in, "query");
+  assert.equal(sortTime.deprecated, true);
+  assert.deepEqual(sortTime.schema.enum, ["asc", "desc"]);
+  assert.match(sortTime.description, /ưu tiên sortBy và sortOrder/);
+});
+
 test("assignment endpoints are documented while extension APIs stay excluded", () => {
   assert.ok(PhanAnhSchemas.AssignPhanAnhRequest.properties.idNguoiXuLy);
   assert.ok(PhanAnhSwagger["/api/phan-anh/{idPhanAnh}/nguoi-xu-ly"]);
