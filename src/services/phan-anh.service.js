@@ -20,7 +20,6 @@ import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
-import { calculatePhanAnhDeadline } from "../utils/phan-anh-deadline.util.js";
 import { toPublicPhanAnhResponse } from "../utils/phan-anh-response.util.js";
 
 const URL_PHAN_ANH_MANAGER = env.URL_PHAN_ANH_MANAGER;
@@ -280,7 +279,7 @@ const PhanAnhService = {
     file,
     idVideoGiaiQuyet = [],
     idNguoiXuLy,
-    soNgayXuLy,
+    ngayDuKienHoanThanh,
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -323,22 +322,12 @@ const PhanAnhService = {
         );
       }
 
-      if (
-        phanAnh.muc_do !== PHAN_ANH_MUC_DO.KHAN_CAP &&
-        !Number.isInteger(soNgayXuLy)
-      ) {
-        throw new BaseError(
-          400,
-          "Số ngày xử lý là bắt buộc đối với phản ánh thông thường",
-        );
+      if (!ngayDuKienHoanThanh) {
+        throw new BaseError(400, "Ngày dự kiến hoàn thành là bắt buộc");
       }
 
       receivedAt = new Date();
-      expectedCompletionAt = calculatePhanAnhDeadline({
-        receivedAt,
-        mucDo: phanAnh.muc_do,
-        soNgayXuLy,
-      });
+      expectedCompletionAt = new Date(ngayDuKienHoanThanh);
     }
 
     // Bắt buộc đính kèm ≥1 ảnh HOẶC ≥1 video hiện trường khi chuyển "Đã giải quyết".

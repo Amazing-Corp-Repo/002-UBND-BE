@@ -132,16 +132,14 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
     "any.required": "Chuyên viên xử lý là bắt buộc khi duyệt phản ánh",
     "any.unknown": "Chỉ được phân công chuyên viên khi duyệt phản ánh",
   }),
-  soNgayXuLy: Joi.number().integer().min(1).max(90).when("trangThai", {
+  ngayDuKienHoanThanh: Joi.date().iso().when("trangThai", {
     is: PHAN_ANH_STATUS.DANG_XU_LY,
-    then: Joi.optional(),
+    then: Joi.required(),
     otherwise: Joi.forbidden(),
   }).messages({
-    "number.base": "Số ngày xử lý phải là số",
-    "number.integer": "Số ngày xử lý phải là số nguyên",
-    "number.min": "Số ngày xử lý phải từ 1 ngày",
-    "number.max": "Số ngày xử lý không được vượt quá 90 ngày",
-    "any.unknown": "Chỉ được chọn số ngày xử lý khi duyệt phản ánh",
+    "date.format": "Ngày dự kiến hoàn thành phải đúng định dạng ISO (YYYY-MM-DD)",
+    "any.required": "Ngày dự kiến hoàn thành là bắt buộc khi duyệt phản ánh",
+    "any.unknown": "Chỉ được gửi ngày dự kiến hoàn thành khi duyệt phản ánh",
   }),
   // Video hiện trường đã xử lý (mảng id của video_uploads đã upload HLS).
   // .single() để nhận cả khi multipart gửi 1 giá trị đơn.

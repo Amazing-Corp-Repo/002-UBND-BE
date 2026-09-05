@@ -118,7 +118,7 @@ const PhanAnhController = {
       trangThai,
       ghiChu,
       idNguoiXuLy,
-      soNgayXuLy,
+      ngayDuKienHoanThanh,
       idVideoGiaiQuyet,
     } = req.body;
     const currentUser = req.payload.userId;
@@ -131,7 +131,7 @@ const PhanAnhController = {
       file,
       idVideoGiaiQuyet,
       idNguoiXuLy,
-      soNgayXuLy,
+      ngayDuKienHoanThanh,
     );
     return successResponse(
       res,
