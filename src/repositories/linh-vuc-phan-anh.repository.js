@@ -291,6 +291,8 @@ const LinhVucPhanAnhRepository = {
             ho_va_ten: true,
             ten_dang_nhap: true,
             email: true,
+            is_active: true,
+            is_delete: true,
           },
         },
       },
@@ -301,7 +303,10 @@ const LinhVucPhanAnhRepository = {
           manager
             .nguoi_dung_linh_vuc_phan_anh_nguoi_quan_ly_id_nguoi_dungTonguoi_dung,
       )
-      .filter(Boolean);
+      .filter(
+        (user) => user && user.is_active !== false && user.is_delete !== true,
+      )
+      .map(({ is_active, is_delete, ...user }) => user);
   },
 };
 

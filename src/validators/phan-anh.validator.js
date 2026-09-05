@@ -112,9 +112,36 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
     "any.only": "Trạng thái phản ánh không hợp lệ",
     "any.required": "Trạng thái là bắt buộc",
   }),
-  ghiChu: Joi.string().trim().max(2000).optional().allow(null, "").messages({
+  ghiChu: Joi.string().trim().max(2000).when("trangThai", {
+    is: PHAN_ANH_STATUS.TU_CHOI,
+    then: Joi.string().trim().min(1).max(2000).required(),
+    otherwise: Joi.optional().allow(null, ""),
+  }).messages({
     "string.base": "Ghi chú phải là chuỗi ký tự",
+    "string.empty": "Lý do từ chối là bắt buộc",
+    "string.min": "Lý do từ chối là bắt buộc",
+    "any.required": "Lý do từ chối là bắt buộc",
     "string.max": "Ghi chú không được vượt quá 2000 ký tự",
+  }),
+  idNguoiXuLy: Joi.string().trim().uuid().when("trangThai", {
+    is: PHAN_ANH_STATUS.DANG_XU_LY,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }).messages({
+    "string.uuid": "idNguoiXuLy phải là UUID hợp lệ",
+    "any.required": "Chuyên viên xử lý là bắt buộc khi duyệt phản ánh",
+    "any.unknown": "Chỉ được phân công chuyên viên khi duyệt phản ánh",
+  }),
+  soNgayXuLy: Joi.number().integer().min(1).max(90).when("trangThai", {
+    is: PHAN_ANH_STATUS.DANG_XU_LY,
+    then: Joi.optional(),
+    otherwise: Joi.forbidden(),
+  }).messages({
+    "number.base": "Số ngày xử lý phải là số",
+    "number.integer": "Số ngày xử lý phải là số nguyên",
+    "number.min": "Số ngày xử lý phải từ 1 ngày",
+    "number.max": "Số ngày xử lý không được vượt quá 90 ngày",
+    "any.unknown": "Chỉ được chọn số ngày xử lý khi duyệt phản ánh",
   }),
   // Video hiện trường đã xử lý (mảng id của video_uploads đã upload HLS).
   // .single() để nhận cả khi multipart gửi 1 giá trị đơn.

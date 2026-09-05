@@ -1,4 +1,6 @@
-import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_STATUS, {
+  getAllowedPhanAnhStatusTransitions,
+} from "../constants/phan-anh-status.constant.js";
 import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
 import PhanAnhRepository from "../repositories/phan-anh.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
@@ -18,12 +20,7 @@ import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
-
-const ORDER = [
-  PHAN_ANH_STATUS.DA_GUI,
-  PHAN_ANH_STATUS.DANG_XU_LY,
-  PHAN_ANH_STATUS.DA_GIAI_QUYET,
-];
+import { calculatePhanAnhDeadline } from "../utils/phan-anh-deadline.util.js";
 
 const URL_PHAN_ANH_MANAGER = env.URL_PHAN_ANH_MANAGER;
 const URL_PHAN_ANH_USER = env.URL_PHAN_ANH_USER;
@@ -281,6 +278,8 @@ const PhanAnhService = {
     currentUser,
     file,
     idVideoGiaiQuyet = [],
+    idNguoiXuLy,
+    soNgayXuLy,
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -290,35 +289,55 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
-    const lastStatus = phanAnh.lich_su_trang_thai[0].ten;
-    if (
-      lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
-      lastStatus === PHAN_ANH_STATUS.DONG
-    ) {
+    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    const allowedNextStatuses =
+      getAllowedPhanAnhStatusTransitions(lastStatus);
+    if (!allowedNextStatuses.includes(trangThai)) {
+      const expected = allowedNextStatuses.length
+        ? allowedNextStatuses.join(" hoặc ")
+        : "không còn trạng thái tiếp theo";
       throw new BaseError(
         400,
-        "Không thể cập nhật trạng thái cho phản ánh đã được giải quyết hoặc đóng",
+        `Không thể chuyển từ trạng thái ${lastStatus || "không xác định"} sang ${trangThai}. Trạng thái hợp lệ: ${expected}`,
       );
-    }
-    if (trangThai !== PHAN_ANH_STATUS.DONG) {
-      const currentIndex = ORDER.indexOf(lastStatus);
-      const nextIndex = ORDER.indexOf(trangThai);
-
-      if (nextIndex === -1 || currentIndex === -1) {
-        throw new BaseError(400, "Trạng thái không hợp lệ");
-      }
-
-      if (nextIndex !== currentIndex + 1) {
-        throw new BaseError(
-          400,
-          `Trạng thái tiếp theo phải là: ${ORDER[currentIndex + 1]}`,
-        );
-      }
     }
 
     let existingUser = await UserRepository.findById(currentUser);
     if (!existingUser) {
       throw new BaseError(400, "Người dùng không tồn tại");
+    }
+
+    let assignedUser = null;
+    let receivedAt;
+    let expectedCompletionAt;
+    if (trangThai === PHAN_ANH_STATUS.DANG_XU_LY) {
+      const managers = await LinhVucPhanAnhRepository.getManagersByLinhVucId(
+        phanAnh.id_linh_vuc_phan_anh,
+      );
+      assignedUser = managers.find((manager) => manager.id === idNguoiXuLy);
+      if (!assignedUser) {
+        throw new BaseError(
+          400,
+          "Chuyên viên được chọn không hoạt động hoặc không quản lý lĩnh vực của phản ánh này",
+        );
+      }
+
+      if (
+        phanAnh.muc_do !== PHAN_ANH_MUC_DO.KHAN_CAP &&
+        !Number.isInteger(soNgayXuLy)
+      ) {
+        throw new BaseError(
+          400,
+          "Số ngày xử lý là bắt buộc đối với phản ánh thông thường",
+        );
+      }
+
+      receivedAt = new Date();
+      expectedCompletionAt = calculatePhanAnhDeadline({
+        receivedAt,
+        mucDo: phanAnh.muc_do,
+        soNgayXuLy,
+      });
     }
 
     // Bắt buộc đính kèm ≥1 ảnh HOẶC ≥1 video hiện trường khi chuyển "Đã giải quyết".
@@ -345,10 +364,11 @@ const PhanAnhService = {
 
     const phanAnhPatch = {
       nguoi_cap_nhat: currentUser,
-      thoi_gian_tiep_nhan:
-        trangThai === PHAN_ANH_STATUS.DANG_XU_LY
-          ? new Date().toISOString()
-          : phanAnh.thoi_gian_tiep_nhan,
+      ...(trangThai === PHAN_ANH_STATUS.DANG_XU_LY && {
+        id_to: idNguoiXuLy,
+        thoi_gian_tiep_nhan: receivedAt,
+        ngay_du_kien_hoan_thanh: expectedCompletionAt,
+      }),
       // Lưu video hiện trường đã xử lý (nếu có) — tách riêng với id_video của công dân.
       ...(videoGiaiQuyet.length > 0 && {
         id_video_giai_quyet: videoGiaiQuyet,
@@ -357,7 +377,15 @@ const PhanAnhService = {
 
     const historyData = {
       ten: trangThai,
-      ghi_chu: ghiChu,
+      ghi_chu:
+        trangThai === PHAN_ANH_STATUS.DANG_XU_LY
+          ? [
+              `Phê duyệt và phân công cho "${assignedUser.ho_va_ten || assignedUser.ten_dang_nhap}"`,
+              ghiChu,
+            ]
+              .filter(Boolean)
+              .join(". ")
+          : ghiChu,
       nguoi_tao: currentUser,
     };
 
@@ -397,6 +425,18 @@ const PhanAnhService = {
       ghiChu,
       phanAnh.nguoi_tao,
     );
+
+    if (trangThai === PHAN_ANH_STATUS.DANG_XU_LY) {
+      await NotificationRepository.createNotification({
+        user_id: idNguoiXuLy,
+        body: `Bạn được phân công xử lý phản ánh với mã ${phanAnh.ma_phan_anh}`,
+        target_id: phanAnh.ma_phan_anh,
+        target_type: "PHAN_ANH",
+        title: "Phân công xử lý phản ánh",
+      });
+    }
+
+    return await PhanAnhRepository.getById(idPhanAnh);
   },
 
   async updateLinhVucPhanAnh(idPhanAnh, idLinhVucPhanAnh, lyDo, currentUser) {

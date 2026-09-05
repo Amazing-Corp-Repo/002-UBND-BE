@@ -348,12 +348,13 @@ const PhanAnhRepository = {
   ) {
     return await prisma.$transaction(async (tx) => {
       // Cập nhật bảng phản ánh
-      await tx.phan_anh.update({
+      const updated = await tx.phan_anh.update({
         where: { id: idPhanAnh },
         data: {
           thoi_gian_tiep_nhan: phanAnhPatch.thoi_gian_tiep_nhan,
           thoi_gian_phan_hoi_du_kien: phanAnhPatch.thoi_gian_phan_hoi_du_kien,
           ngay_du_kien_hoan_thanh: phanAnhPatch.ngay_du_kien_hoan_thanh,
+          id_to: phanAnhPatch.id_to,
           nguoi_cap_nhat: phanAnhPatch.nguoi_cap_nhat,
           // undefined → Prisma bỏ qua (giữ nguyên); chỉ set khi có video giải quyết
           id_video_giai_quyet: phanAnhPatch.id_video_giai_quyet,
@@ -377,6 +378,7 @@ const PhanAnhRepository = {
           data: dinhKems.map((d) => ({ ...d, id_phan_anh: idPhanAnh })),
         });
       }
+      return updated;
     });
   },
 

@@ -9,6 +9,7 @@ import validate from "../middlewares/validate.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
 import { requirePhanAnhImage } from "../middlewares/phan-anh-upload-validation.middleware.js";
+import { authorizePhanAnhStatusUpdate } from "../middlewares/phan-anh-permission.middleware.js";
 import {
   CreatePhanAnhRequest,
   UpdatePhanAnhStatusRequest,
@@ -125,7 +126,6 @@ phanAnhRouter.get(
 phanAnhRouter.put(
   "/update-status/:idPhanAnh",
   authenticate,
-  authorize([PERMISSION.PA_UPDATE_STATUS]),
   validateParams(PhanAnhIdParams),
   // Cho phép đính kèm ảnh hiện trường khi cập nhật trạng thái (bắt buộc khi "Đã giải quyết").
   // Uploader chạy TRƯỚC validate để multer parse text fields vào req.body + ảnh vào req.files.
@@ -145,6 +145,7 @@ phanAnhRouter.put(
     ],
   }),
   validate(UpdatePhanAnhStatusRequest),
+  authorizePhanAnhStatusUpdate,
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,
 );
