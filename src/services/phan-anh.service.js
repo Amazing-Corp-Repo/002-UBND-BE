@@ -594,8 +594,12 @@ const PhanAnhService = {
   },
 
   async getTongQuanPhanAnh() {
-    let { nhat_ky_hoat_dong, tong_hom_nay, thong_ke_theo_trang_thai } =
-      await PhanAnhRepository.getTongQuanPhanAnh();
+    let {
+      nhat_ky_hoat_dong,
+      tong_hom_nay,
+      thong_ke_theo_trang_thai,
+      thong_ke_theo_khu_pho,
+    } = await PhanAnhRepository.getTongQuanPhanAnh();
 
     nhat_ky_hoat_dong = nhat_ky_hoat_dong.map((log) => {
       log.is_success = log.response_status_code === 200;
@@ -605,7 +609,12 @@ const PhanAnhService = {
       return log;
     });
 
-    return { tong_hom_nay, thong_ke_theo_trang_thai, nhat_ky_hoat_dong };
+    return {
+      tong_hom_nay,
+      thong_ke_theo_trang_thai,
+      thong_ke_theo_khu_pho,
+      nhat_ky_hoat_dong,
+    };
   },
 
   async getMucDoAndTrangThaiAndLinhVuc() {

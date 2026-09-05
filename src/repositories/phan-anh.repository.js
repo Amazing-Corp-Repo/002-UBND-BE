@@ -6,6 +6,7 @@ import {
 import {
   enrichPhanAnhResponses,
 } from "../utils/phan-anh-response.util.js";
+import { aggregatePhanAnhByKhuPho } from "../utils/phan-anh-statistics.util.js";
 
 const ATTACHMENT_SELECT = {
   id: true,
@@ -452,6 +453,11 @@ const PhanAnhRepository = {
       }
     });
 
+    const khuPhoRecords = await prisma.phan_anh.findMany({
+      select: { khu_pho: true },
+    });
+    const thongKeTheoKhuPho = aggregatePhanAnhByKhuPho(khuPhoRecords);
+
     let nhat_ky_hoat_dong = await prisma.audit_logs.findMany({
       select: {
         table_name: true,
@@ -474,6 +480,7 @@ const PhanAnhRepository = {
     return {
       tong_hom_nay: tongHomNay,
       thong_ke_theo_trang_thai: thongKeTheoTrangThai,
+      thong_ke_theo_khu_pho: thongKeTheoKhuPho,
       nhat_ky_hoat_dong,
     };
   },
