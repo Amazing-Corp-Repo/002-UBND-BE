@@ -62,7 +62,7 @@ const mucDoSchema = Joi.string()
   .valid(...Object.values(PHAN_ANH_MUC_DO))
   .required()
   .messages({
-    "any.only": "Mức độ phải là Thấp, Trung bình, Cao hoặc Khẩn cấp",
+    "any.only": "Mức độ phải là Thông thường hoặc Khẩn cấp",
     "any.required": "Mức độ là bắt buộc",
   });
 
@@ -93,6 +93,7 @@ export const CreatePhanAnhRequest = Joi.object({
   soDienThoaiNguoiPhanAnh: phoneSchema,
   cccd: citizenIdSchema,
   khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
+    "string.base": "Khu phố phải là chuỗi ký tự",
     "string.empty": "Khu phố là bắt buộc",
     "any.required": "Khu phố là bắt buộc",
     "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,
@@ -171,6 +172,7 @@ export const CreatePhanAnhPublicRequest = Joi.object({
   soDienThoaiNguoiPhanAnh: requiredPhoneSchema,
   cccd: citizenIdSchema,
   khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
+    "string.base": "Khu phố phải là chuỗi ký tự",
     "string.empty": "Khu phố là bắt buộc",
     "any.required": "Khu phố là bắt buộc",
     "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,

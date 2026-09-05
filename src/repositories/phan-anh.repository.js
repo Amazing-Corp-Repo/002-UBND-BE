@@ -1,5 +1,9 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import {
+  getPhanAnhMucDoFilterValues,
+  normalizePhanAnhMucDo,
+} from "../constants/phan-anh-muc-do.constant.js";
 
 const ATTACHMENT_SELECT = {
   id: true,
@@ -20,6 +24,22 @@ const BASIC_VIDEO_SELECT = {
 const DETAIL_VIDEO_SELECT = {
   ...BASIC_VIDEO_SELECT,
   final_mp4_url: true,
+};
+
+const normalizeMucDoForRecords = (phanAnhOrList) => {
+  if (Array.isArray(phanAnhOrList)) {
+    return phanAnhOrList.map((item) => ({
+      ...item,
+      muc_do: normalizePhanAnhMucDo(item.muc_do),
+    }));
+  }
+
+  return phanAnhOrList
+    ? {
+        ...phanAnhOrList,
+        muc_do: normalizePhanAnhMucDo(phanAnhOrList.muc_do),
+      }
+    : phanAnhOrList;
 };
 
 const mapMediaForPhanAnh = async (
@@ -67,7 +87,9 @@ const mapMediaForPhanAnh = async (
     };
   });
 
-  return Array.isArray(phanAnhOrList) ? normalized : normalized[0];
+  return normalizeMucDoForRecords(
+    Array.isArray(phanAnhOrList) ? normalized : normalized[0],
+  );
 };
 
 const PhanAnhRepository = {
@@ -184,8 +206,8 @@ const PhanAnhRepository = {
     }
 
     if (mucDo) {
-      params.push(mucDo);
-      whereSql += ` AND pa.muc_do = $${params.length}`;
+      params.push(getPhanAnhMucDoFilterValues(mucDo));
+      whereSql += ` AND pa.muc_do = ANY($${params.length}::text[])`;
     }
 
     if (maPhanAnh) {
@@ -269,7 +291,7 @@ const PhanAnhRepository = {
     phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
     return {
-      data: phanAnhs,
+      data: normalizeMucDoForRecords(phanAnhs),
       totalItems: total[0].count,
     };
   },
@@ -531,8 +553,8 @@ const PhanAnhRepository = {
     }
 
     if (mucDo) {
-      params.push(mucDo);
-      whereSql += ` AND pa.muc_do = $${params.length}`;
+      params.push(getPhanAnhMucDoFilterValues(mucDo));
+      whereSql += ` AND pa.muc_do = ANY($${params.length}::text[])`;
     }
 
     if (maPhanAnh) {
@@ -600,7 +622,10 @@ const PhanAnhRepository = {
     const idOrder = new Map(ids.map((id, i) => [id, i]));
     phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
-    return { data: phanAnhs, totalItems: total[0].count };
+    return {
+      data: normalizeMucDoForRecords(phanAnhs),
+      totalItems: total[0].count,
+    };
   },
 
   async getPhanAnhToDowload(from, to) {
@@ -652,7 +677,7 @@ const PhanAnhRepository = {
       },
     });
 
-    return data;
+    return normalizeMucDoForRecords(data);
   },
 
   async getById(idPhanAnh) {
