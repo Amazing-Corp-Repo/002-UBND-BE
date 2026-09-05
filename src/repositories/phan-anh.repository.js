@@ -2,8 +2,10 @@ import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 import {
   getPhanAnhMucDoFilterValues,
-  normalizePhanAnhMucDo,
 } from "../constants/phan-anh-muc-do.constant.js";
+import {
+  enrichPhanAnhResponses,
+} from "../utils/phan-anh-response.util.js";
 
 const ATTACHMENT_SELECT = {
   id: true,
@@ -24,22 +26,6 @@ const BASIC_VIDEO_SELECT = {
 const DETAIL_VIDEO_SELECT = {
   ...BASIC_VIDEO_SELECT,
   final_mp4_url: true,
-};
-
-const normalizeMucDoForRecords = (phanAnhOrList) => {
-  if (Array.isArray(phanAnhOrList)) {
-    return phanAnhOrList.map((item) => ({
-      ...item,
-      muc_do: normalizePhanAnhMucDo(item.muc_do),
-    }));
-  }
-
-  return phanAnhOrList
-    ? {
-        ...phanAnhOrList,
-        muc_do: normalizePhanAnhMucDo(phanAnhOrList.muc_do),
-      }
-    : phanAnhOrList;
 };
 
 const mapMediaForPhanAnh = async (
@@ -87,7 +73,7 @@ const mapMediaForPhanAnh = async (
     };
   });
 
-  return normalizeMucDoForRecords(
+  return enrichPhanAnhResponses(
     Array.isArray(phanAnhOrList) ? normalized : normalized[0],
   );
 };
@@ -155,6 +141,7 @@ const PhanAnhRepository = {
           select: {
             ten: true,
             thoi_gian_tao: true,
+            ghi_chu: true,
           },
         },
         dinh_kem_phan_anh: {
@@ -164,6 +151,9 @@ const PhanAnhRepository = {
           select: {
             ten: true,
           },
+        },
+        to_phu_trach: {
+          select: { ho_va_ten: true },
         },
       },
     });
@@ -283,6 +273,9 @@ const PhanAnhRepository = {
         to_phu_trach: {
           select: { id: true, ho_va_ten: true, email: true },
         },
+        dinh_kem_phan_anh: {
+          select: ATTACHMENT_SELECT,
+        },
       },
     });
 
@@ -291,7 +284,7 @@ const PhanAnhRepository = {
     phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
     return {
-      data: normalizeMucDoForRecords(phanAnhs),
+      data: await mapMediaForPhanAnh(phanAnhs),
       totalItems: total[0].count,
     };
   },
@@ -303,6 +296,16 @@ const PhanAnhRepository = {
       },
       orderBy: {
         thoi_gian_tao: "desc",
+      },
+      select: {
+        id: true,
+        ten: true,
+        ghi_chu: true,
+        thoi_gian_tao: true,
+        nguoi_tao: true,
+        nguoi_dung: {
+          select: { id: true, ho_va_ten: true, ten_dang_nhap: true },
+        },
       },
     });
   },
@@ -618,6 +621,9 @@ const PhanAnhRepository = {
         to_phu_trach: {
           select: { id: true, ho_va_ten: true, email: true },
         },
+        dinh_kem_phan_anh: {
+          select: ATTACHMENT_SELECT,
+        },
       },
     });
 
@@ -625,7 +631,7 @@ const PhanAnhRepository = {
     phanAnhs.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
 
     return {
-      data: normalizeMucDoForRecords(phanAnhs),
+      data: await mapMediaForPhanAnh(phanAnhs),
       totalItems: total[0].count,
     };
   },
@@ -679,7 +685,7 @@ const PhanAnhRepository = {
       },
     });
 
-    return normalizeMucDoForRecords(data);
+    return enrichPhanAnhResponses(data);
   },
 
   async getById(idPhanAnh) {

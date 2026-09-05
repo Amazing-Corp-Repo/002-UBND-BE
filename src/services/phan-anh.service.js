@@ -21,6 +21,7 @@ import MAIL_TYPE from "../constants/mail.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 import { calculatePhanAnhDeadline } from "../utils/phan-anh-deadline.util.js";
+import { toPublicPhanAnhResponse } from "../utils/phan-anh-response.util.js";
 
 const URL_PHAN_ANH_MANAGER = env.URL_PHAN_ANH_MANAGER;
 const URL_PHAN_ANH_USER = env.URL_PHAN_ANH_USER;
@@ -163,7 +164,7 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
-    return phanAnh;
+    return toPublicPhanAnhResponse(phanAnh);
   },
 
   async getAll(
