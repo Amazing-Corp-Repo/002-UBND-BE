@@ -304,6 +304,8 @@ const PhanAnhSwagger = {
                     type: "object",
                     properties: {
                       tong_hom_nay: { type: "integer" },
+                      tong_so: { type: "integer" },
+                      tong_nguoi_dan: { type: "integer" },
                       thong_ke_theo_trang_thai: { type: "object" },
                       thong_ke_theo_khu_pho: {
                         type: "array",

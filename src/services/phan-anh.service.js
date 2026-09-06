@@ -19,6 +19,7 @@ import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 import { toPublicPhanAnhResponse } from "../utils/phan-anh-response.util.js";
 
@@ -178,11 +179,24 @@ const PhanAnhService = {
     sortBy,
     sortOrder,
   ) {
-    let role = parseCommaString(payload.roles);
-    let cate = parseCommaString(payload.cate);
+    let role = parseCommaString(payload?.roles);
+    let cate = parseCommaString(payload?.cate);
+    let userPermissions = parseCommaString(payload?.permissions);
 
-    if (cate === null || cate === undefined || cate.length === 0) {
-      let { data, totalItems } = await PhanAnhRepository.getAll(
+    if (trangThai && PHAN_ANH_STATUS[trangThai]) {
+      trangThai = PHAN_ANH_STATUS[trangThai];
+    }
+
+    const hasGetAllPermission =
+      userPermissions.includes(PERMISSION.PA_GET_ALL) ||
+      userPermissions.includes("PA_GET_ALL") ||
+      role.some((r) => {
+        const u = String(r).toUpperCase();
+        return u === "ADMIN" || u === "LÃNH ĐẠO" || u === "LANH_DAO";
+      });
+
+    if (hasGetAllPermission) {
+      let { data, totalItems, stats } = await PhanAnhRepository.getAll(
         idLinhVucPhanAnh,
         trangThai,
         mucDo,
@@ -194,17 +208,17 @@ const PhanAnhService = {
         sortOrder,
       );
       let pagination = createPagination(page, size, totalItems);
-      return { data, pagination };
+      return { data, pagination, stats };
     }
 
-    if (idLinhVucPhanAnh && !cate.includes(idLinhVucPhanAnh.trim())) {
+    if (idLinhVucPhanAnh && (!cate || !cate.includes(idLinhVucPhanAnh.trim()))) {
       throw new BaseError(
         403,
         "Bạn không có quyền truy cập lĩnh vực phản ánh này",
       );
     }
 
-    // Nếu có cate restriction, chỉ lấy các phản ánh thuộc cate đó
+    // Không có quyền xem tất cả -> Chỉ lấy các phản ánh thuộc Lĩnh vực phụ trách (cate)
     const result = await PhanAnhRepository.getAllByCate(
       cate,
       idLinhVucPhanAnh ?? null,
@@ -221,6 +235,7 @@ const PhanAnhService = {
     return {
       data: result.data,
       pagination: createPagination(page, size, result.totalItems),
+      stats: result.stats,
     };
   },
 
@@ -582,28 +597,44 @@ const PhanAnhService = {
     return { id_to: idNguoiXuLy };
   },
 
-  async getTongQuanPhanAnh() {
-    let {
-      nhat_ky_hoat_dong,
-      tong_hom_nay,
-      thong_ke_theo_trang_thai,
-      thong_ke_theo_khu_pho,
-    } = await PhanAnhRepository.getTongQuanPhanAnh();
+  async getTongQuanPhanAnh(payload, options = {}) {
+    let role = payload ? parseCommaString(payload.roles) : [];
+    let cate = payload ? parseCommaString(payload.cate) : null;
+    let userPermissions = payload ? parseCommaString(payload.permissions) : [];
 
-    nhat_ky_hoat_dong = nhat_ky_hoat_dong.map((log) => {
-      log.is_success = log.response_status_code === 200;
-      log.hanh_dong = log.table_name;
-      log.table_name = undefined;
-      log.response_status_code = undefined;
-      return log;
-    });
+    const hasGetAllPermission =
+      userPermissions.includes(PERMISSION.PA_GET_ALL) ||
+      userPermissions.includes("PA_GET_ALL") ||
+      userPermissions.includes(PERMISSION.PA_THUONG_TRUC) ||
+      userPermissions.includes("PA_THUONG_TRUC") ||
+      role.some((r) => {
+        const u = String(r).toUpperCase();
+        return (
+          u === "ADMIN" ||
+          u === "LÃNH ĐẠO" ||
+          u === "LANH_DAO" ||
+          u === "THƯỜNG TRỰC" ||
+          u === "THUONG_TRUC"
+        );
+      });
 
-    return {
-      tong_hom_nay,
-      thong_ke_theo_trang_thai,
-      thong_ke_theo_khu_pho,
-      nhat_ky_hoat_dong,
-    };
+    if (hasGetAllPermission) {
+      cate = null;
+    }
+
+    let statsResult = await PhanAnhRepository.getTongQuanPhanAnh(cate, options);
+
+    if (Array.isArray(statsResult.nhat_ky_hoat_dong)) {
+      statsResult.nhat_ky_hoat_dong = statsResult.nhat_ky_hoat_dong.map((log) => {
+        log.is_success = log.response_status_code === 200;
+        log.hanh_dong = log.table_name;
+        log.table_name = undefined;
+        log.response_status_code = undefined;
+        return log;
+      });
+    }
+
+    return statsResult;
   },
 
   async getMucDoAndTrangThaiAndLinhVuc() {

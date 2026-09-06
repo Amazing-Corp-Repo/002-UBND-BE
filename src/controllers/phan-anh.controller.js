@@ -17,6 +17,9 @@ const PhanAnhController = {
       userId,
       idVideo,
     } = req.body;
+
+    const creatorUserId = req.payload?.userId || userId;
+
     const file = req.files;
     idVideo = parseStringToArray(idVideo);
     let result = await PhanAnhService.createPhanAnh(
@@ -29,7 +32,7 @@ const PhanAnhController = {
       soDienThoaiNguoiPhanAnh,
       khuPho,
       moTaViTri,
-      userId,
+      creatorUserId,
       file,
       idVideo,
     );
@@ -55,7 +58,7 @@ const PhanAnhController = {
       sortOrder,
     } = req.validatedQuery;
     const payload = req.payload;
-    let { data, pagination } = await PhanAnhService.getAll(
+    let { data, pagination, stats } = await PhanAnhService.getAll(
       idLinhVucPhanAnh,
       trangThai,
       mucDo,
@@ -72,6 +75,7 @@ const PhanAnhController = {
       data,
       "Lấy danh sách phản ánh thành công",
       pagination,
+      { stats },
     );
   },
 
@@ -181,7 +185,13 @@ const PhanAnhController = {
   },
 
   async getTongQuanPhanAnh(req, res) {
-    let result = await PhanAnhService.getTongQuanPhanAnh();
+    const payload = req.payload;
+    const { fromDate, toDate, startDate, endDate, khuPho } = req.query;
+    let result = await PhanAnhService.getTongQuanPhanAnh(payload, {
+      fromDate: fromDate || startDate,
+      toDate: toDate || endDate,
+      khuPho,
+    });
     return successResponse(res, result, "Lấy tổng quát phản ánh thành công");
   },
 

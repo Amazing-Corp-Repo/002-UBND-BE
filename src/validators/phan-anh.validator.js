@@ -224,7 +224,7 @@ export const PhanAnhCodeParams = Joi.object({
 
 export const GetAllPhanAnhQuery = Joi.object({
   idLinhVucPhanAnh: Joi.string().uuid().optional(),
-  trangThai: Joi.string().valid(...Object.values(PHAN_ANH_STATUS)).optional(),
+  trangThai: Joi.string().valid(...Object.keys(PHAN_ANH_STATUS), ...Object.values(PHAN_ANH_STATUS)).optional(),
   mucDo: Joi.string().valid(...Object.values(PHAN_ANH_MUC_DO)).optional(),
   maPhanAnh: Joi.string().trim().uppercase().max(255).optional().allow(""),
   page: Joi.number().integer().min(1).default(1),

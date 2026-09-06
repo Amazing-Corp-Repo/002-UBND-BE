@@ -71,7 +71,6 @@ phanAnhRouter.get(
 phanAnhRouter.get(
   "/",
   authenticate,
-  authorize([PERMISSION.PA_GET_ALL]),
   validateQuery(GetAllPhanAnhQuery),
   PhanAnhController.getAllPhanAnh,
 );
@@ -98,7 +97,6 @@ phanAnhRouter.get("/trang-thai", PhanAnhController.getTrangThaiPhanAnh);
 phanAnhRouter.get(
   "/tong-quan",
   authenticate,
-  authorize([PERMISSION.PA_GET_STATS]),
   PhanAnhController.getTongQuanPhanAnh,
 );
 
@@ -110,7 +108,6 @@ phanAnhRouter.get(
 phanAnhRouter.get(
   "/search-by-tieu-de",
   authenticate,
-  authorize([PERMISSION.PA_GET_ALL]),
   validateQuery(SearchPhanAnhQuery),
   PhanAnhController.searhByTieuDe,
 );
