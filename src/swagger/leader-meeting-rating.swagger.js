@@ -4,7 +4,7 @@ const LeaderMeetingRatingSwagger = {
       tags: ["LeaderMeetingRating"],
       summary: "Lấy danh sách đánh giá gặp lãnh đạo theo quyền",
       description:
-        "Yêu cầu quyền LMRT_GET_ALL. Lãnh đạo chỉ xem đánh giá của các lịch mình phụ trách; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ và có thể lọc leaderId. Hỗ trợ search, score, leaderId, fromDate, toDate, page và limit; phạm vi luôn lấy từ access token.",
+        "Yêu cầu permission LMRT_GET_ALL. Phạm vi đánh giá phụ thuộc permission được gán cho tài khoản; quyền xem toàn bộ mới được lọc leaderId. Hỗ trợ search, score, leaderId, fromDate, toDate, page và limit.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "search", in: "query", schema: { type: "string", example: "LD000129" } },
@@ -146,7 +146,7 @@ const LeaderMeetingRatingSwagger = {
       tags: ["LeaderMeetingRating"],
       summary: "Thống kê đánh giá gặp lãnh đạo theo quyền",
       description:
-        "Yêu cầu quyền LMRT_GET_STATS. Lãnh đạo chỉ xem thống kê của chính mình; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ và có thể lọc leaderId. Trả tổng lượt, điểm trung bình, tỷ lệ hài lòng (4-5 sao), phân bố điểm và tổng hợp theo lãnh đạo.",
+        "Yêu cầu permission LMRT_GET_STATS. Phạm vi thống kê phụ thuộc permission được gán cho tài khoản; quyền xem toàn bộ mới được lọc leaderId. Trả tổng lượt, điểm trung bình, tỷ lệ hài lòng (4-5 sao), phân bố điểm và tổng hợp theo lãnh đạo.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "leaderId", in: "query", schema: { type: "string", format: "uuid", example: "123e4567-e89b-42d3-a456-426614174001" } },
@@ -196,7 +196,7 @@ const LeaderMeetingRatingSwagger = {
       tags: ["LeaderMeetingRating"],
       summary: "Xem chi tiết đánh giá gặp lãnh đạo",
       description:
-        "Yêu cầu quyền LMRT_GET_DETAIL. Lãnh đạo chỉ xem đánh giá thuộc lịch của chính mình; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ. Trả đầy đủ nội dung đánh giá, hồ sơ đăng ký, lịch hẹn và lãnh đạo; không chứa dữ liệu quầy.",
+        "Yêu cầu permission LMRT_GET_DETAIL. Phạm vi đánh giá phụ thuộc permission được gán cho tài khoản; quyền xem toàn bộ mới được xem ngoài phạm vi cá nhân. Trả đầy đủ nội dung đánh giá, hồ sơ đăng ký, lịch hẹn và lãnh đạo; không chứa dữ liệu quầy.",
       security: [{ bearerAuth: [] }],
       parameters: [{
         name: "id",

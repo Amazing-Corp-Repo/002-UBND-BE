@@ -124,7 +124,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Lấy danh sách đăng ký gặp lãnh đạo theo quyền",
       description:
-        "Yêu cầu quyền LMR_GET_ALL. Lãnh đạo chỉ xem đơn đăng ký gặp chính mình; ADMIN, APPROVER hoặc PHE_DUYET xem toàn bộ và có thể lọc leaderId. Hỗ trợ search, status, leaderId, fromDate, toDate, page và limit. Phạm vi lãnh đạo luôn được xác định từ access token.",
+        "Yêu cầu permission LMR_GET_ALL. Phạm vi dữ liệu phụ thuộc permission được gán cho tài khoản; quyền xem toàn bộ mới được lọc leaderId. Hỗ trợ search, status, leaderId, fromDate, toDate, page và limit.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "search", in: "query", schema: { type: "string", example: "LD000123" } },
@@ -307,7 +307,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Xem chi tiết đăng ký gặp lãnh đạo",
       description:
-        "Yêu cầu quyền LMR_GET_DETAIL. Lãnh đạo chỉ xem hồ sơ đăng ký gặp chính mình; ADMIN, APPROVER hoặc PHE_DUYET được xem toàn bộ. Kết quả có hồ sơ người dân, lịch hẹn, tiến trình xử lý, đánh giá và metadata file nhưng không trả đường dẫn lưu trữ vật lý. Module này không chứa dữ liệu quầy.",
+        "Yêu cầu permission LMR_GET_DETAIL. Phạm vi hồ sơ phụ thuộc permission được gán cho tài khoản; quyền xem toàn bộ mới được xem ngoài phạm vi cá nhân. Kết quả có hồ sơ người dân, lịch hẹn, tiến trình xử lý, đánh giá và metadata file nhưng không trả đường dẫn lưu trữ vật lý. Module này không chứa dữ liệu quầy.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -707,7 +707,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Hủy đăng ký gặp lãnh đạo",
       description:
-        "Yêu cầu quyền LMR_CANCEL. Chỉ đúng lãnh đạo của lịch hẹn được chuyển đơn từ APPROVED sang CANCELED; ADMIN và APPROVER không được hủy thay. Lý do là bắt buộc. Người dân được đăng ký lại ở khung giờ khác nhưng chỗ cũ không được hoàn lại.",
+        "Yêu cầu permission LMR_CANCEL. Tài khoản chỉ được chuyển đơn từ APPROVED sang CANCELED trong phạm vi được permission cho phép. Lý do là bắt buộc. Người dân được đăng ký lại ở khung giờ khác nhưng chỗ cũ không được hoàn lại.",
       security: [{ bearerAuth: [] }],
       parameters: [{
         name: "id",
