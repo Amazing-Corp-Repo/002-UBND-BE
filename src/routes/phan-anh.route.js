@@ -1,4 +1,5 @@
 import PhanAnhController from "../controllers/phan-anh.controller.js";
+import PhanAnhExtensionController from "../controllers/phan-anh-extension.controller.js";
 import express from "express";
 import { createUploader } from "../middlewares/upload.middleware.js";
 import UPLOAD_TYPE from "../constants/upload.constant.js";
@@ -22,6 +23,12 @@ import {
   GetMyPhanAnhQuery,
   SearchPhanAnhQuery,
 } from "../validators/phan-anh.validator.js";
+import {
+  CreatePhanAnhExtensionRequest,
+  RejectPhanAnhExtensionRequest,
+  PhanAnhExtensionIdParams,
+  GetAllPhanAnhExtensionQuery,
+} from "../validators/phan-anh-extension.validator.js";
 import {
   PERMISSION,
   PERMISSION_DESC,
@@ -99,6 +106,66 @@ phanAnhRouter.get(
   authenticate,
   authorize([PERMISSION.PA_GET_STATS]),
   PhanAnhController.getTongQuanPhanAnh,
+);
+
+phanAnhRouter.get(
+  "/gia-han",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_GET_ALL]),
+  validateQuery(GetAllPhanAnhExtensionQuery),
+  PhanAnhExtensionController.getAll,
+);
+
+phanAnhRouter.post(
+  "/:idPhanAnh/gia-han",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_CREATE]),
+  validateParams(PhanAnhExtensionIdParams),
+  createUploader({
+    type: UPLOAD_TYPE.PHAN_ANH,
+    fieldName: "file",
+    maxCount: 5,
+    maxSizeMB: 10,
+    allowed_types: [
+      "image/jpeg",
+      "image/png",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ],
+  }),
+  validate(CreatePhanAnhExtensionRequest),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.PA_EXTENSION_CREATE),
+  PhanAnhExtensionController.create,
+);
+
+phanAnhRouter.get(
+  "/:idPhanAnh/gia-han",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_GET_DETAIL]),
+  validateParams(PhanAnhExtensionIdParams),
+  PhanAnhExtensionController.getDetail,
+);
+
+phanAnhRouter.put(
+  "/:idPhanAnh/gia-han/approve",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_APPROVE]),
+  validateParams(PhanAnhExtensionIdParams),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_EXTENSION_APPROVE),
+  PhanAnhExtensionController.approve,
+);
+
+phanAnhRouter.put(
+  "/:idPhanAnh/gia-han/reject",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_REJECT]),
+  validateParams(PhanAnhExtensionIdParams),
+  validate(RejectPhanAnhExtensionRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_EXTENSION_REJECT),
+  PhanAnhExtensionController.reject,
 );
 
 phanAnhRouter.get(

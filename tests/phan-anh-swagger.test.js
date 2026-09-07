@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import PhanAnhSchemas from "../src/schemas/phan-anh.schema.js";
+import PhanAnhExtensionSchemas from "../src/schemas/phan-anh-extension.schema.js";
 import PhanAnhSwagger from "../src/swagger/phan-anh.swagger.js";
 
 test("status update documentation exposes approval workflow fields", () => {
@@ -45,9 +46,11 @@ test("complaint list documents legacy sortTime compatibility", () => {
   assert.match(sortTime.description, /ưu tiên sortBy và sortOrder/);
 });
 
-test("assignment endpoints are documented while extension APIs stay excluded", () => {
+test("assignment and extension endpoints are documented", () => {
   assert.ok(PhanAnhSchemas.AssignPhanAnhRequest.properties.idNguoiXuLy);
   assert.ok(PhanAnhSwagger["/api/phan-anh/{idPhanAnh}/nguoi-xu-ly"]);
   assert.ok(PhanAnhSwagger["/api/phan-anh/assign/{idPhanAnh}"]);
-  assert.equal(PhanAnhSwagger["/api/phan-anh/gia-han"], undefined);
+  assert.ok(PhanAnhSwagger["/api/phan-anh/gia-han"]);
+  assert.ok(PhanAnhSwagger["/api/phan-anh/{idPhanAnh}/gia-han"]);
+  assert.ok(PhanAnhExtensionSchemas.CreatePhanAnhExtensionRequest);
 });

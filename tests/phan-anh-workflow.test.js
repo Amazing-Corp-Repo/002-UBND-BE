@@ -12,6 +12,7 @@ import {
   calculatePhanAnhDeadline,
 } from "../src/utils/phan-anh-deadline.util.js";
 import { UpdatePhanAnhStatusRequest } from "../src/validators/phan-anh.validator.js";
+import { CreatePhanAnhExtensionRequest } from "../src/validators/phan-anh-extension.validator.js";
 
 const userId = "550e8400-e29b-41d4-a716-446655440000";
 
@@ -137,4 +138,19 @@ test("late resolution reason is required by the request contract when provided",
   });
   assert.equal(result.error, undefined);
   assert.equal(result.value.lyDoTreHan, "Đơn vị phối hợp phản hồi chậm");
+});
+
+test("extension request validates reason and proposed completion date", () => {
+  assert.ok(
+    CreatePhanAnhExtensionRequest.validate({
+      lyDo: "Cần phối hợp đơn vị chuyên môn để hoàn tất xử lý",
+      ngayDeXuatHoanThanh: "2026-12-31T10:00:00.000Z",
+    }).error === undefined,
+  );
+  assert.ok(
+    CreatePhanAnhExtensionRequest.validate({
+      lyDo: "ngắn",
+      ngayDeXuatHoanThanh: "2026-12-31T10:00:00.000Z",
+    }).error,
+  );
 });

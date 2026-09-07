@@ -229,6 +229,11 @@ export const PERMISSION_DESC = {
   PA_APPROVE: "Phê duyệt phản ánh",
   PA_REJECT: "Từ chối phản ánh",
   PA_GET_STATS: "Xem thống kê phản ánh",
+  PA_EXTENSION_CREATE: "Tạo đề nghị gia hạn phản ánh",
+  PA_EXTENSION_GET_ALL: "Xem danh sách đề nghị gia hạn phản ánh",
+  PA_EXTENSION_GET_DETAIL: "Xem chi tiết đề nghị gia hạn phản ánh",
+  PA_EXTENSION_APPROVE: "Phê duyệt đề nghị gia hạn phản ánh",
+  PA_EXTENSION_REJECT: "Từ chối đề nghị gia hạn phản ánh",
 
   RPT_GET_DETAIL: "Xem báo cáo",
   RPT_GET_EXCEL: "Xuất báo cáo Excel",
@@ -307,4 +312,9 @@ export const PERMISSION_TYPE = {
   AI_LEARN: "Đồng bộ AI",
   DOWNLOAD: "Tải xuống",
   EXPORT: "Xuất danh sách",
+  EXTENSION_CREATE: "Tạo đề nghị gia hạn",
+  EXTENSION_GET_ALL: "Xem tất cả đề nghị gia hạn",
+  EXTENSION_GET_DETAIL: "Xem chi tiết đề nghị gia hạn",
+  EXTENSION_APPROVE: "Phê duyệt đề nghị gia hạn",
+  EXTENSION_REJECT: "Từ chối đề nghị gia hạn",
 };

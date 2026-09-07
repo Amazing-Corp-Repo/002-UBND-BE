@@ -1,4 +1,5 @@
 import PhanAnhSchemas from "../schemas/phan-anh.schema.js";
+import PhanAnhExtensionSchemas from "../schemas/phan-anh-extension.schema.js";
 
 const bearerSecurity = [{ bearerAuth: [] }];
 
@@ -208,6 +209,60 @@ const PhanAnhSwagger = {
         200: { description: "Tạo phản ánh thành công" },
         400: { description: "Dữ liệu hoặc tệp đính kèm không hợp lệ" },
       },
+    },
+  },
+  "/api/phan-anh/gia-han": {
+    get: {
+      tags: ["PhanAnh"],
+      summary: "Lấy danh sách đề nghị gia hạn phản ánh",
+      description: "Yêu cầu PA_EXTENSION_GET_ALL.",
+      security: bearerSecurity,
+      parameters: [
+        { name: "trangThai", in: "query", schema: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] } },
+        { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+        { name: "size", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+      ],
+      responses: { 200: { description: "Danh sách đề nghị gia hạn" }, ...standardErrors },
+    },
+  },
+  "/api/phan-anh/{idPhanAnh}/gia-han": {
+    post: {
+      tags: ["PhanAnh"],
+      summary: "Tạo đề nghị gia hạn cho phản ánh",
+      description: "Yêu cầu PA_EXTENSION_CREATE. Chỉ cán bộ đang phụ trách được tạo khi phản ánh đang xử lý và chưa quá hạn. Mỗi phản ánh chỉ có một đề nghị gia hạn; minh chứng file hoặc idVideo là tùy chọn.",
+      security: bearerSecurity,
+      parameters: [idParameter],
+      requestBody: { required: true, content: { "multipart/form-data": { schema: PhanAnhExtensionSchemas.CreatePhanAnhExtensionRequest } } },
+      responses: { 200: { description: "Đề nghị gia hạn vừa tạo" }, ...standardErrors },
+    },
+    get: {
+      tags: ["PhanAnh"],
+      summary: "Lấy chi tiết đề nghị gia hạn của phản ánh",
+      description: "Yêu cầu PA_EXTENSION_GET_DETAIL.",
+      security: bearerSecurity,
+      parameters: [idParameter],
+      responses: { 200: { description: "Chi tiết đề nghị gia hạn" }, ...standardErrors },
+    },
+  },
+  "/api/phan-anh/{idPhanAnh}/gia-han/approve": {
+    put: {
+      tags: ["PhanAnh"],
+      summary: "Phê duyệt đề nghị gia hạn phản ánh",
+      description: "Yêu cầu PA_EXTENSION_APPROVE. Chỉ duyệt đề nghị PENDING; phản ánh vẫn Đang xử lý và chỉ cập nhật ngayDuKienHoanThanh.",
+      security: bearerSecurity,
+      parameters: [idParameter],
+      responses: { 200: { description: "Đã phê duyệt và cập nhật hạn xử lý" }, ...standardErrors },
+    },
+  },
+  "/api/phan-anh/{idPhanAnh}/gia-han/reject": {
+    put: {
+      tags: ["PhanAnh"],
+      summary: "Từ chối đề nghị gia hạn phản ánh",
+      description: "Yêu cầu PA_EXTENSION_REJECT. Lý do từ chối là bắt buộc để truy vết quyết định.",
+      security: bearerSecurity,
+      parameters: [idParameter],
+      requestBody: { required: true, content: { "application/json": { schema: PhanAnhExtensionSchemas.RejectPhanAnhExtensionRequest } } },
+      responses: { 200: { description: "Đã từ chối đề nghị gia hạn" }, ...standardErrors },
     },
   },
   "/api/phan-anh/{maPhanAnh}/for-mobile": {
