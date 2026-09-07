@@ -19,5 +19,9 @@ export function normalizePermissionCodes(permissions) {
 }
 
 export function hasPermission(currentUser, permissionCode) {
+  const roles = normalizeRoleNames(currentUser?.roles || currentUser?.role);
+  if (roles.some((r) => r.toUpperCase() === "ADMIN" || r.toUpperCase() === "SUPER_ADMIN")) {
+    return true;
+  }
   return normalizePermissionCodes(currentUser?.permissions).includes(permissionCode);
 }

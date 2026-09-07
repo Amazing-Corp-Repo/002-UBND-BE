@@ -295,9 +295,10 @@ const LeaderMeetingScheduleService = {
     }
 
     if (filters.date) {
-      ensureLeaderRole(
+      ensurePermission(
         currentUser,
-        "Chỉ lãnh đạo được xem bảng ca tiếp công dân của mình"
+        PERMISSION.LMS_GET_ALL,
+        "Bạn không có quyền xem bảng ca tiếp công dân"
       );
       const receptionDate = new Date(`${filters.date}T00:00:00.000Z`);
       const [schedule, leader] = await Promise.all([
@@ -373,9 +374,10 @@ const LeaderMeetingScheduleService = {
   },
 
   async createManagementSchedule(input, currentUser) {
-    ensureLeaderRole(
+    ensurePermission(
       currentUser,
-      "Chỉ lãnh đạo được tự tạo lịch gặp công dân"
+      PERMISSION.LMS_CREATE,
+      "Bạn không có quyền tạo lịch gặp công dân"
     );
     if (input.receptionDate < formatVietnamDate(new Date())) {
       throw new BaseError(400, "Không thể tạo lịch gặp lãnh đạo trong quá khứ");
