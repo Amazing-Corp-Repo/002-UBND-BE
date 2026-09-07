@@ -99,6 +99,7 @@ export const toUTCFromVN_End = (dateStr) => {
 
 export const parseCommaString = (str) => {
   if (!str) return [];
+  if (Array.isArray(str)) return str.map((s) => String(s).trim()).filter(Boolean);
   if (typeof str !== "string") return [];
   return str
     .split(",")

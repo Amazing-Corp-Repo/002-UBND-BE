@@ -4,7 +4,7 @@ const LeaderMeetingScheduleSwagger = {
       tags: ["LeaderMeetingSchedule"],
       summary: "Mở hoặc đóng một ca tiếp công dân 30 phút",
       description:
-        "Yêu cầu quyền LMS_UPDATE_STATUS và vai trò LANH_DAO/LEADER. Lãnh đạo được lấy từ access token. API tự tạo hoặc khôi phục lịch của ngày khi mở ca đầu tiên; chỉ chấp nhận 15 ca cố định trong giờ hành chính. Không được thay đổi ca đã qua và không được đóng ca đã có công dân đăng ký giữ chỗ.",
+        "Yêu cầu permission LMS_UPDATE_STATUS. Tài khoản thao tác trong phạm vi được permission cấp; API tự tạo hoặc khôi phục lịch của ngày khi mở ca đầu tiên; chỉ chấp nhận 15 ca cố định trong giờ hành chính. Không được thay đổi ca đã qua và không được đóng ca đã có công dân đăng ký giữ chỗ.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         required: true,
@@ -57,7 +57,7 @@ const LeaderMeetingScheduleSwagger = {
       tags: ["LeaderMeetingSchedule"],
       summary: "Bật hoặc tắt lịch gặp lãnh đạo",
       description:
-        "Yêu cầu quyền LMS_UPDATE_STATUS và vai trò LANH_DAO/LEADER. Chỉ đúng lãnh đạo sở hữu lịch được thay đổi trạng thái. Không cho bật hoặc tắt lịch đã có bất kỳ đăng ký giữ chỗ.",
+        "Yêu cầu permission LMS_UPDATE_STATUS. Chỉ tài khoản có permission phù hợp và thuộc phạm vi lịch được thay đổi trạng thái. Không cho bật hoặc tắt lịch đã có bất kỳ đăng ký giữ chỗ.",
       security: [{ bearerAuth: [] }],
       parameters: [{
         name: "id",
@@ -100,7 +100,7 @@ const LeaderMeetingScheduleSwagger = {
       tags: ["LeaderMeetingSchedule"],
       summary: "Lấy chi tiết lịch gặp lãnh đạo",
       description:
-        "Yêu cầu quyền LMS_GET_DETAIL. Lãnh đạo chỉ xem được lịch của chính mình; ADMIN, APPROVER hoặc PHE_DUYET được xem toàn bộ. Lịch không thuộc phạm vi được trả 404. Kết quả gồm các khung giờ, sức chứa và tổng hợp trạng thái đơn, không chứa dữ liệu quầy.",
+        "Yêu cầu permission LMS_GET_DETAIL. Phạm vi lịch phụ thuộc permission được gán cho tài khoản; quyền xem toàn bộ mới được xem ngoài phạm vi cá nhân. Lịch không thuộc phạm vi được trả 404. Kết quả gồm các khung giờ, sức chứa và tổng hợp trạng thái đơn, không chứa dữ liệu quầy.",
       security: [{ bearerAuth: [] }],
       parameters: [{
         name: "id",
@@ -159,7 +159,7 @@ const LeaderMeetingScheduleSwagger = {
       tags: ["LeaderMeetingSchedule"],
       summary: "Cập nhật lịch gặp lãnh đạo chưa có đơn",
       description:
-        "Yêu cầu quyền LMS_UPDATE và vai trò LANH_DAO/LEADER. Chỉ đúng lãnh đạo sở hữu lịch được sửa. Vẫn hỗ trợ trường slots cũ; UI lưới ca mới dùng openSlots để đồng bộ các ca 30 phút đang mở. Không được đóng ca đã có đăng ký giữ chỗ. Các khung giờ không còn dùng được xóa mềm; sức chứa khung mới mặc định 1.",
+        "Yêu cầu permission LMS_UPDATE. Tài khoản chỉ được sửa lịch trong phạm vi được permission cấp. Vẫn hỗ trợ trường slots cũ; UI lưới ca mới dùng openSlots để đồng bộ các ca 30 phút đang mở. Không được đóng ca đã có đăng ký giữ chỗ. Các khung giờ không còn dùng được xóa mềm; sức chứa khung mới mặc định 1.",
       security: [{ bearerAuth: [] }],
       parameters: [{
         name: "id",
@@ -248,7 +248,7 @@ const LeaderMeetingScheduleSwagger = {
       tags: ["LeaderMeetingSchedule"],
       summary: "Xóa mềm lịch gặp lãnh đạo chưa có đơn",
       description:
-        "Yêu cầu quyền LMS_DELETE và vai trò LANH_DAO/LEADER. Chỉ đúng lãnh đạo sở hữu lịch được xóa. Backend xóa mềm lịch và các khung giờ; lịch đã có bất kỳ đăng ký giữ chỗ sẽ bị từ chối.",
+        "Yêu cầu permission LMS_DELETE. Tài khoản chỉ được xóa lịch trong phạm vi được permission cấp. Backend xóa mềm lịch và các khung giờ; lịch đã có bất kỳ đăng ký giữ chỗ sẽ bị từ chối.",
       security: [{ bearerAuth: [] }],
       parameters: [{
         name: "id",
@@ -294,7 +294,7 @@ const LeaderMeetingScheduleSwagger = {
       tags: ["LeaderMeetingSchedule"],
       summary: "Lấy danh sách lịch gặp lãnh đạo theo quyền",
       description:
-        "Yêu cầu quyền LMS_GET_ALL và không nhận leaderId từ client. Không truyền date: trả danh sách phân trang như contract cũ. Khi truyền date: chỉ lãnh đạo được lấy bảng đủ 15 ca cố định của chính mình, gồm 8 ca sáng, 7 ca chiều, số ca đang mở và lý do không thể bật/tắt.",
+        "Yêu cầu permission LMS_GET_ALL và không nhận leaderId từ client. Không truyền date: trả danh sách phân trang như contract cũ. Khi truyền date: trả bảng đủ 15 ca cố định theo phạm vi permission của tài khoản, gồm 8 ca sáng, 7 ca chiều, số ca đang mở và lý do không thể bật/tắt.",
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },

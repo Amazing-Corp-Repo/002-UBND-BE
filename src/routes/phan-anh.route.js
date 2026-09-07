@@ -1,4 +1,5 @@
 import PhanAnhController from "../controllers/phan-anh.controller.js";
+import PhanAnhExtensionController from "../controllers/phan-anh-extension.controller.js";
 import express from "express";
 import { createUploader } from "../middlewares/upload.middleware.js";
 import UPLOAD_TYPE from "../constants/upload.constant.js";
@@ -9,6 +10,7 @@ import validate from "../middlewares/validate.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
 import { requirePhanAnhImage } from "../middlewares/phan-anh-upload-validation.middleware.js";
+import { authorizePhanAnhStatusUpdate } from "../middlewares/phan-anh-permission.middleware.js";
 import {
   CreatePhanAnhRequest,
   UpdatePhanAnhStatusRequest,
@@ -21,6 +23,12 @@ import {
   GetMyPhanAnhQuery,
   SearchPhanAnhQuery,
 } from "../validators/phan-anh.validator.js";
+import {
+  CreatePhanAnhExtensionRequest,
+  RejectPhanAnhExtensionRequest,
+  PhanAnhExtensionIdParams,
+  GetAllPhanAnhExtensionQuery,
+} from "../validators/phan-anh-extension.validator.js";
 import {
   PERMISSION,
   PERMISSION_DESC,
@@ -70,13 +78,14 @@ phanAnhRouter.get(
 phanAnhRouter.get(
   "/",
   authenticate,
-  authorize([PERMISSION.PA_GET_ALL]),
   validateQuery(GetAllPhanAnhQuery),
   PhanAnhController.getAllPhanAnh,
 );
 
 phanAnhRouter.get(
   "/:idPhanAnh/lich-su-trang-thai",
+  authenticate,
+  authorize([PERMISSION.PA_GET_DETAIL]),
   validateParams(PhanAnhIdParams),
   PhanAnhController.getLichSuTrangThaiPhanAnh,
 );
@@ -95,7 +104,68 @@ phanAnhRouter.get("/trang-thai", PhanAnhController.getTrangThaiPhanAnh);
 phanAnhRouter.get(
   "/tong-quan",
   authenticate,
+  authorize([PERMISSION.PA_GET_STATS]),
   PhanAnhController.getTongQuanPhanAnh,
+);
+
+phanAnhRouter.get(
+  "/gia-han",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_GET_ALL]),
+  validateQuery(GetAllPhanAnhExtensionQuery),
+  PhanAnhExtensionController.getAll,
+);
+
+phanAnhRouter.post(
+  "/:idPhanAnh/gia-han",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_CREATE]),
+  validateParams(PhanAnhExtensionIdParams),
+  createUploader({
+    type: UPLOAD_TYPE.PHAN_ANH,
+    fieldName: "file",
+    maxCount: 5,
+    maxSizeMB: 10,
+    allowed_types: [
+      "image/jpeg",
+      "image/png",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ],
+  }),
+  validate(CreatePhanAnhExtensionRequest),
+  audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.PA_EXTENSION_CREATE),
+  PhanAnhExtensionController.create,
+);
+
+phanAnhRouter.get(
+  "/:idPhanAnh/gia-han",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_GET_DETAIL]),
+  validateParams(PhanAnhExtensionIdParams),
+  PhanAnhExtensionController.getDetail,
+);
+
+phanAnhRouter.put(
+  "/:idPhanAnh/gia-han/approve",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_APPROVE]),
+  validateParams(PhanAnhExtensionIdParams),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_EXTENSION_APPROVE),
+  PhanAnhExtensionController.approve,
+);
+
+phanAnhRouter.put(
+  "/:idPhanAnh/gia-han/reject",
+  authenticate,
+  authorize([PERMISSION.PA_EXTENSION_REJECT]),
+  validateParams(PhanAnhExtensionIdParams),
+  validate(RejectPhanAnhExtensionRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_EXTENSION_REJECT),
+  PhanAnhExtensionController.reject,
 );
 
 phanAnhRouter.get(
@@ -105,6 +175,7 @@ phanAnhRouter.get(
 
 phanAnhRouter.get(
   "/search-by-tieu-de",
+  authenticate,
   validateQuery(SearchPhanAnhQuery),
   PhanAnhController.searhByTieuDe,
 );
@@ -120,7 +191,6 @@ phanAnhRouter.get(
 phanAnhRouter.put(
   "/update-status/:idPhanAnh",
   authenticate,
-  authorize([PERMISSION.PA_UPDATE_STATUS]),
   validateParams(PhanAnhIdParams),
   // Cho phép đính kèm ảnh hiện trường khi cập nhật trạng thái (bắt buộc khi "Đã giải quyết").
   // Uploader chạy TRƯỚC validate để multer parse text fields vào req.body + ảnh vào req.files.
@@ -140,6 +210,7 @@ phanAnhRouter.put(
     ],
   }),
   validate(UpdatePhanAnhStatusRequest),
+  authorizePhanAnhStatusUpdate,
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,
 );
@@ -147,7 +218,7 @@ phanAnhRouter.put(
 phanAnhRouter.put(
   "/update-linh-vuc/:idPhanAnh",
   authenticate,
-  authorize([PERMISSION.PA_UPDATE_STATUS]),
+  authorize([PERMISSION.PA_UPDATE_LINH_VUC]),
   validateParams(PhanAnhIdParams),
   validate(UpdatePhanAnhLinhVucRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_LINH_VUC),

@@ -1,4 +1,6 @@
-import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_STATUS, {
+  getAllowedPhanAnhStatusTransitions,
+} from "../constants/phan-anh-status.constant.js";
 import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
 import PhanAnhRepository from "../repositories/phan-anh.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
@@ -17,13 +19,9 @@ import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
-
-const ORDER = [
-  PHAN_ANH_STATUS.DA_GUI,
-  PHAN_ANH_STATUS.DANG_XU_LY,
-  PHAN_ANH_STATUS.DA_GIAI_QUYET,
-];
+import { toPublicPhanAnhResponse } from "../utils/phan-anh-response.util.js";
 
 const URL_PHAN_ANH_MANAGER = env.URL_PHAN_ANH_MANAGER;
 const URL_PHAN_ANH_USER = env.URL_PHAN_ANH_USER;
@@ -166,7 +164,7 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
-    return phanAnh;
+    return toPublicPhanAnhResponse(phanAnh);
   },
 
   async getAll(
@@ -181,11 +179,17 @@ const PhanAnhService = {
     sortBy,
     sortOrder,
   ) {
-    let role = parseCommaString(payload.roles);
-    let cate = parseCommaString(payload.cate);
+    let cate = parseCommaString(payload?.cate);
+    let userPermissions = parseCommaString(payload?.permissions);
 
-    if (cate === null || cate === undefined || cate.length === 0) {
-      let { data, totalItems } = await PhanAnhRepository.getAll(
+    if (trangThai && PHAN_ANH_STATUS[trangThai]) {
+      trangThai = PHAN_ANH_STATUS[trangThai];
+    }
+
+    const hasGetAllPermission = userPermissions.includes(PERMISSION.PA_GET_ALL);
+
+    if (hasGetAllPermission) {
+      let { data, totalItems, stats } = await PhanAnhRepository.getAll(
         idLinhVucPhanAnh,
         trangThai,
         mucDo,
@@ -197,17 +201,17 @@ const PhanAnhService = {
         sortOrder,
       );
       let pagination = createPagination(page, size, totalItems);
-      return { data, pagination };
+      return { data, pagination, stats };
     }
 
-    if (idLinhVucPhanAnh && !cate.includes(idLinhVucPhanAnh.trim())) {
+    if (idLinhVucPhanAnh && (!cate || !cate.includes(idLinhVucPhanAnh.trim()))) {
       throw new BaseError(
         403,
         "Bạn không có quyền truy cập lĩnh vực phản ánh này",
       );
     }
 
-    // Nếu có cate restriction, chỉ lấy các phản ánh thuộc cate đó
+    // Không có quyền xem tất cả -> Chỉ lấy các phản ánh thuộc Lĩnh vực phụ trách (cate)
     const result = await PhanAnhRepository.getAllByCate(
       cate,
       idLinhVucPhanAnh ?? null,
@@ -224,6 +228,7 @@ const PhanAnhService = {
     return {
       data: result.data,
       pagination: createPagination(page, size, result.totalItems),
+      stats: result.stats,
     };
   },
 
@@ -281,6 +286,9 @@ const PhanAnhService = {
     currentUser,
     file,
     idVideoGiaiQuyet = [],
+    idNguoiXuLy,
+    ngayDuKienHoanThanh,
+    lyDoTreHan,
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -290,35 +298,57 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
-    const lastStatus = phanAnh.lich_su_trang_thai[0].ten;
-    if (
-      lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
-      lastStatus === PHAN_ANH_STATUS.DONG
-    ) {
+    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    const allowedNextStatuses =
+      getAllowedPhanAnhStatusTransitions(lastStatus);
+    if (!allowedNextStatuses.includes(trangThai)) {
+      const expected = allowedNextStatuses.length
+        ? allowedNextStatuses.join(" hoặc ")
+        : "không còn trạng thái tiếp theo";
       throw new BaseError(
         400,
-        "Không thể cập nhật trạng thái cho phản ánh đã được giải quyết hoặc đóng",
+        `Không thể chuyển từ trạng thái ${lastStatus || "không xác định"} sang ${trangThai}. Trạng thái hợp lệ: ${expected}`,
       );
-    }
-    if (trangThai !== PHAN_ANH_STATUS.DONG) {
-      const currentIndex = ORDER.indexOf(lastStatus);
-      const nextIndex = ORDER.indexOf(trangThai);
-
-      if (nextIndex === -1 || currentIndex === -1) {
-        throw new BaseError(400, "Trạng thái không hợp lệ");
-      }
-
-      if (nextIndex !== currentIndex + 1) {
-        throw new BaseError(
-          400,
-          `Trạng thái tiếp theo phải là: ${ORDER[currentIndex + 1]}`,
-        );
-      }
     }
 
     let existingUser = await UserRepository.findById(currentUser);
     if (!existingUser) {
       throw new BaseError(400, "Người dùng không tồn tại");
+    }
+
+    let assignedUser = null;
+    let receivedAt;
+    let expectedCompletionAt;
+    const isOverdueWhileProcessing =
+      phanAnh.lich_su_trang_thai[0]?.ten === PHAN_ANH_STATUS.DANG_XU_LY &&
+      phanAnh.ngay_du_kien_hoan_thanh &&
+      new Date(phanAnh.ngay_du_kien_hoan_thanh).getTime() < Date.now();
+
+    if (
+      trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET &&
+      isOverdueWhileProcessing &&
+      !lyDoTreHan?.trim()
+    ) {
+      throw new BaseError(400, "Lý do trễ hạn là bắt buộc khi giải quyết phản ánh quá hạn");
+    }
+    if (trangThai === PHAN_ANH_STATUS.DANG_XU_LY) {
+      const managers = await LinhVucPhanAnhRepository.getManagersByLinhVucId(
+        phanAnh.id_linh_vuc_phan_anh,
+      );
+      assignedUser = managers.find((manager) => manager.id === idNguoiXuLy);
+      if (!assignedUser) {
+        throw new BaseError(
+          400,
+          "Chuyên viên được chọn không hoạt động hoặc không quản lý lĩnh vực của phản ánh này",
+        );
+      }
+
+      if (!ngayDuKienHoanThanh) {
+        throw new BaseError(400, "Ngày dự kiến hoàn thành là bắt buộc");
+      }
+
+      receivedAt = new Date();
+      expectedCompletionAt = new Date(ngayDuKienHoanThanh);
     }
 
     // Bắt buộc đính kèm ≥1 ảnh HOẶC ≥1 video hiện trường khi chuyển "Đã giải quyết".
@@ -345,19 +375,33 @@ const PhanAnhService = {
 
     const phanAnhPatch = {
       nguoi_cap_nhat: currentUser,
-      thoi_gian_tiep_nhan:
-        trangThai === PHAN_ANH_STATUS.DANG_XU_LY
-          ? new Date().toISOString()
-          : phanAnh.thoi_gian_tiep_nhan,
+      ...(trangThai === PHAN_ANH_STATUS.DANG_XU_LY && {
+        id_to: idNguoiXuLy,
+        thoi_gian_tiep_nhan: receivedAt,
+        ngay_du_kien_hoan_thanh: expectedCompletionAt,
+      }),
       // Lưu video hiện trường đã xử lý (nếu có) — tách riêng với id_video của công dân.
       ...(videoGiaiQuyet.length > 0 && {
         id_video_giai_quyet: videoGiaiQuyet,
+      }),
+      ...(trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET && isOverdueWhileProcessing && {
+        ly_do_tre_han: lyDoTreHan.trim(),
       }),
     };
 
     const historyData = {
       ten: trangThai,
-      ghi_chu: ghiChu,
+      ghi_chu:
+        trangThai === PHAN_ANH_STATUS.DANG_XU_LY
+          ? [
+              `Phê duyệt và phân công cho "${assignedUser.ho_va_ten || assignedUser.ten_dang_nhap}"`,
+              ghiChu,
+            ]
+              .filter(Boolean)
+              .join(". ")
+          : [ghiChu, isOverdueWhileProcessing ? `Lý do trễ hạn: ${lyDoTreHan.trim()}` : null]
+              .filter(Boolean)
+              .join(". ") || null,
       nguoi_tao: currentUser,
     };
 
@@ -397,6 +441,18 @@ const PhanAnhService = {
       ghiChu,
       phanAnh.nguoi_tao,
     );
+
+    if (trangThai === PHAN_ANH_STATUS.DANG_XU_LY) {
+      await NotificationRepository.createNotification({
+        user_id: idNguoiXuLy,
+        body: `Bạn được phân công xử lý phản ánh với mã ${phanAnh.ma_phan_anh}`,
+        target_id: phanAnh.ma_phan_anh,
+        target_type: "PHAN_ANH",
+        title: "Phân công xử lý phản ánh",
+      });
+    }
+
+    return await PhanAnhRepository.getById(idPhanAnh);
   },
 
   async updateLinhVucPhanAnh(idPhanAnh, idLinhVucPhanAnh, lyDo, currentUser) {
@@ -552,19 +608,31 @@ const PhanAnhService = {
     return { id_to: idNguoiXuLy };
   },
 
-  async getTongQuanPhanAnh() {
-    let { nhat_ky_hoat_dong, tong_hom_nay, thong_ke_theo_trang_thai } =
-      await PhanAnhRepository.getTongQuanPhanAnh();
+  async getTongQuanPhanAnh(payload, options = {}) {
+    let cate = payload ? parseCommaString(payload.cate) : null;
+    let userPermissions = payload ? parseCommaString(payload.permissions) : [];
 
-    nhat_ky_hoat_dong = nhat_ky_hoat_dong.map((log) => {
-      log.is_success = log.response_status_code === 200;
-      log.hanh_dong = log.table_name;
-      log.table_name = undefined;
-      log.response_status_code = undefined;
-      return log;
-    });
+    const hasGetAllPermission =
+      userPermissions.includes(PERMISSION.PA_GET_ALL) ||
+      userPermissions.includes(PERMISSION.PA_THUONG_TRUC);
 
-    return { tong_hom_nay, thong_ke_theo_trang_thai, nhat_ky_hoat_dong };
+    if (hasGetAllPermission) {
+      cate = null;
+    }
+
+    let statsResult = await PhanAnhRepository.getTongQuanPhanAnh(cate, options);
+
+    if (Array.isArray(statsResult.nhat_ky_hoat_dong)) {
+      statsResult.nhat_ky_hoat_dong = statsResult.nhat_ky_hoat_dong.map((log) => {
+        log.is_success = log.response_status_code === 200;
+        log.hanh_dong = log.table_name;
+        log.table_name = undefined;
+        log.response_status_code = undefined;
+        return log;
+      });
+    }
+
+    return statsResult;
   },
 
   async getMucDoAndTrangThaiAndLinhVuc() {

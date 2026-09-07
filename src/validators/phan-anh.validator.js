@@ -62,7 +62,7 @@ const mucDoSchema = Joi.string()
   .valid(...Object.values(PHAN_ANH_MUC_DO))
   .required()
   .messages({
-    "any.only": "Mức độ phải là Thấp, Trung bình, Cao hoặc Khẩn cấp",
+    "any.only": "Mức độ phải là Thông thường hoặc Khẩn cấp",
     "any.required": "Mức độ là bắt buộc",
   });
 
@@ -93,6 +93,7 @@ export const CreatePhanAnhRequest = Joi.object({
   soDienThoaiNguoiPhanAnh: phoneSchema,
   cccd: citizenIdSchema,
   khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
+    "string.base": "Khu phố phải là chuỗi ký tự",
     "string.empty": "Khu phố là bắt buộc",
     "any.required": "Khu phố là bắt buộc",
     "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,
@@ -111,9 +112,38 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
     "any.only": "Trạng thái phản ánh không hợp lệ",
     "any.required": "Trạng thái là bắt buộc",
   }),
-  ghiChu: Joi.string().trim().max(2000).optional().allow(null, "").messages({
+  ghiChu: Joi.string().trim().max(2000).when("trangThai", {
+    is: PHAN_ANH_STATUS.TU_CHOI,
+    then: Joi.string().trim().min(1).max(2000).required(),
+    otherwise: Joi.optional().allow(null, ""),
+  }).messages({
     "string.base": "Ghi chú phải là chuỗi ký tự",
+    "string.empty": "Lý do từ chối là bắt buộc",
+    "string.min": "Lý do từ chối là bắt buộc",
+    "any.required": "Lý do từ chối là bắt buộc",
     "string.max": "Ghi chú không được vượt quá 2000 ký tự",
+  }),
+  idNguoiXuLy: Joi.string().trim().uuid().when("trangThai", {
+    is: PHAN_ANH_STATUS.DANG_XU_LY,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }).messages({
+    "string.uuid": "idNguoiXuLy phải là UUID hợp lệ",
+    "any.required": "Chuyên viên xử lý là bắt buộc khi duyệt phản ánh",
+    "any.unknown": "Chỉ được phân công chuyên viên khi duyệt phản ánh",
+  }),
+  ngayDuKienHoanThanh: Joi.date().iso().when("trangThai", {
+    is: PHAN_ANH_STATUS.DANG_XU_LY,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }).messages({
+    "date.format": "Ngày dự kiến hoàn thành phải đúng định dạng ISO (YYYY-MM-DD)",
+    "any.required": "Ngày dự kiến hoàn thành là bắt buộc khi duyệt phản ánh",
+    "any.unknown": "Chỉ được gửi ngày dự kiến hoàn thành khi duyệt phản ánh",
+  }),
+  lyDoTreHan: Joi.string().trim().max(2000).optional().allow(null, "").messages({
+    "string.base": "Lý do trễ hạn phải là chuỗi ký tự",
+    "string.max": "Lý do trễ hạn không được vượt quá 2000 ký tự",
   }),
   // Video hiện trường đã xử lý (mảng id của video_uploads đã upload HLS).
   // .single() để nhận cả khi multipart gửi 1 giá trị đơn.
@@ -171,6 +201,7 @@ export const CreatePhanAnhPublicRequest = Joi.object({
   soDienThoaiNguoiPhanAnh: requiredPhoneSchema,
   cccd: citizenIdSchema,
   khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
+    "string.base": "Khu phố phải là chuỗi ký tự",
     "string.empty": "Khu phố là bắt buộc",
     "any.required": "Khu phố là bắt buộc",
     "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,
@@ -197,7 +228,7 @@ export const PhanAnhCodeParams = Joi.object({
 
 export const GetAllPhanAnhQuery = Joi.object({
   idLinhVucPhanAnh: Joi.string().uuid().optional(),
-  trangThai: Joi.string().valid(...Object.values(PHAN_ANH_STATUS)).optional(),
+  trangThai: Joi.string().valid(...Object.keys(PHAN_ANH_STATUS), ...Object.values(PHAN_ANH_STATUS)).optional(),
   mucDo: Joi.string().valid(...Object.values(PHAN_ANH_MUC_DO)).optional(),
   maPhanAnh: Joi.string().trim().uppercase().max(255).optional().allow(""),
   page: Joi.number().integer().min(1).default(1),

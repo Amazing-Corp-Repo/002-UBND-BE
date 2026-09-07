@@ -5,6 +5,16 @@ import PermissionRepository from "../repositories/permission.repository.js";
 import RoleRepository from "../repositories/role.repository.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 
+const ADDITIVE_ROLE_PERMISSIONS = {
+  LANH_DAO: [
+    PERMISSION.PA_APPROVE,
+    PERMISSION.PA_REJECT,
+    PERMISSION.PA_UPDATE_LINH_VUC,
+    PERMISSION.PA_GET_STATS,
+  ],
+  "CÁN_BỘ": [PERMISSION.PA_UPDATE_LINH_VUC, PERMISSION.PA_GET_STATS],
+};
+
 export const CreateAccountSeed = async () => {
   const username = env.ADMIN_USERNAME;
   const password = env.ADMIN_PASSWORD;
@@ -23,6 +33,15 @@ export const CreateAccountSeed = async () => {
     });
   } else {
     await RoleRepository.syncAdminRolePermissions(adminRole.id);
+  }
+
+  for (const [roleName, permissionCodes] of Object.entries(
+    ADDITIVE_ROLE_PERMISSIONS
+  )) {
+    const role = await RoleRepository.findRoleByName(roleName);
+    if (role) {
+      await RoleRepository.addPermissionsToRole(role.id, permissionCodes);
+    }
   }
 
   let user = await UserRepository.findUserByUsername(username);

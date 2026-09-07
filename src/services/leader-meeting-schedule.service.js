@@ -1,7 +1,8 @@
 import LeaderMeetingScheduleRepository from "../repositories/leader-meeting-schedule.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
-import { normalizeRoleNames } from "../utils/auth-context.util.js";
+import { hasPermission } from "../utils/auth-context.util.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 import {
   DEFAULT_LEADER_MEETING_LOCATION,
   DEFAULT_LEADER_MEETING_NOTE,
@@ -113,9 +114,8 @@ const validateSlots = (slots) => {
   return sortedSlots;
 };
 
-const ensureLeaderRole = (currentUser, message) => {
-  const roles = normalizeRoleNames(currentUser.roles);
-  if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
+const ensurePermission = (currentUser, permissionCode, message) => {
+  if (!hasPermission(currentUser, permissionCode)) {
     throw new BaseError(403, message);
   }
 };
@@ -295,9 +295,10 @@ const LeaderMeetingScheduleService = {
     }
 
     if (filters.date) {
-      ensureLeaderRole(
+      ensurePermission(
         currentUser,
-        "Chỉ lãnh đạo được xem bảng ca tiếp công dân của mình"
+        PERMISSION.LMS_GET_ALL,
+        "Bạn không có quyền xem bảng ca tiếp công dân"
       );
       const receptionDate = new Date(`${filters.date}T00:00:00.000Z`);
       const [schedule, leader] = await Promise.all([
@@ -318,10 +319,7 @@ const LeaderMeetingScheduleService = {
       };
     }
 
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMS_GET_ALL);
     const result = await LeaderMeetingScheduleRepository.findManagement({
       ...filters,
       leaderId: canViewAll ? undefined : currentUser.userId,
@@ -362,10 +360,7 @@ const LeaderMeetingScheduleService = {
   },
 
   async getManagementDetail(id, currentUser) {
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMS_GET_ALL);
     const schedule =
       await LeaderMeetingScheduleRepository.findManagementDetail(
         id,
@@ -379,9 +374,10 @@ const LeaderMeetingScheduleService = {
   },
 
   async createManagementSchedule(input, currentUser) {
-    ensureLeaderRole(
+    ensurePermission(
       currentUser,
-      "Chỉ lãnh đạo được tự tạo lịch gặp công dân"
+      PERMISSION.LMS_CREATE,
+      "Bạn không có quyền tạo lịch gặp công dân"
     );
     if (input.receptionDate < formatVietnamDate(new Date())) {
       throw new BaseError(400, "Không thể tạo lịch gặp lãnh đạo trong quá khứ");
@@ -426,8 +422,9 @@ const LeaderMeetingScheduleService = {
   },
 
   async updateManagementSchedule(id, input, currentUser) {
-    ensureLeaderRole(
+    ensurePermission(
       currentUser,
+      PERMISSION.LMS_UPDATE,
       "Chỉ lãnh đạo được sửa lịch gặp công dân của mình"
     );
     if (input.receptionDate < formatVietnamDate(new Date())) {
@@ -483,10 +480,11 @@ const LeaderMeetingScheduleService = {
   },
 
   async updateManagementStatus(id, isActive, currentUser) {
-    const roles = normalizeRoleNames(currentUser.roles);
-    if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
-      throw new BaseError(403, "Chỉ lãnh đạo được cập nhật trạng thái lịch của mình");
-    }
+    ensurePermission(
+      currentUser,
+      PERMISSION.LMS_UPDATE_STATUS,
+      "Bạn không có quyền cập nhật trạng thái lịch gặp lãnh đạo"
+    );
     const result =
       await LeaderMeetingScheduleRepository.updateManagementStatus(
         id,
@@ -512,8 +510,9 @@ const LeaderMeetingScheduleService = {
   },
 
   async updateDailySlotStatus(input, currentUser) {
-    ensureLeaderRole(
+    ensurePermission(
       currentUser,
+      PERMISSION.LMS_UPDATE_STATUS,
       "Chỉ lãnh đạo được mở hoặc đóng ca tiếp công dân của mình"
     );
     validateStandardSlots([input]);
@@ -555,10 +554,11 @@ const LeaderMeetingScheduleService = {
   },
 
   async deleteManagementSchedule(id, currentUser) {
-    const roles = normalizeRoleNames(currentUser.roles);
-    if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
-      throw new BaseError(403, "Chỉ lãnh đạo được xóa lịch gặp công dân của mình");
-    }
+    ensurePermission(
+      currentUser,
+      PERMISSION.LMS_DELETE,
+      "Bạn không có quyền xóa lịch gặp lãnh đạo"
+    );
     const result = await LeaderMeetingScheduleRepository.deleteManagement(
       id,
       currentUser.userId

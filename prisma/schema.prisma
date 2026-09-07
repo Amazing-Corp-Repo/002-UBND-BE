@@ -355,6 +355,7 @@ model phan_anh {
   thoi_gian_tiep_nhan                            DateTime?            @db.Timestamp(6)
   thoi_gian_phan_hoi_du_kien                     DateTime?            @db.Timestamp(6)
   ngay_du_kien_hoan_thanh                        DateTime?            @db.Timestamp(6)
+  ly_do_tre_han                                  String?
   nguoi_cap_nhat                                 String?              @db.Uuid
   nguoi_tao                                      String?              @db.Uuid
   thoi_gian_tao                                  DateTime?            @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
@@ -364,6 +365,7 @@ model phan_anh {
   dinh_kem_phan_anh                              dinh_kem_phan_anh[]
   lich_su_trang_thai                             lich_su_trang_thai[]
   danh_gia_phan_anh                              danh_gia_phan_anh[]
+  de_nghi_gia_han_phan_anh                       de_nghi_gia_han_phan_anh[]
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")
   to_phu_trach                                   nguoi_dung?          @relation("phan_anh_id_to_nguoi_dung", fields: [id_to], references: [id], onUpdate: NoAction, map: "fk_phan_anh_id_to")
   nguoi_dung_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_cap_nhat")
@@ -376,6 +378,38 @@ model phan_anh {
   @@index([ma_phan_anh], map: "idx_phan_anh_ma_phan_anh")
   @@index([nguoi_tao], map: "idx_phan_anh_nguoi_tao")
   @@index([thoi_gian_tao], map: "idx_phan_anh_thoi_gian_tao")
+}
+
+model de_nghi_gia_han_phan_anh {
+  id                         String                                  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_phan_anh                String                                  @unique @db.Uuid
+  ly_do                      String
+  ngay_de_xuat_hoan_thanh    DateTime                                @db.Timestamp(6)
+  trang_thai                 String                                  @default("PENDING") @db.VarChar(30)
+  ly_do_tu_choi              String?
+  nguoi_tao                  String                                  @db.Uuid
+  nguoi_duyet                String?                                 @db.Uuid
+  nguoi_tu_choi              String?                                 @db.Uuid
+  id_video                   String[]                                @db.VarChar(255)
+  thoi_gian_tao              DateTime?                               @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_cap_nhat         DateTime?                               @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  phan_anh                   phan_anh                                @relation(fields: [id_phan_anh], references: [id], onUpdate: NoAction, map: "fk_de_nghi_gia_han_phan_anh")
+  dinh_kem_de_nghi_gia_han   dinh_kem_de_nghi_gia_han_phan_anh[]
+
+  @@index([trang_thai], map: "idx_de_nghi_gia_han_phan_anh_trang_thai")
+  @@index([nguoi_tao], map: "idx_de_nghi_gia_han_phan_anh_nguoi_tao")
+}
+
+model dinh_kem_de_nghi_gia_han_phan_anh {
+  id                         String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_de_nghi_gia_han         String                    @db.Uuid
+  dinh_dang_file             String?                   @db.VarChar(255)
+  url_file                   String?                   @db.VarChar(500)
+  kich_thuoc_file_mb         Decimal?                  @db.Decimal(10, 2)
+  thoi_gian_tao              DateTime?                 @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  de_nghi_gia_han_phan_anh   de_nghi_gia_han_phan_anh  @relation(fields: [id_de_nghi_gia_han], references: [id], onUpdate: NoAction, map: "fk_dinh_kem_de_nghi_gia_han")
+
+  @@index([id_de_nghi_gia_han], map: "idx_dinh_kem_de_nghi_gia_han_id_de_nghi")
 }
 
 model refresh_token {
@@ -824,6 +858,8 @@ model dang_ky_gap_lanh_dao {
   ngay_lam_don              DateTime? @db.Date
   ly_do                     String
   trang_thai                String  @default("PENDING") @db.VarChar(30)
+  is_qua_han                Boolean @default(false)
+  thoi_gian_qua_han         DateTime? @db.Timestamp(6)
   thoi_gian_phe_duyet       DateTime? @db.Timestamp(6)
   thoi_gian_bat_dau_xu_ly   DateTime? @db.Timestamp(6)
   thoi_gian_hoan_thanh      DateTime? @db.Timestamp(6)
