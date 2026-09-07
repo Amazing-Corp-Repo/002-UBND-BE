@@ -519,6 +519,13 @@ const PhanAnhRepository = {
       const p2 = params.length;
       whereSql += ` AND (pa.khu_pho ILIKE $${p1} OR pa.khu_pho ILIKE $${p2})`;
     }
+    if (startDate && endDate) {
+      params.push(startDate);
+      const pStart = params.length;
+      params.push(endDate);
+      const pEnd = params.length;
+      whereSql += ` AND pa.thoi_gian_tao >= $${pStart} AND pa.thoi_gian_tao <= $${pEnd}`;
+    }
 
     const rows = await prisma.$queryRawUnsafe(`
             WITH latest_status AS (
@@ -717,9 +724,15 @@ const PhanAnhRepository = {
       const rateVal = total > 0 ? (resolved / total) * 100 : 0;
       const rateFormatted = `${Math.round(rateVal)}%`;
       const nameStr = normalizeKhuPhoLabel(r.khu_pho);
-      const name = nameStr.startsWith("KP")
-        ? nameStr.replace(/^KP\s*/i, "Khu phố ")
-        : (nameStr.startsWith("Khu phố") ? nameStr : `Khu phố ${nameStr}`);
+      let name = nameStr;
+      if (/^kp\s*/i.test(nameStr)) {
+        name = nameStr.replace(/^kp\s*/i, "Khu phố ");
+      } else if (/^khu\s*ph[óo]/i.test(nameStr)) {
+        const digits = nameStr.replace(/\D/g, '');
+        name = digits ? `Khu phố ${digits}` : nameStr;
+      } else if (!nameStr.startsWith("Khu phố")) {
+        name = `Khu phố ${nameStr}`;
+      }
 
       return {
         rank: index + 1,
@@ -928,7 +941,13 @@ const PhanAnhRepository = {
     }));
 
     const khuPhoRecords = await prisma.phan_anh.findMany({
-      where: cateFilter,
+      where: {
+        ...baseWhere,
+        thoi_gian_tao: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
       select: { khu_pho: true },
     });
     const thongKeTheoKhuPho = aggregatePhanAnhByKhuPho(khuPhoRecords);
