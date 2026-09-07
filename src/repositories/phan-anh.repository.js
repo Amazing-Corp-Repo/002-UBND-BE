@@ -687,6 +687,23 @@ const PhanAnhRepository = {
 
     const quaHan = Number(quaHanRows[0]?.count) || 0;
 
+    const [soDonCoLyDoTreHan, giaHan] = await Promise.all([
+      prisma.phan_anh.count({
+        where: { ...baseWhere, ly_do_tre_han: { not: null } },
+      }),
+      prisma.de_nghi_gia_han_phan_anh.groupBy({
+        by: ["trang_thai"],
+        where: { phan_anh: baseWhere },
+        _count: { id: true },
+      }),
+    ]);
+    const thongKeGiaHan = { PENDING: 0, APPROVED: 0, REJECTED: 0, tong_so: 0 };
+    giaHan.forEach((item) => {
+      const count = Number(item._count.id) || 0;
+      thongKeGiaHan[item.trang_thai] = count;
+      thongKeGiaHan.tong_so += count;
+    });
+
     const topKhuPhoRows = await prisma.$queryRawUnsafe(`
       WITH latest_status AS (
           SELECT
@@ -965,6 +982,8 @@ const PhanAnhRepository = {
       huong_phan_anh: huongPhanAnh,
       huong_ty_le_xu_ly: huongTyLeXuLy,
       qua_han: quaHan,
+      so_don_co_ly_do_tre_han: soDonCoLyDoTreHan,
+      thong_ke_gia_han: thongKeGiaHan,
       thong_ke_theo_trang_thai: thongKeTheoTrangThai,
       thong_ke_theo_khu_pho: thongKeTheoKhuPho,
       thong_ke_theo_linh_vuc: thongKeTheoLinhVuc,

@@ -362,6 +362,9 @@ const PhanAnhSwagger = {
                       tong_hom_nay: { type: "integer" },
                       tong_so: { type: "integer" },
                       tong_nguoi_dan: { type: "integer" },
+                      qua_han: { type: "integer", description: "Số phản ánh chưa hoàn tất đã quá hạn" },
+                      so_don_co_ly_do_tre_han: { type: "integer", description: "Số phản ánh có lý do trễ hạn" },
+                      thong_ke_gia_han: { type: "object", description: "Số đề nghị gia hạn theo PENDING/APPROVED/REJECTED" },
                       thong_ke_theo_trang_thai: { type: "object" },
                       thong_ke_theo_khu_pho: {
                         type: "array",

@@ -31,6 +31,10 @@ test("Swagger documents response media and neighborhood statistics", () => {
     overview.responses[200].content["application/json"].schema.properties.data
       .properties.thong_ke_theo_khu_pho,
   );
+  assert.ok(
+    overview.responses[200].content["application/json"].schema.properties.data
+      .properties.thong_ke_gia_han,
+  );
 });
 
 test("complaint list documents legacy sortTime compatibility", () => {
