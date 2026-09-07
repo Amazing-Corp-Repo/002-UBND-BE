@@ -5,19 +5,13 @@ import {
   toSnakeCaseNonAccent,
 } from "../utils/string.util.js";
 import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
-import dayjs from "dayjs";
 import { createPagination } from "../utils/response.util.js";
-
-const excelDateToJSDate = (serial) => {
-  const utc_days = Math.floor(serial - 25569);
-  const utc_value = utc_days * 86400;
-  const date_info = new Date(utc_value * 1000);
-  return new Date(
-    date_info.getUTCFullYear(),
-    date_info.getUTCMonth(),
-    date_info.getUTCDate()
-  );
-};
+import {
+  normalizeReceptionTimes,
+  parseVietnamImportDate,
+  parseVietnamImportTime,
+  toDatabaseDate,
+} from "../utils/vietnam-time.util.js";
 
 const sortedLichTiepDan = (data) => {
   return data.sort((a, b) => {
@@ -53,40 +47,24 @@ const LichTiepDanService = {
           record[toSnakeCaseNonAccent(key)] = value;
         }
 
-        const rawDate = record.ngay_tiep_dan;
-        let tu = new Date(record.tu).toISOString().substring(11, 16);
-        let den = new Date(record.den).toISOString().substring(11, 16);
-        let thoi_gian = `${tu} - ${den}`;
-
-        switch (true) {
-          case typeof rawDate === "number":
-            record.ngay_tiep_dan = excelDateToJSDate(rawDate);
-            break;
-
-          case typeof rawDate === "string":
-            record.ngay_tiep_dan = dayjs(rawDate, [
-              "DD/MM/YYYY",
-              "M/D/YYYY",
-            ]).toDate();
-            break;
-
-          case rawDate instanceof Date:
-            record.ngay_tiep_dan = rawDate;
-            break;
-
-          default:
-            record.ngay_tiep_dan = null;
-            break;
+        const receptionDate = parseVietnamImportDate(record.ngay_tiep_dan);
+        const tu = parseVietnamImportTime(record.tu);
+        const den = parseVietnamImportTime(record.den);
+        if (!receptionDate || !tu || !den || tu >= den) {
+          throw new BaseError(400, "Ngày hoặc giờ tiếp dân trong file không hợp lệ");
         }
-
+        record.ngay_tiep_dan = toDatabaseDate(receptionDate);
+        const thoi_gian = `${tu} - ${den}`;
+        const officerName = String(record.ten_can_bo || record.ho_ten_can_bo || "Cán bộ tiếp dân").trim();
+        const location = String(record.dia_diem || "Phòng tiếp công dân").trim();
         const existing = await LichTiepDanRepository.findByCanBoAndNgay(
-          record.ten_can_bo,
+          officerName,
           record.ngay_tiep_dan
         );
 
         if (existing) {
           await LichTiepDanRepository.update(existing.id, {
-            dia_diem: record.dia_diem,
+            dia_diem: location,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
             nguoi_cap_nhat: currentUser,
@@ -94,10 +72,10 @@ const LichTiepDanService = {
           });
         } else {
           await LichTiepDanRepository.create({
-            dia_diem: record.dia_diem,
             thoi_gian: thoi_gian,
             ghi_chu: record.ghi_chu,
-            ten_can_bo: record.ten_can_bo,
+            ten_can_bo: officerName,
+            dia_diem: location,
             ngay_tiep_dan: record.ngay_tiep_dan,
             nguoi_tao: currentUser,
           });
@@ -105,6 +83,7 @@ const LichTiepDanService = {
       }
     } catch (error) {
       console.error("Import Error:", error);
+      if (error instanceof BaseError) throw error;
       throw new BaseError(500, "Không thể import lịch tiếp dân");
     }
     return { message: `Thêm vào thành công ${data.length} lịch tiếp dân` };
@@ -118,7 +97,7 @@ const LichTiepDanService = {
       date,
       isActive,
     });
-    return sortedLichTiepDan(data);
+    return normalizeReceptionTimes(sortedLichTiepDan(data));
   },
 
   async getLichTiepDanWithPagination(filters) {
@@ -138,7 +117,7 @@ const LichTiepDanService = {
 
     const pagination = createPagination(page, size, totalItems);
     data = sortedLichTiepDan(data);
-    return { data, pagination };
+    return normalizeReceptionTimes({ data, pagination });
   },
 
   async countLichTiepDan(filters) {
@@ -188,7 +167,7 @@ const LichTiepDanService = {
       nguoi_cap_nhat: currentUser,
       thoi_gian_cap_nhat: new Date().toISOString(),
     });
-    return data;
+    return normalizeReceptionTimes(data);
   },
 
   async getTemplateLichTiepDan() {
@@ -204,7 +183,7 @@ const LichTiepDanService = {
     if (!data || data.is_delete) {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại");
     }
-    return data;
+    return normalizeReceptionTimes(data);
   },
 
   async createLichTiepDan(
@@ -216,26 +195,28 @@ const LichTiepDanService = {
     ghiChu,
     currentUser
   ) {
+    const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || "Cán bộ tiếp dân";
+    const finalDiaDiem = (diaDiem && diaDiem.trim()) || "Phòng tiếp công dân";
     const existing = await LichTiepDanRepository.findByCanBoAndNgay(
-      tenCanBo,
+      finalTenCanBo,
       ngayTiepDan
     );
     if (existing) {
       throw new BaseError(
         400,
-        "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại"
+        "Lịch tiếp dân vào ngày này đã tồn tại"
       );
     }
     let thoiGian = `${batDau} - ${ketThuc}`;
     const data = await LichTiepDanRepository.create({
-      ten_can_bo: tenCanBo,
-      dia_diem: diaDiem,
+      ten_can_bo: finalTenCanBo,
+      dia_diem: finalDiaDiem,
       ngay_tiep_dan: ngayTiepDan,
       thoi_gian: thoiGian,
       ghi_chu: ghiChu,
       nguoi_tao: currentUser,
     });
-    return data;
+    return normalizeReceptionTimes(data);
   },
 
   async updateLichTiepDan(
@@ -255,28 +236,31 @@ const LichTiepDanService = {
     if (!existing || existing.is_delete) {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại");
     }
+    const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || existing.ten_can_bo || "Cán bộ tiếp dân";
+    const finalDiaDiem = (diaDiem && diaDiem.trim()) || existing.dia_diem || "Phòng tiếp công dân";
+
     const duplicate = await LichTiepDanRepository.findByCanBoAndNgayExcludeId(
-      tenCanBo,
+      finalTenCanBo,
       ngayTiepDan,
       id
     );
     if (duplicate) {
       throw new BaseError(
         400,
-        "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại"
+        "Lịch tiếp dân vào ngày này đã tồn tại"
       );
     }
     let thoiGian = `${batDau} - ${ketThuc}`;
     const data = await LichTiepDanRepository.update(id, {
-      ten_can_bo: tenCanBo,
-      dia_diem: diaDiem,
+      ten_can_bo: finalTenCanBo,
+      dia_diem: finalDiaDiem,
       ngay_tiep_dan: ngayTiepDan,
       thoi_gian: thoiGian,
       ghi_chu: ghiChu,
       nguoi_cap_nhat: currentUser,
       thoi_gian_cap_nhat: new Date().toISOString(),
     });
-    return data;
+    return normalizeReceptionTimes(data);
   },
 };
 

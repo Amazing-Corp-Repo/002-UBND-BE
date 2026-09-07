@@ -1,0 +1,567 @@
+import prisma from "../config/database.config.js";
+
+const ThuVienRepository = {
+  async _mapUserNames(items) {
+    // Gom tất cả user ID cần lấy tên
+    const userIds = new Set();
+    for (const item of items) {
+      if (item.nguoi_tao) userIds.add(item.nguoi_tao);
+      if (item.nguoi_cap_nhat) userIds.add(item.nguoi_cap_nhat);
+      if (item.nguoi_duyet) userIds.add(item.nguoi_duyet);
+    }
+    if (userIds.size === 0) return items;
+
+    const users = await prisma.nguoi_dung.findMany({
+      where: { id: { in: [...userIds] }, is_delete: false },
+      select: { id: true, ho_va_ten: true },
+    });
+    const userMap = Object.fromEntries(users.map((u) => [u.id, u.ho_va_ten]));
+
+    return items.map((item) => ({
+      ...item,
+      ten_nguoi_tao: item.nguoi_tao ? userMap[item.nguoi_tao] || null : null,
+      ten_nguoi_cap_nhat: item.nguoi_cap_nhat ? userMap[item.nguoi_cap_nhat] || null : null,
+      ten_nguoi_duyet: item.nguoi_duyet ? userMap[item.nguoi_duyet] || null : null,
+    }));
+  },
+
+  async getAll({ loai, page, size, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, isDelete = false, currentUser, permissions = [] }) {
+    const skip = (page - 1) * size;
+
+    // Xây dựng mảng AND để tránh xung đột multiple OR
+    const andConditions = [];
+
+    // ADMIN → xem tất cả (kể cả NHAP người khác) — check bằng permissions
+    // TL_APPROVE → xem tất cả, NHAP chỉ người tạo
+    // Không có quyền → chỉ xem tài liệu mình tạo
+    if (currentUser) {
+      const isAdmin = permissions.includes("TL_ADMIN_DELETE");
+      const canViewAll = permissions.includes("TL_APPROVE") || isAdmin;
+      if (!canViewAll) {
+        andConditions.push({ nguoi_tao: currentUser });
+      } else if (!isAdmin) {
+        andConditions.push({
+          OR: [
+            { trang_thai: { not: "NHAP" } },
+            { trang_thai: "NHAP", nguoi_tao: currentUser },
+          ],
+        });
+      }
+      // isAdmin: không thêm filter → thấy ALL kể cả NHAP
+    }
+
+    // Search OR
+    if (search) {
+      andConditions.push({
+        OR: [
+          { tieu_de: { contains: search, mode: "insensitive" } },
+          { mo_ta: { contains: search, mode: "insensitive" } },
+          { so_hieu: { contains: search, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    const where = {
+      loai,
+      is_delete: isDelete,
+      ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
+      ...(trangThai ? { trang_thai: trangThai } : {}),
+      ...(phamVi ? { pham_vi: phamVi } : {}),
+      ...(aiDaHoc !== undefined && aiDaHoc !== "" ? { ai_da_hoc: aiDaHoc === "true" } : {}),
+      ...(coQuanBanHanh ? { co_quan_ban_hanh: { contains: coQuanBanHanh, mode: "insensitive" } } : {}),
+      ...(dateFrom || dateTo ? {
+        ngay_ban_hanh: {
+          ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+          ...(dateTo ? { lte: new Date(dateTo) } : {}),
+        },
+      } : {}),
+      ...(andConditions.length > 0 ? { AND: andConditions } : {}),
+    };
+
+    const orderBy = {};
+    if (sortBy && ["thoi_gian_tao", "tieu_de", "ngay_ban_hanh", "luot_xem", "so_luot_tai"].includes(sortBy)) {
+      orderBy[sortBy] = sortOrder === "asc" ? "asc" : "desc";
+    } else {
+      orderBy.thoi_gian_tao = "desc";
+    }
+
+    const [data, totalItems] = await Promise.all([
+      prisma.thu_vien_tai_lieu.findMany({
+        where,
+        skip,
+        take: size,
+        orderBy,
+        include: {
+          thu_vien_danh_muc: {
+            select: { id: true, ten: true },
+          },
+          thu_vien_tai_lieu_file: {
+            where: { la_phien_ban_hien_tai: true, is_delete: false },
+            select: { id: true, ten_file: true, duong_dan: true, kich_thuoc_mb: true, dinh_dang: true },
+            take: 1,
+          },
+          thu_vien_tai_lieu_tag: {
+            where: { thu_vien_tag: { is_delete: false } },
+            select: {
+              thu_vien_tag: {
+                select: { id: true, ten: true },
+              },
+            },
+          },
+          _count: {
+            select: { thu_vien_tai_lieu_media: true },
+          },
+        },
+      }),
+      prisma.thu_vien_tai_lieu.count({ where }),
+    ]);
+
+    const mappedData = await this._mapUserNames(data);
+    return { data: mappedData, totalItems };
+  },
+
+  async getPublic({ page, size, search, idDanhMuc, loai, sortBy, sortOrder, isDelete = false }) {
+    const skip = (page - 1) * size;
+
+    const where = {
+      loai: loai ? loai : { in: ["VAN_HOA", "PHAP_LUAT"] },
+      is_delete: isDelete,
+      trang_thai: "DA_DUYET",
+      pham_vi: "CONG_KHAI",
+      ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
+      ...(search ? {
+        OR: [
+          { tieu_de: { contains: search, mode: "insensitive" } },
+          { mo_ta: { contains: search, mode: "insensitive" } },
+          { so_hieu: { contains: search, mode: "insensitive" } },
+        ],
+      } : {}),
+    };
+
+    const orderBy = {};
+    if (sortBy && ["thoi_gian_tao", "tieu_de", "ngay_ban_hanh", "luot_xem", "so_luot_tai"].includes(sortBy)) {
+      orderBy[sortBy] = sortOrder === "asc" ? "asc" : "desc";
+    } else {
+      orderBy.thoi_gian_tao = "desc";
+    }
+
+    const [data, totalItems] = await Promise.all([
+      prisma.thu_vien_tai_lieu.findMany({
+        where,
+        skip,
+        take: size,
+        orderBy,
+        include: {
+          thu_vien_danh_muc: {
+            select: { id: true, ten: true },
+          },
+          thu_vien_tai_lieu_file: {
+            where: { la_phien_ban_hien_tai: true, is_delete: false },
+            select: { id: true, ten_file: true, duong_dan: true, kich_thuoc_mb: true, dinh_dang: true },
+            take: 1,
+          },
+          thu_vien_tai_lieu_media: {
+            where: { is_delete: false },
+            select: { id: true, loai: true, ten_file_goc: true, url: true, kich_thuoc: true, mime_type: true },
+          },
+          thu_vien_tai_lieu_tag: {
+            where: { thu_vien_tag: { is_delete: false } },
+            select: {
+              thu_vien_tag: {
+                select: { id: true, ten: true },
+              },
+            },
+          },
+        },
+      }),
+      prisma.thu_vien_tai_lieu.count({ where }),
+    ]);
+
+    return { data, totalItems };
+  },
+
+  async getPublicById(id) {
+    const result = await prisma.thu_vien_tai_lieu.findFirst({
+      where: { id, is_delete: false, trang_thai: "DA_DUYET", pham_vi: "CONG_KHAI" },
+      include: {
+        thu_vien_danh_muc: {
+          select: { id: true, ten: true },
+        },
+        thu_vien_tai_lieu_file: {
+          where: { la_phien_ban_hien_tai: true, is_delete: false },
+          select: { id: true, ten_file: true, duong_dan: true, kich_thuoc_mb: true, dinh_dang: true },
+          take: 1,
+        },
+        thu_vien_tai_lieu_media: {
+          where: { is_delete: false },
+          select: { id: true, loai: true, ten_file_goc: true, url: true, kich_thuoc: true, mime_type: true },
+        },
+        thu_vien_tai_lieu_tag: {
+          where: { thu_vien_tag: { is_delete: false } },
+          select: {
+            thu_vien_tag: {
+              select: { id: true, ten: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!result) return null;
+    return result;
+  },
+
+  async getById(id) {
+    const result = await prisma.thu_vien_tai_lieu.findFirst({
+      where: { id, is_delete: false },
+      include: {
+        thu_vien_danh_muc: {
+          select: { id: true, ten: true },
+        },
+        thu_vien_tai_lieu_file: {
+          where: { la_phien_ban_hien_tai: true, is_delete: false },
+          select: { id: true, ten_file: true, duong_dan: true, kich_thuoc_mb: true, dinh_dang: true },
+          take: 1,
+        },
+        thu_vien_tai_lieu_media: {
+          where: { is_delete: false },
+          select: { id: true, loai: true, ten_file_goc: true, url: true, kich_thuoc: true, mime_type: true },
+        },
+        thu_vien_tai_lieu_tag: {
+          where: { thu_vien_tag: { is_delete: false } },
+          select: {
+            thu_vien_tag: {
+              select: { id: true, ten: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!result) return null;
+    const mapped = await this._mapUserNames([result]);
+    return mapped[0];
+  },
+
+  async create(data) {
+    return prisma.thu_vien_tai_lieu.create({ data });
+  },
+
+  async update(id, data) {
+    return prisma.thu_vien_tai_lieu.update({
+      where: { id },
+      data,
+    });
+  },
+
+  async softDelete(id, nguoiCapNhat, lyDoXoa) {
+    return prisma.thu_vien_tai_lieu.update({
+      where: { id },
+      data: {
+        is_delete: true,
+        trang_thai: "DA_XOA",
+        thoi_gian_xoa: new Date().toISOString(),
+        is_cleaned_up: false,
+        nguoi_cap_nhat: nguoiCapNhat,
+        ly_do_xoa: lyDoXoa || null,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+    });
+  },
+
+  async findByIdEvenDeleted(id) {
+    return prisma.thu_vien_tai_lieu.findFirst({ where: { id } });
+  },
+
+  async getDeleted({ loai, page, size, search, currentUser, permissions = [] }) {
+    const skip = (page - 1) * size;
+    const andConditions = [{ trang_thai: "DA_XOA", is_delete: true }];
+
+    if (currentUser) {
+      const isAdmin = permissions.includes("TL_ADMIN_DELETE");
+      const canViewAll = permissions.includes("TL_APPROVE") || isAdmin;
+      if (!canViewAll) {
+        andConditions.push({ nguoi_tao: currentUser });
+      }
+    }
+
+    if (search) {
+      andConditions.push({
+        OR: [
+          { tieu_de: { contains: search, mode: "insensitive" } },
+          { mo_ta: { contains: search, mode: "insensitive" } },
+          { so_hieu: { contains: search, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    const where = { loai, AND: andConditions };
+    const orderBy = { thoi_gian_xoa: "desc" };
+
+    const [data, totalItems] = await Promise.all([
+      prisma.thu_vien_tai_lieu.findMany({
+        where,
+        skip,
+        take: size,
+        orderBy,
+        include: {
+          thu_vien_danh_muc: {
+            select: { id: true, ten: true },
+          },
+          thu_vien_tai_lieu_file: {
+            where: { la_phien_ban_hien_tai: true },
+            select: { id: true, ten_file: true, duong_dan: true },
+            take: 1,
+          },
+        },
+      }),
+      prisma.thu_vien_tai_lieu.count({ where }),
+    ]);
+
+    const mappedData = await this._mapUserNames(data);
+    return { data: mappedData, totalItems };
+  },
+
+  async restore(id, nguoiCapNhat) {
+    return prisma.thu_vien_tai_lieu.update({
+      where: { id },
+      data: {
+        is_delete: false,
+        trang_thai: "NHAP",
+        thoi_gian_xoa: null,
+        is_cleaned_up: false,
+        nguoi_cap_nhat: nguoiCapNhat,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+    });
+  },
+
+  async forceDelete(id, nguoiCapNhat) {
+    return prisma.thu_vien_tai_lieu.update({
+      where: { id },
+      data: {
+        is_cleaned_up: true,
+        nguoi_cap_nhat: nguoiCapNhat,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+    });
+  },
+
+  async getDocumentsToCleanup() {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    return prisma.thu_vien_tai_lieu.findMany({
+      where: {
+        is_delete: true,
+        trang_thai: "DA_XOA",
+        is_cleaned_up: false,
+        thoi_gian_xoa: { lte: thirtyDaysAgo },
+      },
+      include: {
+        thu_vien_tai_lieu_file: {
+          where: { la_phien_ban_hien_tai: true },
+          select: { id: true, duong_dan: true },
+        },
+        thu_vien_tai_lieu_media: {
+          where: { is_delete: false },
+          select: { id: true, url: true },
+        },
+      },
+    });
+  },
+
+  async getByIdFull(id) {
+    return prisma.thu_vien_tai_lieu.findFirst({
+      where: { id },
+      include: {
+        thu_vien_tai_lieu_file: {
+          where: { la_phien_ban_hien_tai: true },
+          select: { id: true, duong_dan: true },
+        },
+        thu_vien_tai_lieu_media: {
+          where: { is_delete: false },
+          select: { id: true, url: true },
+        },
+      },
+    });
+  },
+
+  async findById(id) {
+    return prisma.thu_vien_tai_lieu.findFirst({
+      where: { id, is_delete: false },
+    });
+  },
+
+  async getStatistics(loai, currentUser, permissions = []) {
+    const baseWhere = { loai, is_delete: false };
+
+    // Áp dụng quyền xem — giống logic trong getAll
+    const andConditions = [];
+    if (currentUser) {
+      const isAdmin = permissions.includes("TL_ADMIN_DELETE");
+      const canViewAll = permissions.includes("TL_APPROVE") || isAdmin;
+      if (!canViewAll) {
+        andConditions.push({ nguoi_tao: currentUser });
+      } else if (!isAdmin) {
+        andConditions.push({
+          OR: [
+            { trang_thai: { not: "NHAP" } },
+            { trang_thai: "NHAP", nguoi_tao: currentUser },
+          ],
+        });
+      }
+      // isAdmin: không thêm filter → thống kê ALL
+    }
+
+    const where = andConditions.length > 0 ? { ...baseWhere, AND: andConditions } : baseWhere;
+
+    const [total, approved, pending, revoked, aiLearned, viewAgg, downloadAgg] = await Promise.all([
+      prisma.thu_vien_tai_lieu.count({ where }),
+      prisma.thu_vien_tai_lieu.count({ where: { ...where, trang_thai: "DA_DUYET" } }),
+      prisma.thu_vien_tai_lieu.count({ where: { ...where, trang_thai: "CHO_DUYET" } }),
+      prisma.thu_vien_tai_lieu.count({ where: { ...where, trang_thai: "LUU_TRU" } }),
+      prisma.thu_vien_tai_lieu.count({ where: { ...where, ai_da_hoc: true } }),
+      prisma.thu_vien_tai_lieu.aggregate({ where, _sum: { luot_xem: true } }),
+      prisma.thu_vien_tai_lieu.aggregate({ where, _sum: { so_luot_tai: true } }),
+    ]);
+
+    return {
+      total,
+      approved,
+      pending,
+      revoked,
+      aiLearned,
+      totalViews: viewAgg._sum.luot_xem || 0,
+      totalDownloads: downloadAgg._sum.so_luot_tai || 0,
+    };
+  },
+
+  async getSubCategories(loai) {
+    const result = await prisma.thu_vien_danh_muc.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        thu_tu: { lt: 10 },
+      },
+      select: {
+        id: true,
+        ten: true,
+        thu_tu: true,
+        _count: {
+          select: { thu_vien_tai_lieu: { where: { loai: loai || "VAN_HOA", is_delete: false } } },
+        },
+      },
+      orderBy: { thu_tu: "asc" },
+    });
+
+    return result.map((item) => ({
+      id: item.id,
+      name: item.ten,
+      sortOrder: item.thu_tu,
+      documentCount: item._count.thu_vien_tai_lieu,
+    }));
+  },
+
+  async getDocTypes() {
+    const result = await prisma.thu_vien_danh_muc.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        thu_tu: { gte: 10 },
+      },
+      select: {
+        id: true,
+        ten: true,
+        thu_tu: true,
+        _count: {
+          select: { thu_vien_tai_lieu: { where: { loai: "PHAP_LUAT", is_delete: false } } },
+        },
+      },
+      orderBy: { thu_tu: "asc" },
+    });
+
+    return result.map((item) => ({
+      id: item.id,
+      name: item.ten,
+      sortOrder: item.thu_tu,
+      documentCount: item._count.thu_vien_tai_lieu,
+    }));
+  },
+
+  async getIssuingAgencies() {
+    const result = await prisma.thu_vien_tai_lieu.groupBy({
+      by: ["co_quan_ban_hanh"],
+      where: {
+        loai: "PHAP_LUAT",
+        is_delete: false,
+        co_quan_ban_hanh: { not: null },
+      },
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+    });
+
+    return result.map((item) => ({
+      id: item.co_quan_ban_hanh,
+      name: item.co_quan_ban_hanh,
+      documentCount: item._count.id,
+    }));
+  },
+
+  async createMedia(data) {
+    return prisma.thu_vien_tai_lieu_media.create({ data });
+  },
+
+  async deleteMedia(id, mediaId) {
+    return prisma.thu_vien_tai_lieu_media.update({
+      where: { id: mediaId, id_tai_lieu: id },
+      data: { is_delete: true },
+    });
+  },
+
+  async findMediaById(id, mediaId) {
+    return prisma.thu_vien_tai_lieu_media.findFirst({
+      where: { id: mediaId, id_tai_lieu: id, is_delete: false },
+    });
+  },
+
+  async incrementViewCount(id) {
+    return prisma.thu_vien_tai_lieu.update({
+      where: { id },
+      data: { luot_xem: { increment: 1 } },
+    });
+  },
+
+  async incrementDownloadCount(id) {
+    return prisma.thu_vien_tai_lieu.update({
+      where: { id },
+      data: { so_luot_tai: { increment: 1 } },
+    });
+  },
+
+  async createTagLink(idTaiLieu, idTag) {
+    return prisma.thu_vien_tai_lieu_tag.create({
+      data: { id_tai_lieu: idTaiLieu, id_tag: idTag },
+    });
+  },
+
+  async deleteTagLinks(idTaiLieu) {
+    return prisma.thu_vien_tai_lieu_tag.deleteMany({
+      where: { id_tai_lieu: idTaiLieu },
+    });
+  },
+
+  async findTagByName(ten) {
+    return prisma.thu_vien_tag.findFirst({
+      where: { ten: { equals: ten, mode: "insensitive" }, is_delete: false },
+    });
+  },
+
+  async createTag(ten) {
+    return prisma.thu_vien_tag.create({
+      data: { ten },
+    });
+  },
+};
+
+export default ThuVienRepository;

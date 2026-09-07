@@ -1,17 +1,27 @@
 import OTP_TYPE from '../constants/otp.constants.js';
 import AuthSchemas from '../schemas/auth.schema.js';
+import { RECEPTION_SWAGGER_DEMO as DEMO } from './reception-swagger-demo.fixture.js';
 
 const AuthSwagger = {
     '/api/auths/login': {
         post: {
             tags: ['Auths'],
-            summary: 'User login',
-            description: 'Login with username/passwor',
+            summary: 'Đăng nhập hệ thống',
+            description: 'Có thể dùng tài khoản DEV mẫu bên dưới để lấy access_token, sau đó bấm Authorize và nhập token trước khi chạy các API tiếp dân có phân quyền.',
             requestBody: {
                 required: true,
                 content: {
                     'application/json': {
                         schema: AuthSchemas.LoginRequest,
+                        examples: {
+                            receptionSwaggerDemo: {
+                                summary: 'Demo DEV - tài khoản có đủ quyền API tiếp dân',
+                                value: {
+                                    tenDangNhap: DEMO.auth.username,
+                                    matKhau: DEMO.auth.password,
+                                },
+                            },
+                        },
                     }
                 }
             },

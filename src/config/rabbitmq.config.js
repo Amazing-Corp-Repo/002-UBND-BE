@@ -11,6 +11,25 @@ export const connectRabbitMQ = async (retryCount = 5) => {
         return { connection, channel };
     }
 
+    // Chưa cấu hình RABBITMQ_URL (vd dev chỉ có .env DB) → bỏ qua, app vẫn boot.
+    // Các tác vụ async (video/export) sẽ cần RabbitMQ khi team cấu hình sau.
+    if (!RABBITMQ_URL) {
+        console.warn("[RabbitMQ] Chưa có RABBITMQ_URL — bỏ qua hàng đợi, app chạy trong chế độ không có async worker.");
+        channel = {
+            assertQueue: async () => {},
+            assertExchange: async () => {},
+            bindQueue: async () => {},
+            sendToQueue: () => false,
+            publish: () => false,
+            consume: () => Promise.resolve(null),
+            prefetch: () => Promise.resolve(null),
+            ack: () => {},
+            nack: () => {},
+            close: async () => {},
+        };
+        return { connection: null, channel };
+    }
+
     for (let attempt = 1; attempt <= retryCount; attempt++) {
         try {
             connection = await amqp.connect(RABBITMQ_URL);

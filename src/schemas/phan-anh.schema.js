@@ -16,8 +16,7 @@ const PhanAnhSchemas = {
     fieldName: "file",
     maxCount: 5,
     description:
-      "Các tệp tin đính kèm cho phản ánh. Chỉ cần có 1 trong 2: file hoặc idVideo. Tối đa 5 tệp.",
-    allowNull: true,
+      "Hình ảnh bắt buộc của phản ánh. Chấp nhận JPEG/PNG, tối đa 5 ảnh, mỗi ảnh tối đa 3 MB.",
   }),
   UpdatePhanAnhStatusRequest: addFileToJoiSchema(UpdatePhanAnhStatusRequest, {
     fieldName: "file",
@@ -31,8 +30,7 @@ const PhanAnhSchemas = {
     fieldName: "file",
     maxCount: 5,
     description:
-      "Các tệp tin đính kèm cho phản ánh. Chỉ cần có 1 trong 2: file hoặc idVideo. Tối đa 5 tệp.",
-    allowNull: true,
+      "Hình ảnh bắt buộc của phản ánh. Chấp nhận JPEG/PNG, tối đa 5 ảnh, mỗi ảnh tối đa 3 MB.",
   }),
 };
 

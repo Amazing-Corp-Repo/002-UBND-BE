@@ -14,4 +14,8 @@ export default defineConfig({
   datasource: {
     url: process.env.MIGRATE_DATABASE_URL || process.env.DATABASE_URL,
   },
+  // Seed DEV (fake data) — node chạy ESM + type-stripping để import Prisma client (.ts sinh ra).
+  migrations: {
+    seed: 'node --experimental-strip-types prisma/seed.js',
+  },
 });

@@ -4,7 +4,9 @@ const PhanAnhSwagger = {
   "/api/phan-anh": {
     post: {
       tags: ["PhanAnh"],
-      summary: "Táº¡o pháº£n Ă¡nh má»›i",
+      summary: "Tạo phản ánh mới (yêu cầu đăng nhập)",
+      description:
+        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -14,7 +16,15 @@ const PhanAnhSwagger = {
         },
         required: true,
       },
-      responses: {},
+      responses: {
+        200: { description: "Tạo phản ánh thành công" },
+        400: {
+          description:
+            "Dữ liệu không hợp lệ, thiếu khu phố, thiếu hình ảnh hoặc lĩnh vực không tồn tại",
+        },
+        401: { description: "Chưa đăng nhập hoặc token hết hạn" },
+        403: { description: "Không có quyền PA_CREATE" },
+      },
     },
     get: {
       tags: ["PhanAnh"],
@@ -55,6 +65,7 @@ const PhanAnhSwagger = {
           schema: {
             type: "integer",
             default: 1,
+            minimum: 1,
           },
           description: "Sá»‘ trang hiá»‡n táº¡i",
         },
@@ -65,6 +76,8 @@ const PhanAnhSwagger = {
           schema: {
             type: "integer",
             default: 10,
+            minimum: 1,
+            maximum: 100,
           },
           description: "Sá»‘ má»¥c trĂªn má»—i trang",
         },
@@ -105,6 +118,7 @@ const PhanAnhSwagger = {
           required: true,
           schema: {
             type: "string",
+            pattern: "^[A-Z0-9]{8}$",
           },
           description: "MĂ£ pháº£n Ă¡nh cáº§n láº¥y thĂ´ng tin",
         },
@@ -334,9 +348,11 @@ const PhanAnhSwagger = {
         {
           name: "search",
           in: "query",
-          required: false,
+          required: true,
           schema: {
             type: "string",
+            minLength: 3,
+            maxLength: 255,
           },
           description: "Chuá»—i tĂ¬m kiáº¿m trong tiĂªu Ä‘á» pháº£n Ă¡nh",
         },
@@ -348,7 +364,8 @@ const PhanAnhSwagger = {
     post: {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới từ công dân (không cần đăng nhập)",
-      description: "API công khai để người dân tạo phản ánh",
+      description:
+        "API công khai để người dân tạo phản ánh. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
       requestBody: {
         content: {
           "multipart/form-data": {
@@ -362,7 +379,8 @@ const PhanAnhSwagger = {
           description: "Tạo phản ánh thành công",
         },
         400: {
-          description: "Dữ liệu không hợp lệ hoặc lĩnh vực không tồn tại",
+          description:
+            "Dữ liệu không hợp lệ, thiếu khu phố, thiếu hình ảnh hoặc lĩnh vực không tồn tại",
         },
       },
     },

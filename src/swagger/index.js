@@ -19,6 +19,16 @@ import NotificationSwagger from './notification.swagger.js';
 import AuditLogSwagger from './audit-log.swagger.js';
 import ExportSwagger from './export.swagger.js';
 import AddressVote from './address-vote.swagger.js';
+import DangKyTiepDanSwagger from './dang-ky-tiep-dan.swagger.js';
+import ReceptionScheduleSwagger from './reception-schedule.swagger.js';
+import ReceptionScheduleManagementSwagger from './reception-schedule-management.swagger.js';
+import ReceptionRatingSwagger from './reception-rating.swagger.js';
+import ReceptionCounterSwagger from './reception-counter.swagger.js';
+import ReceptionCounterAssignmentSwagger from './reception-counter-assignment.swagger.js';
+import LeaderMeetingScheduleSwagger from './leader-meeting-schedule.swagger.js';
+import LeaderMeetingRegistrationSwagger from './leader-meeting-registration.swagger.js';
+import LeaderMeetingRatingSwagger from './leader-meeting-rating.swagger.js';
+import ThuVienSwagger from './thu-vien.swagger.js';
 
 const swaggerDocument = {
 
@@ -55,7 +65,17 @@ const swaggerDocument = {
         ...NotificationSwagger,
         ...AuditLogSwagger,
         ...ExportSwagger,
-        ...AddressVote
+        ...AddressVote,
+        ...DangKyTiepDanSwagger,
+        ...ReceptionScheduleSwagger,
+        ...ReceptionScheduleManagementSwagger,
+        ...ReceptionRatingSwagger,
+        ...ReceptionCounterSwagger,
+        ...ReceptionCounterAssignmentSwagger,
+        ...LeaderMeetingScheduleSwagger,
+        ...LeaderMeetingRegistrationSwagger,
+        ...LeaderMeetingRatingSwagger,
+        ...ThuVienSwagger,
     },
 
     components: {

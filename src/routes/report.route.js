@@ -68,4 +68,11 @@ reportRouter.get(
   ReportController.exportReportTinTuc
 );
 
+reportRouter.get(
+  "/danh-gia/export",
+  authenticate,
+  authorize([PERMISSION.RPT_GET_EXCEL]),
+  ReportController.exportDanhGia
+);
+
 export default reportRouter;

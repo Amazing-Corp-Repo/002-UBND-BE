@@ -1,0 +1,771 @@
+import {
+  applyReceptionDemoExamples,
+  errorDemo,
+  successDemo,
+} from "./reception-demo-example.util.js";
+import { RECEPTION_SWAGGER_DEMO as DEMO } from "./reception-swagger-demo.fixture.js";
+
+const registrationRequestSchema = {
+  type: "object",
+  required: [
+    "idLichTiepDan",
+    "chuDe",
+    "lyDo",
+    "hoTen",
+    "sdt",
+    "cccd",
+    "diaChi",
+  ],
+  anyOf: [{ required: ["slotId"] }, { required: ["slot"] }],
+  properties: {
+    idLichTiepDan: { type: "string", format: "uuid" },
+    slotId: {
+      type: "string",
+      format: "uuid",
+      description: "ID khung giờ do API danh sách lịch trả về; client mới nên dùng trường này",
+    },
+    slot: { type: "string", example: "08:00 - 09:00" },
+    chuDe: { type: "string", maxLength: 255, example: "Hướng dẫn thủ tục" },
+    lyDo: { type: "string", minLength: 10, maxLength: 500 },
+    hoTen: { type: "string", maxLength: 150, example: "Nguyễn Văn An" },
+    sdt: { type: "string", pattern: "^(03|05|07|08|09)\\d{8}$", example: "0912345678" },
+    cccd: { type: "string", pattern: "^\\d{12}$", example: "042204001234" },
+    diaChi: { type: "string", maxLength: 500 },
+  },
+};
+
+const createdRegistrationSchema = {
+  type: "object",
+  description:
+    "Thông tin đăng ký với contract tiếng Anh. Các trường tiếng Việt/snake_case vẫn được trả tạm thời để tương thích Mobile cũ và được đánh dấu deprecated.",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    receptionCode: { type: "string", example: "A00123" },
+    receptionType: { type: "string", example: "COUNTER_RECEPTION" },
+    scheduleId: { type: "string", format: "uuid" },
+    slotId: { type: "string", format: "uuid", nullable: true },
+    receptionDate: { type: "string", format: "date", example: "2026-08-26" },
+    timeSlot: { type: "string", example: "08:00 - 09:00" },
+    topic: { type: "string", example: "Hướng dẫn thủ tục" },
+    description: { type: "string" },
+    fullName: { type: "string", example: "Nguyễn Văn An" },
+    phoneNumber: {
+      type: "string",
+      description: "Số điện thoại đã được che một phần",
+      example: "******5678",
+    },
+    citizenId: {
+      type: "string",
+      description: "CCCD đã được che một phần",
+      example: "********1234",
+    },
+    address: { type: "string" },
+    department: { type: "string", nullable: true },
+    leaderName: { type: "string", nullable: true },
+    leaderTitle: { type: "string", nullable: true },
+    status: { type: "string", example: "PENDING" },
+    rejectionReason: { type: "string", nullable: true },
+    rejectedAt: { type: "string", format: "date-time", nullable: true },
+    createdAt: { type: "string", format: "date-time", nullable: true },
+    updatedAt: { type: "string", format: "date-time", nullable: true },
+    ma_tiep_dan: { type: "string", deprecated: true },
+    loai: { type: "string", deprecated: true },
+    id_lich_tiep_dan: { type: "string", format: "uuid", deprecated: true },
+    ngay: { type: "string", format: "date", deprecated: true },
+    slot: { type: "string", deprecated: true },
+    chu_de: { type: "string", deprecated: true },
+    ly_do: { type: "string", deprecated: true },
+    ho_ten: { type: "string", deprecated: true },
+    sdt: { type: "string", deprecated: true },
+    cccd: { type: "string", deprecated: true },
+    dia_chi: { type: "string", deprecated: true },
+    trang_thai: { type: "string", deprecated: true },
+  },
+};
+
+const staffRegistrationDetailSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    receptionCode: { type: "string", example: "A00123" },
+    receptionType: { type: "string", example: "COUNTER_RECEPTION" },
+    schedule: {
+      type: "object",
+      nullable: true,
+      properties: {
+        id: { type: "string", format: "uuid" },
+        officerName: { type: "string" },
+        location: { type: "string" },
+        receptionDate: { type: "string", format: "date" },
+        timeRange: { type: "string" },
+        note: { type: "string", nullable: true },
+      },
+    },
+    receptionDate: { type: "string", format: "date" },
+    timeSlot: { type: "string" },
+    topic: { type: "string" },
+    workingContent: { type: "string" },
+    applicant: {
+      type: "object",
+      description: "Thông tin định danh đầy đủ, chỉ dành cho API nội bộ có quyền",
+      properties: {
+        fullName: { type: "string" },
+        phoneNumber: { type: "string" },
+        citizenId: { type: "string" },
+        address: { type: "string" },
+      },
+    },
+    department: { type: "string", nullable: true },
+    approvalStatus: {
+      type: "string",
+      enum: ["PENDING", "APPROVED", "COMPLETED", "REJECTED"],
+    },
+    approver: {
+      type: "object",
+      nullable: true,
+      properties: {
+        name: { type: "string" },
+        title: { type: "string", nullable: true },
+        approvedAt: { type: "string", format: "date-time" },
+      },
+    },
+    ratingStatus: { type: "string", enum: ["RATED", "NOT_RATED"] },
+    completedAt: { type: "string", format: "date-time", nullable: true },
+    rejectionReason: { type: "string", nullable: true },
+    rejectedAt: { type: "string", format: "date-time", nullable: true },
+    rating: {
+      type: "object",
+      nullable: true,
+      properties: {
+        id: { type: "string", format: "uuid" },
+        score: { type: "integer", minimum: 1, maximum: 5 },
+        suggestions: { type: "array", items: { type: "string" } },
+        comment: { type: "string", nullable: true },
+        createdAt: { type: "string", format: "date-time" },
+      },
+    },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+  },
+};
+
+const DangKyTiepDanSwagger = {
+  "/api/reception-registrations": {
+    get: {
+      tags: ["ReceptionRegistration"],
+      summary: "Lấy danh sách đăng ký tiếp dân dành cho cán bộ",
+      description:
+        "Trả về danh sách đăng ký tiếp dân có phân trang. Hỗ trợ tìm kiếm và lọc theo ngày tiếp, trạng thái phê duyệt, trạng thái đánh giá và quầy tiếp nhận.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
+        { name: "size", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 10 } },
+        {
+          name: "scope",
+          in: "query",
+          description: "ALL trả tất cả đơn; MY chỉ trả đơn do chính tài khoản đăng nhập đã phê duyệt, hoàn thành hoặc từ chối.",
+          schema: { type: "string", enum: ["ALL", "MY"], default: "ALL" },
+        },
+        { name: "search", in: "query", schema: { type: "string", maxLength: 100 } },
+        { name: "receptionDate", in: "query", schema: { type: "string", format: "date" } },
+        { name: "approvalStatus", in: "query", schema: { type: "string", enum: ["PENDING", "APPROVED", "COMPLETED", "REJECTED"] } },
+        { name: "ratingStatus", in: "query", schema: { type: "string", enum: ["RATED", "NOT_RATED"] } },
+        { name: "department", in: "query", schema: { type: "string", enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"] } },
+      ],
+      responses: {
+        200: { description: "Lấy danh sách đăng ký tiếp dân thành công" },
+        400: { description: "Bộ lọc ngày, trạng thái, quầy hoặc phân trang không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_GET_ALL" },
+      },
+    },
+    post: {
+      tags: ["ReceptionRegistration"],
+      summary: "Đăng ký lịch tiếp dân tại quầy từ Mobile",
+      description:
+        "API công khai. Client mới gửi slotId lấy từ API danh sách lịch; trường slot dạng chuỗi vẫn được hỗ trợ để tương thích phiên bản cũ. Nếu gửi cả hai, chúng phải cùng chỉ một khung giờ. BE kiểm tra khung giờ, chống trùng theo cả SĐT và CCCD, kiểm tra giới hạn trong ngày và sức chứa trong transaction Serializable. Unique index tại DB ngăn hai request đồng thời tạo trùng. Mọi đơn PENDING, APPROVED, COMPLETED, REJECTED hoặc đã xoá mềm đều giữ chỗ và không hoàn lại. Mỗi số điện thoại và mỗi CCCD được tạo tối đa 2 đơn trong cùng ngày tiếp dân. Giới hạn 30 request trong 10 phút cho mỗi IP. Hệ thống tự sinh mã tiếp dân ngắn, ví dụ A00123.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": { schema: registrationRequestSchema },
+        },
+      },
+      responses: {
+        200: {
+          description: "Đăng ký thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  message: {
+                    type: "string",
+                    example: "Đăng ký lịch tiếp dân thành công",
+                  },
+                  data: createdRegistrationSchema,
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Thiếu hoặc sai dữ liệu, lịch đã qua, slot và slotId không khớp hoặc khung giờ không thuộc lịch" },
+        404: { description: "Lịch hoặc ID khung giờ không tồn tại, đã ngừng hoạt động hoặc không thuộc lịch đã chọn" },
+        409: { description: "Khung giờ đã qua hoặc đã đầy, SĐT/CCCD đã đăng ký ca này hoặc đã đạt giới hạn 2 đơn trong ngày" },
+        429: { description: "Vượt quá 30 request đăng ký trong 10 phút từ cùng một IP" },
+        503: { description: "Nhiều request đồng thời gây xung đột transaction; client có thể thử lại" },
+      },
+    },
+  },
+  "/api/reception-registrations/lookup": {
+    post: {
+      tags: ["ReceptionRegistration"],
+      summary: "Tra cứu đăng ký tiếp dân của người dân",
+      description:
+        "API công khai dành cho Mobile. Chỉ sử dụng một trong hai thông tin là mã tiếp dân hoặc số điện thoại. Các trường định danh nhạy cảm được che một phần trong kết quả. Giới hạn 60 lượt tra cứu trong 10 phút cho mỗi IP để hạn chế dò mã và số điện thoại.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              oneOf: [
+                {
+                  type: "object",
+                  required: ["receptionCode"],
+                  properties: {
+                    receptionCode: { type: "string", example: "A00123" },
+                  },
+                  additionalProperties: false,
+                },
+                {
+                  type: "object",
+                  required: ["phoneNumber"],
+                  properties: {
+                    phoneNumber: { type: "string", example: "0912345678" },
+                  },
+                  additionalProperties: false,
+                },
+              ],
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: "Tra cứu đăng ký tiếp dân thành công" },
+        400: { description: "Thông tin tra cứu không hợp lệ" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
+        429: { description: "Vượt quá 60 lượt tra cứu trong 10 phút từ cùng một IP" },
+      },
+    },
+  },
+  "/api/reception-registrations/{id}": {
+    get: {
+      tags: ["ReceptionRegistration"],
+      summary: "Lấy chi tiết đăng ký tiếp dân dành cho cán bộ",
+      description:
+        "Trả về đầy đủ thông tin người dân đã đăng ký để cán bộ kiểm tra khi bấm vào mã tiếp dân.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Lấy chi tiết đăng ký tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: staffRegistrationDetailSchema,
+                  message: {
+                    type: "string",
+                    example: "Lấy chi tiết đăng ký tiếp dân thành công",
+                  },
+                  pagination: { nullable: true, example: null },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID đăng ký tiếp dân không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_GET_DETAIL" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
+      },
+    },
+  },
+  "/api/reception-registrations/{id}/approve": {
+    patch: {
+      tags: ["ReceptionRegistration"],
+      summary: "Phê duyệt đăng ký tiếp dân",
+      description:
+        "Cán bộ phê duyệt yêu cầu gặp tại quầy đã được phân công cho tài khoản trong đúng ca. Frontend không cần gửi mã quầy; backend tự lấy quầy từ phân công của tài khoản đăng nhập, kiểm tra sức chứa rồi ghi nhận người duyệt và thời điểm duyệt. Trường department cũ vẫn được hỗ trợ để đối chiếu tương thích; nếu gửi khác phân công sẽ bị từ chối.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                department: {
+                  type: "string",
+                  nullable: true,
+                  description: "Không bắt buộc; backend tự xác định quầy từ phân công ca trực.",
+                  enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Phê duyệt đăng ký tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: staffRegistrationDetailSchema,
+                  message: {
+                    type: "string",
+                    example: "Phê duyệt đăng ký tiếp dân thành công",
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID đăng ký hoặc quầy tiếp nhận không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_APPROVE, chưa được phân công trong ca hoặc mã quầy không khớp phân công" },
+        404: { description: "Không tìm thấy đăng ký hoặc người phê duyệt" },
+        409: { description: "Đăng ký không ở trạng thái chờ duyệt, đã được xử lý hoặc quầy được chọn đã đầy" },
+        503: { description: "Nhiều cán bộ đồng thời phê duyệt gây xung đột transaction; client có thể thử lại" },
+      },
+    },
+  },
+  "/api/reception-registrations/{id}/complete": {
+    patch: {
+      tags: ["ReceptionRegistration"],
+      summary: "Xác nhận hoàn thành buổi tiếp dân",
+      description:
+        "Cán bộ quầy hoặc lãnh đạo có permission RR_COMPLETE chuyển đơn từ APPROVED sang COMPLETED sau khi tiếp dân xong. Đơn phải được gán QUAY_1 đến QUAY_8. Backend ghi người thực hiện, thời điểm hoàn thành và audit; sau bước này người dân mới được đánh giá.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Hoàn thành buổi tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: staffRegistrationDetailSchema,
+                  message: {
+                    type: "string",
+                    example: "Hoàn thành buổi tiếp dân thành công",
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID đăng ký không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_COMPLETE" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
+        409: { description: "Đơn chưa APPROVED, chưa gán quầy hoặc đã được xử lý" },
+      },
+    },
+  },
+  "/api/reception-registrations/{id}/reject": {
+    patch: {
+      tags: ["ReceptionRegistration"],
+      summary: "Từ chối đăng ký tiếp dân đang chờ",
+      description:
+        "Cán bộ phê duyệt hoặc lãnh đạo có permission RR_REJECT được chuyển đơn từ PENDING sang REJECTED và phải nhập lý do. Backend ghi người thực hiện, thời điểm và audit. Đơn bị từ chối vẫn được tính là đã giữ chỗ và không hoàn lại sức chứa.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["reason"],
+              properties: {
+                reason: { type: "string", minLength: 5, maxLength: 500 },
+              },
+            },
+            example: { reason: "Nội dung đăng ký không thuộc phạm vi tiếp nhận" },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Từ chối đăng ký tiếp dân thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: staffRegistrationDetailSchema,
+                  message: {
+                    type: "string",
+                    example: "Từ chối đăng ký tiếp dân thành công",
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "ID hoặc lý do từ chối không hợp lệ" },
+        401: { description: "Thiếu hoặc sai access token" },
+        403: { description: "Không có quyền RR_REJECT" },
+        404: { description: "Không tìm thấy đăng ký tiếp dân" },
+        409: { description: "Đơn không còn ở trạng thái PENDING hoặc đã được xử lý" },
+      },
+    },
+  },
+  "/api/reception-registrations/rating-lookup/{receptionCode}": {
+    get: {
+      tags: ["ReceptionRegistration"],
+      deprecated: true,
+      summary: "[Luồng cũ] Tra cứu đăng ký đã hoàn thành để đánh giá trên iPad",
+      description:
+        "API luồng cũ được giữ nguyên để tương thích và không còn được iPad mới sử dụng. Luồng mới nhập thủ công toàn bộ thông tin qua POST /api/reception-ratings. API này vẫn chỉ trả về đăng ký ở trạng thái COMPLETED, đã gán từ QUAY_1 đến QUAY_8 và chưa được đánh giá. Trạng thái APPROVED chưa đủ điều kiện đánh giá. Giới hạn riêng 60 lượt tra mã trong 10 phút cho mỗi IP.",
+      parameters: [
+        {
+          name: "receptionCode",
+          in: "path",
+          required: true,
+          schema: { type: "string", example: "A00123" },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Lấy thông tin để người dân xác nhận thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      registrationId: { type: "string", format: "uuid" },
+                      receptionCode: { type: "string", example: "A00123" },
+                      receptionDate: { type: "string", format: "date" },
+                      timeSlot: { type: "string" },
+                      topic: { type: "string" },
+                      workingContent: { type: "string" },
+                      applicant: {
+                        type: "object",
+                        properties: {
+                          fullName: { type: "string" },
+                          phoneNumber: { type: "string", example: "******5678" },
+                          citizenId: { type: "string", example: "********1234" },
+                          address: { type: "string" },
+                        },
+                      },
+                      department: { type: "string", enum: ["QUAY_1", "QUAY_2", "QUAY_3", "QUAY_4", "QUAY_5", "QUAY_6", "QUAY_7", "QUAY_8"] },
+                      approvalStatus: { type: "string", enum: ["COMPLETED"] },
+                      ratingStatus: { type: "string", enum: ["NOT_RATED"] },
+                    },
+                  },
+                  message: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Mã tiếp dân không hợp lệ" },
+        404: { description: "Không tìm thấy mã tiếp dân" },
+        409: { description: "Buổi tiếp chưa hoàn thành, chưa gán quầy hoặc đã được đánh giá" },
+        429: { description: "Vượt quá 60 lượt tra mã đánh giá trong 10 phút từ cùng một IP" },
+      },
+    },
+  },
+};
+
+const registrationDemo = {
+  id: "323e4567-e89b-42d3-a456-426614174000",
+  receptionCode: "A00123",
+  receptionType: "COUNTER_RECEPTION",
+  receptionDate: "2026-08-26",
+  timeSlot: "07:30 - 08:30",
+  topic: "Hướng dẫn thủ tục hành chính",
+  workingContent: "Đề nghị hướng dẫn hồ sơ xác nhận thông tin cư trú",
+  applicant: {
+    fullName: "Nguyễn Văn An",
+    phoneNumber: "0912345678",
+    citizenId: "042204001234",
+    address: "Phường Thành Sen, tỉnh Hà Tĩnh",
+  },
+  department: "QUAY_3",
+  approvalStatus: "APPROVED",
+  ratingStatus: "NOT_RATED",
+};
+
+applyReceptionDemoExamples(DangKyTiepDanSwagger, {
+  "GET /api/reception-registrations": {
+    parameters: {
+      page: 1,
+      size: 10,
+      search: "SWG",
+      receptionDate: null,
+      approvalStatus: null,
+      ratingStatus: null,
+      department: null,
+    },
+    responses: {
+      200: successDemo(
+        "Lấy danh sách đăng ký tiếp dân thành công",
+        [registrationDemo],
+        { currentPage: 1, pageSize: 10, totalPages: 1, totalItems: 1 }
+      ),
+      400: errorDemo(
+        "Demo 400 - Bộ lọc trạng thái không hợp lệ",
+        "Dữ liệu không hợp lệ",
+        [{ field: "approvalStatus", message: "Trạng thái phê duyệt không hợp lệ" }]
+      ),
+    },
+  },
+  "POST /api/reception-registrations": {
+    request: {
+      validRegistration: {
+        summary: "Demo hợp lệ - đăng ký bằng slotId",
+        value: {
+          idLichTiepDan: DEMO.schedules.main,
+          slotId: DEMO.slots.main,
+          chuDe: "Hướng dẫn thủ tục hành chính",
+          lyDo: "Đề nghị hướng dẫn hồ sơ xác nhận thông tin cư trú",
+          hoTen: "Nguyễn Văn An",
+          sdt: DEMO.publicRegistration.phone,
+          cccd: DEMO.publicRegistration.citizenId,
+          diaChi: "Phường Thành Sen, tỉnh Hà Tĩnh",
+        },
+      },
+      missingRequiredFields: {
+        summary: "Demo lỗi 400 - thiếu dữ liệu bắt buộc",
+        value: { hoTen: "Nguyễn Văn An" },
+      },
+    },
+    responses: {
+      200: successDemo("Đăng ký lịch tiếp dân thành công", {
+        ...registrationDemo,
+        scheduleId: "123e4567-e89b-42d3-a456-426614174000",
+        slotId: "223e4567-e89b-42d3-a456-426614174000",
+        phoneNumber: "******5678",
+        citizenId: "********1234",
+        status: "PENDING",
+      }),
+      400: errorDemo(
+        "Demo 400 - Thiếu dữ liệu bắt buộc",
+        "Dữ liệu không hợp lệ",
+        [
+          { field: "idLichTiepDan", message: "ID lịch tiếp dân là bắt buộc" },
+          { field: "chuDe", message: "Chủ đề là bắt buộc" },
+          { field: "slotId", message: "Phải cung cấp ID khung giờ hoặc chuỗi khung giờ" },
+        ]
+      ),
+      409: {
+        duplicateRegistration: errorDemo(
+          "Demo 409 - Đăng ký trùng",
+          "Số điện thoại đã đăng ký trong khung giờ này"
+        ),
+        fullSlot: errorDemo(
+          "Demo 409 - Ca đã đầy",
+          "Khung giờ tiếp dân đã đủ sức chứa"
+        ),
+      },
+      503: errorDemo(
+        "Demo 503 - Xung đột giao dịch đồng thời",
+        "Hệ thống đang bận xử lý đăng ký, vui lòng thử lại"
+      ),
+    },
+  },
+  "POST /api/reception-registrations/lookup": {
+    request: {
+      lookupByCode: {
+        summary: "Demo tra cứu bằng mã tiếp dân",
+        value: { receptionCode: DEMO.registrations.detail.code },
+      },
+      lookupByPhone: {
+        summary: "Demo tra cứu bằng số điện thoại",
+        value: { phoneNumber: "0902000001" },
+      },
+      invalidLookup: {
+        summary: "Demo lỗi 400 - gửi đồng thời hai điều kiện",
+        value: { receptionCode: DEMO.registrations.detail.code, phoneNumber: "0902000001" },
+      },
+    },
+    responses: {
+      200: successDemo("Tra cứu đăng ký tiếp dân thành công", [{
+        ...registrationDemo,
+        phoneNumber: "******5678",
+        citizenId: "********1234",
+      }]),
+      404: errorDemo(
+        "Demo 404 - Không tìm thấy đơn",
+        "Không tìm thấy đăng ký tiếp dân"
+      ),
+    },
+  },
+  "GET /api/reception-registrations/{id}": {
+    parameters: { id: DEMO.registrations.detail.id },
+    responses: {
+      200: successDemo("Lấy chi tiết đăng ký tiếp dân thành công", registrationDemo),
+      404: errorDemo(
+        "Demo 404 - ID không tồn tại",
+        "Không tìm thấy đăng ký tiếp dân"
+      ),
+    },
+  },
+  "PATCH /api/reception-registrations/{id}/approve": {
+    parameters: { id: DEMO.registrations.approve.id },
+    request: {
+      automaticCounter: {
+        summary: "Demo hợp lệ - backend tự lấy quầy theo cán bộ đăng nhập",
+        value: {},
+      },
+      validCounter: {
+        summary: "Demo tương thích cũ - gửi quầy 3 để đối chiếu phân công",
+        value: { department: "QUAY_3" },
+      },
+      invalidCounter: {
+        summary: "Demo lỗi 400 - quầy ngoài phạm vi 1 đến 8",
+        value: { department: "QUAY_9" },
+      },
+    },
+    responses: {
+      200: successDemo("Phê duyệt đăng ký tiếp dân thành công", {
+        ...registrationDemo,
+        approver: {
+          name: "Nguyễn Văn Lãnh đạo",
+          title: "Lãnh đạo UBND",
+          approvedAt: "2026-08-25T15:00:00.000+07:00",
+        },
+      }),
+      403: {
+        noAssignment: errorDemo(
+          "Demo 403 - Cán bộ chưa được phân công trong ca",
+          "Cán bộ chưa được phân công quầy trong ca này"
+        ),
+        assignmentMismatch: errorDemo(
+          "Demo 403 - Mã quầy không khớp phân công",
+          "Cán bộ không được phân công tại quầy này trong ca này"
+        ),
+      },
+      409: {
+        counterIsFull: errorDemo(
+          "Demo 409 - Quầy đã đầy",
+          "Quầy tiếp nhận đã đủ sức chứa trong ca này"
+        ),
+        invalidState: errorDemo(
+          "Demo 409 - Đơn đã được xử lý",
+          "Chỉ đăng ký đang chờ mới được phê duyệt"
+        ),
+      },
+    },
+  },
+  "PATCH /api/reception-registrations/{id}/complete": {
+    parameters: { id: DEMO.registrations.complete.id },
+    responses: {
+      200: successDemo("Hoàn thành buổi tiếp dân thành công", {
+        ...registrationDemo,
+        approvalStatus: "COMPLETED",
+        completedAt: "2026-08-26T15:30:00.000+07:00",
+      }),
+      409: errorDemo(
+        "Demo 409 - Đơn chưa đủ điều kiện hoàn thành",
+        "Chỉ đăng ký đã phê duyệt mới được hoàn thành"
+      ),
+    },
+  },
+  "PATCH /api/reception-registrations/{id}/reject": {
+    parameters: { id: DEMO.registrations.reject.id },
+    request: {
+      validReason: {
+        summary: "Demo hợp lệ - từ chối có lý do",
+        value: { reason: "Nội dung đăng ký không thuộc phạm vi tiếp nhận" },
+      },
+      reasonTooShort: {
+        summary: "Demo lỗi 400 - lý do quá ngắn",
+        value: { reason: "Sai" },
+      },
+    },
+    responses: {
+      200: successDemo("Từ chối đăng ký tiếp dân thành công", {
+        ...registrationDemo,
+        approvalStatus: "REJECTED",
+        rejectionReason: "Nội dung đăng ký không thuộc phạm vi tiếp nhận",
+        rejectedAt: "2026-08-25T15:00:00.000+07:00",
+      }),
+      409: errorDemo(
+        "Demo 409 - Đơn không còn chờ xử lý",
+        "Chỉ đăng ký đang chờ mới được từ chối"
+      ),
+    },
+  },
+  "GET /api/reception-registrations/rating-lookup/{receptionCode}": {
+    parameters: { receptionCode: DEMO.registrations.ratingLookup.code },
+    responses: {
+      200: successDemo("Lấy thông tin để người dân xác nhận thành công", {
+        ...registrationDemo,
+        applicant: {
+          ...registrationDemo.applicant,
+          phoneNumber: "******5678",
+          citizenId: "********1234",
+        },
+        approvalStatus: "COMPLETED",
+      }),
+      409: {
+        notCompleted: errorDemo(
+          "Demo 409 - Buổi tiếp chưa hoàn thành",
+          "Buổi tiếp dân chưa hoàn thành để đánh giá"
+        ),
+        alreadyRated: errorDemo(
+          "Demo 409 - Mã đã được đánh giá",
+          "Mã tiếp dân đã được đánh giá"
+        ),
+      },
+    },
+  },
+});
+
+export default DangKyTiepDanSwagger;

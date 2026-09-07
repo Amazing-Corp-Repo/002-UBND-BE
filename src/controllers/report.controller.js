@@ -112,7 +112,21 @@ const ReportController = {
       "attachment; filename=bao_cao_tin_tuc.xlsx"
     );
     return res.send(buffer);
-  }
+  },
+
+  async exportDanhGia(req, res) {
+    const { from, to } = req.query;
+    const buffer = await ReportService.exportDanhGia({ from, to });
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=danh_sach_danh_gia.xlsx"
+    );
+    return res.send(buffer);
+  },
 };
 
 export default ReportController;

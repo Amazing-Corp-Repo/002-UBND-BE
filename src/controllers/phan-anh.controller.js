@@ -12,6 +12,8 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      khuPho,
+      moTaViTri,
       userId,
       idVideo,
     } = req.body;
@@ -25,6 +27,8 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      khuPho,
+      moTaViTri,
       userId,
       file,
       idVideo,
@@ -33,7 +37,7 @@ const PhanAnhController = {
   },
 
   async getPhanAnhByMaPhanAnh(req, res) {
-    const { maPhanAnh } = req.params;
+    const { maPhanAnh } = req.validatedParams;
     let result = await PhanAnhService.getPhanAnhByMaPhanAnh(maPhanAnh);
     return successResponse(res, result, "Lấy thông tin phản ánh thành công");
   },
@@ -49,7 +53,7 @@ const PhanAnhController = {
       sortTime,
       sortBy,
       sortOrder,
-    } = req.query;
+    } = req.validatedQuery;
     const payload = req.payload;
     let { data, pagination } = await PhanAnhService.getAll(
       idLinhVucPhanAnh,
@@ -72,7 +76,7 @@ const PhanAnhController = {
   },
 
   async getLichSuTrangThaiPhanAnh(req, res) {
-    const { idPhanAnh } = req.params;
+    const { idPhanAnh } = req.validatedParams;
     let result = await PhanAnhService.getLichSuTrangThaiPhanAnh(idPhanAnh);
     return successResponse(
       res,
@@ -83,7 +87,7 @@ const PhanAnhController = {
 
   async getPhanAnhByUserId(req, res) {
     const currentUser = req.payload.userId;
-    let { sortTime } = req.query;
+    let { sortTime } = req.validatedQuery;
     let result = await PhanAnhService.getPhanAnhByUserId(currentUser, sortTime);
     return successResponse(
       res,
@@ -103,16 +107,14 @@ const PhanAnhController = {
   },
 
   async getPhanAnhById(req, res) {
-    const { idPhanAnh } = req.params;
+    const { idPhanAnh } = req.validatedParams;
     let result = await PhanAnhService.getPhanAnhById(idPhanAnh);
     return successResponse(res, result, "Lấy phản ánh thành công");
   },
 
   async updateStatusPhanAnh(req, res) {
-    const { idPhanAnh } = req.params;
+    const { idPhanAnh } = req.validatedParams;
     const {
-      thoiGianPhanHoiDuKien,
-      ngayDuKienHoanThanh,
       trangThai,
       ghiChu,
       idVideoGiaiQuyet,
@@ -121,8 +123,6 @@ const PhanAnhController = {
     const file = req.files;
     let result = await PhanAnhService.updateStatusPhanAnh(
       idPhanAnh,
-      thoiGianPhanHoiDuKien,
-      ngayDuKienHoanThanh,
       trangThai,
       ghiChu,
       currentUser,
@@ -137,7 +137,7 @@ const PhanAnhController = {
   },
 
   async updateLinhVucPhanAnh(req, res) {
-    const { idPhanAnh } = req.params;
+    const { idPhanAnh } = req.validatedParams;
     const { idLinhVucPhanAnh, lyDo } = req.body;
     const currentUser = req.payload.userId;
     let result = await PhanAnhService.updateLinhVucPhanAnh(
@@ -154,7 +154,7 @@ const PhanAnhController = {
   },
 
   async getAssignableUsers(req, res) {
-    const { idPhanAnh } = req.params;
+    const { idPhanAnh } = req.validatedParams;
     let result = await PhanAnhService.getAssignableUsers(idPhanAnh);
     return successResponse(
       res,
@@ -164,7 +164,7 @@ const PhanAnhController = {
   },
 
   async assignPhanAnh(req, res) {
-    const { idPhanAnh } = req.params;
+    const { idPhanAnh } = req.validatedParams;
     const { idNguoiXuLy, lyDo } = req.body;
     const currentUser = req.payload.userId;
     let result = await PhanAnhService.assignPhanAnh(
@@ -191,7 +191,7 @@ const PhanAnhController = {
   },
 
   async searhByTieuDe(req, res) {
-    const { search } = req.query;
+    const { search } = req.validatedQuery;
     let result = await PhanAnhService.searhByTieuDe(search);
     return successResponse(
       res,
@@ -209,6 +209,8 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      khuPho,
+      moTaViTri,
       idVideo,
     } = req.body;
     const file = req.files;
@@ -221,6 +223,8 @@ const PhanAnhController = {
       mucDo,
       tenNguoiPhanAnh,
       soDienThoaiNguoiPhanAnh,
+      khuPho,
+      moTaViTri,
       file,
       idVideo,
     );

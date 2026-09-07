@@ -61,7 +61,7 @@ export const UpdateProfileRequest = Joi.object({
         }),
     soDienThoai: Joi.string()
         .trim()
-        .pattern(/^[0-9]{10,15}$/)
+        .pattern(/^[0-9]{10,11}$/)
         .required()
         .messages({
             'string.pattern.base': 'Số điện thoại không hợp lệ',

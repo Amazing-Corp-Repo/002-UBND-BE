@@ -663,11 +663,100 @@ const ReportService = {
     });
 
     sheet.columns = [
-      { width: 15 }, // ngày
-      { width: 12 }, // tổng
-      { width: 15 }, // xuất bản
-      { width: 12 }, // bản nháp
-      { width: 12 }, // lượt xem
+      { width: 15 }, // ngay
+      { width: 12 }, // tong
+      { width: 15 }, // xuat ban
+      { width: 12 }, // ban nhap
+      { width: 12 }, // luot xem
+    ];
+
+    return await workbook.xlsx.writeBuffer();
+  },
+
+  async exportDanhGia({ from, to }) {
+    const [tiepDan, gapLanhDao] = await Promise.all([
+      ReportRepository.getDanhGiaTiepDan({ from, to }),
+      ReportRepository.getDanhGiaGapLanhDao({ from, to }),
+    ]);
+
+    // Map danh_gia_tiep_dan -> unified rows
+    const rows = [
+      ...tiepDan.map((item) => ({
+        maPhieu: item.ma_tiep_dan,
+        loai: "Tiếp dân",
+        nguoiDan: item.ten_nguoi_dan,
+        canBo: item.ten_can_bo,
+        diemTong: item.diem_tong,
+        thoiGian: item.thoi_gian_tao,
+      })),
+      // Map danh_gia_gap_lanh_dao -> unified rows
+      ...gapLanhDao.map((item) => ({
+        maPhieu: item.dang_ky_gap_lanh_dao?.ma_dang_ky || "--",
+        loai: "Gặp lãnh đạo",
+        nguoiDan: item.dang_ky_gap_lanh_dao?.ho_ten || "--",
+        canBo:
+          item.dang_ky_gap_lanh_dao?.khung_gio_gap_lanh_dao?.lich_gap_lanh_dao
+            ?.lanh_dao?.ho_va_ten || "--",
+        diemTong: item.diem_tong,
+        thoiGian: item.thoi_gian_tao,
+      })),
+    ];
+
+    // Sort by thoiGian desc (newest first)
+    rows.sort((a, b) => new Date(b.thoiGian) - new Date(a.thoiGian));
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Đánh giá");
+
+    // Title
+    FileService.excelStyles.title(sheet, 1, "DANH SÁCH ĐÁNH GIÁ", 6);
+
+    // Info rows
+    sheet.getCell(2, 1).value = "Ngày xuất";
+    sheet.getCell(2, 1).font = { bold: true };
+    sheet.getCell(2, 2).value = nowVN().split(" ")[0];
+    sheet.getCell(3, 1).value = "Từ ngày";
+    sheet.getCell(3, 1).font = { bold: true };
+    sheet.getCell(3, 2).value = from || "Tất cả";
+    sheet.getCell(4, 1).value = "Đến ngày";
+    sheet.getCell(4, 1).font = { bold: true };
+    sheet.getCell(4, 2).value = to || "Tất cả";
+
+    // Header row
+    const headerRow = sheet.getRow(6);
+    headerRow.values = [
+      "STT",
+      "Mã phiếu / Đơn",
+      "Loại tiếp nhận",
+      "Người dân",
+      "Cán bộ / Lãnh đạo tiếp",
+      "Mức đánh giá",
+      "Thời gian",
+    ];
+    FileService.excelStyles.tableHeader(headerRow);
+
+    // Data rows
+    rows.forEach((r, idx) => {
+      const row = sheet.addRow([
+        idx + 1,
+        r.maPhieu,
+        r.loai,
+        r.nguoiDan,
+        r.canBo,
+        r.diemTong,
+        toVNDateTimeString(r.thoiGian),
+      ]);
+      FileService.excelStyles.tableRow(row);
+    });
+
+    sheet.columns = [
+      { width: 6 },
+      { width: 20 },
+      { width: 18 },
+      { width: 28 },
+      { width: 28 },
+      { width: 16 },
+      { width: 22 },
     ];
 
     return await workbook.xlsx.writeBuffer();

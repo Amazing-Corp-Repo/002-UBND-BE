@@ -1,0 +1,101 @@
+import LeaderMeetingScheduleService from "../services/leader-meeting-schedule.service.js";
+import { successResponse } from "../utils/response.util.js";
+
+const LeaderMeetingScheduleController = {
+  async getAvailable(req, res) {
+    const data = await LeaderMeetingScheduleService.getAvailableSchedules(
+      req.validatedQuery
+    );
+    return successResponse(
+      res,
+      data,
+      "Lấy lịch gặp lãnh đạo khả dụng thành công"
+    );
+  },
+
+  async getManagement(req, res) {
+    const result = await LeaderMeetingScheduleService.getManagementSchedules(
+      req.validatedQuery,
+      req.payload
+    );
+    if (result.dailyView) {
+      return successResponse(
+        res,
+        result.data,
+        "Lấy bảng ca tiếp công dân theo ngày thành công"
+      );
+    }
+    return successResponse(
+      res,
+      result.data,
+      "Lấy danh sách lịch gặp lãnh đạo thành công",
+      result.pagination
+    );
+  },
+
+  async getManagementDetail(req, res) {
+    const data = await LeaderMeetingScheduleService.getManagementDetail(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Lấy chi tiết lịch gặp lãnh đạo thành công"
+    );
+  },
+
+  async createManagement(req, res) {
+    const data = await LeaderMeetingScheduleService.createManagementSchedule(
+      req.body,
+      req.payload
+    );
+    return successResponse(res, data, "Tạo lịch gặp lãnh đạo thành công");
+  },
+
+  async updateManagement(req, res) {
+    const data = await LeaderMeetingScheduleService.updateManagementSchedule(
+      req.validatedParams.id,
+      req.body,
+      req.payload
+    );
+    return successResponse(res, data, "Cập nhật lịch gặp lãnh đạo thành công");
+  },
+
+  async updateManagementStatus(req, res) {
+    const data = await LeaderMeetingScheduleService.updateManagementStatus(
+      req.validatedParams.id,
+      req.body.isActive,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      "Cập nhật trạng thái lịch gặp lãnh đạo thành công"
+    );
+  },
+
+  async updateDailySlotStatus(req, res) {
+    const data = await LeaderMeetingScheduleService.updateDailySlotStatus(
+      req.body,
+      req.payload
+    );
+    return successResponse(
+      res,
+      data,
+      req.body.isOpen
+        ? "Đã mở ca tiếp công dân"
+        : "Đã đóng ca tiếp công dân"
+    );
+  },
+
+  async deleteManagement(req, res) {
+    const data = await LeaderMeetingScheduleService.deleteManagementSchedule(
+      req.validatedParams.id,
+      req.payload
+    );
+    return successResponse(res, data, "Xóa lịch gặp lãnh đạo thành công");
+  },
+};
+
+export default LeaderMeetingScheduleController;

@@ -71,6 +71,29 @@ const mapMediaForPhanAnh = async (
 };
 
 const PhanAnhRepository = {
+  async createWithInitialState(data, initialStatus, attachments = []) {
+    return prisma.$transaction(async (tx) => {
+      const createdPhanAnh = await tx.phan_anh.create({ data });
+      const trangThai = await tx.lich_su_trang_thai.create({
+        data: {
+          ...initialStatus,
+          id_phan_anh: createdPhanAnh.id,
+        },
+      });
+
+      if (attachments.length > 0) {
+        await tx.dinh_kem_phan_anh.createMany({
+          data: attachments.map((attachment) => ({
+            ...attachment,
+            id_phan_anh: createdPhanAnh.id,
+          })),
+        });
+      }
+
+      return { createdPhanAnh, trangThai };
+    });
+  },
+
   async create(data) {
     return await prisma.phan_anh.create({
       data: data,

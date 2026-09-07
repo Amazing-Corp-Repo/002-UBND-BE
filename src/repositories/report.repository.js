@@ -260,6 +260,64 @@ const ReportRepository = {
 
     return { tinTucLists: data };
   },
+
+  async getDanhGiaTiepDan({ from, to }) {
+    const where = {
+      is_delete: false,
+      ...(from && to && {
+        thoi_gian_tao: { gte: from, lte: to },
+      }),
+    };
+
+    return prisma.danh_gia_tiep_dan.findMany({
+      where,
+      select: {
+        ma_tiep_dan: true,
+        ten_nguoi_dan: true,
+        ten_can_bo: true,
+        diem_tong: true,
+        thoi_gian_tao: true,
+      },
+      orderBy: { thoi_gian_tao: "desc" },
+    });
+  },
+
+  async getDanhGiaGapLanhDao({ from, to }) {
+    const where = {
+      is_delete: false,
+      ...(from && to && {
+        thoi_gian_tao: { gte: from, lte: to },
+      }),
+    };
+
+    return prisma.danh_gia_gap_lanh_dao.findMany({
+      where,
+      select: {
+        diem_tong: true,
+        thoi_gian_tao: true,
+        dang_ky_gap_lanh_dao: {
+          select: {
+            ma_dang_ky: true,
+            ho_ten: true,
+            khung_gio_gap_lanh_dao: {
+              select: {
+                lich_gap_lanh_dao: {
+                  select: {
+                    lanh_dao: {
+                      select: {
+                        ho_va_ten: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { thoi_gian_tao: "desc" },
+    });
+  },
 };
 
 export default ReportRepository;

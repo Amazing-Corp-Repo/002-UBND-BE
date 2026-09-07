@@ -211,6 +211,37 @@ const UserRepository = {
     });
   },
 
+  async findActiveByUsernames(usernames) {
+    if (!usernames.length) return [];
+    return await prisma.nguoi_dung.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        OR: usernames.map((username) => ({
+          ten_dang_nhap: { equals: username, mode: "insensitive" },
+        })),
+      },
+      select: {
+        id: true,
+        ten_dang_nhap: true,
+        ho_va_ten: true,
+        user_roles: {
+          select: {
+            roles: {
+              select: {
+                is_active: true,
+                is_delete: true,
+                role_permissions: {
+                  select: { permission_code: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
   async findByEmail(email) {
     return await prisma.nguoi_dung.findFirst({
       where: {
