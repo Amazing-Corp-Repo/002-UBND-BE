@@ -393,7 +393,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Duyệt, từ chối hoặc cập nhật trạng thái phản ánh",
       description:
-        "Đã gửi → Đang xử lý yêu cầu PA_APPROVE + PA_ASSIGN, idNguoiXuLy và soNgayXuLy 1–90 với mức Thông thường. Khẩn cấp luôn được BE tính hạn đúng 24 giờ từ lúc tiếp nhận. Thông thường được tính theo ngày làm việc từ lúc tiếp nhận. Từ chối yêu cầu PA_REJECT và ghiChu. Giải quyết/Đóng yêu cầu PA_UPDATE_STATUS. Client không gửi ngày hoàn thành tuyệt đối.",
+        "Đã gửi → Đang xử lý yêu cầu PA_APPROVE + PA_ASSIGN, idNguoiXuLy và ngayDuKienHoanThanh tuyệt đối. Từ chối yêu cầu PA_REJECT và ghiChu. Giải quyết/Đóng yêu cầu PA_UPDATE_STATUS. Phản ánh quá hạn khi giải quyết phải kèm lý do trễ hạn và minh chứng.",
       security: bearerSecurity,
       parameters: [idParameter],
       requestBody: {

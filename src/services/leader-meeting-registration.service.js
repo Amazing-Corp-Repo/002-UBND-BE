@@ -4,7 +4,8 @@ import fs from "node:fs";
 import LeaderMeetingRegistrationRepository from "../repositories/leader-meeting-registration.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
-import { normalizeRoleNames } from "../utils/auth-context.util.js";
+import { hasPermission } from "../utils/auth-context.util.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 
 const MAX_RETRIES = 10;
@@ -365,10 +366,7 @@ const LeaderMeetingRegistrationService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET", "LANH_DAO", "LEADER"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMR_GET_ALL);
     const result = await LeaderMeetingRegistrationRepository.findManagement({
       ...filters,
       leaderId: canViewAll ? (filters.leaderId || undefined) : currentUser.userId,
@@ -380,10 +378,7 @@ const LeaderMeetingRegistrationService = {
   },
 
   async getManagementDetail(id, currentUser) {
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMR_GET_ALL);
     const registration =
       await LeaderMeetingRegistrationRepository.findManagementDetail(
         id,
@@ -566,10 +561,6 @@ const LeaderMeetingRegistrationService = {
   },
 
   async cancel(id, input, currentUser) {
-    const roles = normalizeRoleNames(currentUser.roles);
-    if (!roles.some((role) => ["LANH_DAO", "LEADER"].includes(role))) {
-      throw new BaseError(403, "Chỉ lãnh đạo của lịch hẹn được hủy đăng ký");
-    }
     const registration = await LeaderMeetingRegistrationRepository.findManagementDetail(
       id,
       currentUser.userId
@@ -598,10 +589,7 @@ const LeaderMeetingRegistrationService = {
   },
 
   async getAttachment(registrationId, attachmentId, download, currentUser) {
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMR_GET_ALL);
     const attachment = await LeaderMeetingRegistrationRepository.findAttachment(
       registrationId,
       attachmentId,

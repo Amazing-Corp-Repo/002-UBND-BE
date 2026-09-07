@@ -11,10 +11,9 @@ test("status update documentation exposes approval workflow fields", () => {
     operation.requestBody.content["multipart/form-data"].schema;
 
   assert.ok(schema.properties.idNguoiXuLy);
-  assert.ok(schema.properties.soNgayXuLy);
+  assert.ok(schema.properties.ngayDuKienHoanThanh);
   assert.match(operation.description, /PA_APPROVE \+ PA_ASSIGN/);
-  assert.match(operation.description, /24 giờ/);
-  assert.match(operation.description, /ngày làm việc/);
+  assert.match(operation.description, /ngayDuKienHoanThanh tuyệt đối/);
 });
 
 test("Swagger documents response media and neighborhood statistics", () => {

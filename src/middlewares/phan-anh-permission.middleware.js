@@ -8,10 +8,10 @@ export const authorizePhanAnhStatusUpdate = (req, res, next) => {
 
   let allowed = false;
   if (targetStatus === PHAN_ANH_STATUS.DANG_XU_LY) {
-    // Để chuyển sang "Đang xử lý" (Duyệt), người dùng chỉ cần có một trong các quyền phê duyệt / phân công / cập nhật
-    allowed = userPermissions.some((p) =>
-      [PERMISSION.PA_APPROVE, PERMISSION.PA_ASSIGN, PERMISSION.PA_UPDATE_STATUS].includes(p)
-    );
+    // Duyệt phản ánh đồng thời là thao tác phê duyệt và phân công.
+    allowed =
+      userPermissions.includes(PERMISSION.PA_APPROVE) &&
+      userPermissions.includes(PERMISSION.PA_ASSIGN);
   } else if (targetStatus === PHAN_ANH_STATUS.TU_CHOI) {
     allowed = userPermissions.some((p) =>
       [PERMISSION.PA_REJECT, PERMISSION.PA_APPROVE, PERMISSION.PA_UPDATE_STATUS].includes(p)
@@ -23,7 +23,7 @@ export const authorizePhanAnhStatusUpdate = (req, res, next) => {
   }
 
   if (!allowed) {
-    return next(new BaseError(403, "Bạn không có quyền cập nhật trạng thái phản ánh này"));
+    throw new BaseError(403, "Bạn không có quyền cập nhật trạng thái phản ánh này");
   }
 
   return next();
@@ -36,7 +36,7 @@ export const authorizeGetAssignableUsers = (req, res, next) => {
   );
 
   if (!allowed) {
-    return next(new BaseError(403, "Bạn không có quyền xem danh sách chuyên viên phân công"));
+    throw new BaseError(403, "Bạn không có quyền xem danh sách chuyên viên phân công");
   }
 
   return next();

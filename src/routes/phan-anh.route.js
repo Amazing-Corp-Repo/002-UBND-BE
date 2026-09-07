@@ -97,6 +97,7 @@ phanAnhRouter.get("/trang-thai", PhanAnhController.getTrangThaiPhanAnh);
 phanAnhRouter.get(
   "/tong-quan",
   authenticate,
+  authorize([PERMISSION.PA_GET_STATS]),
   PhanAnhController.getTongQuanPhanAnh,
 );
 

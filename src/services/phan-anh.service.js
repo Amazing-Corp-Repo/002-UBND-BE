@@ -179,7 +179,6 @@ const PhanAnhService = {
     sortBy,
     sortOrder,
   ) {
-    let role = parseCommaString(payload?.roles);
     let cate = parseCommaString(payload?.cate);
     let userPermissions = parseCommaString(payload?.permissions);
 
@@ -187,13 +186,7 @@ const PhanAnhService = {
       trangThai = PHAN_ANH_STATUS[trangThai];
     }
 
-    const hasGetAllPermission =
-      userPermissions.includes(PERMISSION.PA_GET_ALL) ||
-      userPermissions.includes("PA_GET_ALL") ||
-      role.some((r) => {
-        const u = String(r).toUpperCase();
-        return u === "ADMIN" || u === "LÃNH ĐẠO" || u === "LANH_DAO";
-      });
+    const hasGetAllPermission = userPermissions.includes(PERMISSION.PA_GET_ALL);
 
     if (hasGetAllPermission) {
       let { data, totalItems, stats } = await PhanAnhRepository.getAll(
@@ -598,25 +591,12 @@ const PhanAnhService = {
   },
 
   async getTongQuanPhanAnh(payload, options = {}) {
-    let role = payload ? parseCommaString(payload.roles) : [];
     let cate = payload ? parseCommaString(payload.cate) : null;
     let userPermissions = payload ? parseCommaString(payload.permissions) : [];
 
     const hasGetAllPermission =
       userPermissions.includes(PERMISSION.PA_GET_ALL) ||
-      userPermissions.includes("PA_GET_ALL") ||
-      userPermissions.includes(PERMISSION.PA_THUONG_TRUC) ||
-      userPermissions.includes("PA_THUONG_TRUC") ||
-      role.some((r) => {
-        const u = String(r).toUpperCase();
-        return (
-          u === "ADMIN" ||
-          u === "LÃNH ĐẠO" ||
-          u === "LANH_DAO" ||
-          u === "THƯỜNG TRỰC" ||
-          u === "THUONG_TRUC"
-        );
-      });
+      userPermissions.includes(PERMISSION.PA_THUONG_TRUC);
 
     if (hasGetAllPermission) {
       cate = null;

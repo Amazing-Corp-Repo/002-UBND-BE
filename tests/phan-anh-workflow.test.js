@@ -74,20 +74,20 @@ test("status validator requires assignee on approval and reason on rejection", (
   );
 });
 
-test("approval validator accepts 1 to 90 processing days", () => {
+test("approval validator requires an absolute expected completion date", () => {
   const valid = UpdatePhanAnhStatusRequest.validate({
     trangThai: PHAN_ANH_STATUS.DANG_XU_LY,
     idNguoiXuLy: userId,
-    soNgayXuLy: "10",
+    ngayDuKienHoanThanh: "2026-09-17T10:00:00.000Z",
   });
   assert.equal(valid.error, undefined);
-  assert.equal(valid.value.soNgayXuLy, 10);
+  assert.ok(valid.value.ngayDuKienHoanThanh instanceof Date);
 
   assert.ok(
     UpdatePhanAnhStatusRequest.validate({
       trangThai: PHAN_ANH_STATUS.DANG_XU_LY,
       idNguoiXuLy: userId,
-      soNgayXuLy: 91,
+      ngayDuKienHoanThanh: "not-a-date",
     }).error,
   );
 });
