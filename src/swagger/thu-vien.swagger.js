@@ -14,7 +14,7 @@ const ThuVienSwagger = {
         { name: "search", in: "query", schema: { type: "string" }, description: "Tìm kiếm theo tiêu đề, mô tả" },
         { name: "idDanhMuc", in: "query", schema: { type: "string", format: "uuid" }, description: "Lọc theo danh mục" },
         { name: "trangThai", in: "query", schema: { type: "string" }, description: "Lọc theo trạng thái (NHAP, CHO_DUYET, DA_DUYET, LUU_TRU)" },
-        { name: "phamVi", in: "query", schema: { type: "string" }, description: "Lọc theo phạm vi (CONG_KHAI, NOI_BO, HAN_CHE)" },
+        { name: "phamVi", in: "query", schema: { type: "string", enum: ["CONG_KHAI", "NOI_BO"] }, description: "Lọc theo phạm vi công khai hoặc nội bộ" },
         { name: "aiDaHoc", in: "query", schema: { type: "boolean" }, description: "Lọc theo trạng thái AI đã học" },
         { name: "dateFrom", in: "query", schema: { type: "string", format: "date" }, description: "Lọc từ ngày ban hành" },
         { name: "dateTo", in: "query", schema: { type: "string", format: "date" }, description: "Lọc đến ngày ban hành" },

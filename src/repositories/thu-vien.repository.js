@@ -64,9 +64,9 @@ const ThuVienRepository = {
     const where = {
       loai,
       is_delete: isDelete,
+      pham_vi: phamVi || { in: ["CONG_KHAI", "NOI_BO"] },
       ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
       ...(trangThai ? { trang_thai: trangThai } : {}),
-      ...(phamVi ? { pham_vi: phamVi } : {}),
       ...(aiDaHoc !== undefined && aiDaHoc !== "" ? { ai_da_hoc: aiDaHoc === "true" } : {}),
       ...(coQuanBanHanh ? { co_quan_ban_hanh: { contains: coQuanBanHanh, mode: "insensitive" } } : {}),
       ...(dateFrom || dateTo ? {

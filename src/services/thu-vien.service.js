@@ -16,7 +16,7 @@ const COLUMN_MAP = {
   danhMuc:          { label: "Phân nhóm", getValue: (item) => item.thu_vien_danh_muc?.ten ?? "" },
   coQuanBanHanh:    { label: "Cơ quan ban hành", getValue: (item) => item.co_quan_ban_hanh ?? "" },
   phamVi:           { label: "Phạm vi", getValue: (item) => {
-    const map = { CONG_KHAI: "Công khai", NOI_BO: "Nội bộ", HAN_CHE: "Hạn chế" };
+    const map = { CONG_KHAI: "Công khai", NOI_BO: "Nội bộ" };
     return map[item.pham_vi] || item.pham_vi || "";
   }},
   trangThai:        { label: "Trạng thái", getValue: (item) => {
@@ -141,11 +141,12 @@ const ThuVienService = {
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // NHAP: tài khoản có permission quản trị tài liệu được bypass, các tài khoản khác bị chặn
-    if (result.trang_thai === "NHAP" && result.nguoi_tao !== currentUser) {
-      if (!permissions.includes("TL_ADMIN_DELETE")) {
-        throw new BaseError(404, "Không tìm thấy tài liệu");
-      }
+    // Tài liệu chỉ được xem sau khi được phê duyệt, kể cả chính người tạo.
+    if (result.trang_thai !== "DA_DUYET") {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    if (!["CONG_KHAI", "NOI_BO"].includes(result.pham_vi)) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
     }
     return result;
   },
