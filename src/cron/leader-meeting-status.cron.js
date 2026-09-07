@@ -2,12 +2,11 @@ import cron from "node-cron";
 import LeaderMeetingRegistrationService from "../services/leader-meeting-registration.service.js";
 
 export const runLeaderMeetingStatusTransition = async (now = new Date()) => {
-  const result =
-    await LeaderMeetingRegistrationService.transitionDueApprovedToInProgress(now);
+  const result = await LeaderMeetingRegistrationService.markOverdueRegistrations(now);
 
   if (result.transitioned > 0) {
     console.log(
-      `[leader-meeting-status] Đã chuyển ${result.transitioned} đăng ký sang IN_PROGRESS.`
+      `[leader-meeting-status] Đã chuyển ${result.transitioned} đăng ký sang OVERDUE.`
     );
   }
 

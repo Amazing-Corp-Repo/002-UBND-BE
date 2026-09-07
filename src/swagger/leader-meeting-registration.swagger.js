@@ -128,7 +128,7 @@ const LeaderMeetingRegistrationSwagger = {
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: "search", in: "query", schema: { type: "string", example: "LD000123" } },
-        { name: "status", in: "query", schema: { type: "string", enum: ["PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED"] } },
+        { name: "status", in: "query", schema: { type: "string", enum: ["PENDING", "APPROVED", "IN_PROGRESS", "COMPLETED", "REJECTED", "CANCELED", "OVERDUE"] } },
         { name: "leaderId", in: "query", schema: { type: "string", format: "uuid", example: "123e4567-e89b-42d3-a456-426614174001" } },
         { name: "fromDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-01" } },
         { name: "toDate", in: "query", schema: { type: "string", format: "date", example: "2099-08-31" } },

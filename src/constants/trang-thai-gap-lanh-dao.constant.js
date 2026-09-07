@@ -9,6 +9,7 @@ export const TRANG_THAI_GAP_LANH_DAO = Object.freeze({
   REJECTED: "REJECTED",
   CANCELED: "CANCELED",
   COMPLETED: "COMPLETED",
+  OVERDUE: "OVERDUE",
 });
 
 export const TRANG_THAI_GAP_LANH_DAO_DESC = Object.freeze({
@@ -18,6 +19,7 @@ export const TRANG_THAI_GAP_LANH_DAO_DESC = Object.freeze({
   REJECTED: "Từ chối",
   CANCELED: "Đã hủy",
   COMPLETED: "Đã hoàn thành",
+  OVERDUE: "Quá hạn",
 });
 
 export const TRANG_THAI_GAP_LANH_DAO_LIST = Object.freeze(

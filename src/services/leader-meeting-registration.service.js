@@ -7,6 +7,10 @@ import { createPagination } from "../utils/response.util.js";
 import { hasPermission } from "../utils/auth-context.util.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
+import {
+  getEffectiveLeaderMeetingStatus,
+  isLeaderMeetingOverdue,
+} from "../utils/leader-meeting-overdue.util.js";
 
 const MAX_RETRIES = 10;
 const PRIVATE_UPLOAD_ROOT = path.resolve(
@@ -94,7 +98,7 @@ const mapUniqueConflict = (error) => {
 const mapCreated = ({ registration, slot }) => ({
   id: registration.id,
   registrationCode: registration.ma_dang_ky,
-  status: registration.trang_thai,
+  status: getEffectiveLeaderMeetingStatus(registration),
   applicationDate: vietnamDate(registration.ngay_lam_don),
   address: registration.dia_chi,
   reason: registration.ly_do,
@@ -110,7 +114,7 @@ const mapCitizenLookup = (registration) => {
   return {
     id: registration.id,
     registrationCode: registration.ma_dang_ky,
-    status: registration.trang_thai,
+    status: getEffectiveLeaderMeetingStatus(registration),
     receptionDate: vietnamDate(registration.ngay_hen),
     timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
     applicant: {
@@ -141,32 +145,20 @@ const mapCitizenLookup = (registration) => {
   };
 };
 
-const isItemOverdue = (reg) => {
-  // Chỉ đơn PENDING (chưa được lãnh đạo phê duyệt) mới có thể bị quá hạn duyệt
-  if (reg.trang_thai !== "PENDING") return false;
-  const now = new Date();
-  const todayStr = vietnamDate(now);
-  const timeStr = vietnamTime(now);
-  const recDate = reg.ngay_hen ? vietnamDate(reg.ngay_hen) : "";
-  const slotEnd = reg.khung_gio_gap_lanh_dao?.gio_ket_thuc || "23:59";
-  if (!recDate) return false;
-  return recDate < todayStr || (recDate === todayStr && slotEnd <= timeStr);
-};
-
 const mapManagementListItem = (registration) => {
   const slot = registration.khung_gio_gap_lanh_dao;
   const schedule = slot.lich_gap_lanh_dao;
   return {
     id: registration.id,
     registrationCode: registration.ma_dang_ky,
-    isOverdue: isItemOverdue(registration),
+    isOverdue: isLeaderMeetingOverdue(registration),
     applicant: {
       fullName: registration.ho_ten,
       phoneNumber: registration.sdt,
       citizenId: registration.cccd,
     },
     reason: registration.ly_do || "",
-    status: registration.trang_thai,
+    status: getEffectiveLeaderMeetingStatus(registration),
     receptionDate: vietnamDate(registration.ngay_hen),
     timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
     location: schedule.dia_diem,
@@ -196,7 +188,7 @@ const mapManagementDetail = (registration) => {
   return {
     id: registration.id,
     registrationCode: registration.ma_dang_ky,
-    status: registration.trang_thai,
+    status: getEffectiveLeaderMeetingStatus(registration),
     applicationDate: registration.ngay_lam_don
       ? vietnamDate(registration.ngay_lam_don)
       : null,
@@ -277,14 +269,13 @@ const mapManagementDetail = (registration) => {
 };
 
 const LeaderMeetingRegistrationService = {
-  async transitionDueApprovedToInProgress(now = new Date()) {
-    const currentDate = new Date(`${vietnamDate(now)}T00:00:00.000Z`);
-    const result =
-      await LeaderMeetingRegistrationRepository.transitionDueApprovedToInProgress({
-        currentDate,
-        currentTime: vietnamTime(now),
-        transitionedAt: now,
-      });
+  async markOverdueRegistrations(now = new Date()) {
+    const candidates = await LeaderMeetingRegistrationRepository.findOverdueCandidates();
+    const ids = candidates
+      .filter((registration) => isLeaderMeetingOverdue(registration, now))
+      .map((registration) => registration.id);
+    if (ids.length === 0) return { transitioned: 0 };
+    const result = await LeaderMeetingRegistrationRepository.markOverdue(ids, now);
     return { transitioned: result.count };
   },
 
@@ -405,6 +396,10 @@ const LeaderMeetingRegistrationService = {
     if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.PENDING) {
       throw new BaseError(409, "Chỉ đăng ký đang chờ mới được phê duyệt");
     }
+    if (isLeaderMeetingOverdue(registration)) {
+      await LeaderMeetingRegistrationRepository.markOverdue([id], new Date());
+      throw new BaseError(409, "Đăng ký đã quá hạn, không thể phê duyệt");
+    }
 
     const updated = await LeaderMeetingRegistrationRepository.approvePending(
       id,
@@ -475,6 +470,10 @@ const LeaderMeetingRegistrationService = {
         409,
         "Chỉ đăng ký đã được phê duyệt mới được bắt đầu xử lý"
       );
+    }
+    if (isLeaderMeetingOverdue(registration)) {
+      await LeaderMeetingRegistrationRepository.markOverdue([id], new Date());
+      throw new BaseError(409, "Đăng ký đã quá hạn, không thể bắt đầu xử lý");
     }
 
     const now = new Date();

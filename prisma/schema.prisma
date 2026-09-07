@@ -858,6 +858,8 @@ model dang_ky_gap_lanh_dao {
   ngay_lam_don              DateTime? @db.Date
   ly_do                     String
   trang_thai                String  @default("PENDING") @db.VarChar(30)
+  is_qua_han                Boolean @default(false)
+  thoi_gian_qua_han         DateTime? @db.Timestamp(6)
   thoi_gian_phe_duyet       DateTime? @db.Timestamp(6)
   thoi_gian_bat_dau_xu_ly   DateTime? @db.Timestamp(6)
   thoi_gian_hoan_thanh      DateTime? @db.Timestamp(6)
