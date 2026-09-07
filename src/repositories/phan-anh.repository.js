@@ -380,6 +380,7 @@ const PhanAnhRepository = {
           thoi_gian_tiep_nhan: phanAnhPatch.thoi_gian_tiep_nhan,
           thoi_gian_phan_hoi_du_kien: phanAnhPatch.thoi_gian_phan_hoi_du_kien,
           ngay_du_kien_hoan_thanh: phanAnhPatch.ngay_du_kien_hoan_thanh,
+          ly_do_tre_han: phanAnhPatch.ly_do_tre_han,
           id_to: phanAnhPatch.id_to,
           nguoi_cap_nhat: phanAnhPatch.nguoi_cap_nhat,
           // undefined → Prisma bỏ qua (giữ nguyên); chỉ set khi có video giải quyết

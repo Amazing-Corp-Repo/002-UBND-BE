@@ -50,6 +50,7 @@ export const toPublicPhanAnhResponse = (phanAnh) => {
     thoi_gian_tiep_nhan: enriched.thoi_gian_tiep_nhan,
     thoi_gian_phan_hoi_du_kien: enriched.thoi_gian_phan_hoi_du_kien,
     ngay_du_kien_hoan_thanh: enriched.ngay_du_kien_hoan_thanh,
+    ly_do_tre_han: enriched.ly_do_tre_han,
     trang_thai: enriched.trang_thai,
     linh_vuc_phan_anh: enriched.linh_vuc_phan_anh,
     to_phu_trach: enriched.to_phu_trach

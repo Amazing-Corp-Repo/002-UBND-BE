@@ -129,3 +129,12 @@ test("rejection and regular status updates use separate permissions", () => {
     true,
   );
 });
+
+test("late resolution reason is required by the request contract when provided", () => {
+  const result = UpdatePhanAnhStatusRequest.validate({
+    trangThai: PHAN_ANH_STATUS.DA_GIAI_QUYET,
+    lyDoTreHan: "Đơn vị phối hợp phản hồi chậm",
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.value.lyDoTreHan, "Đơn vị phối hợp phản hồi chậm");
+});

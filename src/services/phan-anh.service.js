@@ -288,6 +288,7 @@ const PhanAnhService = {
     idVideoGiaiQuyet = [],
     idNguoiXuLy,
     ngayDuKienHoanThanh,
+    lyDoTreHan,
   ) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -318,6 +319,18 @@ const PhanAnhService = {
     let assignedUser = null;
     let receivedAt;
     let expectedCompletionAt;
+    const isOverdueWhileProcessing =
+      phanAnh.lich_su_trang_thai[0]?.ten === PHAN_ANH_STATUS.DANG_XU_LY &&
+      phanAnh.ngay_du_kien_hoan_thanh &&
+      new Date(phanAnh.ngay_du_kien_hoan_thanh).getTime() < Date.now();
+
+    if (
+      trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET &&
+      isOverdueWhileProcessing &&
+      !lyDoTreHan?.trim()
+    ) {
+      throw new BaseError(400, "Lý do trễ hạn là bắt buộc khi giải quyết phản ánh quá hạn");
+    }
     if (trangThai === PHAN_ANH_STATUS.DANG_XU_LY) {
       const managers = await LinhVucPhanAnhRepository.getManagersByLinhVucId(
         phanAnh.id_linh_vuc_phan_anh,
@@ -371,6 +384,9 @@ const PhanAnhService = {
       ...(videoGiaiQuyet.length > 0 && {
         id_video_giai_quyet: videoGiaiQuyet,
       }),
+      ...(trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET && isOverdueWhileProcessing && {
+        ly_do_tre_han: lyDoTreHan.trim(),
+      }),
     };
 
     const historyData = {
@@ -383,7 +399,9 @@ const PhanAnhService = {
             ]
               .filter(Boolean)
               .join(". ")
-          : ghiChu,
+          : [ghiChu, isOverdueWhileProcessing ? `Lý do trễ hạn: ${lyDoTreHan.trim()}` : null]
+              .filter(Boolean)
+              .join(". ") || null,
       nguoi_tao: currentUser,
     };
 

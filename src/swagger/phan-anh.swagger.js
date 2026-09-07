@@ -41,6 +41,7 @@ const complaintResponseProperties = {
     format: "date-time",
     nullable: true,
   },
+  ly_do_tre_han: { type: "string", nullable: true, description: "Lý do giải quyết phản ánh quá hạn" },
   to_phu_trach: { type: "object", nullable: true },
   lich_su_trang_thai: { type: "array", items: { type: "object" } },
   dinh_kem_phan_anh: { type: "array", items: { type: "object" } },
@@ -393,7 +394,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Duyệt, từ chối hoặc cập nhật trạng thái phản ánh",
       description:
-        "Đã gửi → Đang xử lý yêu cầu PA_APPROVE + PA_ASSIGN, idNguoiXuLy và ngayDuKienHoanThanh tuyệt đối. Từ chối yêu cầu PA_REJECT và ghiChu. Giải quyết/Đóng yêu cầu PA_UPDATE_STATUS. Phản ánh quá hạn khi giải quyết phải kèm lý do trễ hạn và minh chứng.",
+        "Đã gửi → Đang xử lý yêu cầu PA_APPROVE + PA_ASSIGN, idNguoiXuLy và ngayDuKienHoanThanh tuyệt đối. Từ chối yêu cầu PA_REJECT và ghiChu. Giải quyết/Đóng yêu cầu PA_UPDATE_STATUS. Phản ánh đang xử lý nhưng quá hạn khi giải quyết phải kèm lyDoTreHan và minh chứng.",
       security: bearerSecurity,
       parameters: [idParameter],
       requestBody: {

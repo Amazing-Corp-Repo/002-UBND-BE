@@ -141,6 +141,10 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
     "any.required": "Ngày dự kiến hoàn thành là bắt buộc khi duyệt phản ánh",
     "any.unknown": "Chỉ được gửi ngày dự kiến hoàn thành khi duyệt phản ánh",
   }),
+  lyDoTreHan: Joi.string().trim().max(2000).optional().allow(null, "").messages({
+    "string.base": "Lý do trễ hạn phải là chuỗi ký tự",
+    "string.max": "Lý do trễ hạn không được vượt quá 2000 ký tự",
+  }),
   // Video hiện trường đã xử lý (mảng id của video_uploads đã upload HLS).
   // .single() để nhận cả khi multipart gửi 1 giá trị đơn.
   idVideoGiaiQuyet: videoIdsSchema,
