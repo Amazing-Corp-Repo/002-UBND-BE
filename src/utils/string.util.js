@@ -29,6 +29,23 @@ export const capitalizeWords = (str) => {
   return str;
 };
 
+export const normalizeKhuPho = (value) => {
+  if (typeof value !== "string") return null;
+
+  const normalized = value
+    .trim()
+    .toLocaleLowerCase("vi-VN")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/\s+/g, " ");
+  const match = /^(?:(?:khu\s*pho|kp)(?:\s*so)?\s*)?([1-9]|[1-3][0-9]|4[0-5])$/.exec(
+    normalized
+  );
+
+  return match ? `Khu phố ${Number(match[1])}` : null;
+};
+
 export const appendDeleteSuffixc = (str) => {
   if (typeof str !== "string") {
     return str;

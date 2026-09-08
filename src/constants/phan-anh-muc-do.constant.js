@@ -1,7 +1,5 @@
 const PHAN_ANH_MUC_DO = {
-    THAP: 'Thấp',
-    TRUNG_BINH: 'Trung bình',
-    CAO: 'Cao',
+    THONG_THUONG: 'Thông thường',
     KHAN_CAP: 'Khẩn cấp',
 };
 
