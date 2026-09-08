@@ -103,7 +103,7 @@ const ThuVienController = {
     const { id } = req.params;
     const currentUser = req.payload.userId;
     const permissions = req.payload.permissions || [];
-    const { lyDoXoa } = req.body;
+    const { lyDoXoa } = req.body || {};
     await ThuVienService.delete(id, currentUser, permissions, lyDoXoa);
     return successResponse(res, null, "Xóa tài liệu thành công");
   },

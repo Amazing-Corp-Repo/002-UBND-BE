@@ -22,6 +22,7 @@ const ThuVienRepository = {
       ten_nguoi_tao: item.nguoi_tao ? userMap[item.nguoi_tao] || null : null,
       ten_nguoi_cap_nhat: item.nguoi_cap_nhat ? userMap[item.nguoi_cap_nhat] || null : null,
       ten_nguoi_duyet: item.nguoi_duyet ? userMap[item.nguoi_duyet] || null : null,
+      ten_nguoi_xoa: item.nguoi_cap_nhat ? userMap[item.nguoi_cap_nhat] || null : null,
     }));
   },
 

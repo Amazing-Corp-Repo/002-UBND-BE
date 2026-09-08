@@ -317,4 +317,9 @@ export const PERMISSION_TYPE = {
   EXTENSION_GET_DETAIL: "Xem chi tiết đề nghị gia hạn",
   EXTENSION_APPROVE: "Phê duyệt đề nghị gia hạn",
   EXTENSION_REJECT: "Từ chối đề nghị gia hạn",
+  UNAPPROVE: "Bỏ duyệt",
+  RESTORE: "Khôi phục",
+  FORCE_DELETE: "Xóa vĩnh viễn",
+  ADMIN_DELETE: "Quyền Admin xóa",
 };
+
