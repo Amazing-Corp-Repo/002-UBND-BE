@@ -151,13 +151,17 @@ const ThuVienService = {
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // Tài liệu chỉ được xem sau khi được phê duyệt, kể cả chính người tạo.
-    if (result.trang_thai !== "DA_DUYET") {
+
+    const userPermissions = permissions || [];
+    const isOwner = result.nguoi_tao === currentUser;
+    const canReviewAll =
+      userPermissions.includes("TL_APPROVE") ||
+      userPermissions.includes("TL_ADMIN_DELETE");
+    // Bản nháp/chờ duyệt chỉ được xem bởi người tạo hoặc người có quyền duyệt/quản trị.
+    if (result.trang_thai !== "DA_DUYET" && !isOwner && !canReviewAll) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    if (!["CONG_KHAI", "NOI_BO"].includes(result.pham_vi)) {
-      throw new BaseError(404, "Không tìm thấy tài liệu");
-    }
+
     return result;
   },
 
