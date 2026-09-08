@@ -9,6 +9,7 @@ import ReceptionScheduleManagementRepository from "../repositories/reception-sch
 import LichTiepDanService from "./lich-tiep-dan.service.js";
 import FileService from "./file.service.js";
 import { toSnakeCaseNonAccent } from "../utils/string.util.js";
+import { isReceptionScheduleInFuture } from "../utils/vietnam-time.util.js";
 
 const toMinutes = (value) => {
   const [hour, minute] = value.split(":").map(Number);
@@ -93,6 +94,18 @@ const normalizeImportRow = (item, index, currentUser) => {
   const timeRange = periods
     .map((period) => `${period.startTime} - ${period.endTime}`)
     .join(", ");
+
+  if (
+    !isReceptionScheduleInFuture({
+      receptionDate,
+      startTime: periods[0].startTime,
+    })
+  ) {
+    throw new BaseError(
+      400,
+      `Dòng ${rowNumber}: Ngày và giờ tiếp dân phải ở hiện tại hoặc trong tương lai`
+    );
+  }
 
   return {
     officerName,
@@ -225,7 +238,11 @@ const ReceptionScheduleManagementService = {
     if (!files?.length) {
       throw new BaseError(400, "File không được để trống");
     }
-    const spreadsheetRows = await FileService.readSpreadsheetFile(files[0].path);
+    // Giữ ngày/giờ Excel ở dạng serial để parse theo giờ Việt Nam,
+    // tránh Date bị đổi múi giờ làm lệch ngày hoặc giờ.
+    const spreadsheetRows = await FileService.readSpreadsheetFile(files[0].path, {
+      cellDates: false,
+    });
     const nonEmptyRows = spreadsheetRows.filter((row) =>
       Object.values(row).some((value) => value !== null && value !== "")
     );
@@ -283,6 +300,22 @@ const ReceptionScheduleManagementService = {
     currentUser,
     workingPeriods
   ) {
+    const normalizedPeriods = normalizeWorkingPeriods({
+      batDau,
+      ketThuc,
+      workingPeriods,
+    });
+    if (
+      !isReceptionScheduleInFuture({
+        receptionDate: ngayTiepDan,
+        startTime: normalizedPeriods[0].startTime,
+      })
+    ) {
+      throw new BaseError(
+        400,
+        "Ngày và giờ tiếp dân phải ở hiện tại hoặc trong tương lai"
+      );
+    }
     const existing = await ReceptionScheduleManagementRepository.findByCanBoAndNgay(
       tenCanBo,
       ngayTiepDan
@@ -293,11 +326,6 @@ const ReceptionScheduleManagementService = {
         "Lịch tiếp dân của cán bộ vào ngày này đã tồn tại"
       );
     }
-    const normalizedPeriods = normalizeWorkingPeriods({
-      batDau,
-      ketThuc,
-      workingPeriods,
-    });
     const thoiGian = normalizedPeriods
       .map(({ startTime, endTime }) => `${startTime} - ${endTime}`)
       .join(", ");

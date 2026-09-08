@@ -105,6 +105,60 @@ export const parseVietnamImportTime = (value) => {
   return match ? `${pad(match[1])}:${match[2]}` : null;
 };
 
+const toCalendarDate = (value) => {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return `${value.getUTCFullYear()}-${pad(value.getUTCMonth() + 1)}-${pad(
+      value.getUTCDate()
+    )}`;
+  }
+
+  return null;
+};
+
+const getVietnamNowParts = (now = new Date()) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .formatToParts(now)
+    .reduce((result, part) => {
+      if (part.type !== "literal") result[part.type] = part.value;
+      return result;
+    }, {});
+
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    minutes: Number(parts.hour) * 60 + Number(parts.minute),
+  };
+};
+
+export const isReceptionScheduleInFuture = ({
+  receptionDate,
+  startTime,
+  now = new Date(),
+} = {}) => {
+  const scheduleDate = toCalendarDate(receptionDate);
+  const timeMatch = /^(\d{2}):(\d{2})$/.exec(String(startTime || ""));
+  if (!scheduleDate || !timeMatch) return false;
+
+  const scheduleMinutes = Number(timeMatch[1]) * 60 + Number(timeMatch[2]);
+  const current = getVietnamNowParts(now);
+
+  return (
+    scheduleDate > current.date ||
+    (scheduleDate === current.date && scheduleMinutes > current.minutes)
+  );
+};
+
 export const getVietnamDayUtcRange = ({ fromDate, toDate } = {}) => ({
   ...(fromDate
     ? { gte: new Date(`${fromDate}T00:00:00.000${VIETNAM_OFFSET}`) }

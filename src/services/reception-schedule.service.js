@@ -79,6 +79,9 @@ const ReceptionScheduleService = {
       id: item.id,
       receptionDate: formatVietnamDate(item.ngay_tiep_dan),
       timeRange: item.thoi_gian,
+      location: item.dia_diem,
+      officerName: item.ten_can_bo,
+      note: item.ghi_chu,
     }));
   },
 

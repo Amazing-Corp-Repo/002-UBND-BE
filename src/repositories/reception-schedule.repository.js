@@ -16,6 +16,9 @@ const ReceptionScheduleRepository = {
         id: true,
         ngay_tiep_dan: true,
         thoi_gian: true,
+        dia_diem: true,
+        ten_can_bo: true,
+        ghi_chu: true,
       },
     });
   },
