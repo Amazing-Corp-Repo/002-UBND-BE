@@ -211,6 +211,39 @@ const ThuVienRepository = {
     return result;
   },
 
+  async getPublicCategories(loai) {
+    const documentWhere = {
+      is_delete: false,
+      trang_thai: "DA_DUYET",
+      pham_vi: "CONG_KHAI",
+      ...(loai ? { loai } : { loai: { in: ["VAN_HOA", "PHAP_LUAT"] } }),
+    };
+
+    const result = await prisma.thu_vien_danh_muc.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        thu_vien_tai_lieu: { some: documentWhere },
+      },
+      select: {
+        id: true,
+        ten: true,
+        mo_ta: true,
+        thu_tu: true,
+        _count: { select: { thu_vien_tai_lieu: { where: documentWhere } } },
+      },
+      orderBy: { thu_tu: "asc" },
+    });
+
+    return result.map((item) => ({
+      id: item.id,
+      name: item.ten,
+      description: item.mo_ta || "",
+      sortOrder: item.thu_tu,
+      documentCount: item._count.thu_vien_tai_lieu,
+    }));
+  },
+
   async getById(id) {
     const result = await prisma.thu_vien_tai_lieu.findFirst({
       where: { id, is_delete: false },

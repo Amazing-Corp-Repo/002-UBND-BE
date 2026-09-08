@@ -440,6 +440,28 @@ const ThuVienSwagger = {
       responses: {},
     },
   },
+  "/api/tai-lieu-cong-khai/categories": {
+    get: {
+      tags: ["TaiLieuCongKhai"],
+      summary: "Lấy danh mục tài liệu công khai",
+      description: "Public endpoint — chỉ trả về danh mục đang có tài liệu DA_DUYET + CONG_KHAI.",
+      parameters: [
+        { name: "loai", in: "query", schema: { type: "string", enum: ["VAN_HOA", "PHAP_LUAT"] }, description: "Lọc theo loại tài liệu" },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-cong-khai/{id}/download": {
+    get: {
+      tags: ["TaiLieuCongKhai"],
+      summary: "Lấy đường dẫn tải tài liệu công khai",
+      description: "Public endpoint — kiểm tra tài liệu công khai, tăng lượt tải và trả về thông tin file.",
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
+      responses: {},
+    },
+  },
 };
 
 export default ThuVienSwagger;

@@ -1,4 +1,5 @@
 import ThuVienService from "../services/thu-vien.service.js";
+import { BaseError } from "../utils/base-error.util.js";
 import { successResponse } from "../utils/response.util.js";
 
 const ThuVienController = {
@@ -10,10 +11,34 @@ const ThuVienController = {
     return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
   },
 
+  async getPublicCategories(req, res) {
+    const { loai } = req.validatedQuery || req.query;
+    const result = await ThuVienService.getPublicCategories({ loai });
+    return successResponse(res, result, "Lấy danh mục thư viện số thành công");
+  },
+
   async getPublicById(req, res) {
     const { id } = req.validatedParams || req.params;
     const result = await ThuVienService.getPublicById(id);
     return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
+  },
+
+  async downloadPublic(req, res) {
+    const { id } = req.validatedParams || req.params;
+    const result = await ThuVienService.getPublicById(id);
+    const fileInfo = result.thu_vien_tai_lieu_file?.[0];
+    if (!fileInfo) {
+      throw new BaseError(404, "Tài liệu không có file đính kèm");
+    }
+
+    await ThuVienService.incrementDownloadCount(id);
+
+    return successResponse(res, {
+      id: result.id,
+      fileUrl: fileInfo.duong_dan,
+      fileName: fileInfo.ten_file,
+      fileSize: fileInfo.kich_thuoc_mb,
+    }, "Lấy thông tin tải xuống thành công");
   },
 
   // ========== VĂN HÓA & PHÁP LUẬT (dùng chung) ==========

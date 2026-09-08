@@ -57,6 +57,12 @@ export const GetPublicLibraryQuery = Joi.object({
   }),
 });
 
+export const GetPublicLibraryCategoriesQuery = Joi.object({
+  loai: Joi.string().valid("VAN_HOA", "PHAP_LUAT").optional().messages({
+    "any.only": "Loại tài liệu phải là VAN_HOA hoặc PHAP_LUAT",
+  }),
+});
+
 export const PublicLibraryDocumentParams = Joi.object({
   id: Joi.string().trim().uuid().required().messages({
     "string.uuid": "ID tài liệu không hợp lệ",

@@ -146,6 +146,10 @@ const ThuVienService = {
     return result;
   },
 
+  async getPublicCategories({ loai }) {
+    return ThuVienRepository.getPublicCategories(loai);
+  },
+
   async getById(id, currentUser, permissions) {
     const result = await ThuVienRepository.getById(id);
     if (!result) {
