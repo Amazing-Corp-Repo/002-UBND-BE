@@ -79,6 +79,16 @@ const swaggerDocument = {
     },
 
     components: {
+        schemas: {
+            LibraryCategoryRequest: {
+                type: "object",
+                required: ["name"],
+                properties: {
+                    name: { type: "string", minLength: 2, maxLength: 100 },
+                    description: { type: "string", maxLength: 500, nullable: true },
+                },
+            },
+        },
         securitySchemes: {
             bearerAuth: {
                 type: 'http',

@@ -164,6 +164,36 @@ const ThuVienController = {
     return successResponse(res, result, "Lấy danh sách loại văn bản thành công");
   },
 
+  async createCategory(req, res) {
+    const result = await ThuVienService.createCategory({
+      loai: req.loai,
+      name: req.body.name,
+      description: req.body.description,
+      currentUser: req.payload.userId,
+    });
+    return res.status(201).json({ success: true, message: "Thêm danh mục thành công", data: result });
+  },
+
+  async updateCategory(req, res) {
+    const result = await ThuVienService.updateCategory({
+      loai: req.loai,
+      id: req.params.id,
+      name: req.body.name,
+      description: req.body.description,
+      currentUser: req.payload.userId,
+    });
+    return successResponse(res, result, "Cập nhật danh mục thành công");
+  },
+
+  async deleteCategory(req, res) {
+    await ThuVienService.deleteCategory({
+      loai: req.loai,
+      id: req.params.id,
+      currentUser: req.payload.userId,
+    });
+    return successResponse(res, null, "Xóa danh mục thành công");
+  },
+
   async getIssuingAgencies(req, res) {
     const result = await ThuVienService.getIssuingAgencies();
     return successResponse(res, result, "Lấy danh sách cơ quan ban hành thành công");

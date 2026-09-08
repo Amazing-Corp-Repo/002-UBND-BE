@@ -447,7 +447,10 @@ const ThuVienRepository = {
       select: {
         id: true,
         ten: true,
+        mo_ta: true,
         thu_tu: true,
+        nguoi_tao: true,
+        thoi_gian_tao: true,
         _count: {
           select: { thu_vien_tai_lieu: { where: { loai: loai || "VAN_HOA", is_delete: false } } },
         },
@@ -458,6 +461,9 @@ const ThuVienRepository = {
     return result.map((item) => ({
       id: item.id,
       name: item.ten,
+      description: item.mo_ta || "",
+      isSystem: !item.nguoi_tao,
+      createdAt: item.thoi_gian_tao,
       sortOrder: item.thu_tu,
       documentCount: item._count.thu_vien_tai_lieu,
     }));
@@ -473,7 +479,10 @@ const ThuVienRepository = {
       select: {
         id: true,
         ten: true,
+        mo_ta: true,
         thu_tu: true,
+        nguoi_tao: true,
+        thoi_gian_tao: true,
         _count: {
           select: { thu_vien_tai_lieu: { where: { loai: "PHAP_LUAT", is_delete: false } } },
         },
@@ -484,9 +493,45 @@ const ThuVienRepository = {
     return result.map((item) => ({
       id: item.id,
       name: item.ten,
+      description: item.mo_ta || "",
+      isSystem: !item.nguoi_tao,
+      createdAt: item.thoi_gian_tao,
       sortOrder: item.thu_tu,
       documentCount: item._count.thu_vien_tai_lieu,
     }));
+  },
+
+  async findCategoryByName(name, maxSortOrder) {
+    return prisma.thu_vien_danh_muc.findFirst({
+      where: {
+        ten: { equals: name, mode: "insensitive" },
+        is_delete: false,
+        ...(maxSortOrder === 9 ? { thu_tu: { lt: 10 } } : { thu_tu: { gte: 10 } }),
+      },
+    });
+  },
+
+  async findCategoryById(id) {
+    return prisma.thu_vien_danh_muc.findFirst({
+      where: { id, is_delete: false },
+      include: { _count: { select: { thu_vien_tai_lieu: { where: { is_delete: false } } } } },
+    });
+  },
+
+  async getNextCategoryOrder(maxSortOrder) {
+    const result = await prisma.thu_vien_danh_muc.aggregate({
+      where: maxSortOrder === 9 ? { thu_tu: { lt: 10 }, is_delete: false } : { thu_tu: { gte: 10 }, is_delete: false },
+      _max: { thu_tu: true },
+    });
+    return Math.max(maxSortOrder === 9 ? 0 : 9, result._max.thu_tu || 0) + 1;
+  },
+
+  async createCategory(data) {
+    return prisma.thu_vien_danh_muc.create({ data });
+  },
+
+  async updateCategory(id, data) {
+    return prisma.thu_vien_danh_muc.update({ where: { id }, data });
   },
 
   async getIssuingAgencies() {

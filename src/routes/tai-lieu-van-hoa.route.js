@@ -12,6 +12,8 @@ import {
   ApproveTaiLieuRequest,
   RejectTaiLieuRequest,
   DeleteTaiLieuRequest,
+  CreateLibraryCategoryRequest,
+  UpdateLibraryCategoryRequest,
 } from "../validators/thu-vien.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
@@ -32,6 +34,9 @@ taiLieuVanHoaRouter.get("/statistics", authenticate, ThuVienController.getStatis
 
 // Danh sách tiểu mục
 taiLieuVanHoaRouter.get("/sub-categories", authenticate, ThuVienController.getSubCategories);
+taiLieuVanHoaRouter.post("/sub-categories", authenticate, authorize([PERMISSION.TL_CREATE]), validate(CreateLibraryCategoryRequest), ThuVienController.createCategory);
+taiLieuVanHoaRouter.put("/sub-categories/:id", authenticate, authorize([PERMISSION.TL_UPDATE]), validate(UpdateLibraryCategoryRequest), ThuVienController.updateCategory);
+taiLieuVanHoaRouter.delete("/sub-categories/:id", authenticate, authorize([PERMISSION.TL_DELETE]), ThuVienController.deleteCategory);
 
 // Danh sách đã xóa
 taiLieuVanHoaRouter.get(

@@ -24,6 +24,38 @@ const ThuVienSwagger = {
       responses: {},
     },
   },
+  "/api/tai-lieu-van-hoa/sub-categories": {
+    get: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Lấy danh sách phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      responses: {},
+    },
+    post: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Thêm phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/sub-categories/{id}": {
+    put: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Cập nhật phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+    delete: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Xóa phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: {},
+    },
+  },
   "/api/tai-lieu-van-hoa/{id}": {
     get: {
       tags: ["TaiLieuVanHoa"],
@@ -331,6 +363,30 @@ const ThuVienSwagger = {
       tags: ["TaiLieuPhapLuat"],
       summary: "Lấy danh sách loại văn bản pháp luật",
       security: [{ bearerAuth: [] }],
+      responses: {},
+    },
+    post: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Thêm loại văn bản pháp luật",
+      security: [{ bearerAuth: [] }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/doc-types/{id}": {
+    put: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Cập nhật loại văn bản pháp luật",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+    delete: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Xóa loại văn bản pháp luật",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
       responses: {},
     },
   },
