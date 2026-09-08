@@ -61,10 +61,10 @@ export const CreateVanHoaRequest = Joi.object({
     "date.base": "Ngày ban hành không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",
@@ -98,10 +98,10 @@ export const UpdateVanHoaRequest = Joi.object({
     "date.base": "Ngày ban hành không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",
@@ -140,10 +140,10 @@ export const CreatePhapLuatRequest = Joi.object({
     "date.base": "Ngày hết hạn không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",
@@ -185,10 +185,10 @@ export const UpdatePhapLuatRequest = Joi.object({
     "date.base": "Ngày hết hạn không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",

@@ -7,3 +7,17 @@ export function normalizeRoleNames(roles) {
   }
   return [];
 }
+
+export function normalizePermissionCodes(permissions) {
+  if (Array.isArray(permissions)) {
+    return permissions.map((permission) => String(permission).trim()).filter(Boolean);
+  }
+  if (typeof permissions === "string") {
+    return permissions.split(",").map((permission) => permission.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+export function hasPermission(currentUser, permissionCode) {
+  return normalizePermissionCodes(currentUser?.permissions).includes(permissionCode);
+}

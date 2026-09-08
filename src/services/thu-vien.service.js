@@ -16,7 +16,7 @@ const COLUMN_MAP = {
   danhMuc:          { label: "Phân nhóm", getValue: (item) => item.thu_vien_danh_muc?.ten ?? "" },
   coQuanBanHanh:    { label: "Cơ quan ban hành", getValue: (item) => item.co_quan_ban_hanh ?? "" },
   phamVi:           { label: "Phạm vi", getValue: (item) => {
-    const map = { CONG_KHAI: "Công khai", NOI_BO: "Nội bộ", HAN_CHE: "Hạn chế" };
+    const map = { CONG_KHAI: "Công khai", NOI_BO: "Nội bộ" };
     return map[item.pham_vi] || item.pham_vi || "";
   }},
   trangThai:        { label: "Trạng thái", getValue: (item) => {
@@ -141,11 +141,12 @@ const ThuVienService = {
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // NHAP: admin (có TL_ADMIN_DELETE) bypass, non-admin throw
-    if (result.trang_thai === "NHAP" && result.nguoi_tao !== currentUser) {
-      if (!permissions.includes("TL_ADMIN_DELETE")) {
-        throw new BaseError(404, "Không tìm thấy tài liệu");
-      }
+    // Tài liệu chỉ được xem sau khi được phê duyệt, kể cả chính người tạo.
+    if (result.trang_thai !== "DA_DUYET") {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
+    }
+    if (!["CONG_KHAI", "NOI_BO"].includes(result.pham_vi)) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
     }
     return result;
   },
@@ -284,7 +285,7 @@ const ThuVienService = {
     if (!existing) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // ADMIN (có TL_ADMIN_DELETE) xóa tài liệu người khác
+    // Permission TL_ADMIN_DELETE cho phép xóa tài liệu nháp của người khác
     if (existing.nguoi_tao !== currentUser) {
       if (!permissions.includes("TL_ADMIN_DELETE")) {
         throw new BaseError(403, "Bạn không có quyền xóa tài liệu do người khác tạo");
@@ -332,7 +333,7 @@ const ThuVienService = {
       throw new BaseError(400, "Không thể khôi phục tài liệu đã xóa vĩnh viễn");
     }
 
-    // Nếu không phải người đã xóa → chỉ user có TL_ADMIN_DELETE mới được restore
+    // Nếu không phải người đã xóa thì cần permission TL_ADMIN_DELETE để restore
     if (existing.nguoi_cap_nhat !== currentUser) {
       if (!permissions.includes("TL_ADMIN_DELETE")) {
         throw new BaseError(403, "Chỉ admin mới có thể khôi phục tài liệu này");

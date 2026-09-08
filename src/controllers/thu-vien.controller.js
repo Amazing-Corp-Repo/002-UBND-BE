@@ -171,7 +171,11 @@ const ThuVienController = {
 
   async download(req, res) {
     const { id } = req.params;
-    const result = await ThuVienService.getById(id);
+    const result = await ThuVienService.getById(
+      id,
+      req.payload.userId,
+      req.payload.permissions || [],
+    );
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }

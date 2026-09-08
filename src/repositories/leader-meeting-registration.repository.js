@@ -1,4 +1,5 @@
 import prisma from "../config/database.config.js";
+import { isLeaderMeetingOverdue } from "../utils/leader-meeting-overdue.util.js";
 
 const activeHoldingStatuses = [
   "PENDING",
@@ -107,6 +108,8 @@ const LeaderMeetingRegistrationRepository = {
         ngay_hen: true,
         ho_ten: true,
         trang_thai: true,
+        is_qua_han: true,
+        thoi_gian_qua_han: true,
         ly_do_tu_choi: true,
         thoi_gian_tu_choi: true,
         ly_do_huy: true,
@@ -151,57 +154,15 @@ const LeaderMeetingRegistrationRepository = {
     fromDate,
     toDate,
   }) {
-    const now = new Date();
-    const todayStr = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Ho_Chi_Minh",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(now);
-    const timeStr = new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Asia/Ho_Chi_Minh",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }).format(now);
-
     let trangThaiWhere = status || undefined;
     let overdueWhere = undefined;
 
     if (status === "OVERDUE") {
-      // Quá hạn duyệt chỉ áp dụng cho đơn PENDING chưa được phê duyệt và đã qua giờ
-      trangThaiWhere = "PENDING";
-      overdueWhere = {
-        OR: [
-          { ngay_hen: { lt: new Date(`${todayStr}T00:00:00.000Z`) } },
-          {
-            ngay_hen: {
-              gte: new Date(`${todayStr}T00:00:00.000Z`),
-              lte: new Date(`${todayStr}T23:59:59.999Z`),
-            },
-            khung_gio_gap_lanh_dao: {
-              gio_ket_thuc: { lte: timeStr },
-            },
-          },
-        ],
-      };
+      trangThaiWhere = { in: ["PENDING", "APPROVED"] };
+      overdueWhere = { is_qua_han: true };
     } else if (status === "PENDING") {
-      // Lọc Chờ phê duyệt: chỉ lấy các đơn PENDING còn hạn trong tương lai
       trangThaiWhere = "PENDING";
-      overdueWhere = {
-        OR: [
-          { ngay_hen: { gt: new Date(`${todayStr}T23:59:59.999Z`) } },
-          {
-            ngay_hen: {
-              gte: new Date(`${todayStr}T00:00:00.000Z`),
-              lte: new Date(`${todayStr}T23:59:59.999Z`),
-            },
-            khung_gio_gap_lanh_dao: {
-              gio_ket_thuc: { gt: timeStr },
-            },
-          },
-        ],
-      };
+      overdueWhere = { is_qua_han: false };
     } else if (status === "APPROVED" || status === "IN_PROGRESS") {
       // Lọc Đang xử lý: lấy cả các đơn đã duyệt (APPROVED) và các đơn đang tiếp dân (IN_PROGRESS)
       trangThaiWhere = { in: ["APPROVED", "IN_PROGRESS"] };
@@ -248,6 +209,7 @@ const LeaderMeetingRegistrationRepository = {
       select: {
         id: true,
         trang_thai: true,
+        is_qua_han: true,
         thoi_gian_tao: true,
         ngay_hen: true,
         khung_gio_gap_lanh_dao: {
@@ -256,13 +218,7 @@ const LeaderMeetingRegistrationRepository = {
       },
     });
 
-    const isMatchOverdue = (item) => {
-      if (item.trang_thai !== "PENDING") return false;
-      const recDate = item.ngay_hen ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(item.ngay_hen) : "";
-      const slotEnd = item.khung_gio_gap_lanh_dao?.gio_ket_thuc || "23:59";
-      if (!recDate) return false;
-      return recDate < todayStr || (recDate === todayStr && slotEnd <= timeStr);
-    };
+    const isMatchOverdue = (item) => isLeaderMeetingOverdue(item);
 
     const statusWeight = (item) => {
       if (isMatchOverdue(item)) return 2; // Quá hạn
@@ -300,6 +256,8 @@ const LeaderMeetingRegistrationRepository = {
         sdt: true,
         cccd: true,
         trang_thai: true,
+        is_qua_han: true,
+        thoi_gian_qua_han: true,
         ghi_chu_hoan_thanh: true,
         ghi_chu_xu_ly: true,
         thoi_gian_phe_duyet: true,
@@ -358,6 +316,8 @@ const LeaderMeetingRegistrationRepository = {
         dia_chi: true,
         ngay_lam_don: true,
         trang_thai: true,
+        is_qua_han: true,
+        thoi_gian_qua_han: true,
         ly_do_tu_choi: true,
         ly_do_huy: true,
         ghi_chu_xu_ly: true,
@@ -516,34 +476,38 @@ const LeaderMeetingRegistrationRepository = {
     return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
   },
 
-  async transitionDueApprovedToInProgress({ currentDate, currentTime, transitionedAt }) {
-    return prisma.dang_ky_gap_lanh_dao.updateMany({
+  async findOverdueCandidates() {
+    return prisma.dang_ky_gap_lanh_dao.findMany({
       where: {
-        trang_thai: "APPROVED",
+        trang_thai: { in: ["PENDING", "APPROVED"] },
+        is_qua_han: false,
         is_active: true,
         is_delete: false,
-        khung_gio_gap_lanh_dao: {
-          is_active: true,
-          is_delete: false,
-          lich_gap_lanh_dao: {
-            is_active: true,
-            is_delete: false,
-          },
-        },
-        OR: [
-          { ngay_hen: { lt: currentDate } },
-          {
-            ngay_hen: currentDate,
-            khung_gio_gap_lanh_dao: {
-              gio_bat_dau: { lte: currentTime },
-            },
-          },
-        ],
+      },
+      select: {
+        id: true,
+        trang_thai: true,
+        is_qua_han: true,
+        ngay_hen: true,
+        khung_gio_gap_lanh_dao: { select: { gio_ket_thuc: true } },
+      },
+    });
+  },
+
+  async markOverdue(ids, overdueAt) {
+    if (!ids.length) return { count: 0 };
+    return prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        id: { in: ids },
+        trang_thai: { in: ["PENDING", "APPROVED"] },
+        is_qua_han: false,
+        is_active: true,
+        is_delete: false,
       },
       data: {
-        trang_thai: "IN_PROGRESS",
-        thoi_gian_bat_dau_xu_ly: transitionedAt,
-        thoi_gian_cap_nhat: transitionedAt,
+        is_qua_han: true,
+        thoi_gian_qua_han: overdueAt,
+        thoi_gian_cap_nhat: overdueAt,
       },
     });
   },

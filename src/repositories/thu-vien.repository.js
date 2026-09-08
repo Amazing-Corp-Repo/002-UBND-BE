@@ -31,7 +31,7 @@ const ThuVienRepository = {
     // Xây dựng mảng AND để tránh xung đột multiple OR
     const andConditions = [];
 
-    // ADMIN → xem tất cả (kể cả NHAP người khác) — check bằng permissions
+    // Permission TL_ADMIN_DELETE → xem tất cả (kể cả NHAP của người khác)
     // TL_APPROVE → xem tất cả, NHAP chỉ người tạo
     // Không có quyền → chỉ xem tài liệu mình tạo
     if (currentUser) {
@@ -64,9 +64,9 @@ const ThuVienRepository = {
     const where = {
       loai,
       is_delete: isDelete,
+      pham_vi: phamVi || { in: ["CONG_KHAI", "NOI_BO"] },
       ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
       ...(trangThai ? { trang_thai: trangThai } : {}),
-      ...(phamVi ? { pham_vi: phamVi } : {}),
       ...(aiDaHoc !== undefined && aiDaHoc !== "" ? { ai_da_hoc: aiDaHoc === "true" } : {}),
       ...(coQuanBanHanh ? { co_quan_ban_hanh: { contains: coQuanBanHanh, mode: "insensitive" } } : {}),
       ...(dateFrom || dateTo ? {
