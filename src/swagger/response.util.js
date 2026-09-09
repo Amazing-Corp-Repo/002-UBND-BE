@@ -5,14 +5,6 @@ const defaultResponses = (operation) => ({
     description: `${operation.summary || "Thao tác"} thành công`,
     content: {
       "application/json": {
-        schema: {
-          type: "object",
-          properties: {
-            success: { type: "boolean", example: true },
-            data: { nullable: true },
-            message: { type: "string" },
-          },
-        },
         example: {
           success: true,
           data: null,

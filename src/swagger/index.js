@@ -30,23 +30,9 @@ import LeaderMeetingRegistrationSwagger from './leader-meeting-registration.swag
 import LeaderMeetingRatingSwagger from './leader-meeting-rating.swagger.js';
 import ThuVienSwagger from './thu-vien.swagger.js';
 import LogSwagger from './log.swagger.js';
+import { fillEmptyResponses } from './response.util.js';
 
-const swaggerDocument = {
-
-    openapi: '3.0.0',
-    info: {
-        title: `${env.APP_NAME} API Documentation`,
-        version: '1.0.0',
-    },
-
-    servers: [
-        {
-            url: '/',
-            description: 'Current Swagger host',
-        },
-    ],
-
-    paths: {
+const swaggerPaths = {
         ...AuthSwagger,
         ...UserSwagger,
         ...MauDonSwagger,
@@ -78,7 +64,24 @@ const swaggerDocument = {
         ...LeaderMeetingRatingSwagger,
         ...ThuVienSwagger,
         ...LogSwagger,
+    };
+
+const swaggerDocument = {
+
+    openapi: '3.0.0',
+    info: {
+        title: `${env.APP_NAME} API Documentation`,
+        version: '1.0.0',
     },
+
+    servers: [
+        {
+            url: '/',
+            description: 'Current Swagger host',
+        },
+    ],
+
+    paths: fillEmptyResponses(swaggerPaths),
 
     components: {
         schemas: {
