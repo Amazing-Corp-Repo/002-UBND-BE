@@ -1,5 +1,7 @@
 import ThuVienSchemas from "../schemas/thu-vien.schema.js";
 
+import { fillEmptyResponses } from "./response.util.js";
+
 const ThuVienSwagger = {
   // ============ VĂN HÓA - LỊCH SỬ ============
 
@@ -464,4 +466,4 @@ const ThuVienSwagger = {
   },
 };
 
-export default ThuVienSwagger;
+export default fillEmptyResponses(ThuVienSwagger);

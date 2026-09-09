@@ -29,6 +29,7 @@ import LeaderMeetingScheduleSwagger from './leader-meeting-schedule.swagger.js';
 import LeaderMeetingRegistrationSwagger from './leader-meeting-registration.swagger.js';
 import LeaderMeetingRatingSwagger from './leader-meeting-rating.swagger.js';
 import ThuVienSwagger from './thu-vien.swagger.js';
+import LogSwagger from './log.swagger.js';
 
 const swaggerDocument = {
 
@@ -38,12 +39,12 @@ const swaggerDocument = {
         version: '1.0.0',
     },
 
-    // servers: [
-    //     {
-    //         url: 'http://localhost:8880',  // Địa chỉ API cho môi trường phát triển
-    //         description: 'Local Development',
-    //     },
-    // ],
+    servers: [
+        {
+            url: '/',
+            description: 'Current Swagger host',
+        },
+    ],
 
     paths: {
         ...AuthSwagger,
@@ -76,6 +77,7 @@ const swaggerDocument = {
         ...LeaderMeetingRegistrationSwagger,
         ...LeaderMeetingRatingSwagger,
         ...ThuVienSwagger,
+        ...LogSwagger,
     },
 
     components: {

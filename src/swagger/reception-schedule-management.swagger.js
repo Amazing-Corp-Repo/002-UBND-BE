@@ -1,5 +1,7 @@
 import { ReceptionScheduleManagementSchemas } from "../schemas/reception-schedule-management.schema.js";
 
+import { fillEmptyResponses } from "./response.util.js";
+
 const ReceptionScheduleManagementSwagger = {
     '/api/reception-schedules/management/import': {
         post: {
@@ -414,4 +416,4 @@ const ReceptionScheduleManagementSwagger = {
     },
 }
 
-export default ReceptionScheduleManagementSwagger;
+export default fillEmptyResponses(ReceptionScheduleManagementSwagger);
