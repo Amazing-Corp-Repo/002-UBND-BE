@@ -12,6 +12,8 @@ import {
   ApproveTaiLieuRequest,
   RejectTaiLieuRequest,
   DeleteTaiLieuRequest,
+  CreateLibraryCategoryRequest,
+  UpdateLibraryCategoryRequest,
 } from "../validators/thu-vien.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
@@ -32,6 +34,9 @@ taiLieuPhapLuatRouter.get("/statistics", authenticate, ThuVienController.getStat
 
 // Danh sách loại văn bản
 taiLieuPhapLuatRouter.get("/doc-types", authenticate, ThuVienController.getDocTypes);
+taiLieuPhapLuatRouter.post("/doc-types", authenticate, authorize([PERMISSION.TL_CREATE]), validate(CreateLibraryCategoryRequest), ThuVienController.createCategory);
+taiLieuPhapLuatRouter.put("/doc-types/:id", authenticate, authorize([PERMISSION.TL_UPDATE]), validate(UpdateLibraryCategoryRequest), ThuVienController.updateCategory);
+taiLieuPhapLuatRouter.delete("/doc-types/:id", authenticate, authorize([PERMISSION.TL_DELETE]), ThuVienController.deleteCategory);
 
 // Danh sách cơ quan ban hành
 taiLieuPhapLuatRouter.get("/issuing-agencies", authenticate, ThuVienController.getIssuingAgencies);

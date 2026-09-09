@@ -7,6 +7,7 @@ import {
 import LichTiepDanRepository from "../repositories/lich-tiep-dan.repository.js";
 import { createPagination } from "../utils/response.util.js";
 import {
+  isReceptionScheduleInFuture,
   normalizeReceptionTimes,
   parseVietnamImportDate,
   parseVietnamImportTime,
@@ -39,9 +40,13 @@ const LichTiepDanService = {
     if (!file || file.length === 0) {
       throw new BaseError(400, "File không được để trống");
     }
-    const data = await FileService.readSpreadsheetFile(file[0].path);
+    // Giữ ngày/giờ Excel ở dạng serial để parse theo giờ Việt Nam,
+    // tránh Date bị đổi múi giờ làm lệch ngày hoặc giờ.
+    const data = await FileService.readSpreadsheetFile(file[0].path, {
+      cellDates: false,
+    });
     try {
-      for (const item of data) {
+      for (const [index, item] of data.entries()) {
         const record = {};
         for (const [key, value] of Object.entries(item)) {
           record[toSnakeCaseNonAccent(key)] = value;
@@ -52,6 +57,12 @@ const LichTiepDanService = {
         const den = parseVietnamImportTime(record.den);
         if (!receptionDate || !tu || !den || tu >= den) {
           throw new BaseError(400, "Ngày hoặc giờ tiếp dân trong file không hợp lệ");
+        }
+        if (!isReceptionScheduleInFuture({ receptionDate, startTime: tu })) {
+          throw new BaseError(
+            400,
+            `Dòng ${index + 2}: Ngày và giờ tiếp dân phải ở hiện tại hoặc trong tương lai`
+          );
         }
         record.ngay_tiep_dan = toDatabaseDate(receptionDate);
         const thoi_gian = `${tu} - ${den}`;
@@ -195,6 +206,12 @@ const LichTiepDanService = {
     ghiChu,
     currentUser
   ) {
+    if (!isReceptionScheduleInFuture({ receptionDate: ngayTiepDan, startTime: batDau })) {
+      throw new BaseError(
+        400,
+        "Ngày và giờ tiếp dân phải ở hiện tại hoặc trong tương lai"
+      );
+    }
     const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || "Cán bộ tiếp dân";
     const finalDiaDiem = (diaDiem && diaDiem.trim()) || "Phòng tiếp công dân";
     const existing = await LichTiepDanRepository.findByCanBoAndNgay(

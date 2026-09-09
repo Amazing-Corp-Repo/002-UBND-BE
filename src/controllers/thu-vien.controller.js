@@ -1,4 +1,5 @@
 import ThuVienService from "../services/thu-vien.service.js";
+import { BaseError } from "../utils/base-error.util.js";
 import { successResponse } from "../utils/response.util.js";
 
 const ThuVienController = {
@@ -10,10 +11,34 @@ const ThuVienController = {
     return successResponse(res, result.data, "Lấy danh sách tài liệu thành công", result.pagination);
   },
 
+  async getPublicCategories(req, res) {
+    const { loai } = req.validatedQuery || req.query;
+    const result = await ThuVienService.getPublicCategories({ loai });
+    return successResponse(res, result, "Lấy danh mục thư viện số thành công");
+  },
+
   async getPublicById(req, res) {
     const { id } = req.validatedParams || req.params;
     const result = await ThuVienService.getPublicById(id);
     return successResponse(res, result, "Lấy chi tiết tài liệu thành công");
+  },
+
+  async downloadPublic(req, res) {
+    const { id } = req.validatedParams || req.params;
+    const result = await ThuVienService.getPublicById(id);
+    const fileInfo = result.thu_vien_tai_lieu_file?.[0];
+    if (!fileInfo) {
+      throw new BaseError(404, "Tài liệu không có file đính kèm");
+    }
+
+    await ThuVienService.incrementDownloadCount(id);
+
+    return successResponse(res, {
+      id: result.id,
+      fileUrl: fileInfo.duong_dan,
+      fileName: fileInfo.ten_file,
+      fileSize: fileInfo.kich_thuoc_mb,
+    }, "Lấy thông tin tải xuống thành công");
   },
 
   // ========== VĂN HÓA & PHÁP LUẬT (dùng chung) ==========
@@ -78,7 +103,7 @@ const ThuVienController = {
     const { id } = req.params;
     const currentUser = req.payload.userId;
     const permissions = req.payload.permissions || [];
-    const { lyDoXoa } = req.body;
+    const { lyDoXoa } = req.body || {};
     await ThuVienService.delete(id, currentUser, permissions, lyDoXoa);
     return successResponse(res, null, "Xóa tài liệu thành công");
   },
@@ -164,6 +189,36 @@ const ThuVienController = {
     return successResponse(res, result, "Lấy danh sách loại văn bản thành công");
   },
 
+  async createCategory(req, res) {
+    const result = await ThuVienService.createCategory({
+      loai: req.loai,
+      name: req.body.name,
+      description: req.body.description,
+      currentUser: req.payload.userId,
+    });
+    return res.status(201).json({ success: true, message: "Thêm danh mục thành công", data: result });
+  },
+
+  async updateCategory(req, res) {
+    const result = await ThuVienService.updateCategory({
+      loai: req.loai,
+      id: req.params.id,
+      name: req.body.name,
+      description: req.body.description,
+      currentUser: req.payload.userId,
+    });
+    return successResponse(res, result, "Cập nhật danh mục thành công");
+  },
+
+  async deleteCategory(req, res) {
+    await ThuVienService.deleteCategory({
+      loai: req.loai,
+      id: req.params.id,
+      currentUser: req.payload.userId,
+    });
+    return successResponse(res, null, "Xóa danh mục thành công");
+  },
+
   async getIssuingAgencies(req, res) {
     const result = await ThuVienService.getIssuingAgencies();
     return successResponse(res, result, "Lấy danh sách cơ quan ban hành thành công");
@@ -171,7 +226,11 @@ const ThuVienController = {
 
   async download(req, res) {
     const { id } = req.params;
-    const result = await ThuVienService.getById(id);
+    const result = await ThuVienService.getById(
+      id,
+      req.payload.userId,
+      req.payload.permissions || [],
+    );
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }

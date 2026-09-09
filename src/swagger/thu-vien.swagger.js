@@ -14,13 +14,45 @@ const ThuVienSwagger = {
         { name: "search", in: "query", schema: { type: "string" }, description: "Tìm kiếm theo tiêu đề, mô tả" },
         { name: "idDanhMuc", in: "query", schema: { type: "string", format: "uuid" }, description: "Lọc theo danh mục" },
         { name: "trangThai", in: "query", schema: { type: "string" }, description: "Lọc theo trạng thái (NHAP, CHO_DUYET, DA_DUYET, LUU_TRU)" },
-        { name: "phamVi", in: "query", schema: { type: "string" }, description: "Lọc theo phạm vi (CONG_KHAI, NOI_BO, HAN_CHE)" },
+        { name: "phamVi", in: "query", schema: { type: "string", enum: ["CONG_KHAI", "NOI_BO"] }, description: "Lọc theo phạm vi công khai hoặc nội bộ" },
         { name: "aiDaHoc", in: "query", schema: { type: "boolean" }, description: "Lọc theo trạng thái AI đã học" },
         { name: "dateFrom", in: "query", schema: { type: "string", format: "date" }, description: "Lọc từ ngày ban hành" },
         { name: "dateTo", in: "query", schema: { type: "string", format: "date" }, description: "Lọc đến ngày ban hành" },
         { name: "sortBy", in: "query", schema: { type: "string", default: "thoi_gian_tao" }, description: "Trường sắp xếp" },
         { name: "sortOrder", in: "query", schema: { type: "string", default: "desc" }, description: "Thứ tự sắp xếp (asc, desc)" },
       ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/sub-categories": {
+    get: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Lấy danh sách phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      responses: {},
+    },
+    post: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Thêm phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/sub-categories/{id}": {
+    put: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Cập nhật phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+    delete: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Xóa phân nhóm văn hóa - lịch sử",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
       responses: {},
     },
   },
@@ -333,6 +365,30 @@ const ThuVienSwagger = {
       security: [{ bearerAuth: [] }],
       responses: {},
     },
+    post: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Thêm loại văn bản pháp luật",
+      security: [{ bearerAuth: [] }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/doc-types/{id}": {
+    put: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Cập nhật loại văn bản pháp luật",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/LibraryCategoryRequest" } } } },
+      responses: {},
+    },
+    delete: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Xóa loại văn bản pháp luật",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: {},
+    },
   },
   "/api/tai-lieu-phap-luat/issuing-agencies": {
     get: {
@@ -378,6 +434,28 @@ const ThuVienSwagger = {
       tags: ["TaiLieuCongKhai"],
       summary: "Lấy chi tiết tài liệu công khai",
       description: "Public endpoint — không cần token.",
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-cong-khai/categories": {
+    get: {
+      tags: ["TaiLieuCongKhai"],
+      summary: "Lấy danh mục tài liệu công khai",
+      description: "Public endpoint — chỉ trả về danh mục đang có tài liệu DA_DUYET + CONG_KHAI.",
+      parameters: [
+        { name: "loai", in: "query", schema: { type: "string", enum: ["VAN_HOA", "PHAP_LUAT"] }, description: "Lọc theo loại tài liệu" },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-cong-khai/{id}/download": {
+    get: {
+      tags: ["TaiLieuCongKhai"],
+      summary: "Lấy đường dẫn tải tài liệu công khai",
+      description: "Public endpoint — kiểm tra tài liệu công khai, tăng lượt tải và trả về thông tin file.",
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" }, description: "ID tài liệu" },
       ],

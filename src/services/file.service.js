@@ -81,9 +81,9 @@ const FileService = {
     }
   },
 
-  async readSpreadsheetFile(filePath) {
+  async readSpreadsheetFile(filePath, { cellDates = true } = {}) {
     try {
-      const workbook = XLSX.readFile(filePath, { cellDates: true });
+      const workbook = XLSX.readFile(filePath, { cellDates });
       const firstSheetName = workbook.SheetNames?.[0];
       const worksheet = firstSheetName ? workbook.Sheets?.[firstSheetName] : null;
       if (!worksheet) {

@@ -16,7 +16,7 @@ const COLUMN_MAP = {
   danhMuc:          { label: "Phân nhóm", getValue: (item) => item.thu_vien_danh_muc?.ten ?? "" },
   coQuanBanHanh:    { label: "Cơ quan ban hành", getValue: (item) => item.co_quan_ban_hanh ?? "" },
   phamVi:           { label: "Phạm vi", getValue: (item) => {
-    const map = { CONG_KHAI: "Công khai", NOI_BO: "Nội bộ", HAN_CHE: "Hạn chế" };
+    const map = { CONG_KHAI: "Công khai", NOI_BO: "Nội bộ" };
     return map[item.pham_vi] || item.pham_vi || "";
   }},
   trangThai:        { label: "Trạng thái", getValue: (item) => {
@@ -34,6 +34,16 @@ const COLUMN_MAP = {
   nguoiDuyet:       { label: "Người duyệt", getValue: (item) => item.ten_nguoi_duyet ?? "" },
   thoiGianTao:      { label: "Ngày tạo", getValue: (item) => item.thoi_gian_tao ? new Date(item.thoi_gian_tao).toISOString().split("T")[0] : "" },
 };
+
+const mapLibraryCategory = (item) => ({
+  id: item.id,
+  name: item.ten,
+  description: item.mo_ta || "",
+  isSystem: !item.nguoi_tao,
+  createdAt: item.thoi_gian_tao,
+  sortOrder: item.thu_tu,
+  documentCount: item._count?.thu_vien_tai_lieu || 0,
+});
 
 const ThuVienService = {
   async getAll({ loai, page = 1, size = 10, search, idDanhMuc, trangThai, phamVi, aiDaHoc, dateFrom, dateTo, sortBy, sortOrder, coQuanBanHanh, currentUser, permissions = [] }) {
@@ -136,17 +146,26 @@ const ThuVienService = {
     return result;
   },
 
+  async getPublicCategories({ loai }) {
+    return ThuVienRepository.getPublicCategories(loai);
+  },
+
   async getById(id, currentUser, permissions) {
     const result = await ThuVienRepository.getById(id);
     if (!result) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // NHAP: admin (có TL_ADMIN_DELETE) bypass, non-admin throw
-    if (result.trang_thai === "NHAP" && result.nguoi_tao !== currentUser) {
-      if (!permissions.includes("TL_ADMIN_DELETE")) {
-        throw new BaseError(404, "Không tìm thấy tài liệu");
-      }
+
+    const userPermissions = permissions || [];
+    const isOwner = result.nguoi_tao === currentUser;
+    const canReviewAll =
+      userPermissions.includes("TL_APPROVE") ||
+      userPermissions.includes("TL_ADMIN_DELETE");
+    // Bản nháp/chờ duyệt chỉ được xem bởi người tạo hoặc người có quyền duyệt/quản trị.
+    if (result.trang_thai !== "DA_DUYET" && !isOwner && !canReviewAll) {
+      throw new BaseError(404, "Không tìm thấy tài liệu");
     }
+
     return result;
   },
 
@@ -284,7 +303,7 @@ const ThuVienService = {
     if (!existing) {
       throw new BaseError(404, "Không tìm thấy tài liệu");
     }
-    // ADMIN (có TL_ADMIN_DELETE) xóa tài liệu người khác
+    // Permission TL_ADMIN_DELETE cho phép xóa tài liệu nháp của người khác
     if (existing.nguoi_tao !== currentUser) {
       if (!permissions.includes("TL_ADMIN_DELETE")) {
         throw new BaseError(403, "Bạn không có quyền xóa tài liệu do người khác tạo");
@@ -332,7 +351,7 @@ const ThuVienService = {
       throw new BaseError(400, "Không thể khôi phục tài liệu đã xóa vĩnh viễn");
     }
 
-    // Nếu không phải người đã xóa → chỉ user có TL_ADMIN_DELETE mới được restore
+    // Nếu không phải người đã xóa thì cần permission TL_ADMIN_DELETE để restore
     if (existing.nguoi_cap_nhat !== currentUser) {
       if (!permissions.includes("TL_ADMIN_DELETE")) {
         throw new BaseError(403, "Chỉ admin mới có thể khôi phục tài liệu này");
@@ -491,6 +510,55 @@ const ThuVienService = {
 
   async getDocTypes() {
     return ThuVienRepository.getDocTypes();
+  },
+
+  async createCategory({ loai, name, description, currentUser }) {
+    const maxSortOrder = loai === "VAN_HOA" ? 9 : 999999;
+    const duplicate = await ThuVienRepository.findCategoryByName(name, maxSortOrder === 9 ? 9 : 10);
+    if (duplicate) throw new BaseError(409, "Tên danh mục đã tồn tại");
+
+    const thuTu = await ThuVienRepository.getNextCategoryOrder(maxSortOrder === 9 ? 9 : 10);
+    const created = await ThuVienRepository.createCategory({
+      ten: name,
+      mo_ta: description || null,
+      thu_tu: thuTu,
+      nguoi_tao: currentUser,
+      is_active: true,
+      is_delete: false,
+    });
+    return mapLibraryCategory(created);
+  },
+
+  async updateCategory({ loai, id, name, description, currentUser }) {
+    const category = await ThuVienRepository.findCategoryById(id);
+    if (!category || (loai === "VAN_HOA" ? category.thu_tu >= 10 : category.thu_tu < 10)) {
+      throw new BaseError(404, "Không tìm thấy danh mục");
+    }
+    const duplicate = await ThuVienRepository.findCategoryByName(name, loai === "VAN_HOA" ? 9 : 10);
+    if (duplicate && duplicate.id !== id) throw new BaseError(409, "Tên danh mục đã tồn tại");
+    const updated = await ThuVienRepository.updateCategory(id, {
+      ten: name,
+      ...(description !== undefined ? { mo_ta: description || null } : {}),
+      nguoi_cap_nhat: currentUser,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    });
+    return mapLibraryCategory(updated);
+  },
+
+  async deleteCategory({ loai, id, currentUser }) {
+    const category = await ThuVienRepository.findCategoryById(id);
+    if (!category || (loai === "VAN_HOA" ? category.thu_tu >= 10 : category.thu_tu < 10)) {
+      throw new BaseError(404, "Không tìm thấy danh mục");
+    }
+    if (category._count.thu_vien_tai_lieu > 0) {
+      throw new BaseError(409, "Không thể xóa danh mục đang được sử dụng bởi tài liệu");
+    }
+    return ThuVienRepository.updateCategory(id, {
+      is_delete: true,
+      is_active: false,
+      nguoi_cap_nhat: currentUser,
+      thoi_gian_cap_nhat: new Date().toISOString(),
+    });
   },
 
   async getIssuingAgencies() {

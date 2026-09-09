@@ -8,6 +8,28 @@ const PUBLIC_LIBRARY_SORT_FIELDS = [
   "so_luot_tai",
 ];
 
+export const CreateLibraryCategoryRequest = Joi.object({
+  name: Joi.string().trim().min(2).max(100).required().messages({
+    "string.min": "Tên danh mục phải có ít nhất 2 ký tự",
+    "string.max": "Tên danh mục không được vượt quá 100 ký tự",
+    "any.required": "Tên danh mục là bắt buộc",
+  }),
+  description: Joi.string().trim().max(500).allow(null, "").optional().messages({
+    "string.max": "Mô tả không được vượt quá 500 ký tự",
+  }),
+});
+
+export const UpdateLibraryCategoryRequest = Joi.object({
+  name: Joi.string().trim().min(2).max(100).required().messages({
+    "string.min": "Tên danh mục phải có ít nhất 2 ký tự",
+    "string.max": "Tên danh mục không được vượt quá 100 ký tự",
+    "any.required": "Tên danh mục là bắt buộc",
+  }),
+  description: Joi.string().trim().max(500).allow(null, "").optional().messages({
+    "string.max": "Mô tả không được vượt quá 500 ký tự",
+  }),
+});
+
 export const GetPublicLibraryQuery = Joi.object({
   page: Joi.number().integer().min(1).default(1).messages({
     "number.base": "Trang phải là số nguyên",
@@ -32,6 +54,12 @@ export const GetPublicLibraryQuery = Joi.object({
   }),
   sortOrder: Joi.string().valid("asc", "desc").default("desc").messages({
     "any.only": "Thứ tự sắp xếp phải là asc hoặc desc",
+  }),
+});
+
+export const GetPublicLibraryCategoriesQuery = Joi.object({
+  loai: Joi.string().valid("VAN_HOA", "PHAP_LUAT").optional().messages({
+    "any.only": "Loại tài liệu phải là VAN_HOA hoặc PHAP_LUAT",
   }),
 });
 
@@ -61,10 +89,10 @@ export const CreateVanHoaRequest = Joi.object({
     "date.base": "Ngày ban hành không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",
@@ -98,10 +126,10 @@ export const UpdateVanHoaRequest = Joi.object({
     "date.base": "Ngày ban hành không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",
@@ -140,10 +168,10 @@ export const CreatePhapLuatRequest = Joi.object({
     "date.base": "Ngày hết hạn không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",
@@ -185,10 +213,10 @@ export const UpdatePhapLuatRequest = Joi.object({
     "date.base": "Ngày hết hạn không hợp lệ",
   }),
   phamVi: Joi.string()
-    .valid("CONG_KHAI", "NOI_BO", "HAN_CHE")
+    .valid("CONG_KHAI", "NOI_BO")
     .optional()
     .messages({
-      "any.only": "Phạm vi phải là CONG_KHAI, NOI_BO hoặc HAN_CHE",
+      "any.only": "Phạm vi phải là CONG_KHAI hoặc NOI_BO",
     }),
   moTa: Joi.string().trim().optional().allow(null, "").messages({
     "string.base": "Mô tả phải là chuỗi ký tự",

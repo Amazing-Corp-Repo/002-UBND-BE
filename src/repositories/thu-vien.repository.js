@@ -22,6 +22,7 @@ const ThuVienRepository = {
       ten_nguoi_tao: item.nguoi_tao ? userMap[item.nguoi_tao] || null : null,
       ten_nguoi_cap_nhat: item.nguoi_cap_nhat ? userMap[item.nguoi_cap_nhat] || null : null,
       ten_nguoi_duyet: item.nguoi_duyet ? userMap[item.nguoi_duyet] || null : null,
+      ten_nguoi_xoa: item.nguoi_cap_nhat ? userMap[item.nguoi_cap_nhat] || null : null,
     }));
   },
 
@@ -31,7 +32,7 @@ const ThuVienRepository = {
     // Xây dựng mảng AND để tránh xung đột multiple OR
     const andConditions = [];
 
-    // ADMIN → xem tất cả (kể cả NHAP người khác) — check bằng permissions
+    // Permission TL_ADMIN_DELETE → xem tất cả (kể cả NHAP của người khác)
     // TL_APPROVE → xem tất cả, NHAP chỉ người tạo
     // Không có quyền → chỉ xem tài liệu mình tạo
     if (currentUser) {
@@ -64,9 +65,9 @@ const ThuVienRepository = {
     const where = {
       loai,
       is_delete: isDelete,
+      pham_vi: phamVi || { in: ["CONG_KHAI", "NOI_BO"] },
       ...(idDanhMuc ? { id_danh_muc: idDanhMuc } : {}),
       ...(trangThai ? { trang_thai: trangThai } : {}),
-      ...(phamVi ? { pham_vi: phamVi } : {}),
       ...(aiDaHoc !== undefined && aiDaHoc !== "" ? { ai_da_hoc: aiDaHoc === "true" } : {}),
       ...(coQuanBanHanh ? { co_quan_ban_hanh: { contains: coQuanBanHanh, mode: "insensitive" } } : {}),
       ...(dateFrom || dateTo ? {
@@ -209,6 +210,39 @@ const ThuVienRepository = {
 
     if (!result) return null;
     return result;
+  },
+
+  async getPublicCategories(loai) {
+    const documentWhere = {
+      is_delete: false,
+      trang_thai: "DA_DUYET",
+      pham_vi: "CONG_KHAI",
+      ...(loai ? { loai } : { loai: { in: ["VAN_HOA", "PHAP_LUAT"] } }),
+    };
+
+    const result = await prisma.thu_vien_danh_muc.findMany({
+      where: {
+        is_delete: false,
+        is_active: true,
+        thu_vien_tai_lieu: { some: documentWhere },
+      },
+      select: {
+        id: true,
+        ten: true,
+        mo_ta: true,
+        thu_tu: true,
+        _count: { select: { thu_vien_tai_lieu: { where: documentWhere } } },
+      },
+      orderBy: { thu_tu: "asc" },
+    });
+
+    return result.map((item) => ({
+      id: item.id,
+      name: item.ten,
+      description: item.mo_ta || "",
+      sortOrder: item.thu_tu,
+      documentCount: item._count.thu_vien_tai_lieu,
+    }));
   },
 
   async getById(id) {
@@ -447,7 +481,10 @@ const ThuVienRepository = {
       select: {
         id: true,
         ten: true,
+        mo_ta: true,
         thu_tu: true,
+        nguoi_tao: true,
+        thoi_gian_tao: true,
         _count: {
           select: { thu_vien_tai_lieu: { where: { loai: loai || "VAN_HOA", is_delete: false } } },
         },
@@ -458,6 +495,9 @@ const ThuVienRepository = {
     return result.map((item) => ({
       id: item.id,
       name: item.ten,
+      description: item.mo_ta || "",
+      isSystem: !item.nguoi_tao,
+      createdAt: item.thoi_gian_tao,
       sortOrder: item.thu_tu,
       documentCount: item._count.thu_vien_tai_lieu,
     }));
@@ -473,7 +513,10 @@ const ThuVienRepository = {
       select: {
         id: true,
         ten: true,
+        mo_ta: true,
         thu_tu: true,
+        nguoi_tao: true,
+        thoi_gian_tao: true,
         _count: {
           select: { thu_vien_tai_lieu: { where: { loai: "PHAP_LUAT", is_delete: false } } },
         },
@@ -484,9 +527,45 @@ const ThuVienRepository = {
     return result.map((item) => ({
       id: item.id,
       name: item.ten,
+      description: item.mo_ta || "",
+      isSystem: !item.nguoi_tao,
+      createdAt: item.thoi_gian_tao,
       sortOrder: item.thu_tu,
       documentCount: item._count.thu_vien_tai_lieu,
     }));
+  },
+
+  async findCategoryByName(name, maxSortOrder) {
+    return prisma.thu_vien_danh_muc.findFirst({
+      where: {
+        ten: { equals: name, mode: "insensitive" },
+        is_delete: false,
+        ...(maxSortOrder === 9 ? { thu_tu: { lt: 10 } } : { thu_tu: { gte: 10 } }),
+      },
+    });
+  },
+
+  async findCategoryById(id) {
+    return prisma.thu_vien_danh_muc.findFirst({
+      where: { id, is_delete: false },
+      include: { _count: { select: { thu_vien_tai_lieu: { where: { is_delete: false } } } } },
+    });
+  },
+
+  async getNextCategoryOrder(maxSortOrder) {
+    const result = await prisma.thu_vien_danh_muc.aggregate({
+      where: maxSortOrder === 9 ? { thu_tu: { lt: 10 }, is_delete: false } : { thu_tu: { gte: 10 }, is_delete: false },
+      _max: { thu_tu: true },
+    });
+    return Math.max(maxSortOrder === 9 ? 0 : 9, result._max.thu_tu || 0) + 1;
+  },
+
+  async createCategory(data) {
+    return prisma.thu_vien_danh_muc.create({ data });
+  },
+
+  async updateCategory(id, data) {
+    return prisma.thu_vien_danh_muc.update({ where: { id }, data });
   },
 
   async getIssuingAgencies() {

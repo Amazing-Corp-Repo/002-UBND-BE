@@ -5,7 +5,8 @@ import {
 import LeaderMeetingRatingRepository from "../repositories/leader-meeting-rating.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
-import { normalizeRoleNames } from "../utils/auth-context.util.js";
+import { hasPermission } from "../utils/auth-context.util.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 
 const LeaderMeetingRatingService = {
   getConfiguration() {
@@ -56,10 +57,7 @@ const LeaderMeetingRatingService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMRT_GET_ALL);
     const result = await LeaderMeetingRatingRepository.findAll({
       ...filters,
       leaderId: canViewAll ? filters.leaderId : currentUser.userId,
@@ -90,10 +88,7 @@ const LeaderMeetingRatingService = {
     if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
       throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
     }
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMRT_GET_ALL);
     const result = await LeaderMeetingRatingRepository.getStatistics({
       ...filters,
       leaderId: canViewAll ? filters.leaderId : currentUser.userId,
@@ -121,10 +116,7 @@ const LeaderMeetingRatingService = {
   },
 
   async getDetail(id, currentUser) {
-    const roles = normalizeRoleNames(currentUser.roles);
-    const canViewAll = roles.some((role) =>
-      ["ADMIN", "APPROVER", "PHE_DUYET"].includes(role)
-    );
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMRT_GET_ALL);
     const rating = await LeaderMeetingRatingRepository.findDetail(
       id,
       canViewAll ? undefined : currentUser.userId

@@ -1,13 +1,13 @@
 import Joi from "joi";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import { normalizeKhuPho } from "../utils/string.util.js";
 
 const vietnamesePhoneRegex = /^(03|05|07|08|09)\d{8}$/;
 const complaintCodeRegex = /^[A-Z0-9]{8}$/;
 const COMPLAINT_TITLE_MAX_LENGTH = 200;
 const COMPLAINT_DESCRIPTION_MAX_LENGTH = 2000;
 const COMPLAINT_REPORTER_NAME_MAX_LENGTH = 150;
-const COMPLAINT_NEIGHBORHOOD_MAX_LENGTH = 100;
 const COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH = 500;
 const sortFields = [
   "thoi_gian_tao",
@@ -27,15 +27,6 @@ const videoIdsSchema = Joi.array()
     "array.base": "Danh sách video không hợp lệ",
     "array.max": "Chỉ được đính kèm tối đa 5 video",
     "array.unique": "Danh sách video không được chứa ID trùng nhau",
-  });
-
-const citizenIdSchema = Joi.string()
-  .trim()
-  .pattern(/^\d{12}$/)
-  .optional()
-  .allow(null, "")
-  .messages({
-    "string.pattern.base": "CCCD phải gồm đúng 12 chữ số",
   });
 
 const phoneSchema = Joi.string()
@@ -62,8 +53,21 @@ const mucDoSchema = Joi.string()
   .valid(...Object.values(PHAN_ANH_MUC_DO))
   .required()
   .messages({
-    "any.only": "Mức độ phải là Thấp, Trung bình, Cao hoặc Khẩn cấp",
+    "any.only": "Mức độ phải là Thông thường hoặc Khẩn cấp",
     "any.required": "Mức độ là bắt buộc",
+  });
+
+const khuPhoSchema = Joi.string()
+  .trim()
+  .custom((value, helpers) => {
+    const normalized = normalizeKhuPho(value);
+    return normalized || helpers.error("any.invalid");
+  })
+  .required()
+  .messages({
+    "any.invalid": "Khu phố phải từ Khu phố 1 đến Khu phố 45",
+    "any.required": "Khu phố là bắt buộc",
+    "string.empty": "Khu phố là bắt buộc",
   });
 
 export const CreatePhanAnhRequest = Joi.object({
@@ -91,12 +95,7 @@ export const CreatePhanAnhRequest = Joi.object({
     "string.max": `Tên người phản ánh không được vượt quá ${COMPLAINT_REPORTER_NAME_MAX_LENGTH} ký tự`,
   }),
   soDienThoaiNguoiPhanAnh: phoneSchema,
-  cccd: citizenIdSchema,
-  khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
-    "string.empty": "Khu phố là bắt buộc",
-    "any.required": "Khu phố là bắt buộc",
-    "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,
-  }),
+  khuPho: khuPhoSchema,
   moTaViTri: Joi.string().trim().max(COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH).optional().allow(null, "").messages({
     "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
@@ -169,12 +168,7 @@ export const CreatePhanAnhPublicRequest = Joi.object({
     "any.required": "Tên người phản ánh là bắt buộc",
   }),
   soDienThoaiNguoiPhanAnh: requiredPhoneSchema,
-  cccd: citizenIdSchema,
-  khuPho: Joi.string().trim().max(COMPLAINT_NEIGHBORHOOD_MAX_LENGTH).required().messages({
-    "string.empty": "Khu phố là bắt buộc",
-    "any.required": "Khu phố là bắt buộc",
-    "string.max": `Khu phố không được vượt quá ${COMPLAINT_NEIGHBORHOOD_MAX_LENGTH} ký tự`,
-  }),
+  khuPho: khuPhoSchema,
   moTaViTri: Joi.string().trim().max(COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH).optional().allow(null, "").messages({
     "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
