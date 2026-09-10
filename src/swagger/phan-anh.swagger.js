@@ -428,7 +428,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnhExtension"],
       summary: "Gửi đề nghị gia hạn phản ánh",
       security: [{ bearerAuth: [] }],
-      description: "Yêu cầu PA_EXTENSION_CREATE; chỉ tạo cho phản ánh thuộc lĩnh vực trong cate của tài khoản.",
+      description: "Yêu cầu PA_EXTENSION_CREATE; chỉ tạo cho phản ánh thuộc lĩnh vực trong cate của tài khoản. Có thể xin gia hạn trước khi đơn quá hạn hoặc sau khi đơn đã quá hạn. Điều kiện thời gian duy nhất: requestedDeadline phải lớn hơn hạn xử lý hiện tại.",
       requestBody: {
         required: true,
         content: {
@@ -438,7 +438,11 @@ const PhanAnhSwagger = {
               required: ["complaintId", "requestedDeadline", "reason"],
               properties: {
                 complaintId: { type: "string", format: "uuid" },
-                requestedDeadline: { type: "string", format: "date-time" },
+                requestedDeadline: {
+                  type: "string",
+                  format: "date-time",
+                  description: "Hạn đề xuất mới; phải lớn hơn hạn xử lý hiện tại của phản ánh. Không bắt buộc phải lớn hơn thời điểm gửi yêu cầu.",
+                },
                 reason: { type: "string", minLength: 5, maxLength: 4000 },
                 file: { type: "array", items: { type: "string", format: "binary" }, maxItems: 5 },
               },

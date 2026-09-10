@@ -1,21 +1,13 @@
 import Joi from "joi";
 import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
 
-const futureDate = (value, helpers) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return helpers.error("date.format");
-  if (date <= new Date()) return helpers.error("date.future");
-  return value;
-};
-
 export const CreatePhanAnhExtensionRequest = Joi.object({
   complaintId: Joi.string().uuid().required().messages({
     "string.guid": "complaintId không hợp lệ",
     "any.required": "complaintId là bắt buộc",
   }),
-  requestedDeadline: Joi.string().isoDate().custom(futureDate).required().messages({
-    "date.format": "requestedDeadline không hợp lệ",
-    "date.future": "Hạn đề xuất mới phải ở tương lai",
+  requestedDeadline: Joi.string().isoDate().required().messages({
+    "string.isoDate": "requestedDeadline không hợp lệ",
     "any.required": "requestedDeadline là bắt buộc",
   }),
   reason: Joi.string().trim().min(5).max(4000).required().messages({
