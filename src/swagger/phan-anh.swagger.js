@@ -28,7 +28,7 @@ const PhanAnhSwagger = {
     },
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y danh sĂ¡ch pháº£n Ă¡nh vá»›i phĂ¢n trang vĂ  lá»c sá»­ dá»¥ng trĂªn web",
+      summary: "Lấy danh sách phản ánh với phân trang và lọc sử dụng trên web",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -38,7 +38,7 @@ const PhanAnhSwagger = {
           schema: {
             type: "string",
           },
-          description: "Lá»c theo ID lÄ©nh vá»±c pháº£n Ă¡nh",
+          description: "Lọc theo ID lĩnh vực phản ánh",
         },
         {
           name: "trangThai",
@@ -56,7 +56,7 @@ const PhanAnhSwagger = {
           schema: {
             type: "string",
           },
-          description: "Lá»c theo má»©c Ä‘á»™ pháº£n Ă¡nh",
+          description: "Lọc theo mức độ phản ánh",
         },
         {
           name: "page",
@@ -67,7 +67,7 @@ const PhanAnhSwagger = {
             default: 1,
             minimum: 1,
           },
-          description: "Sá»‘ trang hiá»‡n táº¡i",
+          description: "Số trang hiện tại",
         },
         {
           name: "size",
@@ -79,7 +79,7 @@ const PhanAnhSwagger = {
             minimum: 1,
             maximum: 100,
           },
-          description: "Sá»‘ má»¥c trĂªn má»—i trang",
+          description: "Số mục trên mỗi trang",
         },
         {
           name: "maPhanAnh",
@@ -88,7 +88,7 @@ const PhanAnhSwagger = {
           schema: {
             type: "string",
           },
-          description: "Lá»c theo mĂ£ pháº£n Ă¡nh",
+          description: "Lọc theo mã phản ánh",
         },
         {
           name: "sortTime",
@@ -99,9 +99,9 @@ const PhanAnhSwagger = {
             enum: ["asc", "desc"],
             default: "desc",
           },
-          description: `Sáº¯p xáº¿p theo thá»i gian táº¡o pháº£n Ă¡nh:
-                        - "desc": má»›i nháº¥t trÆ°á»›c(máº·c Ä‘á»‹nh)
-                        - "asc": cÅ© nháº¥t trÆ°á»›c`,
+          description: `Sắp xếp theo thời gian tạo phản ánh:
+                        - "desc": mới nhất trước (mặc định)
+                        - "asc": cũ nhất trước`,
         },
       ],
       responses: {},
@@ -110,7 +110,7 @@ const PhanAnhSwagger = {
   "/api/phan-anh/{maPhanAnh}/for-mobile": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y thĂ´ng tin pháº£n Ă¡nh theo mĂ£ pháº£n Ă¡nh cho mobile",
+      summary: "Lấy thông tin phản ánh theo mã phản ánh cho mobile",
       parameters: [
         {
           name: "maPhanAnh",
@@ -120,7 +120,7 @@ const PhanAnhSwagger = {
             type: "string",
             pattern: "^[A-Z0-9]{8}$",
           },
-          description: "MĂ£ pháº£n Ă¡nh cáº§n láº¥y thĂ´ng tin",
+          description: "Mã phản ánh cần lấy thông tin",
         },
       ],
       responses: {},
@@ -129,7 +129,7 @@ const PhanAnhSwagger = {
   "/api/phan-anh/{idPhanAnh}/lich-su-trang-thai": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y lá»‹ch sá»­ tráº¡ng thĂ¡i cá»§a pháº£n Ă¡nh",
+      summary: "Lấy lịch sử trạng thái của phản ánh",
       parameters: [
         {
           name: "idPhanAnh",
@@ -138,7 +138,7 @@ const PhanAnhSwagger = {
           schema: {
             type: "string",
           },
-          description: "ID cá»§a pháº£n Ă¡nh cáº§n láº¥y lá»‹ch sá»­ tráº¡ng thĂ¡i",
+          description: "ID của phản ánh cần lấy lịch sử trạng thái",
         },
       ],
       responses: {},
@@ -147,7 +147,7 @@ const PhanAnhSwagger = {
   "/api/phan-anh/user/me": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y danh sĂ¡ch pháº£n Ă¡nh cá»§a ngÆ°á»i dĂ¹ng hiá»‡n táº¡i",
+      summary: "Lấy danh sách phản ánh của người dùng hiện tại",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -159,9 +159,9 @@ const PhanAnhSwagger = {
             enum: ["asc", "desc"],
             default: "desc",
           },
-          description: `Sáº¯p xáº¿p theo thá»i gian táº¡o pháº£n Ă¡nh:
-                        - "desc": má»›i nháº¥t trÆ°á»›c(máº·c Ä‘á»‹nh)
-                        - "asc": cÅ© nháº¥t trÆ°á»›c`,
+      description: `Sắp xếp theo thời gian tạo phản ánh:
+                        - "desc": mới nhất trước (mặc định)
+                        - "asc": cũ nhất trước`,
         },
       ],
       responses: {},
@@ -170,21 +170,21 @@ const PhanAnhSwagger = {
   "/api/phan-anh/muc-do": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y má»©c Ä‘á»™ pháº£n Ă¡nh",
+      summary: "Lấy mức độ phản ánh",
       responses: {},
     },
   },
   "/api/phan-anh/trang-thai": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y tráº¡ng thĂ¡i pháº£n Ă¡nh",
+      summary: "Lấy trạng thái phản ánh",
       responses: {},
     },
   },
   "/api/phan-anh/{idPhanAnh}": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y pháº£n Ă¡nh theo ID sá»­ dá»¥ng trĂªn web",
+      summary: "Lấy phản ánh theo ID sử dụng trên web",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -194,7 +194,7 @@ const PhanAnhSwagger = {
           schema: {
             type: "string",
           },
-          description: "ID cá»§a pháº£n Ă¡nh cáº§n láº¥y thĂ´ng tin",
+          description: "ID của phản ánh cần lấy thông tin",
         },
       ],
       responses: {},
@@ -203,16 +203,16 @@ const PhanAnhSwagger = {
   "/api/phan-anh/update-status/{idPhanAnh}": {
     put: {
       tags: ["PhanAnh"],
-      summary: "Cáº­p nháº­t tráº¡ng thĂ¡i pháº£n Ă¡nh",
+      summary: "Cập nhật trạng thái phản ánh",
       security: [{ bearerAuth: [] }],
-      description: "Cáº­p nháº­t tráº¡ng thĂ¡i pháº£n Ă¡nh theo ID",
+      description: "Cập nhật trạng thái phản ánh theo ID",
       parameters: [
         {
           name: "idPhanAnh",
           in: "path",
           required: true,
           schema: { type: "string" },
-          description: "ID pháº£n Ă¡nh cáº§n cáº­p nháº­t tráº¡ng thĂ¡i",
+          description: "ID phản ánh cần cập nhật trạng thái",
         },
       ],
       requestBody: {
@@ -377,34 +377,6 @@ const PhanAnhSwagger = {
           schema: { type: "string", format: "date" },
           description: "Ngày kết thúc theo giờ Việt Nam; phải đi cùng startDate",
         },
-        {
-          name: "startDate",
-          in: "query",
-          required: false,
-          schema: { type: "string", format: "date" },
-          description: "Ngày bắt đầu theo giờ Việt Nam",
-        },
-        {
-          name: "endDate",
-          in: "query",
-          required: false,
-          schema: { type: "string", format: "date" },
-          description: "Ngày kết thúc theo giờ Việt Nam",
-        },
-        {
-          name: "khuPho",
-          in: "query",
-          required: false,
-          schema: { type: "string", default: "all" },
-          description: "Khu phố cần lọc hoặc all",
-        },
-        {
-          name: "idLinhVuc",
-          in: "query",
-          required: false,
-          schema: { type: "string", format: "uuid", default: "all" },
-          description: "Lĩnh vực cần lọc hoặc all; vẫn bị giới hạn bởi permission/cate",
-        },
       ],
       responses: {
         200: {
@@ -522,17 +494,70 @@ const PhanAnhSwagger = {
       responses: { 200: { description: "Đã từ chối đề nghị gia hạn" }, 400: { description: "Đề nghị không còn chờ phê duyệt" }, 403: { description: "Thiếu PA_EXTENSION_REJECT" } },
     },
   },
+  "/api/phan-anh/{idPhanAnh}/nguoi-xu-ly": {
+    get: {
+      tags: ["PhanAnh"],
+      summary: "Lấy danh sách chuyên viên có thể xử lý phản ánh",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "idPhanAnh",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {},
+    },
+  },
+  "/api/phan-anh/assign/{idPhanAnh}": {
+    put: {
+      tags: ["PhanAnh"],
+      summary: "Phân công hoặc chuyển phản ánh",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "idPhanAnh",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["idNguoiXuLy", "lyDo"],
+              properties: {
+                idNguoiXuLy: {
+                  type: "string",
+                  format: "uuid",
+                },
+                lyDo: {
+                  type: "string",
+                  maxLength: 1000,
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {},
+    },
+  },
   "/api/phan-anh/muc-do-trang-thai-linh-vuc": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y má»©c Ä‘á»™ vĂ  tráº¡ng thĂ¡i pháº£n Ă¡nh",
+      summary: "Lấy mức độ và trạng thái phản ánh",
       responses: {},
     },
   },
   "/api/phan-anh/search-by-tieu-de": {
     get: {
       tags: ["PhanAnh"],
-      summary: "TĂ¬m kiáº¿m pháº£n Ă¡nh theo tiĂªu Ä‘á»",
+      summary: "Tìm kiếm phản ánh theo tiêu đề",
       parameters: [
         {
           name: "search",
@@ -543,7 +568,7 @@ const PhanAnhSwagger = {
             minLength: 3,
             maxLength: 255,
           },
-          description: "Chuá»—i tĂ¬m kiáº¿m trong tiĂªu Ä‘á» pháº£n Ă¡nh",
+          description: "Chuỗi tìm kiếm trong tiêu đề phản ánh",
         },
       ],
       responses: {},

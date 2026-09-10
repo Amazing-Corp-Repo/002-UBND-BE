@@ -1,5 +1,12 @@
 import JoiToSwagger from 'joi-to-swagger';
-import { CreateAccountRequest, UpdateFcmTokenRequest, UpdateFirstLoginRequest, UpdateProfileByAdminRequest, UpdateProfileRequest, UpdateStatusByAdminRequest } from '../validators/user.validator.js';
+import {
+    CreateAccountRequest,
+    UpdateFcmTokenRequest,
+    UpdateFirstLoginRequest,
+    UpdateProfileByAdminRequest,
+    UpdateProfileRequest,
+    UpdateStatusByAdminRequest,
+} from '../validators/user.validator.js';
 
 const { swagger: CreateAccountSchema } = JoiToSwagger(CreateAccountRequest);
 const { swagger: UpdateProfileRequestSchema } = JoiToSwagger(UpdateProfileRequest);

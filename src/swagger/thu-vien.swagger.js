@@ -181,11 +181,60 @@ const ThuVienSwagger = {
       responses: {},
     },
   },
-  "/api/tai-lieu-van-hoa/sub-categories": {
+  "/api/tai-lieu-van-hoa/deleted": {
     get: {
       tags: ["TaiLieuVanHoa"],
-      summary: "Lấy danh sách tiểu mục văn hóa",
+      summary: "Lấy danh sách tài liệu văn hóa đã xóa",
       security: [{ bearerAuth: [] }],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/export": {
+    get: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Xuất tài liệu văn hóa ra Excel",
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "File Excel tài liệu văn hóa",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/api/tai-lieu-van-hoa/restore/{id}": {
+    put: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Khôi phục tài liệu văn hóa",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-van-hoa/force/{id}": {
+    delete: {
+      tags: ["TaiLieuVanHoa"],
+      summary: "Xóa vĩnh viễn tài liệu văn hóa",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: {},
     },
   },
@@ -357,6 +406,63 @@ const ThuVienSwagger = {
       tags: ["TaiLieuPhapLuat"],
       summary: "Thống kê tài liệu pháp luật",
       security: [{ bearerAuth: [] }],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/deleted": {
+    get: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Lấy danh sách tài liệu pháp luật đã xóa",
+      security: [{ bearerAuth: [] }],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/export": {
+    get: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Xuất tài liệu pháp luật ra Excel",
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "File Excel tài liệu pháp luật",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/api/tai-lieu-phap-luat/restore/{id}": {
+    put: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Khôi phục tài liệu pháp luật",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {},
+    },
+  },
+  "/api/tai-lieu-phap-luat/force/{id}": {
+    delete: {
+      tags: ["TaiLieuPhapLuat"],
+      summary: "Xóa vĩnh viễn tài liệu pháp luật",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
       responses: {},
     },
   },

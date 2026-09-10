@@ -92,6 +92,15 @@ const UserSwagger = {
       responses: {},
     },
   },
+  "/api/users/statistics": {
+    get: {
+      tags: ["Users"],
+      summary: "Thống kê người dùng",
+      description: "Lấy thống kê tổng quan người dùng.",
+      security: [{ bearerAuth: [] }],
+      responses: {},
+    },
+  },
   "/api/users/update-by-admin": {
     put: {
       tags: ["Users"],

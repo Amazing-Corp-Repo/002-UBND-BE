@@ -33,7 +33,7 @@ const PermissionSwagger = {
       description: "API trả về danh sách các danh mục quyền.",
       responses: {},
     },
-  }
+  },
 };
 
 export default PermissionSwagger;
