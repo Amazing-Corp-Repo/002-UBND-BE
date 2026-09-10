@@ -279,6 +279,104 @@ const PhanAnhRepository = {
     };
   },
 
+  async getAllScoped({
+    idLinhVucPhanAnh,
+    trangThai,
+    mucDo,
+    maPhanAnh,
+    search,
+    khuPho,
+    start,
+    end,
+    scopedLinhVucIds,
+    page,
+    size,
+    sortTime,
+    sortBy,
+    sortOrder,
+  }) {
+    const skip = (page - 1) * size;
+    const SORT_COLUMNS = {
+      thoi_gian_tao: "pa.thoi_gian_tao",
+      ma_phan_anh: "pa.ma_phan_anh",
+      tieu_de: "pa.tieu_de",
+      muc_do: "pa.muc_do",
+      trang_thai: "lst.ten",
+    };
+    const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
+    const orderDirection = (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
+    const params = [];
+    let whereSql = "WHERE (pa.is_approve = true OR pa.is_approve IS NULL)";
+
+    if (Array.isArray(scopedLinhVucIds)) {
+      if (scopedLinhVucIds.length === 0) whereSql += " AND 1=0";
+      else {
+        params.push(scopedLinhVucIds);
+        whereSql += ` AND pa.id_linh_vuc_phan_anh = ANY($${params.length}::uuid[])`;
+      }
+    }
+    if (idLinhVucPhanAnh) {
+      params.push(idLinhVucPhanAnh);
+      whereSql += ` AND pa.id_linh_vuc_phan_anh = $${params.length}::uuid`;
+    }
+    if (mucDo) {
+      params.push(mucDo);
+      whereSql += ` AND pa.muc_do = $${params.length}`;
+    }
+    if (maPhanAnh) {
+      params.push(maPhanAnh);
+      whereSql += ` AND pa.ma_phan_anh = $${params.length}`;
+    }
+    if (trangThai) {
+      params.push(trangThai);
+      whereSql += ` AND lst.ten = $${params.length}`;
+    }
+    if (khuPho && khuPho !== "all") {
+      params.push(khuPho);
+      whereSql += ` AND pa.khu_pho = $${params.length}`;
+    }
+    if (start && end) {
+      params.push(start, end);
+      whereSql += ` AND pa.thoi_gian_tao >= $${params.length - 1} AND pa.thoi_gian_tao <= $${params.length}`;
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      whereSql += ` AND (pa.ma_phan_anh ILIKE $${params.length} OR pa.tieu_de ILIKE $${params.length} OR pa.ten_nguoi_phan_anh ILIKE $${params.length} OR pa.sdt_nguoi_phan_anh ILIKE $${params.length})`;
+    }
+
+    const joinLatestStatus = `
+      JOIN (
+        SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
+        FROM lich_su_trang_thai
+        ORDER BY id_phan_anh, thoi_gian_tao DESC
+      ) lst ON lst.id_phan_anh = pa.id`;
+    const countParams = [...params];
+    params.push(size, skip);
+    const rows = await prisma.$queryRawUnsafe(
+      `SELECT pa.id FROM phan_anh pa ${joinLatestStatus} ${whereSql}
+       ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      ...params,
+    );
+    const ids = rows.map((row) => row.id);
+    if (ids.length === 0) return { data: [], totalItems: 0 };
+    const total = await prisma.$queryRawUnsafe(
+      `SELECT COUNT(*)::int AS count FROM phan_anh pa ${joinLatestStatus} ${whereSql}`,
+      ...countParams,
+    );
+    const data = await prisma.phan_anh.findMany({
+      where: { id: { in: ids } },
+      include: {
+        lich_su_trang_thai: { orderBy: { thoi_gian_tao: "desc" }, take: 1, select: { ten: true, thoi_gian_tao: true } },
+        linh_vuc_phan_anh: { select: { id: true, ten: true } },
+        to_phu_trach: { select: { id: true, ho_va_ten: true, email: true } },
+      },
+    });
+    const idOrder = new Map(ids.map((id, index) => [id, index]));
+    data.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
+    return { data, totalItems: total[0].count };
+  },
+
   async getLichSuTrangThaiPhanAnh(idPhanAnh) {
     return await prisma.lich_su_trang_thai.findMany({
       where: {

@@ -83,3 +83,17 @@ export const logAuthMiddleware = (req, res, next) => {
 
   next();
 };
+
+export const authorizeAny = (requiredPermissions = []) => {
+  return (req, res, next) => {
+    if (!requiredPermissions.length) return next();
+    const userPermissions = req.payload.permissions || [];
+    const hasAnyPermission = requiredPermissions.some((permission) =>
+      userPermissions.includes(permission),
+    );
+    if (!hasAnyPermission) {
+      throw new BaseError(403, "Bạn không có quyền truy cập tài nguyên này");
+    }
+    next();
+  };
+};

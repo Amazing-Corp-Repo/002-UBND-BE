@@ -1,6 +1,6 @@
 import Joi from "joi";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
-import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_STATUS, { PHAN_ANH_LIFECYCLE_STATUS } from "../constants/phan-anh-status.constant.js";
 import { normalizeKhuPho } from "../utils/string.util.js";
 import { parseDateOnly } from "../utils/dashboard.util.js";
 
@@ -107,7 +107,7 @@ export const CreatePhanAnhRequest = Joi.object({
 });
 
 export const UpdatePhanAnhStatusRequest = Joi.object({
-  trangThai: Joi.string().trim().valid(...Object.values(PHAN_ANH_STATUS)).required().messages({
+  trangThai: Joi.string().trim().valid(...PHAN_ANH_LIFECYCLE_STATUS, "DA_GUI", "DANG_XU_LY", "DA_GIAI_QUYET", "DONG", "TU_CHOI").required().messages({
     "any.only": "Trạng thái phản ánh không hợp lệ",
     "any.required": "Trạng thái là bắt buộc",
   }),
@@ -192,14 +192,37 @@ export const PhanAnhCodeParams = Joi.object({
 
 export const GetAllPhanAnhQuery = Joi.object({
   idLinhVucPhanAnh: Joi.string().uuid().optional(),
-  trangThai: Joi.string().valid(...Object.values(PHAN_ANH_STATUS)).optional(),
-  mucDo: Joi.string().valid(...Object.values(PHAN_ANH_MUC_DO)).optional(),
+  idLinhVuc: Joi.string().uuid().optional(),
+  trangThai: Joi.string().valid(...PHAN_ANH_LIFECYCLE_STATUS, "DA_GUI", "DANG_XU_LY", "DA_GIAI_QUYET", "DONG", "TU_CHOI").optional(),
+  mucDo: Joi.string().valid(...Object.values(PHAN_ANH_MUC_DO), "KHAN_CAP", "BINH_THUONG").optional(),
   maPhanAnh: Joi.string().trim().uppercase().max(255).optional().allow(""),
+  search: Joi.string().trim().max(255).optional().allow(""),
+  khuPho: Joi.string().trim().max(255).optional().allow("", "all"),
+  startDate: Joi.string().custom((value, helpers) => {
+    if (!parseDateOnly(value)) return helpers.error("date.format");
+    return value;
+  }).optional(),
+  endDate: Joi.string().custom((value, helpers) => {
+    if (!parseDateOnly(value)) return helpers.error("date.format");
+    return value;
+  }).optional(),
   page: Joi.number().integer().min(1).default(1),
   size: Joi.number().integer().min(1).max(100).default(10),
   sortTime: Joi.string().valid("asc", "desc").optional(),
   sortBy: Joi.string().valid(...sortFields).optional(),
   sortOrder: Joi.string().valid("asc", "desc").optional(),
+}).custom((value, helpers) => {
+  if (Boolean(value.startDate) !== Boolean(value.endDate)) {
+    return helpers.error("date.pair");
+  }
+  if (value.startDate && value.endDate && value.startDate > value.endDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({
+  "date.format": "Ngày lọc phải có định dạng YYYY-MM-DD hợp lệ",
+  "date.pair": "startDate và endDate phải được gửi cùng nhau",
+  "date.range": "startDate không được lớn hơn endDate",
 });
 
 export const GetDashboardQuery = Joi.object({

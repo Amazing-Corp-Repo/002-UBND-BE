@@ -45,7 +45,7 @@
   "scripts": {
     "build": "npm run check && prisma generate",
     "check": "prisma validate",
-    "test:dashboard": "node --test src/utils/dashboard.util.test.js",
+    "test:dashboard": "node --test src/utils/dashboard.util.test.js src/utils/phan-anh-status.util.test.js",
     "dev": "node --watch --experimental-strip-types src/app.js",
     "start": "node --experimental-strip-types src/app.js",
     "postinstall": "prisma generate"

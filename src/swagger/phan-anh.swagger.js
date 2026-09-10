@@ -47,7 +47,7 @@ const PhanAnhSwagger = {
           schema: {
             type: "string",
           },
-          description: "Lá»c theo tráº¡ng thĂ¡i pháº£n Ă¡nh",
+          description: "Lọc theo mã trạng thái DA_GUI, DANG_XU_LY, DA_GIAI_QUYET, DONG hoặc TU_CHOI; vẫn nhận giá trị tiếng Việt cũ để tương thích",
         },
         {
           name: "mucDo",
@@ -343,6 +343,41 @@ const PhanAnhSwagger = {
           description: "Preset thời gian; dùng custom khi truyền startDate và endDate",
         },
         {
+          name: "idLinhVuc",
+          in: "query",
+          required: false,
+          schema: { type: "string", format: "uuid" },
+          description: "Lọc theo lĩnh vực; luôn bị giới hạn bởi permission/cate của tài khoản",
+        },
+        {
+          name: "search",
+          in: "query",
+          required: false,
+          schema: { type: "string", maxLength: 255 },
+          description: "Tìm theo mã, tiêu đề, người phản ánh hoặc số điện thoại",
+        },
+        {
+          name: "khuPho",
+          in: "query",
+          required: false,
+          schema: { type: "string" },
+          description: "Lọc theo khu phố",
+        },
+        {
+          name: "startDate",
+          in: "query",
+          required: false,
+          schema: { type: "string", format: "date" },
+          description: "Ngày bắt đầu theo giờ Việt Nam; phải đi cùng endDate",
+        },
+        {
+          name: "endDate",
+          in: "query",
+          required: false,
+          schema: { type: "string", format: "date" },
+          description: "Ngày kết thúc theo giờ Việt Nam; phải đi cùng startDate",
+        },
+        {
           name: "startDate",
           in: "query",
           required: false,
@@ -414,6 +449,77 @@ const PhanAnhSwagger = {
         400: { description: "Query thời gian hoặc UUID không hợp lệ" },
         401: { description: "Chưa xác thực hoặc token hết hạn" },
       },
+    },
+  },
+  "/api/phan-anh/extension/request": {
+    post: {
+      tags: ["PhanAnhExtension"],
+      summary: "Gửi đề nghị gia hạn phản ánh",
+      security: [{ bearerAuth: [] }],
+      description: "Yêu cầu PA_EXTENSION_CREATE; chỉ tạo cho phản ánh thuộc lĩnh vực trong cate của tài khoản.",
+      requestBody: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              required: ["complaintId", "requestedDeadline", "reason"],
+              properties: {
+                complaintId: { type: "string", format: "uuid" },
+                requestedDeadline: { type: "string", format: "date-time" },
+                reason: { type: "string", minLength: 5, maxLength: 4000 },
+                file: { type: "array", items: { type: "string", format: "binary" }, maxItems: 5 },
+              },
+            },
+          },
+        },
+      },
+      responses: { 200: { description: "Đã gửi đề nghị gia hạn thời gian xử lý thành công" }, 400: { description: "Dữ liệu hoặc deadline không hợp lệ" }, 403: { description: "Ngoài phạm vi lĩnh vực" }, 409: { description: "Đang có đề nghị chờ phê duyệt" } },
+    },
+  },
+  "/api/phan-anh/extension": {
+    get: {
+      tags: ["PhanAnhExtension"],
+      summary: "Lấy danh sách đề nghị gia hạn",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "status", in: "query", schema: { type: "string", enum: ["ALL", "PENDING", "APPROVED", "REJECTED"], default: "ALL" } },
+        { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+        { name: "size", in: "query", schema: { type: "integer", default: 10 } },
+        { name: "search", in: "query", schema: { type: "string" } },
+        { name: "mucDo", in: "query", schema: { type: "string", enum: ["KHAN_CAP", "BINH_THUONG"] } },
+        { name: "idLinhVuc", in: "query", schema: { type: "string", format: "uuid" } },
+      ],
+      responses: { 200: { description: "Lấy danh sách đề nghị gia hạn thành công" }, 401: { description: "Chưa xác thực" }, 403: { description: "Không có permission hợp lệ" } },
+    },
+  },
+  "/api/phan-anh/extension/{id}": {
+    get: {
+      tags: ["PhanAnhExtension"],
+      summary: "Lấy chi tiết đề nghị gia hạn",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: { 200: { description: "Lấy chi tiết đề nghị gia hạn thành công" }, 403: { description: "Ngoài phạm vi lĩnh vực" }, 404: { description: "Không tồn tại" } },
+    },
+  },
+  "/api/phan-anh/extension/{id}/approve": {
+    put: {
+      tags: ["PhanAnhExtension"],
+      summary: "Phê duyệt đề nghị gia hạn",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: { content: { "application/json": { schema: { type: "object", properties: { ghiChu: { type: "string", maxLength: 2000 } } } } } },
+      responses: { 200: { description: "Phê duyệt gia hạn thời gian giải quyết thành công" }, 400: { description: "Đề nghị không còn chờ phê duyệt" }, 403: { description: "Thiếu PA_EXTENSION_APPROVE" } },
+    },
+  },
+  "/api/phan-anh/extension/{id}/reject": {
+    put: {
+      tags: ["PhanAnhExtension"],
+      summary: "Từ chối đề nghị gia hạn",
+      security: [{ bearerAuth: [] }],
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["lyDoTuChoi"], properties: { lyDoTuChoi: { type: "string", minLength: 5, maxLength: 4000 } } } } } },
+      responses: { 200: { description: "Đã từ chối đề nghị gia hạn" }, 400: { description: "Đề nghị không còn chờ phê duyệt" }, 403: { description: "Thiếu PA_EXTENSION_REJECT" } },
     },
   },
   "/api/phan-anh/muc-do-trang-thai-linh-vuc": {

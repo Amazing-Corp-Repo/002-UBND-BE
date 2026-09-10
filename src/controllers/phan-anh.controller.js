@@ -1,6 +1,7 @@
 import PhanAnhService from "../services/phan-anh.service.js";
 import { successResponse } from "../utils/response.util.js";
 import { parseStringToArray } from "../utils/string.util.js";
+import { toDbPhanAnhStatus } from "../utils/phan-anh-status.util.js";
 
 const PhanAnhController = {
   async createPhanAnh(req, res) {
@@ -48,6 +49,11 @@ const PhanAnhController = {
       trangThai,
       mucDo,
       maPhanAnh,
+      idLinhVuc,
+      startDate,
+      endDate,
+      khuPho,
+      search,
       page = 1,
       size = 10,
       sortTime,
@@ -57,7 +63,7 @@ const PhanAnhController = {
     const payload = req.payload;
     let { data, pagination } = await PhanAnhService.getAll(
       idLinhVucPhanAnh,
-      trangThai,
+      toDbPhanAnhStatus(trangThai),
       mucDo,
       maPhanAnh,
       parseInt(page),
@@ -66,6 +72,7 @@ const PhanAnhController = {
       payload,
       sortBy,
       sortOrder,
+      { idLinhVuc, startDate, endDate, khuPho, search },
     );
     return successResponse(
       res,

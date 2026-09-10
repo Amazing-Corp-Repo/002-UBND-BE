@@ -1,4 +1,4 @@
-import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_STATUS, { PHAN_ANH_LIFECYCLE_STATUS } from "../constants/phan-anh-status.constant.js";
 import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
 import PhanAnhRepository from "../repositories/phan-anh.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
@@ -18,11 +18,18 @@ import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
 import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
+import { PERMISSION } from "../constants/permission.constant.js";
 import {
   getChange,
   resolveDashboardPeriod,
   resolveDashboardScope,
 } from "../utils/dashboard.util.js";
+import {
+  toApiPhanAnhMucDo,
+  toApiPhanAnhStatus,
+  toDbPhanAnhMucDo,
+  toDbPhanAnhStatus,
+} from "../utils/phan-anh-status.util.js";
 
 const ORDER = [
   PHAN_ANH_STATUS.DA_GUI,
@@ -185,49 +192,45 @@ const PhanAnhService = {
     payload,
     sortBy,
     sortOrder,
+    filters = {},
   ) {
-    let role = parseCommaString(payload.roles);
-    let cate = parseCommaString(payload.cate);
-
-    if (cate === null || cate === undefined || cate.length === 0) {
-      let { data, totalItems } = await PhanAnhRepository.getAll(
-        idLinhVucPhanAnh,
-        trangThai,
-        mucDo,
-        maPhanAnh,
-        page,
-        size,
-        sortTime,
-        sortBy,
-        sortOrder,
-      );
-      let pagination = createPagination(page, size, totalItems);
-      return { data, pagination };
+    const permissions = Array.isArray(payload?.permissions) ? payload.permissions : [];
+    const isFullAccess = [PERMISSION.PA_THUONG_TRUC, PERMISSION.RPT_GET_DETAIL].some(
+      (permission) => permissions.includes(permission),
+    );
+    const cate = parseCommaString(payload?.cate) || [];
+    const selectedLinhVuc = filters.idLinhVuc || idLinhVucPhanAnh || null;
+    if (!isFullAccess && selectedLinhVuc && !cate.includes(selectedLinhVuc.trim())) {
+      throw new BaseError(403, "Bạn không có quyền truy cập lĩnh vực phản ánh này");
     }
 
-    if (idLinhVucPhanAnh && !cate.includes(idLinhVucPhanAnh.trim())) {
-      throw new BaseError(
-        403,
-        "Bạn không có quyền truy cập lĩnh vực phản ánh này",
-      );
-    }
-
-    // Nếu có cate restriction, chỉ lấy các phản ánh thuộc cate đó
-    const result = await PhanAnhRepository.getAllByCate(
-      cate,
-      idLinhVucPhanAnh ?? null,
-      trangThai,
-      mucDo,
+    const period = filters.startDate && filters.endDate
+      ? resolveDashboardPeriod({ preset: "custom", startDate: filters.startDate, endDate: filters.endDate }).current
+      : null;
+    const result = await PhanAnhRepository.getAllScoped({
+      idLinhVucPhanAnh: selectedLinhVuc,
+      trangThai: toDbPhanAnhStatus(trangThai),
+      mucDo: toDbPhanAnhMucDo(mucDo),
       maPhanAnh,
+      search: filters.search,
+      khuPho: filters.khuPho,
+      start: period?.start,
+      end: period?.end,
+      scopedLinhVucIds: isFullAccess ? undefined : cate,
       page,
       size,
       sortTime,
       sortBy,
       sortOrder,
-    );
+    });
 
     return {
-      data: result.data,
+      data: result.data.map((item) => ({
+        ...item,
+        linh_vuc: item.linh_vuc_phan_anh || null,
+        trang_thai_hien_tai: toApiPhanAnhStatus(item.lich_su_trang_thai?.[0]?.ten),
+        muc_do_code: toApiPhanAnhMucDo(item.muc_do),
+      })),
       pagination: createPagination(page, size, result.totalItems),
     };
   },
@@ -251,7 +254,9 @@ const PhanAnhService = {
   },
 
   getTrangThaiPhanAnh() {
-    return PHAN_ANH_STATUS;
+    return Object.fromEntries(
+      Object.entries(PHAN_ANH_STATUS).filter(([, value]) => PHAN_ANH_LIFECYCLE_STATUS.includes(value)),
+    );
   },
 
   async getPhanAnhById(idPhanAnh) {
@@ -287,6 +292,7 @@ const PhanAnhService = {
     file,
     idVideoGiaiQuyet = [],
   ) {
+    trangThai = toDbPhanAnhStatus(trangThai);
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
@@ -298,14 +304,19 @@ const PhanAnhService = {
     const lastStatus = phanAnh.lich_su_trang_thai[0].ten;
     if (
       lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
-      lastStatus === PHAN_ANH_STATUS.DONG
+      lastStatus === PHAN_ANH_STATUS.DONG ||
+      lastStatus === PHAN_ANH_STATUS.TU_CHOI
     ) {
       throw new BaseError(
         400,
         "Không thể cập nhật trạng thái cho phản ánh đã được giải quyết hoặc đóng",
       );
     }
-    if (trangThai !== PHAN_ANH_STATUS.DONG) {
+    if (trangThai === PHAN_ANH_STATUS.TU_CHOI) {
+      if (lastStatus !== PHAN_ANH_STATUS.DA_GUI) {
+        throw new BaseError(400, "Chỉ được từ chối phản ánh ở trạng thái Đã gửi");
+      }
+    } else if (trangThai !== PHAN_ANH_STATUS.DONG) {
       const currentIndex = ORDER.indexOf(lastStatus);
       const nextIndex = ORDER.indexOf(trangThai);
 
