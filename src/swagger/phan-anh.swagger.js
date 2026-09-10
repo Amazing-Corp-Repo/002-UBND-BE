@@ -328,9 +328,92 @@ const PhanAnhSwagger = {
   "/api/phan-anh/tong-quan": {
     get: {
       tags: ["PhanAnh"],
-      summary: "Láº¥y tá»•ng quĂ¡t pháº£n Ă¡nh",
+      summary: "Lấy thống kê tổng quan phản ánh",
       security: [{ bearerAuth: [] }],
-      responses: {},
+      parameters: [
+        {
+          name: "preset",
+          in: "query",
+          required: false,
+          schema: {
+            type: "string",
+            enum: ["today", "yesterday", "7days", "30days", "thisMonth", "thisQuarter", "custom"],
+            default: "today",
+          },
+          description: "Preset thời gian; dùng custom khi truyền startDate và endDate",
+        },
+        {
+          name: "startDate",
+          in: "query",
+          required: false,
+          schema: { type: "string", format: "date" },
+          description: "Ngày bắt đầu theo giờ Việt Nam",
+        },
+        {
+          name: "endDate",
+          in: "query",
+          required: false,
+          schema: { type: "string", format: "date" },
+          description: "Ngày kết thúc theo giờ Việt Nam",
+        },
+        {
+          name: "khuPho",
+          in: "query",
+          required: false,
+          schema: { type: "string", default: "all" },
+          description: "Khu phố cần lọc hoặc all",
+        },
+        {
+          name: "idLinhVuc",
+          in: "query",
+          required: false,
+          schema: { type: "string", format: "uuid", default: "all" },
+          description: "Lĩnh vực cần lọc hoặc all; vẫn bị giới hạn bởi permission/cate",
+        },
+      ],
+      responses: {
+        200: {
+          description: "Lấy thống kê tổng quan phản ánh thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  message: { type: "string" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      tong_so: { type: "integer", example: 1250 },
+                      tong_hom_nay: { type: "integer", example: 18 },
+                      tong_nguoi_dan: { type: "integer", example: 4520 },
+                      ty_le_xu_ly: { type: "number", example: 88.5 },
+                      qua_han: { type: "integer", example: 12 },
+                      khan_cap: { type: "integer", example: 3 },
+                      pt_nguoi_dan: { type: "number", example: 5.2 },
+                      huong_nguoi_dan: { type: "string", enum: ["up", "down", "flat"] },
+                      pt_phan_anh: { type: "number", example: 12.4 },
+                      huong_phan_anh: { type: "string", enum: ["up", "down", "flat"] },
+                      pt_ty_le_xu_ly: { type: "number", example: 2.1 },
+                      huong_ty_le_xu_ly: { type: "string", enum: ["up", "down", "flat"] },
+                      thong_ke_theo_trang_thai: { type: "object", additionalProperties: { type: "integer" } },
+                      thong_ke_theo_khu_pho: { type: "array", items: { type: "object" } },
+                      top_khu_pho: { type: "array", items: { type: "object" } },
+                      ty_le_xu_ly_theo_khu_pho: { type: "array", items: { type: "object" } },
+                      thong_ke_theo_linh_vuc: { type: "array", items: { type: "object" } },
+                      thong_ke_theo_han_xu_ly: { type: "array", items: { type: "object" } },
+                      xu_huong_phan_anh: { type: "array", items: { type: "object" } },
+                      nhat_ky_hoat_dong: { type: "array", items: { type: "object" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Query thời gian hoặc UUID không hợp lệ" },
+        401: { description: "Chưa xác thực hoặc token hết hạn" },
+      },
     },
   },
   "/api/phan-anh/muc-do-trang-thai-linh-vuc": {

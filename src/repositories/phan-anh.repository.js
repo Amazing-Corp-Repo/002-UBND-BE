@@ -1,5 +1,10 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
+import {
+  getDatePartsInVietnam,
+  getSlaClassification,
+} from "../utils/dashboard.util.js";
 
 const ATTACHMENT_SELECT = {
   id: true,
@@ -358,71 +363,140 @@ const PhanAnhRepository = {
     });
   },
 
-  async getTongQuanPhanAnh() {
-    const now = new Date();
-
-    const startOfTodayUTC = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0,
-        0,
-        0,
-        0,
-      ),
-    );
-
-    const endOfTodayUTC = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        23,
-        59,
-        59,
-        999,
-      ),
-    );
-
-    // Tổng số trạng thái tạo hôm nay theo UTC
-    const tongHomNay = await prisma.phan_anh.count({
-      where: {
-        thoi_gian_tao: {
-          gte: startOfTodayUTC,
-          lte: endOfTodayUTC,
-        },
+  async getTongQuanPhanAnh({
+    currentPeriod,
+    previousPeriod,
+    todayPeriod,
+    khuPho,
+    effectiveLinhVucIds,
+  } = {}) {
+    const buildWhere = (period) => ({
+      thoi_gian_tao: {
+        gte: period.start,
+        lte: period.end,
       },
+      ...(khuPho && khuPho !== "all" ? { khu_pho: khuPho } : {}),
+      ...(Array.isArray(effectiveLinhVucIds)
+        ? { id_linh_vuc_phan_anh: { in: effectiveLinhVucIds } }
+        : {}),
     });
 
-    const rows = await prisma.$queryRawUnsafe(`
-            WITH latest_status AS (
-                SELECT
-                    ls.id_phan_anh,
-                    ls.ten,
-                    ls.thoi_gian_tao,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY ls.id_phan_anh
-                        ORDER BY ls.thoi_gian_tao DESC
-                    ) AS rn
-                FROM lich_su_trang_thai ls
-            )
-            SELECT ten, COUNT(*)::int AS count
-            FROM latest_status
-            WHERE rn = 1
-            GROUP BY ten;
-        `);
+    const select = {
+      id: true,
+      muc_do: true,
+      khu_pho: true,
+      id_linh_vuc_phan_anh: true,
+      thoi_gian_tao: true,
+      ngay_du_kien_hoan_thanh: true,
+      linh_vuc_phan_anh: { select: { ten: true } },
+      lich_su_trang_thai: {
+        orderBy: { thoi_gian_tao: "desc" },
+        take: 1,
+        select: { ten: true, thoi_gian_tao: true },
+      },
+    };
 
-    const thongKeTheoTrangThai = {};
-    rows.forEach((r) => {
-      thongKeTheoTrangThai[r.ten] = Number(r.count) || 0;
+    const [currentItems, previousItems, todayItems, totalCitizens, currentCitizens, previousCitizens] =
+      await Promise.all([
+        prisma.phan_anh.findMany({ where: buildWhere(currentPeriod), select }),
+        prisma.phan_anh.findMany({ where: buildWhere(previousPeriod), select }),
+        prisma.phan_anh.findMany({ where: buildWhere(todayPeriod), select }),
+        prisma.nguoi_dung.count({ where: { is_active: true, is_delete: false } }),
+        prisma.nguoi_dung.count({
+          where: {
+            is_active: true,
+            is_delete: false,
+            thoi_gian_tao: { gte: currentPeriod.start, lte: currentPeriod.end },
+          },
+        }),
+        prisma.nguoi_dung.count({
+          where: {
+            is_active: true,
+            is_delete: false,
+            thoi_gian_tao: { gte: previousPeriod.start, lte: previousPeriod.end },
+          },
+        }),
+      ]);
+
+    const getLatestStatus = (item) => item.lich_su_trang_thai[0] || null;
+    const isResolved = (item) => getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET;
+    const isClosed = (item) => getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DONG;
+    const isOpen = (item) => !isResolved(item) && !isClosed(item);
+
+    const statusCounts = (items) => {
+      const result = Object.fromEntries(Object.values(PHAN_ANH_STATUS).map((status) => [status, 0]));
+      items.forEach((item) => {
+        const status = getLatestStatus(item)?.ten;
+        if (status && Object.prototype.hasOwnProperty.call(result, status)) result[status] += 1;
+      });
+      return result;
+    };
+
+    const getSlaCounts = (items, now = new Date()) => {
+      const result = { onTime: 0, soon: 0, overdue: 0 };
+      items.forEach((item) => {
+        const latestStatus = getLatestStatus(item);
+        const completedAt = isResolved(item) && latestStatus?.thoi_gian_tao
+          ? latestStatus.thoi_gian_tao
+          : null;
+        const classification = getSlaClassification({
+          createdAt: item.thoi_gian_tao,
+          deadline: item.ngay_du_kien_hoan_thanh,
+          completedAt,
+          now,
+        });
+        if (classification === "overdue") result.overdue += 1;
+        if (classification === "soon") result.soon += 1;
+        if (classification === "onTime") result.onTime += 1;
+      });
+      return result;
+    };
+
+    const currentStatus = statusCounts(currentItems);
+    const previousStatus = statusCounts(previousItems);
+    const currentSla = getSlaCounts(currentItems);
+
+    const khuPhoMap = new Map();
+    currentItems.forEach((item) => {
+      const name = item.khu_pho || "Không xác định";
+      const entry = khuPhoMap.get(name) || { name, count: 0, resolved: 0 };
+      entry.count += 1;
+      if (isResolved(item)) entry.resolved += 1;
+      khuPhoMap.set(name, entry);
     });
+    const thongKeTheoKhuPho = [...khuPhoMap.values()].map(({ name, count }) => ({ name, count }));
+    const topKhuPho = [...khuPhoMap.values()]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map((item) => ({
+        name: item.name,
+        total: item.count,
+        resolved: item.resolved,
+        rate: `${item.count ? ((item.resolved / item.count) * 100).toFixed(1) : "0.0"}%`,
+      }));
 
-    // đảm bảo đủ tất cả trạng thái
-    Object.values(PHAN_ANH_STATUS).forEach((status) => {
-      if (!thongKeTheoTrangThai[status]) {
-        thongKeTheoTrangThai[status] = 0;
-      }
+    const linhVucMap = new Map();
+    currentItems.forEach((item) => {
+      const name = item.linh_vuc_phan_anh?.ten || "Không xác định";
+      linhVucMap.set(name, (linhVucMap.get(name) || 0) + 1);
+    });
+    const colors = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
+    const thongKeTheoLinhVuc = [...linhVucMap.entries()].map(([name, count], index) => ({
+      name,
+      count,
+      percent: currentItems.length ? Number(((count / currentItems.length) * 100).toFixed(1)) : 0,
+      color: colors[index % colors.length],
+    }));
+
+    const trendMap = new Map();
+    currentItems.forEach((item) => {
+      if (!item.thoi_gian_tao) return;
+      const dateParts = getDatePartsInVietnam(new Date(item.thoi_gian_tao));
+      const date = `${String(dateParts.day).padStart(2, "0")}/${String(dateParts.month).padStart(2, "0")}`;
+      const entry = trendMap.get(date) || { date, tongPhanAnh: 0, daGiaiQuyet: 0 };
+      entry.tongPhanAnh += 1;
+      if (isResolved(item)) entry.daGiaiQuyet += 1;
+      trendMap.set(date, entry);
     });
 
     let nhat_ky_hoat_dong = await prisma.audit_logs.findMany({
@@ -445,8 +519,53 @@ const PhanAnhRepository = {
     });
 
     return {
-      tong_hom_nay: tongHomNay,
-      thong_ke_theo_trang_thai: thongKeTheoTrangThai,
+      tong_so: currentItems.length,
+      previous_tong_so: previousItems.length,
+      tong_hom_nay: todayItems.length,
+      tong_nguoi_dan: totalCitizens,
+      current_nguoi_dan: currentCitizens,
+      previous_nguoi_dan: previousCitizens,
+      current_ty_le_xu_ly: currentItems.length
+        ? Number(((currentStatus[PHAN_ANH_STATUS.DA_GIAI_QUYET] / currentItems.length) * 100).toFixed(1))
+        : 0,
+      previous_ty_le_xu_ly: previousItems.length
+        ? Number(((previousStatus[PHAN_ANH_STATUS.DA_GIAI_QUYET] / previousItems.length) * 100).toFixed(1))
+        : 0,
+      qua_han: currentSla.overdue,
+      khan_cap: currentItems.filter(
+        (item) => item.muc_do === PHAN_ANH_MUC_DO.KHAN_CAP && isOpen(item),
+      ).length,
+      thong_ke_theo_trang_thai: currentStatus,
+      thong_ke_theo_khu_pho: thongKeTheoKhuPho,
+      top_khu_pho: topKhuPho,
+      ty_le_xu_ly_theo_khu_pho: topKhuPho.map((item) => ({
+        name: item.name,
+        rate: Number.parseFloat(item.rate),
+      })),
+      thong_ke_theo_linh_vuc: thongKeTheoLinhVuc,
+      thong_ke_theo_han_xu_ly: [
+        {
+          label: "Đúng hạn",
+          count: currentSla.onTime,
+          percent: currentItems.length ? Number(((currentSla.onTime / currentItems.length) * 100).toFixed(1)) : 0,
+          color: "#10B981",
+        },
+        {
+          label: "Sắp trễ hạn",
+          count: currentSla.soon,
+          percent: currentItems.length ? Number(((currentSla.soon / currentItems.length) * 100).toFixed(1)) : 0,
+          color: "#F59E0B",
+        },
+        {
+          label: "Quá hạn",
+          count: currentSla.overdue,
+          percent: currentItems.length ? Number(((currentSla.overdue / currentItems.length) * 100).toFixed(1)) : 0,
+          color: "#EF4444",
+        },
+      ],
+      xu_huong_phan_anh: [...trendMap.values()].sort((a, b) => a.date.localeCompare(b.date)),
+      current_status: currentStatus,
+      previous_status: previousStatus,
       nhat_ky_hoat_dong,
     };
   },

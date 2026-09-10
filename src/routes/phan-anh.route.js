@@ -18,6 +18,7 @@ import {
   PhanAnhIdParams,
   PhanAnhCodeParams,
   GetAllPhanAnhQuery,
+  GetDashboardQuery,
   GetMyPhanAnhQuery,
   SearchPhanAnhQuery,
 } from "../validators/phan-anh.validator.js";
@@ -95,6 +96,7 @@ phanAnhRouter.get("/trang-thai", PhanAnhController.getTrangThaiPhanAnh);
 phanAnhRouter.get(
   "/tong-quan",
   authenticate,
+  validateQuery(GetDashboardQuery),
   PhanAnhController.getTongQuanPhanAnh,
 );
 

@@ -2,6 +2,7 @@ import Joi from "joi";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 import { normalizeKhuPho } from "../utils/string.util.js";
+import { parseDateOnly } from "../utils/dashboard.util.js";
 
 const vietnamesePhoneRegex = /^(03|05|07|08|09)\d{8}$/;
 const complaintCodeRegex = /^[A-Z0-9]{8}$/;
@@ -199,6 +200,52 @@ export const GetAllPhanAnhQuery = Joi.object({
   sortTime: Joi.string().valid("asc", "desc").optional(),
   sortBy: Joi.string().valid(...sortFields).optional(),
   sortOrder: Joi.string().valid("asc", "desc").optional(),
+});
+
+export const GetDashboardQuery = Joi.object({
+  preset: Joi.string()
+    .valid("today", "yesterday", "7days", "30days", "thisMonth", "thisQuarter", "custom")
+    .optional(),
+  startDate: Joi.string()
+    .custom((value, helpers) => {
+      if (!parseDateOnly(value)) return helpers.error("date.format");
+      return value;
+    })
+    .messages({ "date.format": "startDate phải có định dạng YYYY-MM-DD hợp lệ" })
+    .optional(),
+  endDate: Joi.string()
+    .custom((value, helpers) => {
+      if (!parseDateOnly(value)) return helpers.error("date.format");
+      return value;
+    })
+    .messages({ "date.format": "endDate phải có định dạng YYYY-MM-DD hợp lệ" })
+    .optional(),
+  khuPho: Joi.string().trim().optional().default("all"),
+  idLinhVuc: Joi.alternatives()
+    .try(Joi.string().valid("all"), Joi.string().uuid())
+    .optional()
+    .default("all"),
+}).custom((value, helpers) => {
+  const hasStart = Boolean(value.startDate);
+  const hasEnd = Boolean(value.endDate);
+
+  if (hasStart !== hasEnd) {
+    return helpers.error("date.pair");
+  }
+
+  if (value.preset === "custom" && (!hasStart || !hasEnd)) {
+    return helpers.error("date.customRequired");
+  }
+
+  if (hasStart && hasEnd && value.startDate > value.endDate) {
+    return helpers.error("date.range");
+  }
+
+  return value;
+}).messages({
+  "date.pair": "startDate và endDate phải được gửi cùng nhau",
+  "date.customRequired": "preset=custom bắt buộc có startDate và endDate",
+  "date.range": "startDate không được lớn hơn endDate",
 });
 
 export const GetMyPhanAnhQuery = Joi.object({

@@ -177,7 +177,19 @@ const PhanAnhController = {
   },
 
   async getTongQuanPhanAnh(req, res) {
-    let result = await PhanAnhService.getTongQuanPhanAnh();
+    const { preset, startDate, endDate, khuPho, idLinhVuc } =
+      req.validatedQuery;
+    const payload = req.payload || {};
+    let result = await PhanAnhService.getTongQuanPhanAnh({
+      preset: preset || (startDate && endDate ? "custom" : "today"),
+      startDate,
+      endDate,
+      khuPho,
+      idLinhVuc,
+      userId: payload.userId,
+      permissions: payload.permissions,
+      cate: payload.cate,
+    });
     return successResponse(res, result, "Lấy tổng quát phản ánh thành công");
   },
 
