@@ -126,6 +126,36 @@ const PhanAnhSwagger = {
       responses: {},
     },
   },
+  "/api/phan-anh/export-excel": {
+    post: {
+      tags: ["PhanAnh"],
+      summary: "Xuất Excel danh sách phản ánh theo phạm vi được cấp",
+      description:
+        "Yêu cầu đồng thời PA_EXPORT và PA_GET_ALL. Chỉ PA_THUONG_TRUC được xuất toàn bộ; các tài khoản khác chỉ xuất phản ánh thuộc các lĩnh vực trong cate của access token. Bộ lọc do client gửi chỉ làm hẹp dữ liệu, không thể mở rộng phạm vi. Thông tin liên hệ được xuất đầy đủ trong phạm vi đã được cấp.",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: PhanAnhSchemas.ExportPhanAnhExcelRequest,
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "File Excel danh sách phản ánh",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+        400: { description: "Dữ liệu lọc hoặc danh sách cột không hợp lệ" },
+        401: { description: "Chưa xác thực hoặc token hết hạn" },
+        403: { description: "Thiếu PA_EXPORT, PA_GET_ALL hoặc truy cập lĩnh vực ngoài cate" },
+      },
+    },
+  },
   "/api/phan-anh/{idPhanAnh}/lich-su-trang-thai": {
     get: {
       tags: ["PhanAnh"],

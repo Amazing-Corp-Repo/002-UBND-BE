@@ -241,6 +241,65 @@ export const GetAllPhanAnhQuery = Joi.object({
   "date.range": "startDate không được lớn hơn endDate",
 });
 
+export const ExportPhanAnhExcelRequest = Joi.object({
+  columns: Joi.array()
+    .items(Joi.string().valid(
+      "index",
+      "ma_phan_anh",
+      "tieu_de",
+      "khu_pho",
+      "linh_vuc_phan_anh",
+      "muc_do",
+      "lich_su_trang_thai",
+      "thoi_gian_tao",
+      "han_xu_ly",
+      "thong_tin_lien_he",
+      "sla_status",
+    ))
+    .min(1)
+    .unique()
+    .required()
+    .messages({
+      "array.base": "Danh sách cột phải là mảng",
+      "array.min": "Phải chọn ít nhất một cột để xuất",
+      "array.unique": "Danh sách cột không được chứa giá trị trùng lặp",
+      "any.only": "Danh sách cột chứa cột không được hỗ trợ",
+      "any.required": "Danh sách cột là bắt buộc",
+    }),
+  search: Joi.string().trim().max(255).optional().allow(""),
+  trangThai: Joi.string()
+    .valid(...PHAN_ANH_LIFECYCLE_STATUS, "DA_GUI", "DANG_XU_LY", "DA_GIAI_QUYET", "DONG", "TU_CHOI")
+    .optional()
+    .allow(""),
+  idLinhVucPhanAnh: Joi.string().uuid().optional().allow(""),
+  khuPho: Joi.string().trim().max(255).optional().allow("", "all"),
+  mucDo: Joi.string()
+    .valid(...Object.values(PHAN_ANH_MUC_DO), "KHAN_CAP", "BINH_THUONG")
+    .optional()
+    .allow(""),
+  startDate: Joi.string().custom((value, helpers) => {
+    if (!parseDateOnly(value)) return helpers.error("date.format");
+    return value;
+  }).optional().allow(""),
+  endDate: Joi.string().custom((value, helpers) => {
+    if (!parseDateOnly(value)) return helpers.error("date.format");
+    return value;
+  }).optional().allow(""),
+  sortTime: Joi.string().valid("asc", "desc").default("desc"),
+}).custom((value, helpers) => {
+  if (Boolean(value.startDate) !== Boolean(value.endDate)) {
+    return helpers.error("date.pair");
+  }
+  if (value.startDate && value.endDate && value.startDate > value.endDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({
+  "date.format": "Ngày lọc phải có định dạng YYYY-MM-DD hợp lệ",
+  "date.pair": "startDate và endDate phải được gửi cùng nhau",
+  "date.range": "startDate không được lớn hơn endDate",
+});
+
 export const GetDashboardQuery = Joi.object({
   preset: Joi.string()
     .valid("today", "yesterday", "7days", "30days", "thisMonth", "thisQuarter", "custom")

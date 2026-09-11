@@ -20,6 +20,7 @@ import {
   PhanAnhIdParams,
   PhanAnhCodeParams,
   GetAllPhanAnhQuery,
+  ExportPhanAnhExcelRequest,
   GetDashboardQuery,
   GetMyPhanAnhQuery,
   SearchPhanAnhQuery,
@@ -107,6 +108,14 @@ phanAnhRouter.get(
   authenticate,
   validateQuery(GetDashboardQuery),
   PhanAnhController.getTongQuanPhanAnh,
+);
+
+phanAnhRouter.post(
+  "/export-excel",
+  authenticate,
+  authorize([PERMISSION.PA_EXPORT, PERMISSION.PA_GET_ALL]),
+  validate(ExportPhanAnhExcelRequest),
+  PhanAnhController.exportPhanAnhExcel,
 );
 
 phanAnhRouter.post(

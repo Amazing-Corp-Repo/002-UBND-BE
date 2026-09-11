@@ -2,6 +2,7 @@ import PhanAnhService from "../services/phan-anh.service.js";
 import { successResponse } from "../utils/response.util.js";
 import { parseStringToArray } from "../utils/string.util.js";
 import { toDbPhanAnhStatus } from "../utils/phan-anh-status.util.js";
+import { formatVietnamDate } from "../utils/vietnam-time.util.js";
 
 const PhanAnhController = {
   async createPhanAnh(req, res) {
@@ -158,6 +159,23 @@ const PhanAnhController = {
       result,
       "Cập nhật lĩnh vực phản ánh thành công",
     );
+  },
+
+  async exportPhanAnhExcel(req, res) {
+    const buffer = await PhanAnhService.exportPhanAnhExcel({
+      ...req.body,
+      payload: req.payload,
+    });
+    const date = formatVietnamDate(new Date()) || new Date().toISOString().slice(0, 10);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="danh_sach_phan_anh_${date}.xlsx"`,
+    );
+    return res.send(Buffer.from(buffer));
   },
 
   async updateMucDoPhanAnh(req, res) {
