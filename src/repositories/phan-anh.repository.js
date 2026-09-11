@@ -1,5 +1,6 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
 import {
   getDatePartsInVietnam,
@@ -147,6 +148,14 @@ const PhanAnhRepository = {
         linh_vuc_phan_anh: {
           select: {
             ten: true,
+          },
+        },
+        de_nghi_gia_han_phan_anh: {
+          where: { trang_thai: PHAN_ANH_EXTENSION_STATUS.APPROVED },
+          orderBy: { thoi_gian_duyet: "desc" },
+          select: {
+            ly_do_gia_han: true,
+            thoi_gian_duyet: true,
           },
         },
       },

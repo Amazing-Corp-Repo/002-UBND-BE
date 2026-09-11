@@ -251,17 +251,28 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+    // Repository trả cả hai danh sách theo thời gian giảm dần. Ghép lần lượt
+    // từng event "Đã gia hạn" với đề nghị APPROVED tương ứng, tránh phụ thuộc
+    // vào mili-giây giữa default NOW() của DB và thời gian duyệt từ app.
+    const approvedExtensionReasons = (phanAnh.de_nghi_gia_han_phan_anh || [])
+      .map((extension) => extension.ly_do_gia_han)
+      .filter(Boolean);
+    let extensionReasonIndex = 0;
     phanAnh.lich_su_trang_thai = (phanAnh.lich_su_trang_thai || []).map(
       ({ ten, thoi_gian_tao, ghi_chu }) => ({
         ten,
         thoi_gian_tao,
         // Chỉ công khai lý do của sự kiện gia hạn; các ghi chú nghiệp vụ khác
         // (phân công, chuyển lĩnh vực, xử lý...) vẫn thuộc luồng nội bộ.
-        ...(ten === PHAN_ANH_STATUS.DA_GIA_HAN && ghi_chu
-          ? { ghi_chu }
+        ...(ten === PHAN_ANH_STATUS.DA_GIA_HAN
+          ? {
+              ghi_chu:
+                approvedExtensionReasons[extensionReasonIndex++] || ghi_chu,
+            }
           : {}),
       }),
     );
+    delete phanAnh.de_nghi_gia_han_phan_anh;
     return phanAnh;
   },
 
