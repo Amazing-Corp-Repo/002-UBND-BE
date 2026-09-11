@@ -38,7 +38,7 @@ test("getChange handles zero baseline and percentage-point differences", () => {
 test("resolveDashboardScope uses permissions and cate without role names", () => {
   assert.deepEqual(
     resolveDashboardScope({
-      permissions: ["RPT_GET_DETAIL"],
+      permissions: ["PA_THUONG_TRUC"],
       cate: "field-a, field-b",
       idLinhVuc: "all",
     }),
@@ -47,6 +47,15 @@ test("resolveDashboardScope uses permissions and cate without role names", () =>
       assignedLinhVucIds: ["field-a", "field-b"],
       effectiveLinhVucIds: undefined,
     },
+  );
+
+  assert.deepEqual(
+    resolveDashboardScope({
+      permissions: ["RPT_GET_DETAIL"],
+      cate: "field-a, field-b",
+      idLinhVuc: "all",
+    }).effectiveLinhVucIds,
+    ["field-a", "field-b"],
   );
 
   assert.deepEqual(

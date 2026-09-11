@@ -10,6 +10,7 @@ import {
 } from "../utils/string.util.js";
 import UserRepository from "../repositories/user.repository.js";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
+import ExcelJS from "exceljs";
 import { getIO } from "../realtime/socket/index.js";
 import adminFirebase from "../realtime/firebase/index.js";
 import NotificationRepository from "../repositories/notification.repository.js";
@@ -21,6 +22,7 @@ import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import {
   getChange,
+  getSlaClassification,
   resolveDashboardPeriod,
   resolveDashboardScope,
 } from "../utils/dashboard.util.js";
@@ -39,6 +41,76 @@ const ORDER = [
 
 const URL_PHAN_ANH_MANAGER = env.URL_PHAN_ANH_MANAGER;
 const URL_PHAN_ANH_USER = env.URL_PHAN_ANH_USER;
+
+const EXCEL_COLUMN_MAP = {
+  index: { header: "STT", width: 8, value: (_, index) => index + 1 },
+  ma_phan_anh: { header: "Mã phản ánh", width: 16, value: (item) => item.ma_phan_anh || "" },
+  tieu_de: { header: "Tiêu đề phản ánh", width: 35, value: (item) => item.tieu_de || "" },
+  khu_pho: { header: "Khu phố", width: 14, value: (item) => item.khu_pho || "" },
+  linh_vuc_phan_anh: { header: "Lĩnh vực", width: 24, value: (item) => item.linh_vuc_phan_anh?.ten || "" },
+  muc_do: { header: "Mức độ", width: 16, value: (item) => item.muc_do || "" },
+  lich_su_trang_thai: { header: "Trạng thái", width: 18, value: (item) => item.lich_su_trang_thai?.[0]?.ten || "" },
+  thoi_gian_tao: { header: "Ngày gửi", width: 20, value: (item) => formatExcelDateTime(item.thoi_gian_tao) },
+  han_xu_ly: { header: "Hạn xử lý (SLA)", width: 20, value: (item) => formatExcelDateTime(item.ngay_du_kien_hoan_thanh) || "-" },
+  thong_tin_lien_he: {
+    header: "Thông tin người gửi",
+    width: 30,
+    value: (item) => [item.ten_nguoi_phan_anh, item.sdt_nguoi_phan_anh].filter(Boolean).join(" - "),
+  },
+  sla_status: { header: "TÌNH TRẠNG", width: 18, value: (item) => getExcelSlaLabel(item) },
+};
+
+const formatExcelDateTime = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date).reduce((result, part) => {
+    if (part.type !== "literal") result[part.type] = part.value;
+    return result;
+  }, {});
+  return `${parts.hour}:${parts.minute} ${parts.day}/${parts.month}/${parts.year}`;
+};
+
+const getExcelSlaLabel = (item) => {
+  const history = item.lich_su_trang_thai || [];
+  if (history.some((entry) => entry.ten === PHAN_ANH_STATUS.DA_GIA_HAN)) return "Đã gia hạn";
+  const latestStatus = history[0];
+  const completedAt = latestStatus?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET
+    ? latestStatus.thoi_gian_tao
+    : null;
+  const classification = getSlaClassification({
+    createdAt: item.thoi_gian_tao,
+    deadline: item.ngay_du_kien_hoan_thanh,
+    completedAt,
+  });
+  return {
+    onTime: "Còn hạn",
+    soon: "Sắp đến hạn",
+    overdue: "Quá hạn",
+    unknown: "Chưa có hạn",
+  }[classification] || "Chưa có hạn";
+};
+
+const resolvePhanAnhScope = ({ payload, selectedLinhVuc }) => {
+  const permissions = Array.isArray(payload?.permissions) ? payload.permissions : [];
+  const isFullAccess = permissions.includes(PERMISSION.PA_THUONG_TRUC);
+  const cate = parseCommaString(payload?.cate) || [];
+  if (!isFullAccess && selectedLinhVuc && !cate.includes(selectedLinhVuc.trim())) {
+    throw new BaseError(403, "Bạn không có quyền truy cập lĩnh vực phản ánh này");
+  }
+  return {
+    selectedLinhVuc,
+    scopedLinhVucIds: isFullAccess ? undefined : cate,
+  };
+};
 
 const PhanAnhService = {
   async createPhanAnh(
@@ -82,7 +154,8 @@ const PhanAnhService = {
       mo_ta_vi_tri: moTaViTri || null,
       id_video: idVideo,
       id_video_giai_quyet: [],
-      is_approve: true,
+      // Phản ánh khẩn cấp phải được cán bộ xem xét, không tự động duyệt.
+      is_approve: mucDo !== PHAN_ANH_MUC_DO.KHAN_CAP,
     };
 
     if (userId != null && userId !== "") {
@@ -178,6 +251,17 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+    phanAnh.lich_su_trang_thai = (phanAnh.lich_su_trang_thai || []).map(
+      ({ ten, thoi_gian_tao, ghi_chu }) => ({
+        ten,
+        thoi_gian_tao,
+        // Chỉ công khai lý do của sự kiện gia hạn; các ghi chú nghiệp vụ khác
+        // (phân công, chuyển lĩnh vực, xử lý...) vẫn thuộc luồng nội bộ.
+        ...(ten === PHAN_ANH_STATUS.DA_GIA_HAN && ghi_chu
+          ? { ghi_chu }
+          : {}),
+      }),
+    );
     return phanAnh;
   },
 
@@ -194,21 +278,17 @@ const PhanAnhService = {
     sortOrder,
     filters = {},
   ) {
-    const permissions = Array.isArray(payload?.permissions) ? payload.permissions : [];
-    const isFullAccess = [PERMISSION.PA_THUONG_TRUC, PERMISSION.RPT_GET_DETAIL].some(
-      (permission) => permissions.includes(permission),
-    );
-    const cate = parseCommaString(payload?.cate) || [];
     const selectedLinhVuc = filters.idLinhVuc || idLinhVucPhanAnh || null;
-    if (!isFullAccess && selectedLinhVuc && !cate.includes(selectedLinhVuc.trim())) {
-      throw new BaseError(403, "Bạn không có quyền truy cập lĩnh vực phản ánh này");
-    }
+    const scope = resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc,
+    });
 
     const period = filters.startDate && filters.endDate
       ? resolveDashboardPeriod({ preset: "custom", startDate: filters.startDate, endDate: filters.endDate }).current
       : null;
     const result = await PhanAnhRepository.getAllScoped({
-      idLinhVucPhanAnh: selectedLinhVuc,
+      idLinhVucPhanAnh: scope.selectedLinhVuc,
       trangThai: toDbPhanAnhStatus(trangThai),
       mucDo: toDbPhanAnhMucDo(mucDo),
       maPhanAnh,
@@ -216,7 +296,7 @@ const PhanAnhService = {
       khuPho: filters.khuPho,
       start: period?.start,
       end: period?.end,
-      scopedLinhVucIds: isFullAccess ? undefined : cate,
+      scopedLinhVucIds: scope.scopedLinhVucIds,
       page,
       size,
       sortTime,
@@ -236,10 +316,87 @@ const PhanAnhService = {
     };
   },
 
-  async getLichSuTrangThaiPhanAnh(idPhanAnh) {
+  async exportPhanAnhExcel({
+    columns,
+    search,
+    trangThai,
+    idLinhVucPhanAnh,
+    khuPho,
+    mucDo,
+    startDate,
+    endDate,
+    sortTime,
+    payload,
+  }) {
+    const scope = resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc: idLinhVucPhanAnh || null,
+    });
+    const period = startDate && endDate
+      ? resolveDashboardPeriod({ preset: "custom", startDate, endDate }).current
+      : null;
+    const items = await PhanAnhRepository.getAllForExcelExport({
+      idLinhVucPhanAnh: scope.selectedLinhVuc,
+      trangThai: toDbPhanAnhStatus(trangThai),
+      mucDo: toDbPhanAnhMucDo(mucDo),
+      search,
+      khuPho,
+      start: period?.start,
+      end: period?.end,
+      scopedLinhVucIds: scope.scopedLinhVucIds,
+      sortTime,
+    });
+
+    const columnDefs = columns.map((key) => EXCEL_COLUMN_MAP[key]);
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Danh sách Phản ánh");
+    sheet.columns = columnDefs.map((column) => ({
+      header: column.header,
+      width: column.width,
+    }));
+
+    const header = sheet.getRow(1);
+    header.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E40AF" } };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      cell.border = {
+        top: { style: "thin" }, left: { style: "thin" },
+        bottom: { style: "thin" }, right: { style: "thin" },
+      };
+    });
+
+    items.forEach((item, index) => {
+      const row = sheet.addRow(columnDefs.map((column) => column.value(item, index)));
+      row.eachCell((cell) => {
+        cell.alignment = { vertical: "top", wrapText: true };
+        cell.border = {
+          top: { style: "thin" }, left: { style: "thin" },
+          bottom: { style: "thin" }, right: { style: "thin" },
+        };
+      });
+    });
+    sheet.views = [{ state: "frozen", ySplit: 1 }];
+    return await workbook.xlsx.writeBuffer();
+  },
+
+  async getLichSuTrangThaiPhanAnhPublic(maPhanAnh) {
+    const phanAnh = await this.getPhanAnhByMaPhanAnh(maPhanAnh);
+    return phanAnh.lich_su_trang_thai || [];
+  },
+
+  async getLichSuTrangThaiPhanAnh(idPhanAnh, payload) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+    resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
+    });
     return await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh);
   },
 
@@ -260,7 +417,7 @@ const PhanAnhService = {
     );
   },
 
-  async getPhanAnhById(idPhanAnh) {
+  async getPhanAnhById(idPhanAnh, payload) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
@@ -268,6 +425,11 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+
+    resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
+    });
 
     // Phản ánh từ tài khoản không nhập tay tên/SĐT → lấy từ thông tin người gửi.
     const nguoiGui = phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
@@ -472,6 +634,51 @@ const PhanAnhService = {
       {
         ten: lastStatus,
         ghi_chu: `Chuyển lĩnh vực từ "${tenLinhVucCu}" sang "${existingLinhVuc.ten}". Lý do: ${lyDo}`,
+        nguoi_tao: currentUser,
+      },
+    );
+  },
+
+  async updateMucDoPhanAnh(idPhanAnh, mucDo, lyDo, currentUser) {
+    if (idPhanAnh === null || idPhanAnh === undefined) {
+      throw new BaseError(400, "ID phản ánh không được để trống");
+    }
+
+    mucDo = toDbPhanAnhMucDo(mucDo);
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+    resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
+    });
+
+    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    if ([PHAN_ANH_STATUS.DA_GIAI_QUYET, PHAN_ANH_STATUS.DONG, PHAN_ANH_STATUS.TU_CHOI].includes(lastStatus)) {
+      throw new BaseError(400, "Không thể đổi mức độ cho phản ánh đã kết thúc");
+    }
+    if (phanAnh.muc_do === mucDo) {
+      throw new BaseError(400, "Mức độ phản ánh mới phải khác mức độ hiện tại");
+    }
+
+    const existingUser = await UserRepository.findById(currentUser);
+    if (!existingUser) {
+      throw new BaseError(400, "Người dùng không tồn tại");
+    }
+
+    // Đổi mức độ không làm thay đổi is_approve: phản ánh khẩn cấp vẫn chỉ được
+    // duyệt bởi luồng phê duyệt riêng, tránh phát sinh phê duyệt ngầm.
+    return await PhanAnhRepository.updateMucDoWithHistory(
+      idPhanAnh,
+      {
+        muc_do: mucDo,
+        nguoi_cap_nhat: currentUser,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+      {
+        ten: lastStatus || PHAN_ANH_STATUS.DA_GUI,
+        ghi_chu: `Đổi mức độ từ "${phanAnh.muc_do || "chưa xác định"}" sang "${mucDo}". Lý do: ${lyDo}`,
         nguoi_tao: currentUser,
       },
     );
@@ -723,7 +930,8 @@ const PhanAnhService = {
       id_video: idVideo,
       id_video_giai_quyet: [],
       ma_phan_anh: generateUniqueCode(),
-      is_approve: true,
+      // Phản ánh khẩn cấp công khai cũng phải chờ cán bộ duyệt.
+      is_approve: mucDo !== PHAN_ANH_MUC_DO.KHAN_CAP,
     };
 
     const attachments = (file || []).map((f) => ({

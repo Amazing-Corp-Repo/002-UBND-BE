@@ -15,10 +15,12 @@ import {
   UpdatePhanAnhStatusRequest,
   CreatePhanAnhPublicRequest,
   UpdatePhanAnhLinhVucRequest,
+  UpdatePhanAnhMucDoRequest,
   AssignPhanAnhRequest,
   PhanAnhIdParams,
   PhanAnhCodeParams,
   GetAllPhanAnhQuery,
+  ExportPhanAnhExcelRequest,
   GetDashboardQuery,
   GetMyPhanAnhQuery,
   SearchPhanAnhQuery,
@@ -77,6 +79,12 @@ phanAnhRouter.get(
 );
 
 phanAnhRouter.get(
+  "/:maPhanAnh/for-mobile/lich-su-trang-thai",
+  validateParams(PhanAnhCodeParams),
+  PhanAnhController.getLichSuTrangThaiPhanAnhPublic,
+);
+
+phanAnhRouter.get(
   "/",
   authenticate,
   authorize([PERMISSION.PA_GET_ALL]),
@@ -86,6 +94,8 @@ phanAnhRouter.get(
 
 phanAnhRouter.get(
   "/:idPhanAnh/lich-su-trang-thai",
+  authenticate,
+  authorize([PERMISSION.PA_GET_DETAIL]),
   validateParams(PhanAnhIdParams),
   PhanAnhController.getLichSuTrangThaiPhanAnh,
 );
@@ -106,6 +116,14 @@ phanAnhRouter.get(
   authenticate,
   validateQuery(GetDashboardQuery),
   PhanAnhController.getTongQuanPhanAnh,
+);
+
+phanAnhRouter.post(
+  "/export-excel",
+  authenticate,
+  authorize([PERMISSION.PA_EXPORT, PERMISSION.PA_GET_ALL]),
+  validate(ExportPhanAnhExcelRequest),
+  PhanAnhController.exportPhanAnhExcel,
 );
 
 phanAnhRouter.post(
@@ -223,6 +241,16 @@ phanAnhRouter.put(
   validate(UpdatePhanAnhStatusRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,
+);
+
+phanAnhRouter.put(
+  "/update-muc-do/:idPhanAnh",
+  authenticate,
+  authorizeAny([PERMISSION.PA_APPROVE, PERMISSION.PA_REJECT]),
+  validateParams(PhanAnhIdParams),
+  validate(UpdatePhanAnhMucDoRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, "Đổi mức độ phản ánh"),
+  PhanAnhController.updateMucDoPhanAnh,
 );
 
 phanAnhRouter.put(

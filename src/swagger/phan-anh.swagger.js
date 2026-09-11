@@ -6,7 +6,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới (yêu cầu đăng nhập)",
       description:
-        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
+        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Người tạo luôn lấy từ access token, không nhận userId từ client. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn. Phản ánh mức Khẩn cấp được lưu chờ duyệt (is_approve=false), không tự động duyệt.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -111,6 +111,8 @@ const PhanAnhSwagger = {
     get: {
       tags: ["PhanAnh"],
       summary: "Lấy thông tin phản ánh theo mã phản ánh cho mobile",
+      description:
+        "Không cần đăng nhập. Lịch sử trả trạng thái và thời gian; chỉ sự kiện Đã gia hạn mới kèm ghi_chu là lý do gia hạn công khai.",
       parameters: [
         {
           name: "maPhanAnh",
@@ -126,10 +128,60 @@ const PhanAnhSwagger = {
       responses: {},
     },
   },
+  "/api/phan-anh/{maPhanAnh}/for-mobile/lich-su-trang-thai": {
+    get: {
+      tags: ["PhanAnh"],
+      summary: "Công dân tra cứu lịch sử trạng thái bằng mã phản ánh",
+      description:
+        "Không cần đăng nhập. Trả trạng thái và thời gian công khai; chỉ sự kiện Đã gia hạn mới kèm ghi_chu là lý do gia hạn công khai.",
+      parameters: [
+        {
+          name: "maPhanAnh",
+          in: "path",
+          required: true,
+          schema: { type: "string", pattern: "^[A-Z0-9]{8}$" },
+        },
+      ],
+      responses: {},
+    },
+  },
+  "/api/phan-anh/export-excel": {
+    post: {
+      tags: ["PhanAnh"],
+      summary: "Xuất Excel danh sách phản ánh theo phạm vi được cấp",
+      description:
+        "Yêu cầu đồng thời PA_EXPORT và PA_GET_ALL. Chỉ PA_THUONG_TRUC được xuất toàn bộ; các tài khoản khác chỉ xuất phản ánh thuộc các lĩnh vực trong cate của access token. Bộ lọc do client gửi chỉ làm hẹp dữ liệu, không thể mở rộng phạm vi. Thông tin liên hệ được xuất đầy đủ trong phạm vi đã được cấp.",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: PhanAnhSchemas.ExportPhanAnhExcelRequest,
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "File Excel danh sách phản ánh",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+        400: { description: "Dữ liệu lọc hoặc danh sách cột không hợp lệ" },
+        401: { description: "Chưa xác thực hoặc token hết hạn" },
+        403: { description: "Thiếu PA_EXPORT, PA_GET_ALL hoặc truy cập lĩnh vực ngoài cate" },
+      },
+    },
+  },
   "/api/phan-anh/{idPhanAnh}/lich-su-trang-thai": {
     get: {
       tags: ["PhanAnh"],
       summary: "Lấy lịch sử trạng thái của phản ánh",
+      description:
+        "API nội bộ. Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC.",
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: "idPhanAnh",
@@ -185,6 +237,8 @@ const PhanAnhSwagger = {
     get: {
       tags: ["PhanAnh"],
       summary: "Lấy phản ánh theo ID sử dụng trên web",
+      description:
+        "Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -224,6 +278,38 @@ const PhanAnhSwagger = {
         },
       },
       responses: {},
+    },
+  },
+  "/api/phan-anh/update-muc-do/{idPhanAnh}": {
+    put: {
+      tags: ["PhanAnh"],
+      summary: "Đổi mức độ phản ánh",
+      description:
+        "Đổi giữa Thông thường và Khẩn cấp. Yêu cầu một trong hai permission PA_APPROVE hoặc PA_REJECT; lý do bắt buộc và được ghi vào lịch sử cập nhật. Thao tác này không tự động phê duyệt phản ánh.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "idPhanAnh",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+          description: "ID phản ánh cần đổi mức độ",
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: PhanAnhSchemas.UpdatePhanAnhMucDoRequest,
+          },
+        },
+      },
+      responses: {
+        200: { description: "Cập nhật mức độ phản ánh thành công" },
+        400: { description: "Dữ liệu không hợp lệ, phản ánh đã kết thúc hoặc mức độ không thay đổi" },
+        401: { description: "Chưa xác thực hoặc token hết hạn" },
+        403: { description: "Thiếu PA_APPROVE hoặc PA_REJECT" },
+      },
     },
   },
   "/api/phan-anh/update-linh-vuc/{idPhanAnh}": {
@@ -482,6 +568,7 @@ const PhanAnhSwagger = {
     put: {
       tags: ["PhanAnhExtension"],
       summary: "Phê duyệt đề nghị gia hạn",
+      description: "Sự kiện Đã gia hạn trên Mobile luôn hiển thị ly_do_gia_han gốc của đề nghị. ghiChu, nếu có, là ghi chú phê duyệt nội bộ và không được trả trong lịch sử công khai.",
       security: [{ bearerAuth: [] }],
       parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
       requestBody: { content: { "application/json": { schema: { type: "object", properties: { ghiChu: { type: "string", maxLength: 2000 } } } } } },
@@ -583,7 +670,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới từ công dân (không cần đăng nhập)",
       description:
-        "API công khai để người dân tạo phản ánh. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
+        "API công khai để người dân tạo phản ánh. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn. Phản ánh mức Khẩn cấp được lưu chờ duyệt (is_approve=false), không tự động duyệt.",
       requestBody: {
         content: {
           "multipart/form-data": {

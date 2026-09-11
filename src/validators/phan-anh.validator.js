@@ -100,9 +100,6 @@ export const CreatePhanAnhRequest = Joi.object({
   moTaViTri: Joi.string().trim().max(COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH).optional().allow(null, "").messages({
     "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
-  userId: Joi.string().trim().uuid().optional().allow(null, "").messages({
-    "string.uuid": "userId must be a valid UUID",
-  }),
   idVideo: videoIdsSchema,
 });
 
@@ -129,6 +126,22 @@ export const UpdatePhanAnhLinhVucRequest = Joi.object({
     "string.empty": "Lý do chuyển lĩnh vực không được để trống",
     "string.max": "Lý do chuyển lĩnh vực không được vượt quá 1000 ký tự",
     "any.required": "Lý do chuyển lĩnh vực là bắt buộc",
+  }),
+});
+
+export const UpdatePhanAnhMucDoRequest = Joi.object({
+  mucDo: Joi.string()
+    .trim()
+    .valid(...Object.values(PHAN_ANH_MUC_DO), "KHAN_CAP", "BINH_THUONG")
+    .required()
+    .messages({
+      "any.only": "Mức độ phải là Thông thường hoặc Khẩn cấp",
+      "any.required": "Mức độ là bắt buộc",
+    }),
+  lyDo: Joi.string().trim().max(1000).required().messages({
+    "string.empty": "Lý do đổi mức độ không được để trống",
+    "string.max": "Lý do đổi mức độ không được vượt quá 1000 ký tự",
+    "any.required": "Lý do đổi mức độ là bắt buộc",
   }),
 });
 
@@ -215,6 +228,65 @@ export const GetAllPhanAnhQuery = Joi.object({
     .try(Joi.boolean(), Joi.string().valid("true", "false"))
     .optional()
     .default(false),
+}).custom((value, helpers) => {
+  if (Boolean(value.startDate) !== Boolean(value.endDate)) {
+    return helpers.error("date.pair");
+  }
+  if (value.startDate && value.endDate && value.startDate > value.endDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({
+  "date.format": "Ngày lọc phải có định dạng YYYY-MM-DD hợp lệ",
+  "date.pair": "startDate và endDate phải được gửi cùng nhau",
+  "date.range": "startDate không được lớn hơn endDate",
+});
+
+export const ExportPhanAnhExcelRequest = Joi.object({
+  columns: Joi.array()
+    .items(Joi.string().valid(
+      "index",
+      "ma_phan_anh",
+      "tieu_de",
+      "khu_pho",
+      "linh_vuc_phan_anh",
+      "muc_do",
+      "lich_su_trang_thai",
+      "thoi_gian_tao",
+      "han_xu_ly",
+      "thong_tin_lien_he",
+      "sla_status",
+    ))
+    .min(1)
+    .unique()
+    .required()
+    .messages({
+      "array.base": "Danh sách cột phải là mảng",
+      "array.min": "Phải chọn ít nhất một cột để xuất",
+      "array.unique": "Danh sách cột không được chứa giá trị trùng lặp",
+      "any.only": "Danh sách cột chứa cột không được hỗ trợ",
+      "any.required": "Danh sách cột là bắt buộc",
+    }),
+  search: Joi.string().trim().max(255).optional().allow(""),
+  trangThai: Joi.string()
+    .valid(...PHAN_ANH_LIFECYCLE_STATUS, "DA_GUI", "DANG_XU_LY", "DA_GIAI_QUYET", "DONG", "TU_CHOI")
+    .optional()
+    .allow(""),
+  idLinhVucPhanAnh: Joi.string().uuid().optional().allow(""),
+  khuPho: Joi.string().trim().max(255).optional().allow("", "all"),
+  mucDo: Joi.string()
+    .valid(...Object.values(PHAN_ANH_MUC_DO), "KHAN_CAP", "BINH_THUONG")
+    .optional()
+    .allow(""),
+  startDate: Joi.string().custom((value, helpers) => {
+    if (!parseDateOnly(value)) return helpers.error("date.format");
+    return value;
+  }).optional().allow(""),
+  endDate: Joi.string().custom((value, helpers) => {
+    if (!parseDateOnly(value)) return helpers.error("date.format");
+    return value;
+  }).optional().allow(""),
+  sortTime: Joi.string().valid("asc", "desc").default("desc"),
 }).custom((value, helpers) => {
   if (Boolean(value.startDate) !== Boolean(value.endDate)) {
     return helpers.error("date.pair");
