@@ -9,6 +9,7 @@ import {
 import { createPagination } from "../utils/response.util.js";
 import FileService from "./file.service.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import { getLatestPhanAnhLifecycleHistory } from "../utils/phan-anh-status.util.js";
 import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 
@@ -27,17 +28,18 @@ const ReportService = {
 
     for (let pa of phanAnh) {
       const vnDate = formatDate(pa.thoi_gian_tao);
+      const latestStatus = getLatestPhanAnhLifecycleHistory(pa.lich_su_trang_thai)?.ten;
 
       const isProcessed =
-        pa.lich_su_trang_thai[0]?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
-        pa.lich_su_trang_thai[0]?.ten === PHAN_ANH_STATUS.DONG;
+        latestStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
+        latestStatus === PHAN_ANH_STATUS.DONG;
 
       if (!xu_huong[vnDate]) {
         xu_huong[vnDate] = { tong: 0, da_xu_ly: 0 };
       }
 
-      if (!trang_thai[pa.lich_su_trang_thai[0]?.ten]) {
-        trang_thai[pa.lich_su_trang_thai[0]?.ten] = 0;
+      if (!trang_thai[latestStatus]) {
+        trang_thai[latestStatus] = 0;
       }
 
       if (!linh_vuc_phan_anh[pa.linh_vuc_phan_anh.ten]) {
@@ -46,7 +48,7 @@ const ReportService = {
 
       linh_vuc_phan_anh[pa.linh_vuc_phan_anh.ten]++;
 
-      trang_thai[pa.lich_su_trang_thai[0]?.ten]++;
+      trang_thai[latestStatus]++;
 
       xu_huong[vnDate].tong++;
       if (isProcessed) {
@@ -59,7 +61,7 @@ const ReportService = {
         ma_phan_anh: pa.ma_phan_anh,
         tieu_de: pa.tieu_de,
         linh_vuc_phan_anh: pa.linh_vuc_phan_anh.ten,
-        trang_thai_hien_tai: pa.lich_su_trang_thai[0]?.ten,
+        trang_thai_hien_tai: getLatestPhanAnhLifecycleHistory(pa.lich_su_trang_thai)?.ten || null,
         thoi_gian_cap_nhat: pa.thoi_gian_cap_nhat,
       });
     }
@@ -178,7 +180,7 @@ const ReportService = {
         chuyen_vien: pa.to_phu_trach?.ho_va_ten || null,
         muc_do: pa.muc_do,
         vi_tri: pa.vi_tri,
-        trang_thai_hien_tai: pa.lich_su_trang_thai[0]?.ten || null,
+        trang_thai_hien_tai: getLatestPhanAnhLifecycleHistory(pa.lich_su_trang_thai)?.ten || null,
         thoi_gian_tao: pa.thoi_gian_tao,
       });
     }

@@ -31,6 +31,8 @@ import {
   toApiPhanAnhStatus,
   toDbPhanAnhMucDo,
   toDbPhanAnhStatus,
+  getLatestPhanAnhLifecycleHistory,
+  getPhanAnhLifecycleHistory,
 } from "../utils/phan-anh-status.util.js";
 
 const ORDER = [
@@ -49,7 +51,7 @@ const EXCEL_COLUMN_MAP = {
   khu_pho: { header: "Khu phố", width: 14, value: (item) => item.khu_pho || "" },
   linh_vuc_phan_anh: { header: "Lĩnh vực", width: 24, value: (item) => item.linh_vuc_phan_anh?.ten || "" },
   muc_do: { header: "Mức độ", width: 16, value: (item) => item.muc_do || "" },
-  lich_su_trang_thai: { header: "Trạng thái", width: 18, value: (item) => item.lich_su_trang_thai?.[0]?.ten || "" },
+  lich_su_trang_thai: { header: "Trạng thái", width: 18, value: (item) => getLatestPhanAnhLifecycleHistory(item.lich_su_trang_thai)?.ten || "" },
   thoi_gian_tao: { header: "Ngày gửi", width: 20, value: (item) => formatExcelDateTime(item.thoi_gian_tao) },
   han_xu_ly: { header: "Hạn xử lý (SLA)", width: 20, value: (item) => formatExcelDateTime(item.ngay_du_kien_hoan_thanh) || "-" },
   thong_tin_lien_he: {
@@ -81,8 +83,7 @@ const formatExcelDateTime = (value) => {
 
 const getExcelSlaLabel = (item) => {
   const history = item.lich_su_trang_thai || [];
-  if (history.some((entry) => entry.ten === PHAN_ANH_STATUS.DA_GIA_HAN)) return "Đã gia hạn";
-  const latestStatus = history[0];
+  const latestStatus = getLatestPhanAnhLifecycleHistory(history);
   const completedAt = latestStatus?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET
     ? latestStatus.thoi_gian_tao
     : null;
@@ -251,27 +252,19 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
-    // Repository trả cả hai danh sách theo thời gian giảm dần. Ghép lần lượt
-    // từng event "Đã gia hạn" với đề nghị APPROVED tương ứng, tránh phụ thuộc
-    // vào mili-giây giữa default NOW() của DB và thời gian duyệt từ app.
-    const approvedExtensionReasons = (phanAnh.de_nghi_gia_han_phan_anh || [])
-      .map((extension) => extension.ly_do_gia_han)
-      .filter(Boolean);
-    let extensionReasonIndex = 0;
-    phanAnh.lich_su_trang_thai = (phanAnh.lich_su_trang_thai || []).map(
-      ({ ten, thoi_gian_tao, ghi_chu }) => ({
-        ten,
-        thoi_gian_tao,
-        // Chỉ công khai lý do của sự kiện gia hạn; các ghi chú nghiệp vụ khác
-        // (phân công, chuyển lĩnh vực, xử lý...) vẫn thuộc luồng nội bộ.
-        ...(ten === PHAN_ANH_STATUS.DA_GIA_HAN
-          ? {
-              ghi_chu:
-                approvedExtensionReasons[extensionReasonIndex++] || ghi_chu,
-            }
-          : {}),
-      }),
-    );
+    const latestApprovedExtension = phanAnh.de_nghi_gia_han_phan_anh?.[0] || null;
+    // Không công khai event "Đã gia hạn" trong danh sách trạng thái. Thông tin
+    // gia hạn vẫn được trả riêng để UI có thể hiển thị hạn/lý do, không biến nó
+    // thành trạng thái thứ sáu.
+    phanAnh.lich_su_trang_thai = getPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai)
+      .map(({ ten, thoi_gian_tao }) => ({ ten, thoi_gian_tao }));
+    phanAnh.thong_tin_gia_han = latestApprovedExtension
+      ? {
+          han_xu_ly_moi: phanAnh.ngay_du_kien_hoan_thanh,
+          ly_do_gia_han: latestApprovedExtension.ly_do_gia_han,
+          thoi_gian_duyet: latestApprovedExtension.thoi_gian_duyet,
+        }
+      : null;
     delete phanAnh.de_nghi_gia_han_phan_anh;
     return phanAnh;
   },
@@ -318,8 +311,9 @@ const PhanAnhService = {
     return {
       data: result.data.map((item) => ({
         ...item,
+        lich_su_trang_thai: getPhanAnhLifecycleHistory(item.lich_su_trang_thai),
         linh_vuc: item.linh_vuc_phan_anh || null,
-        trang_thai_hien_tai: toApiPhanAnhStatus(item.lich_su_trang_thai?.[0]?.ten),
+        trang_thai_hien_tai: toApiPhanAnhStatus(getLatestPhanAnhLifecycleHistory(item.lich_su_trang_thai)?.ten),
         muc_do_code: toApiPhanAnhMucDo(item.muc_do),
       })),
       pagination: createPagination(page, size, result.totalItems),
@@ -407,14 +401,18 @@ const PhanAnhService = {
       payload,
       selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
     });
-    return await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh);
+    return getPhanAnhLifecycleHistory(await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh));
   },
 
   async getPhanAnhByUserId(userId, sortTime) {
     if (userId === null || userId === undefined) {
       throw new BaseError(400, "ID người dùng không được để trống");
     }
-    return await PhanAnhRepository.getPhanAnhByUserId(userId, sortTime);
+    const phanAnhs = await PhanAnhRepository.getPhanAnhByUserId(userId, sortTime);
+    return phanAnhs.map((phanAnh) => ({
+      ...phanAnh,
+      lich_su_trang_thai: getPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai),
+    }));
   },
 
   getMucDoPhanAnh() {
@@ -474,7 +472,7 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
-    const lastStatus = phanAnh.lich_su_trang_thai[0].ten;
+    const lastStatus = getLatestPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai)?.ten;
     if (
       lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
       lastStatus === PHAN_ANH_STATUS.DONG ||
@@ -601,7 +599,7 @@ const PhanAnhService = {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
 
-    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    const lastStatus = getLatestPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai)?.ten;
     if (
       lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
       lastStatus === PHAN_ANH_STATUS.DONG
@@ -664,7 +662,7 @@ const PhanAnhService = {
       selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
     });
 
-    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    const lastStatus = getLatestPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai)?.ten;
     if ([PHAN_ANH_STATUS.DA_GIAI_QUYET, PHAN_ANH_STATUS.DONG, PHAN_ANH_STATUS.TU_CHOI].includes(lastStatus)) {
       throw new BaseError(400, "Không thể đổi mức độ cho phản ánh đã kết thúc");
     }
@@ -723,7 +721,7 @@ const PhanAnhService = {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
 
-    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    const lastStatus = getLatestPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai)?.ten;
     if (
       lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
       lastStatus === PHAN_ANH_STATUS.DONG
@@ -893,7 +891,11 @@ const PhanAnhService = {
       throw new BaseError(400, "Từ khóa tìm kiếm phải có ít nhất 3 ký tự");
     }
 
-    return await PhanAnhRepository.searhByTieuDe(search);
+    const phanAnhs = await PhanAnhRepository.searhByTieuDe(search);
+    return phanAnhs.map((phanAnh) => ({
+      ...phanAnh,
+      lich_su_trang_thai: getPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai),
+    }));
   },
 
   async createPhanAnhPublic(

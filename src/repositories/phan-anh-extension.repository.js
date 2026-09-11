@@ -1,5 +1,6 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
+import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 
 const extensionInclude = {
   phan_anh: {
@@ -7,6 +8,7 @@ const extensionInclude = {
       linh_vuc_phan_anh: { select: { id: true, ten: true } },
       to_phu_trach: { select: { id: true, ho_va_ten: true, email: true } },
       lich_su_trang_thai: {
+        where: { ten: { not: PHAN_ANH_STATUS.DA_GIA_HAN } },
         orderBy: { thoi_gian_tao: "desc" },
         take: 1,
         select: { ten: true, thoi_gian_tao: true },
@@ -24,6 +26,7 @@ const PhanAnhExtensionRepository = {
       where: { id: idPhanAnh },
       include: {
         lich_su_trang_thai: {
+          where: { ten: { not: PHAN_ANH_STATUS.DA_GIA_HAN } },
           orderBy: { thoi_gian_tao: "desc" },
           take: 1,
           select: { ten: true, thoi_gian_tao: true },

@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import PHAN_ANH_STATUS, { PHAN_ANH_LIFECYCLE_STATUS } from "../constants/phan-anh-status.constant.js";
 import {
+  getLatestPhanAnhLifecycleHistory,
+  getPhanAnhLifecycleHistory,
   toApiPhanAnhMucDo,
   toApiPhanAnhStatus,
   toDbPhanAnhMucDo,
@@ -18,6 +20,17 @@ test("maps canonical complaint status codes to legacy Vietnamese database values
 test("keeps extension history event out of normal complaint lifecycle", () => {
   assert.ok(PHAN_ANH_LIFECYCLE_STATUS.includes(PHAN_ANH_STATUS.TU_CHOI));
   assert.ok(!PHAN_ANH_LIFECYCLE_STATUS.includes(PHAN_ANH_STATUS.DA_GIA_HAN));
+});
+
+test("uses the latest lifecycle status when extension is the newest audit event", () => {
+  const history = [
+    { ten: PHAN_ANH_STATUS.DA_GIA_HAN, thoi_gian_tao: "2026-09-12T03:00:00.000Z" },
+    { ten: PHAN_ANH_STATUS.DANG_XU_LY, thoi_gian_tao: "2026-09-12T02:00:00.000Z" },
+    { ten: PHAN_ANH_STATUS.DA_GUI, thoi_gian_tao: "2026-09-12T01:00:00.000Z" },
+  ];
+
+  assert.deepEqual(getPhanAnhLifecycleHistory(history).map((item) => item.ten), ["Đang xử lý", "Đã gửi"]);
+  assert.equal(getLatestPhanAnhLifecycleHistory(history)?.ten, PHAN_ANH_STATUS.DANG_XU_LY);
 });
 
 test("maps severity codes without changing the legacy stored values", () => {

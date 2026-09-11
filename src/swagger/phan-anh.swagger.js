@@ -29,6 +29,7 @@ const PhanAnhSwagger = {
     get: {
       tags: ["PhanAnh"],
       summary: "Lấy danh sách phản ánh với phân trang và lọc sử dụng trên web",
+      description: "Danh sách Quản lý phản ánh chỉ chứa phản ánh chưa từng có đề nghị gia hạn. Ngay khi gửi đề nghị gia hạn, phản ánh được quản lý tại API Gia hạn và không còn xuất hiện trong danh sách này.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -112,7 +113,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Lấy thông tin phản ánh theo mã phản ánh cho mobile",
       description:
-        "Không cần đăng nhập. Lịch sử trả trạng thái và thời gian; chỉ sự kiện Đã gia hạn mới kèm ghi_chu là lý do gia hạn công khai.",
+        "Không cần đăng nhập. Lịch sử chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối. Gia hạn được trả riêng trong thong_tin_gia_han, không phải trạng thái.",
       parameters: [
         {
           name: "maPhanAnh",
@@ -133,7 +134,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Công dân tra cứu lịch sử trạng thái bằng mã phản ánh",
       description:
-        "Không cần đăng nhập. Trả trạng thái và thời gian công khai; chỉ sự kiện Đã gia hạn mới kèm ghi_chu là lý do gia hạn công khai.",
+        "Không cần đăng nhập. Chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối; không trả sự kiện Đã gia hạn trong lịch sử trạng thái.",
       parameters: [
         {
           name: "maPhanAnh",
@@ -568,7 +569,7 @@ const PhanAnhSwagger = {
     put: {
       tags: ["PhanAnhExtension"],
       summary: "Phê duyệt đề nghị gia hạn",
-      description: "Sự kiện Đã gia hạn trên Mobile luôn hiển thị ly_do_gia_han gốc của đề nghị. ghiChu, nếu có, là ghi chú phê duyệt nội bộ và không được trả trong lịch sử công khai.",
+      description: "Gia hạn được lưu như sự kiện audit nội bộ, không tạo trạng thái thứ sáu trên Web/Mobile. API chi tiết công khai thông tin gia hạn tại thong_tin_gia_han.",
       security: [{ bearerAuth: [] }],
       parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
       requestBody: { content: { "application/json": { schema: { type: "object", properties: { ghiChu: { type: "string", maxLength: 2000 } } } } } },

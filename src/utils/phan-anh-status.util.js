@@ -1,4 +1,4 @@
-import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_STATUS, { PHAN_ANH_LIFECYCLE_STATUS } from "../constants/phan-anh-status.constant.js";
 
 const API_TO_DB_STATUS = {
   DA_GUI: PHAN_ANH_STATUS.DA_GUI,
@@ -23,6 +23,20 @@ const toApiPhanAnhStatus = (value) => {
   return DB_TO_API_STATUS[value] || value;
 };
 
+// Gia hạn là sự kiện nghiệp vụ/audit, không phải trạng thái vòng đời phản ánh.
+// Các response hiển thị cho Web/Mobile luôn phải dùng các helper này thay vì
+// lấy phần tử đầu tiên của lịch sử trạng thái.
+const isPhanAnhLifecycleStatus = (value) => PHAN_ANH_LIFECYCLE_STATUS.includes(value);
+
+const getPhanAnhLifecycleHistory = (history = []) => (
+  Array.isArray(history) ? history.filter((item) => isPhanAnhLifecycleStatus(item?.ten)) : []
+);
+
+const getLatestPhanAnhLifecycleHistory = (history = []) => getPhanAnhLifecycleHistory(history)
+  .reduce((latest, item) => (
+    !latest || new Date(item.thoi_gian_tao) > new Date(latest.thoi_gian_tao) ? item : latest
+  ), null);
+
 const toDbPhanAnhMucDo = (value) => {
   if (value === "KHAN_CAP") return "Khẩn cấp";
   if (value === "BINH_THUONG") return "Thông thường";
@@ -37,6 +51,9 @@ const toApiPhanAnhMucDo = (value) => {
 
 export {
   API_TO_DB_STATUS,
+  getLatestPhanAnhLifecycleHistory,
+  getPhanAnhLifecycleHistory,
+  isPhanAnhLifecycleStatus,
   toApiPhanAnhMucDo,
   toApiPhanAnhStatus,
   toDbPhanAnhMucDo,

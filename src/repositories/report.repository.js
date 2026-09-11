@@ -158,6 +158,7 @@ const ReportRepository = {
         SELECT id_phan_anh, ten,
           ROW_NUMBER() OVER (PARTITION BY id_phan_anh ORDER BY thoi_gian_tao DESC) AS rn
         FROM lich_su_trang_thai
+        WHERE ten <> 'Đã gia hạn'
       ) ls ON ls.id_phan_anh = pa.id AND ls.rn = 1
       ${whereSql}
     `;
