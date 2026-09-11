@@ -16,7 +16,6 @@ const PhanAnhController = {
       soDienThoaiNguoiPhanAnh,
       khuPho,
       moTaViTri,
-      userId,
       idVideo,
     } = req.body;
     const file = req.files;
@@ -31,7 +30,7 @@ const PhanAnhController = {
       soDienThoaiNguoiPhanAnh,
       khuPho,
       moTaViTri,
-      userId,
+      req.payload.userId,
       file,
       idVideo,
     );
@@ -85,7 +84,22 @@ const PhanAnhController = {
 
   async getLichSuTrangThaiPhanAnh(req, res) {
     const { idPhanAnh } = req.validatedParams;
-    let result = await PhanAnhService.getLichSuTrangThaiPhanAnh(idPhanAnh);
+    let result = await PhanAnhService.getLichSuTrangThaiPhanAnh(
+      idPhanAnh,
+      req.payload,
+    );
+    return successResponse(
+      res,
+      result,
+      "Lấy lịch sử trạng thái phản ánh thành công",
+    );
+  },
+
+  async getLichSuTrangThaiPhanAnhPublic(req, res) {
+    const { maPhanAnh } = req.validatedParams;
+    const result = await PhanAnhService.getLichSuTrangThaiPhanAnhPublic(
+      maPhanAnh,
+    );
     return successResponse(
       res,
       result,
@@ -116,7 +130,7 @@ const PhanAnhController = {
 
   async getPhanAnhById(req, res) {
     const { idPhanAnh } = req.validatedParams;
-    let result = await PhanAnhService.getPhanAnhById(idPhanAnh);
+    let result = await PhanAnhService.getPhanAnhById(idPhanAnh, req.payload);
     return successResponse(res, result, "Lấy phản ánh thành công");
   },
 

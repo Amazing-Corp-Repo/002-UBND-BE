@@ -99,10 +99,9 @@ const getExcelSlaLabel = (item) => {
   }[classification] || "Chưa có hạn";
 };
 
-const resolvePhanAnhScope = ({ payload, selectedLinhVuc, allowReportFullAccess = false }) => {
+const resolvePhanAnhScope = ({ payload, selectedLinhVuc }) => {
   const permissions = Array.isArray(payload?.permissions) ? payload.permissions : [];
-  const isFullAccess = permissions.includes(PERMISSION.PA_THUONG_TRUC)
-    || (allowReportFullAccess && permissions.includes(PERMISSION.RPT_GET_DETAIL));
+  const isFullAccess = permissions.includes(PERMISSION.PA_THUONG_TRUC);
   const cate = parseCommaString(payload?.cate) || [];
   if (!isFullAccess && selectedLinhVuc && !cate.includes(selectedLinhVuc.trim())) {
     throw new BaseError(403, "Bạn không có quyền truy cập lĩnh vực phản ánh này");
@@ -272,7 +271,6 @@ const PhanAnhService = {
     const scope = resolvePhanAnhScope({
       payload,
       selectedLinhVuc,
-      allowReportFullAccess: true,
     });
 
     const period = filters.startDate && filters.endDate
@@ -321,8 +319,6 @@ const PhanAnhService = {
     const scope = resolvePhanAnhScope({
       payload,
       selectedLinhVuc: idLinhVucPhanAnh || null,
-      // RPT_GET_DETAIL không phải quyền phạm vi toàn cục cho dữ liệu export.
-      allowReportFullAccess: false,
     });
     const period = startDate && endDate
       ? resolveDashboardPeriod({ preset: "custom", startDate, endDate }).current
@@ -372,10 +368,23 @@ const PhanAnhService = {
     return await workbook.xlsx.writeBuffer();
   },
 
-  async getLichSuTrangThaiPhanAnh(idPhanAnh) {
+  async getLichSuTrangThaiPhanAnhPublic(maPhanAnh) {
+    const phanAnh = await this.getPhanAnhByMaPhanAnh(maPhanAnh);
+    return phanAnh.lich_su_trang_thai || [];
+  },
+
+  async getLichSuTrangThaiPhanAnh(idPhanAnh, payload) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+    resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
+    });
     return await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh);
   },
 
@@ -396,7 +405,7 @@ const PhanAnhService = {
     );
   },
 
-  async getPhanAnhById(idPhanAnh) {
+  async getPhanAnhById(idPhanAnh, payload) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }
@@ -404,6 +413,11 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+
+    resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
+    });
 
     // Phản ánh từ tài khoản không nhập tay tên/SĐT → lấy từ thông tin người gửi.
     const nguoiGui = phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
@@ -623,6 +637,10 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+    resolvePhanAnhScope({
+      payload,
+      selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
+    });
 
     const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
     if ([PHAN_ANH_STATUS.DA_GIAI_QUYET, PHAN_ANH_STATUS.DONG, PHAN_ANH_STATUS.TU_CHOI].includes(lastStatus)) {

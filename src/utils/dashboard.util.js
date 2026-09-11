@@ -152,9 +152,7 @@ const resolveDashboardScope = ({
   idLinhVuc = "all",
 } = {}) => {
   const permissionList = Array.isArray(permissions) ? permissions : [];
-  const isFullAccess = ["PA_THUONG_TRUC", "RPT_GET_DETAIL"].some((permission) =>
-    permissionList.includes(permission),
-  );
+  const isFullAccess = permissionList.includes("PA_THUONG_TRUC");
   const assignedLinhVucIds = String(cate || "")
     .split(",")
     .map((id) => id.trim())

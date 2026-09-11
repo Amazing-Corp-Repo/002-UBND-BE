@@ -79,6 +79,12 @@ phanAnhRouter.get(
 );
 
 phanAnhRouter.get(
+  "/:maPhanAnh/for-mobile/lich-su-trang-thai",
+  validateParams(PhanAnhCodeParams),
+  PhanAnhController.getLichSuTrangThaiPhanAnhPublic,
+);
+
+phanAnhRouter.get(
   "/",
   authenticate,
   authorize([PERMISSION.PA_GET_ALL]),
@@ -88,6 +94,8 @@ phanAnhRouter.get(
 
 phanAnhRouter.get(
   "/:idPhanAnh/lich-su-trang-thai",
+  authenticate,
+  authorize([PERMISSION.PA_GET_DETAIL]),
   validateParams(PhanAnhIdParams),
   PhanAnhController.getLichSuTrangThaiPhanAnh,
 );

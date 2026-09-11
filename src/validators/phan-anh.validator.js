@@ -100,9 +100,6 @@ export const CreatePhanAnhRequest = Joi.object({
   moTaViTri: Joi.string().trim().max(COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH).optional().allow(null, "").messages({
     "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
-  userId: Joi.string().trim().uuid().optional().allow(null, "").messages({
-    "string.uuid": "userId must be a valid UUID",
-  }),
   idVideo: videoIdsSchema,
 });
 

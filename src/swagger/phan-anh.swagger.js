@@ -6,7 +6,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới (yêu cầu đăng nhập)",
       description:
-        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn. Phản ánh mức Khẩn cấp được lưu chờ duyệt (is_approve=false), không tự động duyệt.",
+        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Người tạo luôn lấy từ access token, không nhận userId từ client. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn. Phản ánh mức Khẩn cấp được lưu chờ duyệt (is_approve=false), không tự động duyệt.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -126,6 +126,23 @@ const PhanAnhSwagger = {
       responses: {},
     },
   },
+  "/api/phan-anh/{maPhanAnh}/for-mobile/lich-su-trang-thai": {
+    get: {
+      tags: ["PhanAnh"],
+      summary: "Công dân tra cứu lịch sử trạng thái bằng mã phản ánh",
+      description:
+        "Không cần đăng nhập. Chỉ trả trạng thái và thời gian công khai của phản ánh tương ứng với mã tra cứu.",
+      parameters: [
+        {
+          name: "maPhanAnh",
+          in: "path",
+          required: true,
+          schema: { type: "string", pattern: "^[A-Z0-9]{8}$" },
+        },
+      ],
+      responses: {},
+    },
+  },
   "/api/phan-anh/export-excel": {
     post: {
       tags: ["PhanAnh"],
@@ -160,6 +177,9 @@ const PhanAnhSwagger = {
     get: {
       tags: ["PhanAnh"],
       summary: "Lấy lịch sử trạng thái của phản ánh",
+      description:
+        "API nội bộ. Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC.",
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           name: "idPhanAnh",
@@ -215,6 +235,8 @@ const PhanAnhSwagger = {
     get: {
       tags: ["PhanAnh"],
       summary: "Lấy phản ánh theo ID sử dụng trên web",
+      description:
+        "Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
