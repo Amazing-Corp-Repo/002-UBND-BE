@@ -211,6 +211,10 @@ export const GetAllPhanAnhQuery = Joi.object({
   sortTime: Joi.string().valid("asc", "desc").optional(),
   sortBy: Joi.string().valid(...sortFields).optional(),
   sortOrder: Joi.string().valid("asc", "desc").optional(),
+  includePendingExtension: Joi.alternatives()
+    .try(Joi.boolean(), Joi.string().valid("true", "false"))
+    .optional()
+    .default(false),
 }).custom((value, helpers) => {
   if (Boolean(value.startDate) !== Boolean(value.endDate)) {
     return helpers.error("date.pair");

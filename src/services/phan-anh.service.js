@@ -222,6 +222,7 @@ const PhanAnhService = {
       sortTime,
       sortBy,
       sortOrder,
+      includePendingExtension: filters.includePendingExtension,
     });
 
     return {

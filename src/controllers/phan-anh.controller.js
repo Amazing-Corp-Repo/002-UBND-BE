@@ -59,6 +59,7 @@ const PhanAnhController = {
       sortTime,
       sortBy,
       sortOrder,
+      includePendingExtension,
     } = req.validatedQuery;
     const payload = req.payload;
     let { data, pagination } = await PhanAnhService.getAll(
@@ -72,7 +73,7 @@ const PhanAnhController = {
       payload,
       sortBy,
       sortOrder,
-      { idLinhVuc, startDate, endDate, khuPho, search },
+      { idLinhVuc, startDate, endDate, khuPho, search, includePendingExtension: includePendingExtension === true || includePendingExtension === "true" },
     );
     return successResponse(
       res,

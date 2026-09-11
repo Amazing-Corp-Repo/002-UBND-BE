@@ -294,6 +294,7 @@ const PhanAnhRepository = {
     sortTime,
     sortBy,
     sortOrder,
+    includePendingExtension = false,
   }) {
     const skip = (page - 1) * size;
     const SORT_COLUMNS = {
@@ -307,6 +308,14 @@ const PhanAnhRepository = {
     const orderDirection = (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
     const params = [];
     let whereSql = "WHERE (pa.is_approve = true OR pa.is_approve IS NULL)";
+
+    if (!includePendingExtension) {
+      whereSql += ` AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh extension_req
+        WHERE extension_req.id_phan_anh = pa.id
+        AND extension_req.trang_thai = 'PENDING'
+      )`;
+    }
 
     if (Array.isArray(scopedLinhVucIds)) {
       if (scopedLinhVucIds.length === 0) whereSql += " AND 1=0";
