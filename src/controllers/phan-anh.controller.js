@@ -160,6 +160,19 @@ const PhanAnhController = {
     );
   },
 
+  async updateMucDoPhanAnh(req, res) {
+    const { idPhanAnh } = req.validatedParams;
+    const { mucDo, lyDo } = req.body;
+    const currentUser = req.payload.userId;
+    const result = await PhanAnhService.updateMucDoPhanAnh(
+      idPhanAnh,
+      mucDo,
+      lyDo,
+      currentUser,
+    );
+    return successResponse(res, result, "Cập nhật mức độ phản ánh thành công");
+  },
+
   async getAssignableUsers(req, res) {
     const { idPhanAnh } = req.validatedParams;
     let result = await PhanAnhService.getAssignableUsers(idPhanAnh);

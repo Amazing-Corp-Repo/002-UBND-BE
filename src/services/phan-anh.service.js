@@ -82,7 +82,8 @@ const PhanAnhService = {
       mo_ta_vi_tri: moTaViTri || null,
       id_video: idVideo,
       id_video_giai_quyet: [],
-      is_approve: true,
+      // Phản ánh khẩn cấp phải được cán bộ xem xét, không tự động duyệt.
+      is_approve: mucDo !== PHAN_ANH_MUC_DO.KHAN_CAP,
     };
 
     if (userId != null && userId !== "") {
@@ -476,6 +477,47 @@ const PhanAnhService = {
     );
   },
 
+  async updateMucDoPhanAnh(idPhanAnh, mucDo, lyDo, currentUser) {
+    if (idPhanAnh === null || idPhanAnh === undefined) {
+      throw new BaseError(400, "ID phản ánh không được để trống");
+    }
+
+    mucDo = toDbPhanAnhMucDo(mucDo);
+    const phanAnh = await PhanAnhRepository.getById(idPhanAnh);
+    if (!phanAnh) {
+      throw new BaseError(400, "Phản ánh không tồn tại");
+    }
+
+    const lastStatus = phanAnh.lich_su_trang_thai[0]?.ten;
+    if ([PHAN_ANH_STATUS.DA_GIAI_QUYET, PHAN_ANH_STATUS.DONG, PHAN_ANH_STATUS.TU_CHOI].includes(lastStatus)) {
+      throw new BaseError(400, "Không thể đổi mức độ cho phản ánh đã kết thúc");
+    }
+    if (phanAnh.muc_do === mucDo) {
+      throw new BaseError(400, "Mức độ phản ánh mới phải khác mức độ hiện tại");
+    }
+
+    const existingUser = await UserRepository.findById(currentUser);
+    if (!existingUser) {
+      throw new BaseError(400, "Người dùng không tồn tại");
+    }
+
+    // Đổi mức độ không làm thay đổi is_approve: phản ánh khẩn cấp vẫn chỉ được
+    // duyệt bởi luồng phê duyệt riêng, tránh phát sinh phê duyệt ngầm.
+    return await PhanAnhRepository.updateMucDoWithHistory(
+      idPhanAnh,
+      {
+        muc_do: mucDo,
+        nguoi_cap_nhat: currentUser,
+        thoi_gian_cap_nhat: new Date().toISOString(),
+      },
+      {
+        ten: lastStatus || PHAN_ANH_STATUS.DA_GUI,
+        ghi_chu: `Đổi mức độ từ "${phanAnh.muc_do || "chưa xác định"}" sang "${mucDo}". Lý do: ${lyDo}`,
+        nguoi_tao: currentUser,
+      },
+    );
+  },
+
   async getAssignableUsers(idPhanAnh) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
@@ -722,7 +764,8 @@ const PhanAnhService = {
       id_video: idVideo,
       id_video_giai_quyet: [],
       ma_phan_anh: generateUniqueCode(),
-      is_approve: true,
+      // Phản ánh khẩn cấp công khai cũng phải chờ cán bộ duyệt.
+      is_approve: mucDo !== PHAN_ANH_MUC_DO.KHAN_CAP,
     };
 
     const attachments = (file || []).map((f) => ({

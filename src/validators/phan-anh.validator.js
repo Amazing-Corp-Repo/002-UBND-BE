@@ -132,6 +132,22 @@ export const UpdatePhanAnhLinhVucRequest = Joi.object({
   }),
 });
 
+export const UpdatePhanAnhMucDoRequest = Joi.object({
+  mucDo: Joi.string()
+    .trim()
+    .valid(...Object.values(PHAN_ANH_MUC_DO), "KHAN_CAP", "BINH_THUONG")
+    .required()
+    .messages({
+      "any.only": "Mức độ phải là Thông thường hoặc Khẩn cấp",
+      "any.required": "Mức độ là bắt buộc",
+    }),
+  lyDo: Joi.string().trim().max(1000).required().messages({
+    "string.empty": "Lý do đổi mức độ không được để trống",
+    "string.max": "Lý do đổi mức độ không được vượt quá 1000 ký tự",
+    "any.required": "Lý do đổi mức độ là bắt buộc",
+  }),
+});
+
 export const AssignPhanAnhRequest = Joi.object({
   idNguoiXuLy: Joi.string().trim().uuid().required().messages({
     "string.uuid": "idNguoiXuLy must be a valid UUID",

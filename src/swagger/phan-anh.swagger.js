@@ -6,7 +6,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới (yêu cầu đăng nhập)",
       description:
-        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
+        "Tạo phản ánh từ tài khoản có quyền PA_CREATE. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn. Phản ánh mức Khẩn cấp được lưu chờ duyệt (is_approve=false), không tự động duyệt.",
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -224,6 +224,38 @@ const PhanAnhSwagger = {
         },
       },
       responses: {},
+    },
+  },
+  "/api/phan-anh/update-muc-do/{idPhanAnh}": {
+    put: {
+      tags: ["PhanAnh"],
+      summary: "Đổi mức độ phản ánh",
+      description:
+        "Đổi giữa Thông thường và Khẩn cấp. Yêu cầu một trong hai permission PA_APPROVE hoặc PA_REJECT; lý do bắt buộc và được ghi vào lịch sử cập nhật. Thao tác này không tự động phê duyệt phản ánh.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "idPhanAnh",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+          description: "ID phản ánh cần đổi mức độ",
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: PhanAnhSchemas.UpdatePhanAnhMucDoRequest,
+          },
+        },
+      },
+      responses: {
+        200: { description: "Cập nhật mức độ phản ánh thành công" },
+        400: { description: "Dữ liệu không hợp lệ, phản ánh đã kết thúc hoặc mức độ không thay đổi" },
+        401: { description: "Chưa xác thực hoặc token hết hạn" },
+        403: { description: "Thiếu PA_APPROVE hoặc PA_REJECT" },
+      },
     },
   },
   "/api/phan-anh/update-linh-vuc/{idPhanAnh}": {
@@ -583,7 +615,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Tạo phản ánh mới từ công dân (không cần đăng nhập)",
       description:
-        "API công khai để người dân tạo phản ánh. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn.",
+        "API công khai để người dân tạo phản ánh. Khu phố và ít nhất một ảnh là bắt buộc; mô tả vị trí/mốc nhận diện không bắt buộc. Không nhận kinh độ/vĩ độ. Hỗ trợ tối đa 5 ảnh JPEG/PNG, mỗi ảnh tối đa 3 MB; video là tài liệu tùy chọn. Phản ánh mức Khẩn cấp được lưu chờ duyệt (is_approve=false), không tự động duyệt.",
       requestBody: {
         content: {
           "multipart/form-data": {

@@ -5,10 +5,14 @@ import {
   UpdatePhanAnhStatusRequest,
   CreatePhanAnhPublicRequest,
   UpdatePhanAnhLinhVucRequest,
+  UpdatePhanAnhMucDoRequest,
 } from "../validators/phan-anh.validator.js";
 
 const { swagger: UpdatePhanAnhLinhVucRequestSchema } = joiToSwagger(
   UpdatePhanAnhLinhVucRequest,
+);
+const { swagger: UpdatePhanAnhMucDoRequestSchema } = joiToSwagger(
+  UpdatePhanAnhMucDoRequest,
 );
 
 const PhanAnhSchemas = {
@@ -26,6 +30,7 @@ const PhanAnhSchemas = {
     allowNull: true,
   }),
   UpdatePhanAnhLinhVucRequest: UpdatePhanAnhLinhVucRequestSchema,
+  UpdatePhanAnhMucDoRequest: UpdatePhanAnhMucDoRequestSchema,
   CreatePhanAnhPublicRequest: addFileToJoiSchema(CreatePhanAnhPublicRequest, {
     fieldName: "file",
     maxCount: 5,

@@ -15,6 +15,7 @@ import {
   UpdatePhanAnhStatusRequest,
   CreatePhanAnhPublicRequest,
   UpdatePhanAnhLinhVucRequest,
+  UpdatePhanAnhMucDoRequest,
   AssignPhanAnhRequest,
   PhanAnhIdParams,
   PhanAnhCodeParams,
@@ -223,6 +224,16 @@ phanAnhRouter.put(
   validate(UpdatePhanAnhStatusRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,
+);
+
+phanAnhRouter.put(
+  "/update-muc-do/:idPhanAnh",
+  authenticate,
+  authorizeAny([PERMISSION.PA_APPROVE, PERMISSION.PA_REJECT]),
+  validateParams(PhanAnhIdParams),
+  validate(UpdatePhanAnhMucDoRequest),
+  audit_logs(AUDIT_LOGS.UPDATE, "Đổi mức độ phản ánh"),
+  PhanAnhController.updateMucDoPhanAnh,
 );
 
 phanAnhRouter.put(
