@@ -45,6 +45,7 @@
   "scripts": {
     "build": "npm run check && prisma generate",
     "check": "prisma validate",
+    "check:swagger": "node scripts/check-swagger-coverage.mjs",
     "test:dashboard": "node --test src/utils/dashboard.util.test.js src/utils/phan-anh-status.util.test.js",
     "dev": "node --watch --experimental-strip-types src/app.js",
     "start": "node --experimental-strip-types src/app.js",

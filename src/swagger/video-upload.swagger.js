@@ -4,6 +4,7 @@ const VideoUploadSwagger = {
     '/api/video/upload': {
         post: {
             tags: ['VideoUpload'],
+            summary: 'Tải video phản ánh',
             description: 'API for uploading videos related to citizen feedback',
             security: [ { bearerAuth: [] } ],
             requestBody: {
@@ -21,6 +22,7 @@ const VideoUploadSwagger = {
     '/api/video/{idVideo}': {
         get: {
             tags: ['VideoUpload'],
+            summary: 'Lấy thông tin video đã tải',
             description: 'API to get video upload details by ID',
             parameters: [
                 {
