@@ -111,6 +111,8 @@ const PhanAnhSwagger = {
     get: {
       tags: ["PhanAnh"],
       summary: "Lấy thông tin phản ánh theo mã phản ánh cho mobile",
+      description:
+        "Không cần đăng nhập. Lịch sử trả trạng thái và thời gian; chỉ sự kiện Đã gia hạn mới kèm ghi_chu là lý do gia hạn công khai.",
       parameters: [
         {
           name: "maPhanAnh",
@@ -131,7 +133,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Công dân tra cứu lịch sử trạng thái bằng mã phản ánh",
       description:
-        "Không cần đăng nhập. Chỉ trả trạng thái và thời gian công khai của phản ánh tương ứng với mã tra cứu.",
+        "Không cần đăng nhập. Trả trạng thái và thời gian công khai; chỉ sự kiện Đã gia hạn mới kèm ghi_chu là lý do gia hạn công khai.",
       parameters: [
         {
           name: "maPhanAnh",

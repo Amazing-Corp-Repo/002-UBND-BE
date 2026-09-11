@@ -251,6 +251,17 @@ const PhanAnhService = {
     if (!phanAnh) {
       throw new BaseError(400, "Phản ánh không tồn tại");
     }
+    phanAnh.lich_su_trang_thai = (phanAnh.lich_su_trang_thai || []).map(
+      ({ ten, thoi_gian_tao, ghi_chu }) => ({
+        ten,
+        thoi_gian_tao,
+        // Chỉ công khai lý do của sự kiện gia hạn; các ghi chú nghiệp vụ khác
+        // (phân công, chuyển lĩnh vực, xử lý...) vẫn thuộc luồng nội bộ.
+        ...(ten === PHAN_ANH_STATUS.DA_GIA_HAN && ghi_chu
+          ? { ghi_chu }
+          : {}),
+      }),
+    );
     return phanAnh;
   },
 

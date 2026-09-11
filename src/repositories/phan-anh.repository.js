@@ -138,6 +138,7 @@ const PhanAnhRepository = {
           select: {
             ten: true,
             thoi_gian_tao: true,
+            ghi_chu: true,
           },
         },
         dinh_kem_phan_anh: {
