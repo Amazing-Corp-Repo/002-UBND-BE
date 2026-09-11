@@ -568,6 +568,7 @@ const PhanAnhSwagger = {
     put: {
       tags: ["PhanAnhExtension"],
       summary: "Phê duyệt đề nghị gia hạn",
+      description: "Sự kiện Đã gia hạn trên Mobile luôn hiển thị ly_do_gia_han gốc của đề nghị. ghiChu, nếu có, là ghi chú phê duyệt nội bộ và không được trả trong lịch sử công khai.",
       security: [{ bearerAuth: [] }],
       parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
       requestBody: { content: { "application/json": { schema: { type: "object", properties: { ghiChu: { type: "string", maxLength: 2000 } } } } } },

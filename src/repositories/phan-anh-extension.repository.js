@@ -135,7 +135,9 @@ const PhanAnhExtensionRepository = {
         data: {
           id_phan_anh: extension.id_phan_anh,
           ten: "Đã gia hạn",
-          ghi_chu: ghiChu || "Đề nghị gia hạn đã được phê duyệt",
+          // Lịch sử này được công khai cho công dân theo mã phản ánh, nên phải
+          // lưu đúng lý do xin gia hạn thay vì ghi chú duyệt nội bộ.
+          ghi_chu: extension.ly_do_gia_han,
           nguoi_tao: userId,
         },
       });
