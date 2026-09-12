@@ -133,7 +133,6 @@ const PhanAnhRepository = {
       },
       include: {
         lich_su_trang_thai: {
-          where: { ten: { not: PHAN_ANH_STATUS.DA_GIA_HAN } },
           orderBy: {
             thoi_gian_tao: "desc",
           },
