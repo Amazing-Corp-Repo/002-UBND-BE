@@ -113,7 +113,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Lấy thông tin phản ánh theo mã phản ánh cho mobile",
       description:
-        "Không cần đăng nhập. Lịch sử chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối. Gia hạn được trả riêng trong thong_tin_gia_han, không phải trạng thái.",
+        "Không cần đăng nhập. Lịch sử chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối. Mốc gia hạn vẫn xuất hiện trong lịch sử bằng trạng thái gần nhất kèm ghi_chu Lý do gia hạn, không phải trạng thái thứ sáu.",
       parameters: [
         {
           name: "maPhanAnh",
@@ -134,7 +134,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Công dân tra cứu lịch sử trạng thái bằng mã phản ánh",
       description:
-        "Không cần đăng nhập. Chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối; không trả sự kiện Đã gia hạn trong lịch sử trạng thái.",
+        "Không cần đăng nhập. Chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối; mốc gia hạn được hiển thị bằng trạng thái gần nhất kèm Lý do gia hạn.",
       parameters: [
         {
           name: "maPhanAnh",
@@ -239,7 +239,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Lấy phản ánh theo ID sử dụng trên web",
       description:
-        "Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC. Lịch sử chỉ trả 5 trạng thái vòng đời; sự kiện Đã gia hạn không được trả như một trạng thái.",
+        "Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC. Lịch sử chỉ trả 5 trạng thái vòng đời; mốc gia hạn vẫn được trả bằng trạng thái gần nhất kèm Lý do gia hạn.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {

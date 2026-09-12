@@ -32,6 +32,29 @@ const getPhanAnhLifecycleHistory = (history = []) => (
   Array.isArray(history) ? history.filter((item) => isPhanAnhLifecycleStatus(item?.ten)) : []
 );
 
+// Lịch sử DB vẫn giữ event "Đã gia hạn" để audit. Khi hiển thị, event này
+// trở thành một mốc cập nhật với trạng thái vòng đời liền trước, để timeline
+// có đầy đủ lịch sử nhưng không phát sinh trạng thái thứ sáu.
+const getPhanAnhDisplayHistory = (history = []) => {
+  if (!Array.isArray(history)) return [];
+  return history.flatMap((item, index) => {
+    if (isPhanAnhLifecycleStatus(item?.ten)) return [item];
+    if (item?.ten !== PHAN_ANH_STATUS.DA_GIA_HAN) return [];
+
+    const previousLifecycleStatus = history
+      .slice(index + 1)
+      .find((entry) => isPhanAnhLifecycleStatus(entry?.ten));
+    if (!previousLifecycleStatus) return [];
+
+    return [{
+      ...item,
+      ten: previousLifecycleStatus.ten,
+      ghi_chu: item.ghi_chu ? `Lý do gia hạn: ${item.ghi_chu}` : "Cập nhật hạn xử lý",
+      is_gia_han: true,
+    }];
+  });
+};
+
 const getLatestPhanAnhLifecycleHistory = (history = []) => getPhanAnhLifecycleHistory(history)
   .reduce((latest, item) => (
     !latest || new Date(item.thoi_gian_tao) > new Date(latest.thoi_gian_tao) ? item : latest
@@ -52,6 +75,7 @@ const toApiPhanAnhMucDo = (value) => {
 export {
   API_TO_DB_STATUS,
   getLatestPhanAnhLifecycleHistory,
+  getPhanAnhDisplayHistory,
   getPhanAnhLifecycleHistory,
   isPhanAnhLifecycleStatus,
   toApiPhanAnhMucDo,

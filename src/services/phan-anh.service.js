@@ -32,6 +32,7 @@ import {
   toDbPhanAnhMucDo,
   toDbPhanAnhStatus,
   getLatestPhanAnhLifecycleHistory,
+  getPhanAnhDisplayHistory,
   getPhanAnhLifecycleHistory,
 } from "../utils/phan-anh-status.util.js";
 
@@ -256,8 +257,12 @@ const PhanAnhService = {
     // Không công khai event "Đã gia hạn" trong danh sách trạng thái. Thông tin
     // gia hạn vẫn được trả riêng để UI có thể hiển thị hạn/lý do, không biến nó
     // thành trạng thái thứ sáu.
-    phanAnh.lich_su_trang_thai = getPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai)
-      .map(({ ten, thoi_gian_tao }) => ({ ten, thoi_gian_tao }));
+    phanAnh.lich_su_trang_thai = getPhanAnhDisplayHistory(phanAnh.lich_su_trang_thai)
+      .map(({ ten, thoi_gian_tao, ghi_chu, is_gia_han }) => ({
+        ten,
+        thoi_gian_tao,
+        ...(is_gia_han ? { ghi_chu } : {}),
+      }));
     phanAnh.thong_tin_gia_han = latestApprovedExtension
       ? {
           han_xu_ly_moi: phanAnh.ngay_du_kien_hoan_thanh,
@@ -401,7 +406,7 @@ const PhanAnhService = {
       payload,
       selectedLinhVuc: phanAnh.id_linh_vuc_phan_anh,
     });
-    return getPhanAnhLifecycleHistory(await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh));
+    return getPhanAnhDisplayHistory(await PhanAnhRepository.getLichSuTrangThaiPhanAnh(idPhanAnh));
   },
 
   async getPhanAnhByUserId(userId, sortTime) {
@@ -452,9 +457,9 @@ const PhanAnhService = {
     }
     delete phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
 
-    // API chi tiết Web cũng chỉ trả trạng thái vòng đời. "Đã gia hạn" được
-    // lưu để audit nội bộ nhưng không được trở thành badge/timeline status.
-    phanAnh.lich_su_trang_thai = getPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai);
+    // API chi tiết Web trả mốc cập nhật gia hạn bằng trạng thái vòng đời gần
+    // nhất và lý do gia hạn; tuyệt đối không trả nhãn "Đã gia hạn".
+    phanAnh.lich_su_trang_thai = getPhanAnhDisplayHistory(phanAnh.lich_su_trang_thai);
 
     return phanAnh;
   },

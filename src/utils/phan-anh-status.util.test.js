@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import PHAN_ANH_STATUS, { PHAN_ANH_LIFECYCLE_STATUS } from "../constants/phan-anh-status.constant.js";
 import {
   getLatestPhanAnhLifecycleHistory,
+  getPhanAnhDisplayHistory,
   getPhanAnhLifecycleHistory,
   toApiPhanAnhMucDo,
   toApiPhanAnhStatus,
@@ -31,6 +32,18 @@ test("uses the latest lifecycle status when extension is the newest audit event"
 
   assert.deepEqual(getPhanAnhLifecycleHistory(history).map((item) => item.ten), ["Đang xử lý", "Đã gửi"]);
   assert.equal(getLatestPhanAnhLifecycleHistory(history)?.ten, PHAN_ANH_STATUS.DANG_XU_LY);
+});
+
+test("keeps an extension update visible without exposing a sixth status", () => {
+  const history = [
+    { ten: PHAN_ANH_STATUS.DA_GIA_HAN, ghi_chu: "Cần thêm thời gian phối hợp", thoi_gian_tao: "2026-09-12T03:00:00.000Z" },
+    { ten: PHAN_ANH_STATUS.DANG_XU_LY, thoi_gian_tao: "2026-09-12T02:00:00.000Z" },
+  ];
+  const displayed = getPhanAnhDisplayHistory(history);
+
+  assert.equal(displayed[0].ten, PHAN_ANH_STATUS.DANG_XU_LY);
+  assert.equal(displayed[0].ghi_chu, "Lý do gia hạn: Cần thêm thời gian phối hợp");
+  assert.ok(displayed[0].is_gia_han);
 });
 
 test("maps severity codes without changing the legacy stored values", () => {
