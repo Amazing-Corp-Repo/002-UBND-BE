@@ -20,6 +20,31 @@ const extensionInclude = {
   de_nghi_gia_han_file: true,
 };
 
+const buildExtensionWhere = ({ status, search, mucDo, idLinhVuc, scopedLinhVucIds }) => {
+  const complaintFilters = [
+    ...(Array.isArray(scopedLinhVucIds)
+      ? [{ id_linh_vuc_phan_anh: { in: scopedLinhVucIds } }]
+      : []),
+    ...(idLinhVuc ? [{ id_linh_vuc_phan_anh: idLinhVuc }] : []),
+    ...(mucDo ? [{ muc_do: mucDo }] : []),
+  ];
+
+  return {
+    ...(status !== "ALL" ? { trang_thai: status } : {}),
+    ...(complaintFilters.length > 0 ? { phan_anh: { is: { AND: complaintFilters } } } : {}),
+    ...(search
+      ? {
+          OR: [
+            { ly_do_gia_han: { contains: search, mode: "insensitive" } },
+            { phan_anh: { is: { ma_phan_anh: { contains: search, mode: "insensitive" } } } },
+            { phan_anh: { is: { tieu_de: { contains: search, mode: "insensitive" } } } },
+            { nguoi_de_nghi: { is: { ho_va_ten: { contains: search, mode: "insensitive" } } } },
+          ],
+        }
+      : {}),
+  };
+};
+
 const PhanAnhExtensionRepository = {
   async findComplaintById(idPhanAnh) {
     return prisma.phan_anh.findUnique({
@@ -67,27 +92,7 @@ const PhanAnhExtensionRepository = {
 
   async getList({ status, page, size, search, mucDo, idLinhVuc, scopedLinhVucIds }) {
     const skip = (page - 1) * size;
-    const complaintFilters = [
-      ...(Array.isArray(scopedLinhVucIds)
-        ? [{ id_linh_vuc_phan_anh: { in: scopedLinhVucIds } }]
-        : []),
-      ...(idLinhVuc ? [{ id_linh_vuc_phan_anh: idLinhVuc }] : []),
-      ...(mucDo ? [{ muc_do: mucDo }] : []),
-    ];
-    const where = {
-      ...(status !== "ALL" ? { trang_thai: status } : {}),
-      ...(complaintFilters.length > 0 ? { phan_anh: { is: { AND: complaintFilters } } } : {}),
-      ...(search
-        ? {
-            OR: [
-              { ly_do_gia_han: { contains: search, mode: "insensitive" } },
-              { phan_anh: { is: { ma_phan_anh: { contains: search, mode: "insensitive" } } } },
-              { phan_anh: { is: { tieu_de: { contains: search, mode: "insensitive" } } } },
-              { nguoi_de_nghi: { is: { ho_va_ten: { contains: search, mode: "insensitive" } } } },
-            ],
-          }
-        : {}),
-    };
+    const where = buildExtensionWhere({ status, search, mucDo, idLinhVuc, scopedLinhVucIds });
     const [data, totalItems] = await prisma.$transaction([
       prisma.de_nghi_gia_han_phan_anh.findMany({
         where,
@@ -99,6 +104,14 @@ const PhanAnhExtensionRepository = {
       prisma.de_nghi_gia_han_phan_anh.count({ where }),
     ]);
     return { data, totalItems };
+  },
+
+  async getAllForExport({ status, search, mucDo, idLinhVuc, scopedLinhVucIds }) {
+    return prisma.de_nghi_gia_han_phan_anh.findMany({
+      where: buildExtensionWhere({ status, search, mucDo, idLinhVuc, scopedLinhVucIds }),
+      include: extensionInclude,
+      orderBy: { thoi_gian_tao: "desc" },
+    });
   },
 
   async getById(id) {
