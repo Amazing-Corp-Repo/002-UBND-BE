@@ -3,7 +3,7 @@ import { createPagination } from "../utils/response.util.js";
 import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 import { PERMISSION } from "../constants/permission.constant.js";
-import { toDbPhanAnhMucDo, toApiPhanAnhMucDo, toApiPhanAnhStatus } from "../utils/phan-anh-status.util.js";
+import { getLatestPhanAnhLifecycleHistory, toDbPhanAnhMucDo, toApiPhanAnhMucDo, toApiPhanAnhStatus } from "../utils/phan-anh-status.util.js";
 import PhanAnhExtensionRepository from "../repositories/phan-anh-extension.repository.js";
 import NotificationRepository from "../repositories/notification.repository.js";
 import UserRepository from "../repositories/user.repository.js";
@@ -30,7 +30,7 @@ const mapExtension = (extension) => {
     khu_pho: complaint?.khu_pho || null,
     muc_do: toApiPhanAnhMucDo(complaint?.muc_do),
     linh_vuc: complaint?.linh_vuc_phan_anh || null,
-    trang_thai_phan_anh: toApiPhanAnhStatus(complaint?.lich_su_trang_thai?.[0]?.ten),
+    trang_thai_phan_anh: toApiPhanAnhStatus(getLatestPhanAnhLifecycleHistory(complaint?.lich_su_trang_thai)?.ten),
     nguoi_de_nghi: extension.nguoi_de_nghi || null,
     nguoi_duyet: extension.nguoi_duyet || null,
     han_ban_dau: extension.han_ban_dau,
@@ -71,7 +71,7 @@ const PhanAnhExtensionService = {
       throw new BaseError(400, "Phản ánh chưa có thời hạn xử lý để gia hạn");
     }
 
-    const latestStatus = complaint.lich_su_trang_thai[0]?.ten;
+    const latestStatus = getLatestPhanAnhLifecycleHistory(complaint.lich_su_trang_thai)?.ten;
     if ([PHAN_ANH_STATUS.DA_GIAI_QUYET, PHAN_ANH_STATUS.DONG, PHAN_ANH_STATUS.TU_CHOI].includes(latestStatus)) {
       throw new BaseError(400, "Không thể gia hạn phản ánh đã kết thúc");
     }

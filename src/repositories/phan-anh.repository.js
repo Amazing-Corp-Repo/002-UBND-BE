@@ -1,5 +1,6 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
 import {
   getDatePartsInVietnam,
@@ -132,6 +133,7 @@ const PhanAnhRepository = {
       },
       include: {
         lich_su_trang_thai: {
+          where: { ten: { not: PHAN_ANH_STATUS.DA_GIA_HAN } },
           orderBy: {
             thoi_gian_tao: "desc",
           },
@@ -147,6 +149,14 @@ const PhanAnhRepository = {
         linh_vuc_phan_anh: {
           select: {
             ten: true,
+          },
+        },
+        de_nghi_gia_han_phan_anh: {
+          where: { trang_thai: PHAN_ANH_EXTENSION_STATUS.APPROVED },
+          orderBy: { thoi_gian_duyet: "desc" },
+          select: {
+            ly_do_gia_han: true,
+            thoi_gian_duyet: true,
           },
         },
       },
@@ -182,7 +192,12 @@ const PhanAnhRepository = {
       (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
-    let whereSql = `WHERE 1=1 AND (pa.is_approve = true OR pa.is_approve IS NULL)`;
+    let whereSql = `WHERE 1=1
+      AND (pa.is_approve = true OR pa.is_approve IS NULL)
+      AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
+        WHERE dngh.id_phan_anh = pa.id
+      )`;
 
     if (idLinhVucPhanAnh) {
       params.push(idLinhVucPhanAnh);
@@ -217,6 +232,7 @@ const PhanAnhRepository = {
             SELECT DISTINCT ON (id_phan_anh)
                 id_phan_anh, ten, thoi_gian_tao
             FROM lich_su_trang_thai
+            WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
             ORDER BY id_phan_anh, thoi_gian_tao DESC
         ) lst ON lst.id_phan_anh = pa.id
         ${whereSql}
@@ -241,6 +257,7 @@ const PhanAnhRepository = {
             SELECT DISTINCT ON (id_phan_anh)
                 id_phan_anh, ten, thoi_gian_tao
             FROM lich_su_trang_thai
+            WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
             ORDER BY id_phan_anh, thoi_gian_tao DESC
         ) lst ON lst.id_phan_anh = pa.id
         ${whereSql};
@@ -308,7 +325,11 @@ const PhanAnhRepository = {
     const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
     const orderDirection = (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
     const params = [];
-    let whereSql = "WHERE (pa.is_approve = true OR pa.is_approve IS NULL)";
+    let whereSql = `WHERE (pa.is_approve = true OR pa.is_approve IS NULL)
+      AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
+        WHERE dngh.id_phan_anh = pa.id
+      )`;
 
     if (!includePendingExtension) {
       whereSql += ` AND NOT EXISTS (
@@ -358,6 +379,7 @@ const PhanAnhRepository = {
       JOIN (
         SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
         FROM lich_su_trang_thai
+        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
         ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id`;
     const countParams = [...params];
@@ -437,6 +459,7 @@ const PhanAnhRepository = {
       JOIN (
         SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
         FROM lich_su_trang_thai
+        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
         ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id`;
     const orderDirection = sortTime === "asc" ? "ASC" : "DESC";
@@ -602,7 +625,8 @@ const PhanAnhRepository = {
         }),
       ]);
 
-    const getLatestStatus = (item) => item.lich_su_trang_thai[0] || null;
+    const getLatestStatus = (item) => item.lich_su_trang_thai
+      .find((entry) => entry.ten !== PHAN_ANH_STATUS.DA_GIA_HAN) || null;
     const isResolved = (item) => getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET;
     const isClosed = (item) => getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DONG;
     const isOpen = (item) => !isResolved(item) && !isClosed(item);
@@ -784,6 +808,7 @@ const PhanAnhRepository = {
         },
         thoi_gian_tao: true,
         lich_su_trang_thai: {
+          where: { ten: { not: PHAN_ANH_STATUS.DA_GIA_HAN } },
           orderBy: {
             thoi_gian_tao: "desc",
           },
@@ -823,7 +848,11 @@ const PhanAnhRepository = {
       (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
-    let whereSql = `WHERE 1=1`;
+    let whereSql = `WHERE 1=1
+      AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
+        WHERE dngh.id_phan_anh = pa.id
+      )`;
 
     if (idLinhVucPhanAnh) {
       params.push(idLinhVucPhanAnh);
@@ -859,6 +888,7 @@ const PhanAnhRepository = {
           SELECT DISTINCT ON (id_phan_anh)
               id_phan_anh, ten, thoi_gian_tao
           FROM lich_su_trang_thai
+          WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
           ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id
       ${whereSql}
@@ -879,6 +909,7 @@ const PhanAnhRepository = {
           SELECT DISTINCT ON (id_phan_anh)
               id_phan_anh, ten, thoi_gian_tao
           FROM lich_su_trang_thai
+          WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
           ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id
       ${whereSql};
