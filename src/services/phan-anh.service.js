@@ -452,6 +452,10 @@ const PhanAnhService = {
     }
     delete phanAnh.nguoi_dung_phan_anh_nguoi_taoTonguoi_dung;
 
+    // API chi tiết Web cũng chỉ trả trạng thái vòng đời. "Đã gia hạn" được
+    // lưu để audit nội bộ nhưng không được trở thành badge/timeline status.
+    phanAnh.lich_su_trang_thai = getPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai);
+
     return phanAnh;
   },
 

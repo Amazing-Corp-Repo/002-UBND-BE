@@ -239,7 +239,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Lấy phản ánh theo ID sử dụng trên web",
       description:
-        "Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC.",
+        "Yêu cầu PA_GET_DETAIL và chỉ truy cập phản ánh thuộc cate của token, trừ PA_THUONG_TRUC. Lịch sử chỉ trả 5 trạng thái vòng đời; sự kiện Đã gia hạn không được trả như một trạng thái.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
