@@ -192,7 +192,6 @@ const PhanAnhRepository = {
 
     const params = [];
     let whereSql = `WHERE 1=1
-      AND (pa.is_approve = true OR pa.is_approve IS NULL)
       AND NOT EXISTS (
         SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
         WHERE dngh.id_phan_anh = pa.id
@@ -299,6 +298,7 @@ const PhanAnhRepository = {
   async getAllScoped({
     idLinhVucPhanAnh,
     trangThai,
+    slaStatus,
     mucDo,
     maPhanAnh,
     search,
@@ -324,13 +324,15 @@ const PhanAnhRepository = {
     const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
     const orderDirection = (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
     const params = [];
-    let whereSql = `WHERE (pa.is_approve = true OR pa.is_approve IS NULL)
+    let whereSql = `WHERE 1=1
       AND NOT EXISTS (
         SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
         WHERE dngh.id_phan_anh = pa.id
       )`;
 
-    if (!includePendingExtension) {
+    const normalizedSla = (slaStatus || "").toUpperCase();
+
+    if (!includePendingExtension && normalizedSla !== "PENDING_EXTENSION" && normalizedSla !== "CHO_GIA_HAN" && normalizedSla !== "CHỜ GIA HẠN") {
       whereSql += ` AND NOT EXISTS (
         SELECT 1 FROM de_nghi_gia_han_phan_anh extension_req
         WHERE extension_req.id_phan_anh = pa.id
@@ -374,6 +376,22 @@ const PhanAnhRepository = {
       whereSql += ` AND (pa.ma_phan_anh ILIKE $${params.length} OR pa.tieu_de ILIKE $${params.length} OR pa.ten_nguoi_phan_anh ILIKE $${params.length} OR pa.sdt_nguoi_phan_anh ILIKE $${params.length})`;
     }
 
+    if (normalizedSla) {
+      if (normalizedSla === "OVERDUE" || normalizedSla === "QUA_HAN" || normalizedSla === "QUÁ HẠN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL)) OR pa.muc_do ILIKE '%khẩn%')`;
+      } else if (normalizedSla === "NEAR_DUE" || normalizedSla === "SAP_DEN_HAN" || normalizedSla === "SẮP ĐẾN HẠN") {
+        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%')`;
+      } else if (normalizedSla === "ON_TIME" || normalizedSla === "CON_HAN" || normalizedSla === "CÒN HẠN" || normalizedSla === "DUNG_HAN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%') OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
+      } else if (normalizedSla === "PENDING_EXTENSION" || normalizedSla === "CHO_GIA_HAN" || normalizedSla === "CHỜ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'PENDING')`;
+      } else if (normalizedSla === "EXTENDED" || normalizedSla === "DA_GIA_HAN" || normalizedSla === "ĐÃ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'APPROVED')`;
+      } else if (normalizedSla === "REJECTED_EXTENSION" || normalizedSla === "TU_CHOI_GIA_HAN" || normalizedSla === "TỪ CHỐI GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'REJECTED')`;
+      }
+    }
+
     const joinLatestStatus = `
       JOIN (
         SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
@@ -390,11 +408,21 @@ const PhanAnhRepository = {
       ...params,
     );
     const ids = rows.map((row) => row.id);
-    if (ids.length === 0) return { data: [], totalItems: 0 };
-    const total = await prisma.$queryRawUnsafe(
-      `SELECT COUNT(*)::int AS count FROM phan_anh pa ${joinLatestStatus} ${whereSql}`,
+    const statRows = await prisma.$queryRawUnsafe(
+      `SELECT 
+        COUNT(*)::int AS total,
+        COUNT(CASE WHEN lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') THEN 1 END)::int AS resolved,
+        COUNT(CASE WHEN lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL THEN 1 END)::int AS processing,
+        COUNT(CASE WHEN (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL)) OR pa.muc_do ILIKE '%khẩn%' THEN 1 END)::int AS overdue
+       FROM phan_anh pa ${joinLatestStatus} ${whereSql}`,
       ...countParams,
     );
+    const stats = statRows[0] || { total: 0, resolved: 0, processing: 0, overdue: 0 };
+
+    if (ids.length === 0) {
+      return { data: [], totalItems: stats.total || 0, stats };
+    }
+
     const data = await prisma.phan_anh.findMany({
       where: { id: { in: ids } },
       include: {
@@ -405,12 +433,13 @@ const PhanAnhRepository = {
     });
     const idOrder = new Map(ids.map((id, index) => [id, index]));
     data.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
-    return { data, totalItems: total[0].count };
+    return { data, totalItems: stats.total, stats };
   },
 
   async getAllForExcelExport({
     idLinhVucPhanAnh,
     trangThai,
+    slaStatus,
     mucDo,
     search,
     khuPho,
@@ -420,7 +449,9 @@ const PhanAnhRepository = {
     sortTime,
   }) {
     const params = [];
-    let whereSql = "WHERE (pa.is_approve = true OR pa.is_approve IS NULL)";
+    let whereSql = "WHERE 1=1";
+
+    const normalizedSla = (slaStatus || "").toUpperCase();
 
     if (Array.isArray(scopedLinhVucIds)) {
       if (scopedLinhVucIds.length === 0) whereSql += " AND 1=0";
@@ -452,6 +483,22 @@ const PhanAnhRepository = {
     if (search) {
       params.push(`%${search}%`);
       whereSql += ` AND (pa.ma_phan_anh ILIKE $${params.length} OR pa.tieu_de ILIKE $${params.length} OR pa.ten_nguoi_phan_anh ILIKE $${params.length} OR pa.sdt_nguoi_phan_anh ILIKE $${params.length})`;
+    }
+
+    if (normalizedSla) {
+      if (normalizedSla === "OVERDUE" || normalizedSla === "QUA_HAN" || normalizedSla === "QUÁ HẠN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL)) OR pa.muc_do ILIKE '%khẩn%')`;
+      } else if (normalizedSla === "NEAR_DUE" || normalizedSla === "SAP_DEN_HAN" || normalizedSla === "SẮP ĐẾN HẠN") {
+        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%')`;
+      } else if (normalizedSla === "ON_TIME" || normalizedSla === "CON_HAN" || normalizedSla === "CÒN HẠN" || normalizedSla === "DUNG_HAN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%') OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
+      } else if (normalizedSla === "PENDING_EXTENSION" || normalizedSla === "CHO_GIA_HAN" || normalizedSla === "CHỜ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'PENDING')`;
+      } else if (normalizedSla === "EXTENDED" || normalizedSla === "DA_GIA_HAN" || normalizedSla === "ĐÃ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'APPROVED')`;
+      } else if (normalizedSla === "REJECTED_EXTENSION" || normalizedSla === "TU_CHOI_GIA_HAN" || normalizedSla === "TỪ CHỐI GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'REJECTED')`;
+      }
     }
 
     const joinLatestStatus = `
@@ -550,6 +597,25 @@ const PhanAnhRepository = {
         },
       });
 
+      // Lấy thoi_gian_tao lớn nhất trong lịch sử hiện tại của phản ánh này để đảm bảo trạng thái mới luôn là mới nhất
+      const latestHistory = await tx.lich_su_trang_thai.findFirst({
+        where: { id_phan_anh: idPhanAnh },
+        orderBy: { thoi_gian_tao: "desc" },
+        select: { thoi_gian_tao: true },
+      });
+
+      const now = new Date();
+      let statusTime = now;
+      if (
+        latestHistory &&
+        latestHistory.thoi_gian_tao &&
+        new Date(latestHistory.thoi_gian_tao).getTime() >= now.getTime()
+      ) {
+        statusTime = new Date(
+          new Date(latestHistory.thoi_gian_tao).getTime() + 1000,
+        );
+      }
+
       // Tạo bản ghi lịch sử trạng thái
       await tx.lich_su_trang_thai.create({
         data: {
@@ -557,6 +623,7 @@ const PhanAnhRepository = {
           ten: historyData.ten,
           ghi_chu: historyData.ghi_chu,
           nguoi_tao: historyData.nguoi_tao,
+          thoi_gian_tao: statusTime,
         },
       });
 
@@ -577,10 +644,14 @@ const PhanAnhRepository = {
     effectiveLinhVucIds,
   } = {}) {
     const buildWhere = (period) => ({
-      thoi_gian_tao: {
-        gte: period.start,
-        lte: period.end,
-      },
+      ...(period && (period.start || period.end)
+        ? {
+            thoi_gian_tao: {
+              ...(period.start ? { gte: period.start } : {}),
+              ...(period.end ? { lte: period.end } : {}),
+            },
+          }
+        : {}),
       ...(khuPho && khuPho !== "all" ? { khu_pho: khuPho } : {}),
       ...(Array.isArray(effectiveLinhVucIds)
         ? { id_linh_vuc_phan_anh: { in: effectiveLinhVucIds } }
@@ -594,6 +665,7 @@ const PhanAnhRepository = {
       id_linh_vuc_phan_anh: true,
       thoi_gian_tao: true,
       ngay_du_kien_hoan_thanh: true,
+      sdt_nguoi_phan_anh: true,
       linh_vuc_phan_anh: { select: { ten: true } },
       lich_su_trang_thai: {
         orderBy: { thoi_gian_tao: "desc" },
@@ -602,27 +674,47 @@ const PhanAnhRepository = {
       },
     };
 
-    const [currentItems, previousItems, todayItems, totalCitizens, currentCitizens, previousCitizens] =
-      await Promise.all([
-        prisma.phan_anh.findMany({ where: buildWhere(currentPeriod), select }),
-        prisma.phan_anh.findMany({ where: buildWhere(previousPeriod), select }),
-        prisma.phan_anh.findMany({ where: buildWhere(todayPeriod), select }),
-        prisma.nguoi_dung.count({ where: { is_active: true, is_delete: false } }),
-        prisma.nguoi_dung.count({
-          where: {
-            is_active: true,
-            is_delete: false,
-            thoi_gian_tao: { gte: currentPeriod.start, lte: currentPeriod.end },
-          },
-        }),
-        prisma.nguoi_dung.count({
-          where: {
-            is_active: true,
-            is_delete: false,
-            thoi_gian_tao: { gte: previousPeriod.start, lte: previousPeriod.end },
-          },
-        }),
-      ]);
+    const buildAccumulatedWhere = (maxDate) => ({
+      ...(maxDate ? { thoi_gian_tao: { lte: maxDate } } : {}),
+      ...(khuPho && khuPho !== "all" ? { khu_pho: khuPho } : {}),
+      ...(Array.isArray(effectiveLinhVucIds)
+        ? { id_linh_vuc_phan_anh: { in: effectiveLinhVucIds } }
+        : {}),
+    });
+
+    const [
+      currentItems,
+      previousItems,
+      todayItems,
+      totalAllPhanAnh,
+      previousAllPhanAnh,
+      totalCitizensGroup,
+    ] = await Promise.all([
+      prisma.phan_anh.findMany({ where: buildWhere(currentPeriod), select }),
+      prisma.phan_anh.findMany({ where: buildWhere(previousPeriod), select }),
+      prisma.phan_anh.findMany({ where: buildWhere(todayPeriod), select }),
+      prisma.phan_anh.count({ where: buildAccumulatedWhere(currentPeriod?.end) }),
+      prisma.phan_anh.count({ where: buildAccumulatedWhere(previousPeriod?.end) }),
+      prisma.phan_anh.groupBy({
+        by: ["sdt_nguoi_phan_anh"],
+        where: {
+          ...buildWhere(null),
+          sdt_nguoi_phan_anh: { not: null, notIn: [""] },
+        },
+      }),
+    ]);
+
+    const totalCitizens = totalCitizensGroup.length;
+    const currentCitizens = new Set(
+      currentItems
+        .map((i) => i.sdt_nguoi_phan_anh)
+        .filter((phone) => Boolean(phone && phone.trim()))
+    ).size;
+    const previousCitizens = new Set(
+      previousItems
+        .map((i) => i.sdt_nguoi_phan_anh)
+        .filter((phone) => Boolean(phone && phone.trim()))
+    ).size;
 
     const getLatestStatus = (item) => item.lich_su_trang_thai
       .find((entry) => entry.ten !== PHAN_ANH_STATUS.DA_GIA_HAN) || null;
@@ -673,9 +765,10 @@ const PhanAnhRepository = {
     });
     const thongKeTheoKhuPho = [...khuPhoMap.values()].map(({ name, count }) => ({ name, count }));
     const topKhuPho = [...khuPhoMap.values()]
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => a.count - b.count || (b.count ? b.resolved / b.count : 0) - (a.count ? a.resolved / a.count : 0))
       .slice(0, 5)
-      .map((item) => ({
+      .map((item, index) => ({
+        rank: index + 1,
         name: item.name,
         total: item.count,
         resolved: item.resolved,
@@ -688,22 +781,54 @@ const PhanAnhRepository = {
       linhVucMap.set(name, (linhVucMap.get(name) || 0) + 1);
     });
     const colors = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
-    const thongKeTheoLinhVuc = [...linhVucMap.entries()].map(([name, count], index) => ({
-      name,
-      count,
-      percent: currentItems.length ? Number(((count / currentItems.length) * 100).toFixed(1)) : 0,
-      color: colors[index % colors.length],
-    }));
+    const thongKeTheoLinhVuc = [...linhVucMap.entries()]
+      .map(([name, count]) => ({
+        name,
+        count,
+        percent: currentItems.length ? Number(((count / currentItems.length) * 100).toFixed(1)) : 0,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .map((item, index) => ({
+        ...item,
+        color: colors[index % colors.length],
+      }));
 
     const trendMap = new Map();
+    const nowForTrend = new Date();
     currentItems.forEach((item) => {
       if (!item.thoi_gian_tao) return;
       const dateParts = getDatePartsInVietnam(new Date(item.thoi_gian_tao));
+      const key = `${dateParts.year}-${String(dateParts.month).padStart(2, "0")}-${String(dateParts.day).padStart(2, "0")}`;
       const date = `${String(dateParts.day).padStart(2, "0")}/${String(dateParts.month).padStart(2, "0")}`;
-      const entry = trendMap.get(date) || { date, tongPhanAnh: 0, daGiaiQuyet: 0 };
+
+      const latestStatus = getLatestStatus(item);
+      const completedAt = isResolved(item) && latestStatus?.thoi_gian_tao
+        ? latestStatus.thoi_gian_tao
+        : null;
+      const classification = getSlaClassification({
+        createdAt: item.thoi_gian_tao,
+        deadline: item.ngay_du_kien_hoan_thanh,
+        completedAt,
+        now: nowForTrend,
+      });
+
+      const entry = trendMap.get(key) || {
+        key,
+        date,
+        tongPhanAnh: 0,
+        hoanThanh: 0,
+        daGiaiQuyet: 0,
+        quaHan: 0,
+      };
       entry.tongPhanAnh += 1;
-      if (isResolved(item)) entry.daGiaiQuyet += 1;
-      trendMap.set(date, entry);
+      if (isResolved(item)) {
+        entry.hoanThanh += 1;
+        entry.daGiaiQuyet += 1;
+      }
+      if (classification === "overdue") {
+        entry.quaHan += 1;
+      }
+      trendMap.set(key, entry);
     });
 
     let nhat_ky_hoat_dong = await prisma.audit_logs.findMany({
@@ -727,6 +852,8 @@ const PhanAnhRepository = {
 
     return {
       tong_so: currentItems.length,
+      tong_tat_ca: totalAllPhanAnh,
+      previous_tong_tat_ca: previousAllPhanAnh,
       previous_tong_so: previousItems.length,
       tong_hom_nay: todayItems.length,
       tong_nguoi_dan: totalCitizens,
@@ -745,10 +872,12 @@ const PhanAnhRepository = {
       thong_ke_theo_trang_thai: currentStatus,
       thong_ke_theo_khu_pho: thongKeTheoKhuPho,
       top_khu_pho: topKhuPho,
-      ty_le_xu_ly_theo_khu_pho: topKhuPho.map((item) => ({
-        name: item.name,
-        rate: Number.parseFloat(item.rate),
-      })),
+      ty_le_xu_ly_theo_khu_pho: [...khuPhoMap.values()]
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .map((item) => ({
+          name: item.name,
+          rate: item.count ? Number(((item.resolved / item.count) * 100).toFixed(1)) : 0,
+        })),
       thong_ke_theo_linh_vuc: thongKeTheoLinhVuc,
       thong_ke_theo_han_xu_ly: [
         {
@@ -770,7 +899,15 @@ const PhanAnhRepository = {
           color: "#EF4444",
         },
       ],
-      xu_huong_phan_anh: [...trendMap.values()].sort((a, b) => a.date.localeCompare(b.date)),
+      xu_huong_phan_anh: [...trendMap.values()]
+        .sort((a, b) => a.key.localeCompare(b.key))
+        .map(({ date, tongPhanAnh, hoanThanh, daGiaiQuyet, quaHan }) => ({
+          date,
+          tongPhanAnh,
+          hoanThanh,
+          daGiaiQuyet,
+          quaHan,
+        })),
       current_status: currentStatus,
       previous_status: previousStatus,
       nhat_ky_hoat_dong,

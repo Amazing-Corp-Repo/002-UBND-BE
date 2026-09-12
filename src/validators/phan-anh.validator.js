@@ -211,6 +211,8 @@ export const GetAllPhanAnhQuery = Joi.object({
   idLinhVucPhanAnh: Joi.string().uuid().optional(),
   idLinhVuc: Joi.string().uuid().optional(),
   trangThai: Joi.string().valid(...PHAN_ANH_LIFECYCLE_STATUS, "DA_GUI", "DANG_XU_LY", "DA_GIAI_QUYET", "DONG", "TU_CHOI").optional(),
+  slaStatus: Joi.string().optional().allow(""),
+  tinhTrang: Joi.string().optional().allow(""),
   mucDo: Joi.string().valid(...Object.values(PHAN_ANH_MUC_DO), "KHAN_CAP", "BINH_THUONG").optional(),
   maPhanAnh: Joi.string().trim().uppercase().max(255).optional().allow(""),
   search: Joi.string().trim().max(255).optional().allow(""),
@@ -276,6 +278,8 @@ export const ExportPhanAnhExcelRequest = Joi.object({
     .valid(...PHAN_ANH_LIFECYCLE_STATUS, "DA_GUI", "DANG_XU_LY", "DA_GIAI_QUYET", "DONG", "TU_CHOI")
     .optional()
     .allow(""),
+  slaStatus: Joi.string().optional().allow(""),
+  tinhTrang: Joi.string().optional().allow(""),
   idLinhVucPhanAnh: Joi.string().uuid().optional().allow(""),
   khuPho: Joi.string().trim().max(255).optional().allow("", "all"),
   mucDo: Joi.string()

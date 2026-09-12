@@ -47,6 +47,8 @@ const PhanAnhController = {
     const {
       idLinhVucPhanAnh,
       trangThai,
+      slaStatus,
+      tinhTrang,
       mucDo,
       maPhanAnh,
       idLinhVuc,
@@ -62,7 +64,8 @@ const PhanAnhController = {
       includePendingExtension,
     } = req.validatedQuery;
     const payload = req.payload;
-    let { data, pagination } = await PhanAnhService.getAll(
+    const effectiveSlaStatus = slaStatus || tinhTrang;
+    let { data, pagination, stats } = await PhanAnhService.getAll(
       idLinhVucPhanAnh,
       toDbPhanAnhStatus(trangThai),
       mucDo,
@@ -73,13 +76,27 @@ const PhanAnhController = {
       payload,
       sortBy,
       sortOrder,
-      { idLinhVuc, startDate, endDate, khuPho, search, includePendingExtension: includePendingExtension === true || includePendingExtension === "true" },
+      {
+        idLinhVuc,
+        startDate,
+        endDate,
+        khuPho,
+        search,
+        slaStatus: effectiveSlaStatus,
+        includePendingExtension:
+          includePendingExtension === true ||
+          includePendingExtension === "true" ||
+          effectiveSlaStatus === "PENDING_EXTENSION" ||
+          effectiveSlaStatus === "CHO_GIA_HAN" ||
+          effectiveSlaStatus === "CHỜ GIA HẠN",
+      },
     );
     return successResponse(
       res,
       data,
       "Lấy danh sách phản ánh thành công",
       pagination,
+      { stats }
     );
   },
 

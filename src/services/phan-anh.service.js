@@ -303,6 +303,7 @@ const PhanAnhService = {
       maPhanAnh,
       search: filters.search,
       khuPho: filters.khuPho,
+      slaStatus: filters.slaStatus,
       start: period?.start,
       end: period?.end,
       scopedLinhVucIds: scope.scopedLinhVucIds,
@@ -322,7 +323,11 @@ const PhanAnhService = {
         trang_thai_hien_tai: toApiPhanAnhStatus(getLatestPhanAnhLifecycleHistory(item.lich_su_trang_thai)?.ten),
         muc_do_code: toApiPhanAnhMucDo(item.muc_do),
       })),
-      pagination: createPagination(page, size, result.totalItems),
+      pagination: {
+        ...createPagination(page, size, result.totalItems),
+        stats: result.stats || null,
+      },
+      stats: result.stats || null,
     };
   },
 
@@ -330,6 +335,8 @@ const PhanAnhService = {
     columns,
     search,
     trangThai,
+    slaStatus,
+    tinhTrang,
     idLinhVucPhanAnh,
     khuPho,
     mucDo,
@@ -349,6 +356,7 @@ const PhanAnhService = {
       idLinhVucPhanAnh: scope.selectedLinhVuc,
       trangThai: toDbPhanAnhStatus(trangThai),
       mucDo: toDbPhanAnhMucDo(mucDo),
+      slaStatus: slaStatus || tinhTrang,
       search,
       khuPho,
       start: period?.start,
@@ -819,6 +827,8 @@ const PhanAnhService = {
     let {
       nhat_ky_hoat_dong,
       tong_so,
+      tong_tat_ca,
+      previous_tong_tat_ca,
       previous_tong_so,
       tong_hom_nay,
       tong_nguoi_dan,
@@ -852,13 +862,14 @@ const PhanAnhService = {
     });
 
     const nguoiDanChange = getChange(current_nguoi_dan, previous_nguoi_dan);
-    const phanAnhChange = getChange(tong_so, previous_tong_so);
+    const phanAnhChange = getChange(tong_tat_ca, previous_tong_tat_ca ?? previous_tong_so);
     const tyLeXuLyChange = getChange(current_ty_le_xu_ly, previous_ty_le_xu_ly, {
       percentagePoint: true,
     });
 
     return {
       tong_so,
+      tong_tat_ca,
       tong_hom_nay,
       tong_nguoi_dan,
       ty_le_xu_ly: current_ty_le_xu_ly,
