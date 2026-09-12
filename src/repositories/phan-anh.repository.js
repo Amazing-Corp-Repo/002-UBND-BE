@@ -137,9 +137,15 @@ const PhanAnhRepository = {
             thoi_gian_tao: "desc",
           },
           select: {
+            id: true,
+            id_phan_anh: true,
             ten: true,
             thoi_gian_tao: true,
             ghi_chu: true,
+            nguoi_tao: true,
+            nguoi_dung: {
+              select: { id: true, ho_va_ten: true, ten_dang_nhap: true },
+            },
           },
         },
         dinh_kem_phan_anh: {
