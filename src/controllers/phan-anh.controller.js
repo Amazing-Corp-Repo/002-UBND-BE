@@ -140,6 +140,7 @@ const PhanAnhController = {
     const {
       trangThai,
       ghiChu,
+      ngayDuKienHoanThanh,
       idVideoGiaiQuyet,
     } = req.body;
     const currentUser = req.payload.userId;
@@ -148,6 +149,7 @@ const PhanAnhController = {
       idPhanAnh,
       trangThai,
       ghiChu,
+      ngayDuKienHoanThanh,
       currentUser,
       file,
       idVideoGiaiQuyet,

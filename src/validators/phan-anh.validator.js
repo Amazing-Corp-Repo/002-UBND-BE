@@ -112,6 +112,10 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
     "string.base": "Ghi chú phải là chuỗi ký tự",
     "string.max": "Ghi chú không được vượt quá 2000 ký tự",
   }),
+  ngayDuKienHoanThanh: Joi.date().iso().optional().messages({
+    "date.base": "Ngày dự kiến hoàn thành không hợp lệ",
+    "date.format": "Ngày dự kiến hoàn thành phải có định dạng ISO 8601",
+  }),
   // Video hiện trường đã xử lý (mảng id của video_uploads đã upload HLS).
   // .single() để nhận cả khi multipart gửi 1 giá trị đơn.
   idVideoGiaiQuyet: videoIdsSchema,
