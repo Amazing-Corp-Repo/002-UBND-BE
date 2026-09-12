@@ -113,7 +113,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Lấy thông tin phản ánh theo mã phản ánh cho mobile",
       description:
-        "Không cần đăng nhập. Lịch sử chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối. Mốc gia hạn vẫn xuất hiện trong lịch sử bằng trạng thái gần nhất kèm ghi_chu Lý do gia hạn, không phải trạng thái thứ sáu.",
+        "Không cần đăng nhập. Lịch sử trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối; mỗi mốc có ghi_chu và nguoi_dung (người thực hiện) như Web. Mốc gia hạn vẫn hiển thị bằng trạng thái gần nhất kèm Lý do gia hạn, không phải trạng thái thứ sáu.",
       parameters: [
         {
           name: "maPhanAnh",
@@ -134,7 +134,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Công dân tra cứu lịch sử trạng thái bằng mã phản ánh",
       description:
-        "Không cần đăng nhập. Chỉ trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối; mốc gia hạn được hiển thị bằng trạng thái gần nhất kèm Lý do gia hạn.",
+        "Không cần đăng nhập. Trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối; mỗi mốc có ghi_chu và nguoi_dung (người thực hiện) như Web. Mốc gia hạn hiển thị bằng trạng thái gần nhất kèm Lý do gia hạn.",
       parameters: [
         {
           name: "maPhanAnh",

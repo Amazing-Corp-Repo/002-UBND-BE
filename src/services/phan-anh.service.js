@@ -257,12 +257,9 @@ const PhanAnhService = {
     // Không công khai event "Đã gia hạn" trong danh sách trạng thái. Thông tin
     // gia hạn vẫn được trả riêng để UI có thể hiển thị hạn/lý do, không biến nó
     // thành trạng thái thứ sáu.
-    phanAnh.lich_su_trang_thai = getPhanAnhDisplayHistory(phanAnh.lich_su_trang_thai)
-      .map(({ ten, thoi_gian_tao, ghi_chu, is_gia_han }) => ({
-        ten,
-        thoi_gian_tao,
-        ...(is_gia_han ? { ghi_chu } : {}),
-      }));
+    // Mobile sử dụng cùng dữ liệu timeline như Web: gồm ghi chú và người thực
+    // hiện. Event gia hạn vẫn được map về trạng thái vòng đời gần nhất.
+    phanAnh.lich_su_trang_thai = getPhanAnhDisplayHistory(phanAnh.lich_su_trang_thai);
     phanAnh.thong_tin_gia_han = latestApprovedExtension
       ? {
           han_xu_ly_moi: phanAnh.ngay_du_kien_hoan_thanh,

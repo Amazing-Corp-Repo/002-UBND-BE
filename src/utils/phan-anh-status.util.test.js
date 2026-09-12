@@ -36,7 +36,12 @@ test("uses the latest lifecycle status when extension is the newest audit event"
 
 test("keeps an extension update visible without exposing a sixth status", () => {
   const history = [
-    { ten: PHAN_ANH_STATUS.DA_GIA_HAN, ghi_chu: "Cần thêm thời gian phối hợp", thoi_gian_tao: "2026-09-12T03:00:00.000Z" },
+    {
+      ten: PHAN_ANH_STATUS.DA_GIA_HAN,
+      ghi_chu: "Cần thêm thời gian phối hợp",
+      thoi_gian_tao: "2026-09-12T03:00:00.000Z",
+      nguoi_dung: { ho_va_ten: "Admin" },
+    },
     { ten: PHAN_ANH_STATUS.DANG_XU_LY, thoi_gian_tao: "2026-09-12T02:00:00.000Z" },
   ];
   const displayed = getPhanAnhDisplayHistory(history);
@@ -44,6 +49,7 @@ test("keeps an extension update visible without exposing a sixth status", () => 
   assert.equal(displayed[0].ten, PHAN_ANH_STATUS.DANG_XU_LY);
   assert.equal(displayed[0].ghi_chu, "Lý do gia hạn: Cần thêm thời gian phối hợp");
   assert.ok(displayed[0].is_gia_han);
+  assert.equal(displayed[0].nguoi_dung.ho_va_ten, "Admin");
 });
 
 test("maps severity codes without changing the legacy stored values", () => {
