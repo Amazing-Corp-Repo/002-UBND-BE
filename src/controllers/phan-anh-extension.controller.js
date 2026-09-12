@@ -27,6 +27,17 @@ const PhanAnhExtensionController = {
     return successResponse(res, data, "Lấy danh sách đề nghị gia hạn thành công", pagination);
   },
 
+  async exportExcel(req, res) {
+    const buffer = await PhanAnhExtensionService.exportExcel({
+      ...req.validatedQuery,
+      permissions: req.payload.permissions || [],
+      cate: req.payload.cate,
+    });
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=quan_ly_gia_han.xlsx");
+    return res.send(buffer);
+  },
+
   async getById(req, res) {
     const result = await PhanAnhExtensionService.getById(req.validatedParams.id, {
       permissions: req.payload.permissions || [],

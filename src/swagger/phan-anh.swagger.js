@@ -556,6 +556,25 @@ const PhanAnhSwagger = {
       responses: { 200: { description: "Lấy danh sách đề nghị gia hạn thành công" }, 401: { description: "Chưa xác thực" }, 403: { description: "Không có permission hợp lệ" } },
     },
   },
+  "/api/phan-anh/extension/export-excel": {
+    get: {
+      tags: ["PhanAnhExtension"],
+      summary: "Xuất Excel quản lý gia hạn phản ánh",
+      description: "Trả file .xlsx theo đúng cùng phạm vi permission và cate như danh sách Gia hạn. Các bộ lọc chỉ thu hẹp dữ liệu, không thể xuất phản ánh ngoài lĩnh vực được cấp.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "status", in: "query", schema: { type: "string", enum: ["ALL", "PENDING", "APPROVED", "REJECTED"], default: "ALL" } },
+        { name: "search", in: "query", schema: { type: "string" } },
+        { name: "mucDo", in: "query", schema: { type: "string", enum: ["KHAN_CAP", "BINH_THUONG"] } },
+        { name: "idLinhVuc", in: "query", schema: { type: "string", format: "uuid" } },
+      ],
+      responses: {
+        200: { description: "File Excel quản lý gia hạn", content: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { schema: { type: "string", format: "binary" } } } },
+        401: { description: "Chưa xác thực" },
+        403: { description: "Không có permission hợp lệ hoặc ngoài phạm vi lĩnh vực" },
+      },
+    },
+  },
   "/api/phan-anh/extension/{id}": {
     get: {
       tags: ["PhanAnhExtension"],

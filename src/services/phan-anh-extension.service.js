@@ -7,6 +7,7 @@ import { getLatestPhanAnhLifecycleHistory, toDbPhanAnhMucDo, toApiPhanAnhMucDo, 
 import PhanAnhExtensionRepository from "../repositories/phan-anh-extension.repository.js";
 import NotificationRepository from "../repositories/notification.repository.js";
 import UserRepository from "../repositories/user.repository.js";
+import ExcelJS from "exceljs";
 
 const parseCate = (cate) => String(cate || "")
   .split(",")
@@ -56,6 +57,26 @@ const assertExtensionScope = (extension, permissions, cate) => {
   if (!cateIds.includes(extension.phan_anh?.id_linh_vuc_phan_anh)) {
     throw new BaseError(403, "Bạn không có quyền truy cập đề nghị gia hạn này");
   }
+};
+
+const resolveExtensionScope = ({ permissions, cate, idLinhVuc }) => {
+  const fullAccess = hasExtensionFullAccess(permissions);
+  const cateIds = parseCate(cate);
+  if (!fullAccess && idLinhVuc && !cateIds.includes(idLinhVuc)) {
+    throw new BaseError(403, "Bạn không có quyền truy cập lĩnh vực phản ánh này");
+  }
+  return { scopedLinhVucIds: fullAccess ? undefined : cateIds };
+};
+
+const formatExcelDateTime = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
 };
 
 const PhanAnhExtensionService = {
@@ -112,14 +133,7 @@ const PhanAnhExtensionService = {
   },
 
   async getAll({ status, page, size, search, mucDo, idLinhVuc, permissions, cate }) {
-    const fullAccess = hasExtensionFullAccess(permissions);
-    const cateIds = parseCate(cate);
-    if (!fullAccess && idLinhVuc && !cateIds.includes(idLinhVuc)) {
-      throw new BaseError(403, "Bạn không có quyền truy cập lĩnh vực phản ánh này");
-    }
-    const scopedLinhVucIds = fullAccess
-      ? undefined
-      : cateIds;
+    const { scopedLinhVucIds } = resolveExtensionScope({ permissions, cate, idLinhVuc });
     const result = await PhanAnhExtensionRepository.getList({
       status,
       page,
@@ -133,6 +147,69 @@ const PhanAnhExtensionService = {
       data: result.data.map(mapExtension),
       pagination: createPagination(page, size, result.totalItems),
     };
+  },
+
+  async exportExcel({ status, search, mucDo, idLinhVuc, permissions, cate }) {
+    const { scopedLinhVucIds } = resolveExtensionScope({ permissions, cate, idLinhVuc });
+    const extensions = await PhanAnhExtensionRepository.getAllForExport({
+      status,
+      search,
+      mucDo: toDbPhanAnhMucDo(mucDo),
+      idLinhVuc,
+      scopedLinhVucIds,
+    });
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Quản lý gia hạn");
+    sheet.columns = [
+      { header: "STT", key: "stt", width: 8 },
+      { header: "Mã phản ánh", key: "ma", width: 16 },
+      { header: "Tiêu đề phản ánh", key: "tieuDe", width: 38 },
+      { header: "Lĩnh vực", key: "linhVuc", width: 25 },
+      { header: "Mức độ", key: "mucDo", width: 16 },
+      { header: "Trạng thái phản ánh", key: "trangThaiPhanAnh", width: 20 },
+      { header: "Hạn ban đầu", key: "hanBanDau", width: 20 },
+      { header: "Hạn đề xuất mới", key: "hanMoi", width: 20 },
+      { header: "Lý do gia hạn", key: "lyDoGiaHan", width: 42 },
+      { header: "Người đề nghị", key: "nguoiDeNghi", width: 24 },
+      { header: "Thời gian đề nghị", key: "thoiGianDeNghi", width: 22 },
+      { header: "Trạng thái đề nghị", key: "trangThai", width: 18 },
+      { header: "Người duyệt", key: "nguoiDuyet", width: 24 },
+      { header: "Thời gian duyệt", key: "thoiGianDuyet", width: 22 },
+      { header: "Lý do từ chối", key: "lyDoTuChoi", width: 42 },
+    ];
+    sheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E40AF" } };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    });
+    extensions.map(mapExtension).forEach((item, index) => {
+      const row = sheet.addRow({
+        stt: index + 1,
+        ma: item.ma_phan_anh,
+        tieuDe: item.tieu_de_phan_anh,
+        linhVuc: item.linh_vuc?.ten || "",
+        mucDo: item.muc_do,
+        trangThaiPhanAnh: item.trang_thai_phan_anh,
+        hanBanDau: formatExcelDateTime(item.han_ban_dau),
+        hanMoi: formatExcelDateTime(item.han_de_xuat_moi),
+        lyDoGiaHan: item.ly_do_gia_han,
+        nguoiDeNghi: item.nguoi_de_nghi?.ho_va_ten || item.nguoi_de_nghi?.email || "",
+        thoiGianDeNghi: formatExcelDateTime(item.thoi_gian_de_nghi),
+        trangThai: item.trang_thai,
+        nguoiDuyet: item.nguoi_duyet?.ho_va_ten || item.nguoi_duyet?.email || "",
+        thoiGianDuyet: formatExcelDateTime(item.thoi_gian_duyet),
+        lyDoTuChoi: item.ly_do_tu_choi,
+      });
+      row.eachCell((cell) => {
+        cell.alignment = { vertical: "top", wrapText: true };
+        cell.border = {
+          top: { style: "thin" }, left: { style: "thin" },
+          bottom: { style: "thin" }, right: { style: "thin" },
+        };
+      });
+    });
+    sheet.views = [{ state: "frozen", ySplit: 1 }];
+    return workbook.xlsx.writeBuffer();
   },
 
   async getById(id, { permissions, cate }) {
