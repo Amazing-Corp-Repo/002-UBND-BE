@@ -468,6 +468,7 @@ const PhanAnhService = {
     idPhanAnh,
     trangThai,
     ghiChu,
+    ngayDuKienHoanThanh,
     currentUser,
     file,
     idVideoGiaiQuyet = [],
@@ -545,6 +546,8 @@ const PhanAnhService = {
         trangThai === PHAN_ANH_STATUS.DANG_XU_LY
           ? new Date().toISOString()
           : phanAnh.thoi_gian_tiep_nhan,
+      // undefined để Prisma giữ nguyên hạn hiện tại khi client không gửi trường này.
+      ngay_du_kien_hoan_thanh: ngayDuKienHoanThanh,
       // Lưu video hiện trường đã xử lý (nếu có) — tách riêng với id_video của công dân.
       ...(videoGiaiQuyet.length > 0 && {
         id_video_giai_quyet: videoGiaiQuyet,
