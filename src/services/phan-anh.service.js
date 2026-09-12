@@ -660,7 +660,7 @@ const PhanAnhService = {
     );
   },
 
-  async updateMucDoPhanAnh(idPhanAnh, mucDo, lyDo, currentUser) {
+  async updateMucDoPhanAnh(idPhanAnh, mucDo, lyDo, currentUser, payload) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
     }

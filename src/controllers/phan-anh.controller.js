@@ -204,6 +204,7 @@ const PhanAnhController = {
       mucDo,
       lyDo,
       currentUser,
+      req.payload,
     );
     return successResponse(res, result, "Cập nhật mức độ phản ánh thành công");
   },
