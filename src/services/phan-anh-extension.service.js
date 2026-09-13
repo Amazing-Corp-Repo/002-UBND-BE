@@ -244,6 +244,15 @@ const PhanAnhExtensionService = {
       target_type: "PHAN_ANH_EXTENSION",
       target_id: id,
     });
+    if (result.complaint?.nguoi_tao) {
+      await NotificationRepository.createNotification({
+        user_id: result.complaint.nguoi_tao,
+        title: "Cập nhật trạng thái phản ánh",
+        body: `Phản ánh của bạn với mã ${result.complaintCode} đã được cập nhật trạng thái: ${PHAN_ANH_STATUS.DONG}`,
+        target_type: "PHAN_ANH",
+        target_id: result.complaintCode,
+      });
+    }
     return mapExtension(extension);
   },
 };

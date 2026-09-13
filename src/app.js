@@ -122,6 +122,14 @@ import("./cron/cleanup-thu-vien.cron.js")
   })
   .catch((err) => console.error("Thu vien cleanup cron error:", err));
 
+import("./cron/phan-anh-overdue.cron.js")
+  .then((m) => {
+    m.registerPhanAnhOverdueCron();
+    console.log("Phan anh overdue cron started cùng server");
+  })
+  .catch((err) => console.error("Phan anh overdue cron error:", err));
+
 server.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
+

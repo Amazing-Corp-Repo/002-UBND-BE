@@ -330,11 +330,7 @@ const PhanAnhRepository = {
     const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
     const orderDirection = (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
     const params = [];
-    let whereSql = `WHERE 1=1
-      AND NOT EXISTS (
-        SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
-        WHERE dngh.id_phan_anh = pa.id
-      )`;
+    let whereSql = "WHERE 1=1";
 
     const normalizedSla = (slaStatus || "").toUpperCase();
 
@@ -384,11 +380,11 @@ const PhanAnhRepository = {
 
     if (normalizedSla) {
       if (normalizedSla === "OVERDUE" || normalizedSla === "QUA_HAN" || normalizedSla === "QUÁ HẠN") {
-        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL)) OR pa.muc_do ILIKE '%khẩn%')`;
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn')`;
       } else if (normalizedSla === "NEAR_DUE" || normalizedSla === "SAP_DEN_HAN" || normalizedSla === "SẮP ĐẾN HẠN") {
-        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%')`;
+        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL))`;
       } else if (normalizedSla === "ON_TIME" || normalizedSla === "CON_HAN" || normalizedSla === "CÒN HẠN" || normalizedSla === "DUNG_HAN") {
-        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%') OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
       } else if (normalizedSla === "PENDING_EXTENSION" || normalizedSla === "CHO_GIA_HAN" || normalizedSla === "CHỜ GIA HẠN") {
         whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'PENDING')`;
       } else if (normalizedSla === "EXTENDED" || normalizedSla === "DA_GIA_HAN" || normalizedSla === "ĐÃ GIA HẠN") {
@@ -402,31 +398,65 @@ const PhanAnhRepository = {
       JOIN (
         SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
         FROM lich_su_trang_thai
-        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
+        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}' AND ten <> '${PHAN_ANH_STATUS.XIN_GIA_HAN}'
         ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id`;
-    const countParams = [...params];
-    params.push(size, skip);
-    const rows = await prisma.$queryRawUnsafe(
-      `SELECT pa.id FROM phan_anh pa ${joinLatestStatus} ${whereSql}
-       ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
-       LIMIT $${params.length - 1} OFFSET $${params.length}`,
-      ...params,
-    );
-    const ids = rows.map((row) => row.id);
+
+    // 1. Thống kê KPI tổng thể theo phạm vi (lĩnh vực, khu phố, kỳ báo cáo) - không bị thu hẹp bởi filter trạng thái/SLA
+    const statParams = [];
+    let statWhereSql = "WHERE 1=1";
+    if (Array.isArray(scopedLinhVucIds)) {
+      if (scopedLinhVucIds.length === 0) statWhereSql += " AND 1=0";
+      else {
+        statParams.push(scopedLinhVucIds);
+        statWhereSql += ` AND pa.id_linh_vuc_phan_anh = ANY($${statParams.length}::uuid[])`;
+      }
+    }
+    if (idLinhVucPhanAnh) {
+      statParams.push(idLinhVucPhanAnh);
+      statWhereSql += ` AND pa.id_linh_vuc_phan_anh = $${statParams.length}::uuid`;
+    }
+    if (khuPho && khuPho !== "all") {
+      statParams.push(khuPho);
+      statWhereSql += ` AND pa.khu_pho = $${statParams.length}`;
+    }
+    if (start && end) {
+      statParams.push(start, end);
+      statWhereSql += ` AND pa.thoi_gian_tao >= $${statParams.length - 1} AND pa.thoi_gian_tao <= $${statParams.length}`;
+    }
+
     const statRows = await prisma.$queryRawUnsafe(
       `SELECT 
         COUNT(*)::int AS total,
         COUNT(CASE WHEN lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') THEN 1 END)::int AS resolved,
-        COUNT(CASE WHEN lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL THEN 1 END)::int AS processing,
-        COUNT(CASE WHEN (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL)) OR pa.muc_do ILIKE '%khẩn%' THEN 1 END)::int AS overdue
-       FROM phan_anh pa ${joinLatestStatus} ${whereSql}`,
-      ...countParams,
+        COUNT(CASE WHEN lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG', 'Từ chối', 'TU_CHOI') OR lst.ten IS NULL THEN 1 END)::int AS processing,
+        COUNT(CASE WHEN (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn' THEN 1 END)::int AS overdue
+       FROM phan_anh pa ${joinLatestStatus} ${statWhereSql}`,
+      ...statParams,
     );
     const stats = statRows[0] || { total: 0, resolved: 0, processing: 0, overdue: 0 };
 
+    // 2. Lấy dữ liệu danh sách đã lọc kèm phân trang
+    const countParams = [...params];
+    params.push(size, skip);
+    const [rows, countRows] = await Promise.all([
+      prisma.$queryRawUnsafe(
+        `SELECT pa.id FROM phan_anh pa ${joinLatestStatus} ${whereSql}
+         ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
+         LIMIT $${params.length - 1} OFFSET $${params.length}`,
+        ...params,
+      ),
+      prisma.$queryRawUnsafe(
+        `SELECT COUNT(*)::int AS total FROM phan_anh pa ${joinLatestStatus} ${whereSql}`,
+        ...countParams,
+      ),
+    ]);
+
+    const ids = rows.map((row) => row.id);
+    const totalItems = countRows[0]?.total || 0;
+
     if (ids.length === 0) {
-      return { data: [], totalItems: stats.total || 0, stats };
+      return { data: [], totalItems: 0, stats };
     }
 
     const data = await prisma.phan_anh.findMany({
@@ -439,7 +469,7 @@ const PhanAnhRepository = {
     });
     const idOrder = new Map(ids.map((id, index) => [id, index]));
     data.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
-    return { data, totalItems: stats.total, stats };
+    return { data, totalItems, stats };
   },
 
   async getAllForExcelExport({
@@ -493,11 +523,11 @@ const PhanAnhRepository = {
 
     if (normalizedSla) {
       if (normalizedSla === "OVERDUE" || normalizedSla === "QUA_HAN" || normalizedSla === "QUÁ HẠN") {
-        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL)) OR pa.muc_do ILIKE '%khẩn%')`;
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn')`;
       } else if (normalizedSla === "NEAR_DUE" || normalizedSla === "SAP_DEN_HAN" || normalizedSla === "SẮP ĐẾN HẠN") {
-        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%')`;
+        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL))`;
       } else if (normalizedSla === "ON_TIME" || normalizedSla === "CON_HAN" || normalizedSla === "CÒN HẠN" || normalizedSla === "DUNG_HAN") {
-        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') OR lst.ten IS NULL) AND pa.muc_do NOT ILIKE '%khẩn%') OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
       } else if (normalizedSla === "PENDING_EXTENSION" || normalizedSla === "CHO_GIA_HAN" || normalizedSla === "CHỜ GIA HẠN") {
         whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'PENDING')`;
       } else if (normalizedSla === "EXTENDED" || normalizedSla === "DA_GIA_HAN" || normalizedSla === "ĐÃ GIA HẠN") {
@@ -511,7 +541,7 @@ const PhanAnhRepository = {
       JOIN (
         SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
         FROM lich_su_trang_thai
-        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
+        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}' AND ten <> '${PHAN_ANH_STATUS.XIN_GIA_HAN}'
         ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id`;
     const orderDirection = sortTime === "asc" ? "ASC" : "DESC";

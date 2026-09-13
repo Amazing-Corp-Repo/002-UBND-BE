@@ -78,7 +78,7 @@ const PhanAnhExtensionRepository = {
       });
       if (pending) return null;
 
-      return tx.de_nghi_gia_han_phan_anh.create({
+      const created = await tx.de_nghi_gia_han_phan_anh.create({
         data: {
           ...data,
           ...(files.length > 0
@@ -87,6 +87,41 @@ const PhanAnhExtensionRepository = {
         },
         include: extensionInclude,
       });
+
+      const hanMoiDate = new Date(data.han_de_xuat_moi);
+      const formattedHanMoi = isNaN(hanMoiDate.getTime())
+        ? ""
+        : new Intl.DateTimeFormat("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(hanMoiDate);
+
+      const latestHistory = await tx.lich_su_trang_thai.findFirst({
+        where: { id_phan_anh: data.id_phan_anh },
+        orderBy: { thoi_gian_tao: "desc" },
+        select: { thoi_gian_tao: true },
+      });
+      const now = new Date();
+      let statusTime = now;
+      if (latestHistory?.thoi_gian_tao && new Date(latestHistory.thoi_gian_tao).getTime() >= now.getTime()) {
+        statusTime = new Date(new Date(latestHistory.thoi_gian_tao).getTime() + 1000);
+      }
+
+      await tx.lich_su_trang_thai.create({
+        data: {
+          id_phan_anh: data.id_phan_anh,
+          ten: PHAN_ANH_STATUS.XIN_GIA_HAN,
+          ghi_chu: `Lý do xin gia hạn: ${data.ly_do_gia_han}${formattedHanMoi ? `. Hạn đề xuất mới: ${formattedHanMoi}` : ""}`,
+          nguoi_tao: data.id_nguoi_de_nghi,
+          thoi_gian_tao: statusTime,
+        },
+      });
+
+      return created;
     });
   },
 
@@ -130,6 +165,18 @@ const PhanAnhExtensionRepository = {
       if (!extension || extension.trang_thai !== PHAN_ANH_EXTENSION_STATUS.PENDING) return null;
 
       const now = new Date();
+      const hanMoiDate = new Date(extension.han_de_xuat_moi);
+      const formattedHanMoi = isNaN(hanMoiDate.getTime())
+        ? ""
+        : new Intl.DateTimeFormat("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(hanMoiDate);
+
       const updateResult = await tx.de_nghi_gia_han_phan_anh.updateMany({
         where: { id, trang_thai: PHAN_ANH_EXTENSION_STATUS.PENDING },
         data: {
@@ -139,6 +186,7 @@ const PhanAnhExtensionRepository = {
         },
       });
       if (updateResult.count !== 1) return null;
+
       await tx.phan_anh.update({
         where: { id: extension.id_phan_anh },
         data: {
@@ -147,16 +195,42 @@ const PhanAnhExtensionRepository = {
           thoi_gian_cap_nhat: now,
         },
       });
+
+      const latestHistory = await tx.lich_su_trang_thai.findFirst({
+        where: { id_phan_anh: extension.id_phan_anh },
+        orderBy: { thoi_gian_tao: "desc" },
+        select: { thoi_gian_tao: true },
+      });
+      let approveTime = now;
+      if (latestHistory?.thoi_gian_tao && new Date(latestHistory.thoi_gian_tao).getTime() >= now.getTime()) {
+        approveTime = new Date(new Date(latestHistory.thoi_gian_tao).getTime() + 1000);
+      }
+      const resumeTime = new Date(approveTime.getTime() + 1000);
+
+      // Mốc "Đã gia hạn" kèm ý kiến Lãnh đạo
       await tx.lich_su_trang_thai.create({
         data: {
           id_phan_anh: extension.id_phan_anh,
-          ten: "Đã gia hạn",
-          // Lịch sử này được công khai cho công dân theo mã phản ánh, nên phải
-          // lưu đúng lý do xin gia hạn thay vì ghi chú duyệt nội bộ.
-          ghi_chu: extension.ly_do_gia_han,
+          ten: PHAN_ANH_STATUS.DA_GIA_HAN,
+          ghi_chu: ghiChu
+            ? `Lãnh đạo đã phê duyệt gia hạn đến ${formattedHanMoi}. Ý kiến: ${ghiChu}`
+            : `Lãnh đạo đã phê duyệt gia hạn đến ${formattedHanMoi}`,
           nguoi_tao: userId,
+          thoi_gian_tao: approveTime,
         },
       });
+
+      // Tự động chuyển tiếp sang "Đang xử lý" theo hạn mới
+      await tx.lich_su_trang_thai.create({
+        data: {
+          id_phan_anh: extension.id_phan_anh,
+          ten: PHAN_ANH_STATUS.DANG_XU_LY,
+          ghi_chu: `Tiếp tục xử lý phản ánh theo thời hạn mới`,
+          nguoi_tao: userId,
+          thoi_gian_tao: resumeTime,
+        },
+      });
+
       return { complaintCode: extension.phan_anh.ma_phan_anh };
     });
   },
@@ -165,22 +239,64 @@ const PhanAnhExtensionRepository = {
     return prisma.$transaction(async (tx) => {
       const extension = await tx.de_nghi_gia_han_phan_anh.findUnique({
         where: { id },
-        include: { phan_anh: { select: { ma_phan_anh: true } } },
+        include: {
+          phan_anh: {
+            select: {
+              id: true,
+              ma_phan_anh: true,
+              nguoi_tao: true,
+              id_linh_vuc_phan_anh: true,
+              tieu_de: true,
+              mo_ta: true,
+            },
+          },
+        },
       });
       if (!extension || extension.trang_thai !== PHAN_ANH_EXTENSION_STATUS.PENDING) return null;
 
+      const now = new Date();
       const updateResult = await tx.de_nghi_gia_han_phan_anh.updateMany({
         where: { id, trang_thai: PHAN_ANH_EXTENSION_STATUS.PENDING },
         data: {
           trang_thai: PHAN_ANH_EXTENSION_STATUS.REJECTED,
           id_nguoi_duyet: userId,
           ly_do_tu_choi: lyDoTuChoi,
-          thoi_gian_duyet: new Date(),
+          thoi_gian_duyet: now,
         },
       });
       if (updateResult.count !== 1) return null;
+
+      await tx.phan_anh.update({
+        where: { id: extension.id_phan_anh },
+        data: {
+          nguoi_cap_nhat: userId,
+          thoi_gian_cap_nhat: now,
+        },
+      });
+
+      const latestHistory = await tx.lich_su_trang_thai.findFirst({
+        where: { id_phan_anh: extension.id_phan_anh },
+        orderBy: { thoi_gian_tao: "desc" },
+        select: { thoi_gian_tao: true },
+      });
+      let rejectTime = now;
+      if (latestHistory?.thoi_gian_tao && new Date(latestHistory.thoi_gian_tao).getTime() >= now.getTime()) {
+        rejectTime = new Date(new Date(latestHistory.thoi_gian_tao).getTime() + 1000);
+      }
+
+      await tx.lich_su_trang_thai.create({
+        data: {
+          id_phan_anh: extension.id_phan_anh,
+          ten: PHAN_ANH_STATUS.DONG,
+          ghi_chu: lyDoTuChoi ? `Lãnh đạo từ chối gia hạn. Lý do: ${lyDoTuChoi}` : "Lãnh đạo từ chối gia hạn phản ánh",
+          nguoi_tao: userId,
+          thoi_gian_tao: rejectTime,
+        },
+      });
+
       return {
         complaintCode: extension.phan_anh.ma_phan_anh,
+        complaint: extension.phan_anh,
       };
     });
   },

@@ -7,6 +7,8 @@ const API_TO_DB_STATUS = {
   DONG: PHAN_ANH_STATUS.DONG,
   TU_CHOI: PHAN_ANH_STATUS.TU_CHOI,
   DA_GIA_HAN: PHAN_ANH_STATUS.DA_GIA_HAN,
+  XIN_GIA_HAN: PHAN_ANH_STATUS.XIN_GIA_HAN,
+  QUA_HAN: PHAN_ANH_STATUS.QUA_HAN,
 };
 
 const DB_TO_API_STATUS = Object.fromEntries(
@@ -23,35 +25,26 @@ const toApiPhanAnhStatus = (value) => {
   return DB_TO_API_STATUS[value] || value;
 };
 
-// Gia hạn là sự kiện nghiệp vụ/audit, không phải trạng thái vòng đời phản ánh.
-// Các response hiển thị cho Web/Mobile luôn phải dùng các helper này thay vì
-// lấy phần tử đầu tiên của lịch sử trạng thái.
+// Vòng đời phản ánh chính thống
 const isPhanAnhLifecycleStatus = (value) => PHAN_ANH_LIFECYCLE_STATUS.includes(value);
 
 const getPhanAnhLifecycleHistory = (history = []) => (
   Array.isArray(history) ? history.filter((item) => isPhanAnhLifecycleStatus(item?.ten)) : []
 );
 
-// Lịch sử DB vẫn giữ event "Đã gia hạn" để audit. Khi hiển thị, event này
-// trở thành một mốc cập nhật với trạng thái vòng đời liền trước, để timeline
-// có đầy đủ lịch sử nhưng không phát sinh trạng thái thứ sáu.
+// Trả về đầy đủ lịch sử cập nhật cho timeline hiển thị công khai và quản trị
 const getPhanAnhDisplayHistory = (history = []) => {
   if (!Array.isArray(history)) return [];
-  return history.flatMap((item, index) => {
-    if (isPhanAnhLifecycleStatus(item?.ten)) return [item];
-    if (item?.ten !== PHAN_ANH_STATUS.DA_GIA_HAN) return [];
-
-    const previousLifecycleStatus = history
-      .slice(index + 1)
-      .find((entry) => isPhanAnhLifecycleStatus(entry?.ten));
-    if (!previousLifecycleStatus) return [];
-
-    return [{
+  return history.map((item) => {
+    const isGiaHan = item?.ten === PHAN_ANH_STATUS.DA_GIA_HAN || item?.is_gia_han === true;
+    const isXinGiaHan = item?.ten === PHAN_ANH_STATUS.XIN_GIA_HAN || item?.is_xin_gia_han === true;
+    const isQuaHan = item?.ten === PHAN_ANH_STATUS.QUA_HAN || item?.is_qua_han === true;
+    return {
       ...item,
-      ten: previousLifecycleStatus.ten,
-      ghi_chu: item.ghi_chu ? `Lý do gia hạn: ${item.ghi_chu}` : "Cập nhật hạn xử lý",
-      is_gia_han: true,
-    }];
+      is_gia_han: isGiaHan,
+      is_xin_gia_han: isXinGiaHan,
+      is_qua_han: isQuaHan,
+    };
   });
 };
 
@@ -59,6 +52,7 @@ const getLatestPhanAnhLifecycleHistory = (history = []) => getPhanAnhLifecycleHi
   .reduce((latest, item) => (
     !latest || new Date(item.thoi_gian_tao) > new Date(latest.thoi_gian_tao) ? item : latest
   ), null);
+
 
 const toDbPhanAnhMucDo = (value) => {
   if (value === "KHAN_CAP") return "Khẩn cấp";

@@ -5,10 +5,11 @@ const PHAN_ANH_STATUS = {
     DONG: 'Đóng',
     TU_CHOI: 'Từ chối',
     DA_GIA_HAN: 'Đã gia hạn',
+    XIN_GIA_HAN: 'Xin gia hạn',
+    QUA_HAN: 'Quá hạn',
 };
 
-// "Đã gia hạn" is an audit/history event, not a status that can be set through
-// the normal complaint-status transition endpoint.
+// Vòng đời phản ánh chính thống
 export const PHAN_ANH_LIFECYCLE_STATUS = Object.freeze([
     PHAN_ANH_STATUS.DA_GUI,
     PHAN_ANH_STATUS.DANG_XU_LY,
@@ -18,3 +19,4 @@ export const PHAN_ANH_LIFECYCLE_STATUS = Object.freeze([
 ]);
 
 export default PHAN_ANH_STATUS;
+
