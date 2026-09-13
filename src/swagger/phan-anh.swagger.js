@@ -424,7 +424,7 @@ const PhanAnhSwagger = {
           required: false,
           schema: {
             type: "string",
-            enum: ["today", "yesterday", "7days", "30days", "thisMonth", "thisQuarter", "custom"],
+            enum: ["all", "today", "yesterday", "7days", "30days", "thisMonth", "thisQuarter", "custom"],
             default: "today",
           },
           description: "Preset thời gian; dùng custom khi truyền startDate và endDate",

@@ -311,7 +311,7 @@ export const ExportPhanAnhExcelRequest = Joi.object({
 
 export const GetDashboardQuery = Joi.object({
   preset: Joi.string()
-    .valid("today", "yesterday", "7days", "30days", "thisMonth", "thisQuarter", "custom")
+    .valid("all", "today", "yesterday", "7days", "30days", "thisMonth", "thisQuarter", "custom")
     .optional(),
   startDate: Joi.string()
     .custom((value, helpers) => {

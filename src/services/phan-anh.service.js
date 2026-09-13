@@ -813,13 +813,14 @@ const PhanAnhService = {
     isInternal = false,
   } = {}) {
     const period = resolveDashboardPeriod({ preset, startDate, endDate });
-    const { effectiveLinhVucIds } = resolveDashboardScope({
+    const { effectiveLinhVucIds, assignedLinhVucIds, isFullAccess } = resolveDashboardScope({
       permissions: isInternal
         ? ["PA_THUONG_TRUC"]
         : permissions,
       cate,
       idLinhVuc,
     });
+    const scopedLinhVucIds = isFullAccess ? undefined : assignedLinhVucIds;
 
     let {
       nhat_ky_hoat_dong,
@@ -842,12 +843,14 @@ const PhanAnhService = {
       thong_ke_theo_linh_vuc,
       thong_ke_theo_han_xu_ly,
       xu_huong_phan_anh,
+      hieu_suat_don_vi,
     } = await PhanAnhRepository.getTongQuanPhanAnh({
       currentPeriod: period.current,
       previousPeriod: period.previous,
       todayPeriod: period.today,
       khuPho,
       effectiveLinhVucIds,
+      scopedLinhVucIds,
     });
 
     nhat_ky_hoat_dong = nhat_ky_hoat_dong.map((log) => {
@@ -885,6 +888,7 @@ const PhanAnhService = {
       thong_ke_theo_linh_vuc,
       thong_ke_theo_han_xu_ly,
       xu_huong_phan_anh,
+      hieu_suat_don_vi,
       nhat_ky_hoat_dong,
       ky_hien_tai: {
         startDate: period.current.startDate,

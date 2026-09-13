@@ -69,6 +69,27 @@ const resolveDashboardPeriod = ({
   now = new Date(),
 } = {}) => {
   const today = getDatePartsInVietnam(now);
+  if (preset === "all") {
+    return {
+      current: {
+        startDate: null,
+        endDate: null,
+        start: null,
+        end: null,
+      },
+      previous: {
+        startDate: null,
+        endDate: null,
+        start: null,
+        end: null,
+      },
+      today: {
+        start: toVietnamStart(today),
+        end: toVietnamEnd(today),
+      },
+    };
+  }
+
   let currentStart = today;
   let currentEnd = today;
 

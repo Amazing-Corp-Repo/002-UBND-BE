@@ -678,8 +678,9 @@ const PhanAnhRepository = {
     todayPeriod,
     khuPho,
     effectiveLinhVucIds,
+    scopedLinhVucIds,
   } = {}) {
-    const buildWhere = (period) => ({
+    const buildWhere = (period, customLinhVucIds = effectiveLinhVucIds) => ({
       ...(period && (period.start || period.end)
         ? {
             thoi_gian_tao: {
@@ -689,8 +690,8 @@ const PhanAnhRepository = {
           }
         : {}),
       ...(khuPho && khuPho !== "all" ? { khu_pho: khuPho } : {}),
-      ...(Array.isArray(effectiveLinhVucIds)
-        ? { id_linh_vuc_phan_anh: { in: effectiveLinhVucIds } }
+      ...(Array.isArray(customLinhVucIds)
+        ? { id_linh_vuc_phan_anh: { in: customLinhVucIds } }
         : {}),
     });
 
@@ -718,6 +719,10 @@ const PhanAnhRepository = {
         : {}),
     });
 
+    const isFilteredSpecificLinhVuc = Array.isArray(effectiveLinhVucIds) && (
+      !Array.isArray(scopedLinhVucIds) || effectiveLinhVucIds.length !== scopedLinhVucIds.length
+    );
+
     const [
       currentItems,
       previousItems,
@@ -725,6 +730,8 @@ const PhanAnhRepository = {
       totalAllPhanAnh,
       previousAllPhanAnh,
       totalCitizensGroup,
+      scopeItemsForDept,
+      activeLinhVucList,
     ] = await Promise.all([
       prisma.phan_anh.findMany({ where: buildWhere(currentPeriod), select }),
       prisma.phan_anh.findMany({ where: buildWhere(previousPeriod), select }),
@@ -738,7 +745,20 @@ const PhanAnhRepository = {
           sdt_nguoi_phan_anh: { not: null, notIn: [""] },
         },
       }),
+      isFilteredSpecificLinhVuc
+        ? prisma.phan_anh.findMany({ where: buildWhere(currentPeriod, scopedLinhVucIds), select })
+        : Promise.resolve(null),
+      prisma.linh_vuc_phan_anh.findMany({
+        where: {
+          is_active: true,
+          is_delete: false,
+          ...(Array.isArray(scopedLinhVucIds) ? { id: { in: scopedLinhVucIds } } : {}),
+        },
+        select: { id: true, ten: true },
+      }),
     ]);
+
+    const allScopeItems = scopeItemsForDept || currentItems;
 
     const totalCitizens = totalCitizensGroup.length;
     const currentCitizens = new Set(
@@ -867,6 +887,64 @@ const PhanAnhRepository = {
       trendMap.set(key, entry);
     });
 
+    const deptMap = new Map();
+    (activeLinhVucList || []).forEach((lv) => {
+      deptMap.set(lv.ten, {
+        name: lv.ten,
+        totalAssigned: 0,
+        processing: 0,
+        completed: 0,
+        onTime: 0,
+        overdue: 0,
+      });
+    });
+
+    allScopeItems.forEach((item) => {
+      const name = item.linh_vuc_phan_anh?.ten || "Chưa phân loại";
+      const entry = deptMap.get(name) || {
+        name,
+        totalAssigned: 0,
+        processing: 0,
+        completed: 0,
+        onTime: 0,
+        overdue: 0,
+      };
+
+      entry.totalAssigned += 1;
+      const latestStatus = getLatestStatus(item);
+      const isItemResolved = isResolved(item) || isClosed(item);
+      if (isItemResolved) {
+        entry.completed += 1;
+      } else {
+        entry.processing += 1;
+      }
+
+      const completedAt = isResolved(item) && latestStatus?.thoi_gian_tao
+        ? latestStatus.thoi_gian_tao
+        : null;
+      const classification = getSlaClassification({
+        createdAt: item.thoi_gian_tao,
+        deadline: item.ngay_du_kien_hoan_thanh,
+        completedAt,
+        now: new Date(),
+      });
+
+      if (classification === "overdue") {
+        entry.overdue += 1;
+      } else {
+        entry.onTime += 1;
+      }
+
+      deptMap.set(name, entry);
+    });
+
+    const hieuSuatDonVi = [...deptMap.values()]
+      .sort((a, b) => b.totalAssigned - a.totalAssigned || a.name.localeCompare(b.name))
+      .map((dept) => ({
+        ...dept,
+        rate: `${dept.totalAssigned ? Math.round((dept.onTime / dept.totalAssigned) * 100) : 100}%`,
+      }));
+
     let nhat_ky_hoat_dong = await prisma.audit_logs.findMany({
       select: {
         table_name: true,
@@ -944,6 +1022,7 @@ const PhanAnhRepository = {
           daGiaiQuyet,
           quaHan,
         })),
+      hieu_suat_don_vi: hieuSuatDonVi,
       current_status: currentStatus,
       previous_status: previousStatus,
       nhat_ky_hoat_dong,

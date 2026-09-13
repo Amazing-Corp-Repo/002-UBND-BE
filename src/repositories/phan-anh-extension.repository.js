@@ -128,24 +128,54 @@ const PhanAnhExtensionRepository = {
   async getList({ status, page, size, search, mucDo, idLinhVuc, scopedLinhVucIds }) {
     const skip = (page - 1) * size;
     const where = buildExtensionWhere({ status, search, mucDo, idLinhVuc, scopedLinhVucIds });
-    const [data, totalItems] = await prisma.$transaction([
+    
+    if (status && status !== "ALL") {
+      const [data, totalItems] = await prisma.$transaction([
+        prisma.de_nghi_gia_han_phan_anh.findMany({
+          where,
+          include: extensionInclude,
+          orderBy: { thoi_gian_tao: "desc" },
+          skip,
+          take: size,
+        }),
+        prisma.de_nghi_gia_han_phan_anh.count({ where }),
+      ]);
+      return { data, totalItems };
+    }
+
+    // Khi lấy tất cả hoặc không lọc status: Ưu tiên PENDING (Chờ phê duyệt) lên trên cùng
+    const [allRecords, totalItems] = await prisma.$transaction([
       prisma.de_nghi_gia_han_phan_anh.findMany({
         where,
         include: extensionInclude,
         orderBy: { thoi_gian_tao: "desc" },
-        skip,
-        take: size,
       }),
       prisma.de_nghi_gia_han_phan_anh.count({ where }),
     ]);
+
+    const sorted = allRecords.sort((a, b) => {
+      const isPendingA = a.trang_thai === PHAN_ANH_EXTENSION_STATUS.PENDING ? 1 : 0;
+      const isPendingB = b.trang_thai === PHAN_ANH_EXTENSION_STATUS.PENDING ? 1 : 0;
+      if (isPendingA !== isPendingB) return isPendingB - isPendingA;
+      return new Date(b.thoi_gian_tao || 0).getTime() - new Date(a.thoi_gian_tao || 0).getTime();
+    });
+
+    const data = sorted.slice(skip, skip + size);
     return { data, totalItems };
   },
 
   async getAllForExport({ status, search, mucDo, idLinhVuc, scopedLinhVucIds }) {
-    return prisma.de_nghi_gia_han_phan_anh.findMany({
+    const records = await prisma.de_nghi_gia_han_phan_anh.findMany({
       where: buildExtensionWhere({ status, search, mucDo, idLinhVuc, scopedLinhVucIds }),
       include: extensionInclude,
       orderBy: { thoi_gian_tao: "desc" },
+    });
+
+    return records.sort((a, b) => {
+      const isPendingA = a.trang_thai === PHAN_ANH_EXTENSION_STATUS.PENDING ? 1 : 0;
+      const isPendingB = b.trang_thai === PHAN_ANH_EXTENSION_STATUS.PENDING ? 1 : 0;
+      if (isPendingA !== isPendingB) return isPendingB - isPendingA;
+      return new Date(b.thoi_gian_tao || 0).getTime() - new Date(a.thoi_gian_tao || 0).getTime();
     });
   },
 
