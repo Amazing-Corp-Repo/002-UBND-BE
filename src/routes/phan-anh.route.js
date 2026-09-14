@@ -79,12 +79,6 @@ phanAnhRouter.get(
 );
 
 phanAnhRouter.get(
-  "/:maPhanAnh/for-mobile/lich-su-trang-thai",
-  validateParams(PhanAnhCodeParams),
-  PhanAnhController.getLichSuTrangThaiPhanAnhPublic,
-);
-
-phanAnhRouter.get(
   "/",
   authenticate,
   authorize([PERMISSION.PA_GET_ALL]),

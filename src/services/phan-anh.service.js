@@ -395,11 +395,6 @@ const PhanAnhService = {
     return await workbook.xlsx.writeBuffer();
   },
 
-  async getLichSuTrangThaiPhanAnhPublic(maPhanAnh) {
-    const phanAnh = await this.getPhanAnhByMaPhanAnh(maPhanAnh);
-    return phanAnh.lich_su_trang_thai || [];
-  },
-
   async getLichSuTrangThaiPhanAnh(idPhanAnh, payload) {
     if (idPhanAnh === null || idPhanAnh === undefined) {
       throw new BaseError(400, "ID phản ánh không được để trống");
