@@ -6,6 +6,15 @@ import prisma from "../config/database.config.js";
 import ExcelJS from "exceljs";
 import FileService from "./file.service.js";
 
+const decodeOriginalName = (name) => {
+  if (!name) return name;
+  try {
+    return Buffer.from(name, "latin1").toString("utf8");
+  } catch {
+    return name;
+  }
+};
+
 // Ánh xạ cột FE gửi lên → header hiển thị + cách lấy giá trị
 const COLUMN_MAP = {
   stt:              { label: "STT", getValue: (item, idx) => idx + 1 },
@@ -200,7 +209,7 @@ const ThuVienService = {
     if (files && files.file && files.file.length > 0) {
       createData.thu_vien_tai_lieu_file = {
         create: {
-          ten_file: files.file[0].originalname,
+          ten_file: decodeOriginalName(files.file[0].originalname),
           duong_dan: files.file[0].relativeUrl,
           dinh_dang: files.file[0].mimetype,
           kich_thuoc_mb: files.file[0].sizeMB,
@@ -283,7 +292,7 @@ const ThuVienService = {
       await ThuVienRepository.update(id, {
         thu_vien_tai_lieu_file: {
           create: {
-            ten_file: files.file[0].originalname,
+            ten_file: decodeOriginalName(files.file[0].originalname),
             duong_dan: files.file[0].relativeUrl,
             dinh_dang: files.file[0].mimetype,
             kich_thuoc_mb: files.file[0].sizeMB,
@@ -629,7 +638,7 @@ const ThuVienService = {
         await ThuVienRepository.createMedia({
           id_tai_lieu: idTaiLieu,
           loai: "IMAGE",
-          ten_file_goc: img.originalname,
+          ten_file_goc: decodeOriginalName(img.originalname),
           url: img.relativeUrl,
           kich_thuoc: img.size,
           mime_type: img.mimetype,
@@ -644,7 +653,7 @@ const ThuVienService = {
         await ThuVienRepository.createMedia({
           id_tai_lieu: idTaiLieu,
           loai: "VIDEO",
-          ten_file_goc: vid.originalname,
+          ten_file_goc: decodeOriginalName(vid.originalname),
           url: vid.relativeUrl,
           kich_thuoc: vid.size,
           mime_type: vid.mimetype,
