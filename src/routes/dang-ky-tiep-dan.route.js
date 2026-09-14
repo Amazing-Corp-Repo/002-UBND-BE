@@ -7,15 +7,10 @@ import validateQuery from "../middlewares/validate-query.middleware.js";
 import validateParams from "../middlewares/validate-params.middleware.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
-import receptionRegistrationRateLimiter, {
-  receptionLookupRateLimiter,
-  receptionRatingLookupRateLimiter,
-} from "../middlewares/reception-registration-rate-limit.middleware.js";
+import { receptionRatingLookupRateLimiter } from "../middlewares/reception-registration-rate-limit.middleware.js";
 import {
-  CreateDangKyTiepDanRequest,
   ApproveReceptionRegistrationRequest,
   GetDangKyTiepDanQuery,
-  LookupDangKyTiepDanRequest,
   ReceptionRegistrationIdParams,
   ReceptionCodeParams,
   RejectReceptionRegistrationRequest,
@@ -66,13 +61,6 @@ dangKyTiepDanRouter.patch(
   DangKyTiepDanController.reject
 );
 
-dangKyTiepDanRouter.post(
-  "/lookup",
-  receptionLookupRateLimiter,
-  validate(LookupDangKyTiepDanRequest),
-  DangKyTiepDanController.lookup
-);
-
 dangKyTiepDanRouter.get(
   "/rating-lookup/:receptionCode",
   receptionRatingLookupRateLimiter,
@@ -86,16 +74,6 @@ dangKyTiepDanRouter.get(
   authorize([PERMISSION.RR_GET_DETAIL]),
   validateParams(ReceptionRegistrationIdParams),
   DangKyTiepDanController.getDetail
-);
-
-dangKyTiepDanRouter.post(
-  "/",
-  receptionRegistrationRateLimiter,
-  validate(CreateDangKyTiepDanRequest),
-  receptionAudit(AUDIT_LOGS.CREATE, {
-    sensitiveFields: ["cccd", "sdt"],
-  }),
-  DangKyTiepDanController.create
 );
 
 export default dangKyTiepDanRouter;

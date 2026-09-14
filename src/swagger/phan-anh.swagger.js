@@ -129,23 +129,6 @@ const PhanAnhSwagger = {
       responses: {},
     },
   },
-  "/api/phan-anh/{maPhanAnh}/for-mobile/lich-su-trang-thai": {
-    get: {
-      tags: ["PhanAnh"],
-      summary: "Công dân tra cứu lịch sử trạng thái bằng mã phản ánh",
-      description:
-        "Không cần đăng nhập. Trả 5 trạng thái vòng đời: Đã gửi, Đang xử lý, Đã giải quyết, Đóng, Từ chối; mỗi mốc có ghi_chu và nguoi_dung (người thực hiện) như Web. Mốc gia hạn hiển thị bằng trạng thái gần nhất kèm Lý do gia hạn.",
-      parameters: [
-        {
-          name: "maPhanAnh",
-          in: "path",
-          required: true,
-          schema: { type: "string", pattern: "^[A-Z0-9]{8}$" },
-        },
-      ],
-      responses: {},
-    },
-  },
   "/api/phan-anh/export-excel": {
     post: {
       tags: ["PhanAnh"],

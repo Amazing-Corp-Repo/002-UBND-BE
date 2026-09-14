@@ -113,18 +113,6 @@ const PhanAnhController = {
     );
   },
 
-  async getLichSuTrangThaiPhanAnhPublic(req, res) {
-    const { maPhanAnh } = req.validatedParams;
-    const result = await PhanAnhService.getLichSuTrangThaiPhanAnhPublic(
-      maPhanAnh,
-    );
-    return successResponse(
-      res,
-      result,
-      "Lấy lịch sử trạng thái phản ánh thành công",
-    );
-  },
-
   async getPhanAnhByUserId(req, res) {
     const currentUser = req.payload.userId;
     let { sortTime } = req.validatedQuery;

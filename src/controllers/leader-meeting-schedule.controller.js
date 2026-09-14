@@ -75,20 +75,6 @@ const LeaderMeetingScheduleController = {
     );
   },
 
-  async updateDailySlotStatus(req, res) {
-    const data = await LeaderMeetingScheduleService.updateDailySlotStatus(
-      req.body,
-      req.payload
-    );
-    return successResponse(
-      res,
-      data,
-      req.body.isOpen
-        ? "Đã mở ca tiếp công dân"
-        : "Đã đóng ca tiếp công dân"
-    );
-  },
-
   async deleteManagement(req, res) {
     const data = await LeaderMeetingScheduleService.deleteManagementSchedule(
       req.validatedParams.id,
