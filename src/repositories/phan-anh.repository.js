@@ -942,7 +942,7 @@ const PhanAnhRepository = {
       .sort((a, b) => b.totalAssigned - a.totalAssigned || a.name.localeCompare(b.name))
       .map((dept) => ({
         ...dept,
-        rate: `${dept.totalAssigned ? Math.round((dept.onTime / dept.totalAssigned) * 100) : 100}%`,
+        rate: dept.totalAssigned ? `${Math.round((dept.onTime / dept.totalAssigned) * 100)}%` : "—",
       }));
 
     let nhat_ky_hoat_dong = await prisma.audit_logs.findMany({
