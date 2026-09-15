@@ -622,11 +622,11 @@ const LeaderMeetingRegistrationService = {
     if (!registration) {
       throw new BaseError(404, "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn");
     }
-    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS) {
-      throw new BaseError(409, "Chỉ đăng ký đang xử lý mới được hủy");
+    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.APPROVED) {
+      throw new BaseError(409, "Chỉ đăng ký đã được duyệt mới được hủy");
     }
     const now = new Date();
-    const updated = await LeaderMeetingRegistrationRepository.cancelInProgress(
+    const updated = await LeaderMeetingRegistrationRepository.cancelApproved(
       id,
       currentUser.userId,
       {

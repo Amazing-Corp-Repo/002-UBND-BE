@@ -459,11 +459,11 @@ const LeaderMeetingRegistrationRepository = {
     return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
   },
 
-  async cancelInProgress(id, leaderId, data) {
+  async cancelApproved(id, leaderId, data) {
     const result = await prisma.dang_ky_gap_lanh_dao.updateMany({
       where: {
         id,
-        trang_thai: "IN_PROGRESS",
+        trang_thai: "APPROVED",
         is_active: true,
         is_delete: false,
         khung_gio_gap_lanh_dao: {
