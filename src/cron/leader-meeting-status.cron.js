@@ -2,15 +2,23 @@ import cron from "node-cron";
 import LeaderMeetingRegistrationService from "../services/leader-meeting-registration.service.js";
 
 export const runLeaderMeetingStatusTransition = async (now = new Date()) => {
-  const result = await LeaderMeetingRegistrationService.markOverdueRegistrations(now);
+  // Quét đơn PENDING quá hạn trước, sau đó tự bắt đầu các đơn đã APPROVED.
+  const overdue = await LeaderMeetingRegistrationService.markOverdueRegistrations(now);
+  const processing =
+    await LeaderMeetingRegistrationService.startDueApprovedRegistrations(now);
 
-  if (result.transitioned > 0) {
+  if (overdue.transitioned > 0) {
     console.log(
-      `[leader-meeting-status] Đã chuyển ${result.transitioned} đăng ký sang OVERDUE.`
+      `[leader-meeting-status] Đã chuyển ${overdue.transitioned} đăng ký sang OVERDUE.`
+    );
+  }
+  if (processing.transitioned > 0) {
+    console.log(
+      `[leader-meeting-status] Đã chuyển ${processing.transitioned} đăng ký APPROVED sang IN_PROGRESS.`
     );
   }
 
-  return result;
+  return { overdue: overdue.transitioned, processing: processing.transitioned };
 };
 
 export const registerLeaderMeetingStatusCron = () => {
