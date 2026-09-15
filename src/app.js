@@ -15,6 +15,7 @@ import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
 import "./utils/logger.util.js";
 import { isCorsOriginAllowed } from "./config/cors.config.js";
+import { registerLeaderMeetingStatusCron } from "./cron/leader-meeting-status.cron.js";
 
 const app = express();
 // Render đứng trước ứng dụng một lớp proxy và gửi X-Forwarded-For.
@@ -108,12 +109,10 @@ import("./cron/daily-overview-report.cron.js")
   })
   .catch((err) => console.error("Daily overview report cron error:", err));
 
-import("./cron/leader-meeting-status.cron.js")
-  .then((m) => {
-    m.registerLeaderMeetingStatusCron();
-    console.log("Leader meeting status cron started cùng server");
-  })
-  .catch((err) => console.error("Leader meeting status cron error:", err));
+// Đồng bộ ngay trước khi mở HTTP server, sau đó chỉ đặt timer tại ca hợp lệ kế tiếp.
+// Không để import động khiến lỗi khởi tạo chỉ được log rồi server vẫn chạy.
+await registerLeaderMeetingStatusCron();
+console.log("Leader meeting status cron started cùng server");
 
 import("./cron/cleanup-thu-vien.cron.js")
   .then((m) => {

@@ -1,5 +1,7 @@
-import cron from "node-cron";
 import LeaderMeetingRegistrationService from "../services/leader-meeting-registration.service.js";
+
+const MAX_TIMER_DELAY_MS = 2_147_000_000;
+let leaderMeetingStatusTimer;
 
 export const runLeaderMeetingStatusTransition = async (now = new Date()) => {
   // Quét đơn PENDING quá hạn trước, sau đó tự bắt đầu các đơn đã APPROVED.
@@ -21,26 +23,37 @@ export const runLeaderMeetingStatusTransition = async (now = new Date()) => {
   return { overdue: overdue.transitioned, processing: processing.transitioned };
 };
 
-export const registerLeaderMeetingStatusCron = () => {
-  // Chạy ngay khi server khởi động để bù khoảng thời gian server ngừng hoạt động.
-  runLeaderMeetingStatusTransition().catch((error) => {
-    console.error(
-      `[leader-meeting-status] Lỗi đồng bộ trạng thái khi khởi động: ${error.message}`
-    );
-  });
+export const scheduleNextLeaderMeetingStatusTransition = async () => {
+  if (leaderMeetingStatusTimer) {
+    clearTimeout(leaderMeetingStatusTimer);
+    leaderMeetingStatusTimer = undefined;
+  }
 
-  // Đồng bộ mỗi phút; updateMany giữ thao tác an toàn khi chạy lặp.
-  cron.schedule(
-    "* * * * *",
-    async () => {
-      try {
-        await runLeaderMeetingStatusTransition();
-      } catch (error) {
-        console.error(
-          `[leader-meeting-status] Lỗi đồng bộ trạng thái: ${error.message}`
-        );
-      }
-    },
-    { timezone: "Asia/Ho_Chi_Minh" }
+  const now = new Date();
+  await runLeaderMeetingStatusTransition(now);
+  const nextAt = await LeaderMeetingRegistrationService.getNextStatusTransitionAt(
+    new Date()
   );
+  if (!nextAt) return null;
+
+  const delay = Math.max(0, nextAt.getTime() - Date.now());
+  leaderMeetingStatusTimer = setTimeout(async () => {
+    leaderMeetingStatusTimer = undefined;
+    try {
+      await scheduleNextLeaderMeetingStatusTransition();
+    } catch (error) {
+      console.error(
+        `[leader-meeting-status] Lỗi đồng bộ trạng thái: ${error.message}`
+      );
+    }
+  }, Math.min(delay, MAX_TIMER_DELAY_MS));
+
+  console.log(
+    `[leader-meeting-status] Lần đồng bộ tiếp theo: ${nextAt.toISOString()}`
+  );
+  return nextAt;
+};
+
+export const registerLeaderMeetingStatusCron = async () => {
+  return scheduleNextLeaderMeetingStatusTransition();
 };

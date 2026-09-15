@@ -8,6 +8,8 @@ import { hasPermission } from "../utils/auth-context.util.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 import {
+  getLeaderMeetingGraceDeadline,
+  getLeaderMeetingStartTime,
   getEffectiveLeaderMeetingStatus,
   isLeaderMeetingOverdue,
   isLeaderMeetingReadyToProcess,
@@ -39,6 +41,18 @@ const vietnamTime = (date = new Date()) =>
     minute: "2-digit",
     hourCycle: "h23",
   }).format(date);
+
+const refreshLeaderMeetingStatusSchedule = () => {
+  void import("../cron/leader-meeting-status.cron.js")
+    .then(({ scheduleNextLeaderMeetingStatusTransition }) =>
+      scheduleNextLeaderMeetingStatusTransition()
+    )
+    .catch((error) =>
+      console.error(
+        `[leader-meeting-status] Không thể lên lịch lại sau khi phê duyệt: ${error.message}`
+      )
+    );
+};
 
 const buildAttachments = (files = {}) => {
   const mapFile = (file, type) => ({
@@ -271,7 +285,9 @@ const mapManagementDetail = (registration) => {
 
 const LeaderMeetingRegistrationService = {
   async markOverdueRegistrations(now = new Date()) {
-    const candidates = await LeaderMeetingRegistrationRepository.findOverdueCandidates();
+    const candidates = await LeaderMeetingRegistrationRepository.findOverdueCandidates(
+      vietnamDate(now)
+    );
     const ids = candidates
       .filter((registration) => isLeaderMeetingOverdue(registration, now))
       .map((registration) => registration.id);
@@ -282,13 +298,39 @@ const LeaderMeetingRegistrationService = {
 
   async startDueApprovedRegistrations(now = new Date()) {
     const candidates =
-      await LeaderMeetingRegistrationRepository.findAutoProcessCandidates();
+      await LeaderMeetingRegistrationRepository.findAutoProcessCandidates(vietnamDate(now));
     const ids = candidates
       .filter((registration) => isLeaderMeetingReadyToProcess(registration, now))
       .map((registration) => registration.id);
     if (ids.length === 0) return { transitioned: 0 };
     const result = await LeaderMeetingRegistrationRepository.markInProgress(ids, now);
     return { transitioned: result.count };
+  },
+
+  async getNextStatusTransitionAt(now = new Date()) {
+    const fromDate = vietnamDate(now);
+    const [pending, approved] = await Promise.all([
+      LeaderMeetingRegistrationRepository.findOverdueCandidates(fromDate),
+      LeaderMeetingRegistrationRepository.findAutoProcessCandidates(fromDate),
+    ]);
+    const candidates = [
+      ...pending.map((registration) =>
+        getLeaderMeetingGraceDeadline(
+          registration.ngay_hen,
+          registration.khung_gio_gap_lanh_dao?.gio_bat_dau
+        )
+      ),
+      ...approved.map((registration) =>
+        getLeaderMeetingStartTime(
+          registration.ngay_hen,
+          registration.khung_gio_gap_lanh_dao?.gio_bat_dau
+        )
+      ),
+    ].filter((time) => time && time > now);
+
+    return candidates.length > 0
+      ? new Date(Math.min(...candidates.map((time) => time.getTime())))
+      : null;
   },
 
   async create(input, files = {}) {
@@ -427,6 +469,7 @@ const LeaderMeetingRegistrationService = {
     if (!updated) {
       throw new BaseError(409, "Đăng ký đã được xử lý bởi yêu cầu khác");
     }
+    refreshLeaderMeetingStatusSchedule();
     return mapManagementDetail(updated);
   },
 

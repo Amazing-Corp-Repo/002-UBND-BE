@@ -476,13 +476,14 @@ const LeaderMeetingRegistrationRepository = {
     return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
   },
 
-  async findOverdueCandidates() {
+  async findOverdueCandidates(fromDate) {
     return prisma.dang_ky_gap_lanh_dao.findMany({
       where: {
         trang_thai: "PENDING",
         is_qua_han: false,
         is_active: true,
         is_delete: false,
+        ngay_hen: { gte: new Date(`${fromDate}T00:00:00.000Z`) },
       },
       select: {
         id: true,
@@ -494,13 +495,14 @@ const LeaderMeetingRegistrationRepository = {
     });
   },
 
-  async findAutoProcessCandidates() {
+  async findAutoProcessCandidates(fromDate) {
     return prisma.dang_ky_gap_lanh_dao.findMany({
       where: {
         trang_thai: "APPROVED",
         is_qua_han: false,
         is_active: true,
         is_delete: false,
+        ngay_hen: { gte: new Date(`${fromDate}T00:00:00.000Z`) },
       },
       select: {
         id: true,
