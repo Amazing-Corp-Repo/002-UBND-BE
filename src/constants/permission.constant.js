@@ -106,6 +106,11 @@ export const PERMISSION = {
   PA_EXTENSION_APPROVE: "PA_EXTENSION_APPROVE",
   PA_EXTENSION_REJECT: "PA_EXTENSION_REJECT",
 
+  // Đánh giá phản ánh
+  PART_GET_ALL: "PART_GET_ALL",
+  PART_GET_DETAIL: "PART_GET_DETAIL",
+  PART_GET_STATS: "PART_GET_STATS",
+
   // Report
   RPT_GET_DETAIL: "RPT_GET_DETAIL",
   RPT_GET_EXCEL: "RPT_GET_EXCEL",
@@ -242,6 +247,10 @@ export const PERMISSION_DESC = {
   PA_EXTENSION_APPROVE: "Phê duyệt đề nghị gia hạn phản ánh",
   PA_EXTENSION_REJECT: "Từ chối đề nghị gia hạn phản ánh",
 
+  PART_GET_ALL: "Xem danh sách đánh giá phản ánh",
+  PART_GET_DETAIL: "Xem chi tiết đánh giá phản ánh",
+  PART_GET_STATS: "Xem thống kê đánh giá phản ánh",
+
   RPT_GET_DETAIL: "Xem báo cáo",
   RPT_GET_EXCEL: "Xuất báo cáo Excel",
 
@@ -289,6 +298,7 @@ export const PERMISSION_CATEGORIES = {
   LVTTHC: "Lĩnh vực thủ tục hành chính",
   MD: "Mẫu đơn",
   PA: "Phản ánh",
+  PART: "Đánh giá phản ánh",
   RPT: "Báo cáo",
   TT: "Thủ tục hành chính",
   TTIN: "Tin tức",
