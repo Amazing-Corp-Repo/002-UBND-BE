@@ -10,6 +10,7 @@ import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.co
 import {
   getEffectiveLeaderMeetingStatus,
   isLeaderMeetingOverdue,
+  isLeaderMeetingReadyToProcess,
 } from "../utils/leader-meeting-overdue.util.js";
 
 const MAX_RETRIES = 10;
@@ -276,6 +277,17 @@ const LeaderMeetingRegistrationService = {
       .map((registration) => registration.id);
     if (ids.length === 0) return { transitioned: 0 };
     const result = await LeaderMeetingRegistrationRepository.markOverdue(ids, now);
+    return { transitioned: result.count };
+  },
+
+  async startDueApprovedRegistrations(now = new Date()) {
+    const candidates =
+      await LeaderMeetingRegistrationRepository.findAutoProcessCandidates();
+    const ids = candidates
+      .filter((registration) => isLeaderMeetingReadyToProcess(registration, now))
+      .map((registration) => registration.id);
+    if (ids.length === 0) return { transitioned: 0 };
+    const result = await LeaderMeetingRegistrationRepository.markInProgress(ids, now);
     return { transitioned: result.count };
   },
 
@@ -567,11 +579,11 @@ const LeaderMeetingRegistrationService = {
     if (!registration) {
       throw new BaseError(404, "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn");
     }
-    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.APPROVED) {
-      throw new BaseError(409, "Chỉ đăng ký đã được phê duyệt mới được hủy");
+    if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.IN_PROGRESS) {
+      throw new BaseError(409, "Chỉ đăng ký đang xử lý mới được hủy");
     }
     const now = new Date();
-    const updated = await LeaderMeetingRegistrationRepository.cancelApproved(
+    const updated = await LeaderMeetingRegistrationRepository.cancelInProgress(
       id,
       currentUser.userId,
       {
