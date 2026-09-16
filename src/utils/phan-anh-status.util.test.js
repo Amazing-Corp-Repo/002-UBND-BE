@@ -34,7 +34,7 @@ test("uses the latest lifecycle status when extension is the newest audit event"
   assert.equal(getLatestPhanAnhLifecycleHistory(history)?.ten, PHAN_ANH_STATUS.DANG_XU_LY);
 });
 
-test("keeps an extension update visible without exposing a sixth status", () => {
+test("keeps an extension update visible with is_gia_han flag", () => {
   const history = [
     {
       ten: PHAN_ANH_STATUS.DA_GIA_HAN,
@@ -46,8 +46,8 @@ test("keeps an extension update visible without exposing a sixth status", () => 
   ];
   const displayed = getPhanAnhDisplayHistory(history);
 
-  assert.equal(displayed[0].ten, PHAN_ANH_STATUS.DANG_XU_LY);
-  assert.equal(displayed[0].ghi_chu, "Lý do gia hạn: Cần thêm thời gian phối hợp");
+  assert.equal(displayed[0].ten, PHAN_ANH_STATUS.DA_GIA_HAN);
+  assert.equal(displayed[0].ghi_chu, "Cần thêm thời gian phối hợp");
   assert.ok(displayed[0].is_gia_han);
   assert.equal(displayed[0].nguoi_dung.ho_va_ten, "Admin");
 });

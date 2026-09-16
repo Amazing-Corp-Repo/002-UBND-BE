@@ -50,6 +50,50 @@ const PhanAnhRatingService = {
     };
   },
 
+  async getByComplaintCode(complaintCode) {
+    const complaint = await PhanAnhRatingRepository.findRatingStatusByComplaintCode(complaintCode);
+    if (!complaint) {
+      throw new BaseError(404, "Không tìm thấy mã phản ánh");
+    }
+
+    const latestStatus = complaint.lich_su_trang_thai?.[0]?.ten || null;
+    const isResolved = latestStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET;
+    const existingRating = complaint.danh_gia_phan_anh?.[0] || null;
+    const isRated = Boolean(existingRating);
+    const canRate = isResolved && !isRated;
+
+    let message = null;
+    if (!isResolved) {
+      message = "Phản ánh đang trong quá trình xử lý, chỉ có thể đánh giá sau khi đã giải quyết";
+    } else if (isRated) {
+      message = "Mã phản ánh đã được đánh giá";
+    }
+
+    return {
+      complaint: {
+        id: complaint.id,
+        code: complaint.ma_phan_anh,
+        title: complaint.tieu_de || "",
+        category: complaint.linh_vuc_phan_anh
+          ? { id: complaint.linh_vuc_phan_anh.id, name: complaint.linh_vuc_phan_anh.ten || "" }
+          : null,
+      },
+      status: latestStatus,
+      isResolved,
+      isRated,
+      canRate,
+      message,
+      rating: existingRating
+        ? {
+            id: existingRating.id,
+            score: existingRating.diem,
+            comment: existingRating.nhan_xet || "",
+            ratedAt: existingRating.thoi_gian_tao,
+          }
+        : null,
+    };
+  },
+
   async create(input) {
     const complaint = await PhanAnhRatingRepository.findComplaintByCode(input.complaintCode);
     if (!complaint) {

@@ -12,12 +12,19 @@ import {
   CreatePhanAnhRatingRequest,
   GetPhanAnhRatingStatisticsQuery,
   GetPhanAnhRatingsQuery,
+  PhanAnhRatingCodeParams,
   PhanAnhRatingIdParams,
 } from "../validators/phan-anh-rating.validator.js";
 
 const phanAnhRatingRouter = express.Router();
 
 phanAnhRatingRouter.get("/configuration", PhanAnhRatingController.getConfiguration);
+
+phanAnhRatingRouter.get(
+  "/by-code/:complaintCode",
+  validateParams(PhanAnhRatingCodeParams),
+  PhanAnhRatingController.getByComplaintCode
+);
 
 phanAnhRatingRouter.get(
   "/",

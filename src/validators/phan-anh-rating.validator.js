@@ -78,3 +78,7 @@ export const PhanAnhRatingIdParams = Joi.object({
     "any.required": "ID đánh giá phản ánh là bắt buộc",
   }),
 });
+
+export const PhanAnhRatingCodeParams = Joi.object({
+  complaintCode,
+});
