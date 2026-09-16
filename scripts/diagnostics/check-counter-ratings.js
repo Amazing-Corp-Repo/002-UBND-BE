@@ -1,10 +1,10 @@
-import "./config/environment.config.js";
-import prisma from "./config/database.config.js";
+import "../../src/config/environment.config.js";
+import prisma from "../../src/config/database.config.js";
 
 async function main() {
   const counterRatings = await prisma.danh_gia_tiep_dan.findMany({
     orderBy: { thoi_gian_tao: "desc" },
-    take: 10
+    take: 10,
   });
   console.log("COUNTER RATINGS IN DB:", JSON.stringify(counterRatings, null, 2));
 }

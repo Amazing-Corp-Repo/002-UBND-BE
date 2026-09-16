@@ -11,21 +11,21 @@ import {
 import UserRepository from "../repositories/user.repository.js";
 import PHAN_ANH_MUC_DO from "../constants/phan-anh-muc-do.constant.js";
 import ExcelJS from "exceljs";
-import { getIO } from "../realtime/socket/index.js";
-import adminFirebase from "../realtime/firebase/index.js";
 import NotificationRepository from "../repositories/notification.repository.js";
 import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
-import ExpoNotiRepository from "../repositories/http/expo-noti.repository.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import {
-  getChange,
   getSlaClassification,
   resolveDashboardPeriod,
-  resolveDashboardScope,
 } from "../utils/dashboard.util.js";
+import PhanAnhDashboardService from "./phan-anh-dashboard.service.js";
+import {
+  sendExpoStatusUpdate,
+  sendStatusEmailNotification,
+} from "./phan-anh-notification.service.js";
 import {
   toApiPhanAnhMucDo,
   toApiPhanAnhStatus,
@@ -43,7 +43,6 @@ const ORDER = [
 ];
 
 const URL_PHAN_ANH_MANAGER = env.URL_PHAN_ANH_MANAGER;
-const URL_PHAN_ANH_USER = env.URL_PHAN_ANH_USER;
 
 const EXCEL_COLUMN_MAP = {
   index: { header: "STT", width: 8, value: (_, index) => index + 1 },
@@ -583,7 +582,7 @@ const PhanAnhService = {
         phanAnh.id_linh_vuc_phan_anh,
       );
 
-    await handleSendMailNotification(
+    await sendStatusEmailNotification(
       phanAnh,
       trangThai,
       ghiChu,
@@ -591,7 +590,7 @@ const PhanAnhService = {
       managerMailList,
     );
 
-    await handleSendNotificationByExpo(
+    await sendExpoStatusUpdate(
       phanAnh,
       trangThai,
       ghiChu,
@@ -797,103 +796,8 @@ const PhanAnhService = {
     return { id_to: idNguoiXuLy };
   },
 
-  async getTongQuanPhanAnh({
-    preset = "today",
-    startDate,
-    endDate,
-    khuPho = "all",
-    idLinhVuc = "all",
-    permissions = [],
-    cate = "",
-    isInternal = false,
-  } = {}) {
-    const period = resolveDashboardPeriod({ preset, startDate, endDate });
-    const { effectiveLinhVucIds, assignedLinhVucIds, isFullAccess } = resolveDashboardScope({
-      permissions: isInternal
-        ? ["PA_THUONG_TRUC"]
-        : permissions,
-      cate,
-      idLinhVuc,
-    });
-    const scopedLinhVucIds = isFullAccess ? undefined : assignedLinhVucIds;
-
-    let {
-      nhat_ky_hoat_dong,
-      tong_so,
-      tong_tat_ca,
-      previous_tong_tat_ca,
-      previous_tong_so,
-      tong_hom_nay,
-      tong_nguoi_dan,
-      current_nguoi_dan,
-      previous_nguoi_dan,
-      current_ty_le_xu_ly,
-      previous_ty_le_xu_ly,
-      qua_han,
-      khan_cap,
-      thong_ke_theo_trang_thai,
-      thong_ke_theo_khu_pho,
-      top_khu_pho,
-      ty_le_xu_ly_theo_khu_pho,
-      thong_ke_theo_linh_vuc,
-      thong_ke_theo_han_xu_ly,
-      xu_huong_phan_anh,
-      hieu_suat_don_vi,
-    } = await PhanAnhRepository.getTongQuanPhanAnh({
-      currentPeriod: period.current,
-      previousPeriod: period.previous,
-      todayPeriod: period.today,
-      khuPho,
-      effectiveLinhVucIds,
-      scopedLinhVucIds,
-    });
-
-    nhat_ky_hoat_dong = nhat_ky_hoat_dong.map((log) => {
-      log.is_success = log.response_status_code === 200;
-      log.hanh_dong = log.table_name;
-      log.table_name = undefined;
-      log.response_status_code = undefined;
-      return log;
-    });
-
-    const nguoiDanChange = getChange(current_nguoi_dan, previous_nguoi_dan);
-    const phanAnhChange = getChange(tong_tat_ca, previous_tong_tat_ca ?? previous_tong_so);
-    const tyLeXuLyChange = getChange(current_ty_le_xu_ly, previous_ty_le_xu_ly, {
-      percentagePoint: true,
-    });
-
-    return {
-      tong_so,
-      tong_tat_ca,
-      tong_hom_nay,
-      tong_nguoi_dan,
-      ty_le_xu_ly: current_ty_le_xu_ly,
-      qua_han,
-      khan_cap,
-      pt_nguoi_dan: nguoiDanChange.value,
-      huong_nguoi_dan: nguoiDanChange.direction,
-      pt_phan_anh: phanAnhChange.value,
-      huong_phan_anh: phanAnhChange.direction,
-      pt_ty_le_xu_ly: tyLeXuLyChange.value,
-      huong_ty_le_xu_ly: tyLeXuLyChange.direction,
-      thong_ke_theo_trang_thai,
-      thong_ke_theo_khu_pho,
-      top_khu_pho,
-      ty_le_xu_ly_theo_khu_pho,
-      thong_ke_theo_linh_vuc,
-      thong_ke_theo_han_xu_ly,
-      xu_huong_phan_anh,
-      hieu_suat_don_vi,
-      nhat_ky_hoat_dong,
-      ky_hien_tai: {
-        startDate: period.current.startDate,
-        endDate: period.current.endDate,
-      },
-      ky_doi_chieu: {
-        startDate: period.previous.startDate,
-        endDate: period.previous.endDate,
-      },
-    };
+  async getTongQuanPhanAnh(options = {}) {
+    return PhanAnhDashboardService.getTongQuanPhanAnh(options);
   },
 
   async getMucDoAndTrangThaiAndLinhVuc() {
@@ -1036,187 +940,6 @@ const PhanAnhService = {
       })),
     };
   },
-};
-
-const handleSendNotificationByExpo = async (
-  phanAnh,
-  trangThai,
-  ghiChu,
-  userId,
-) => {
-  const existingUser = await UserRepository.findById(userId);
-
-  if (!existingUser || !existingUser.fcm_token) {
-    console.log(
-      "Người dùng không tồn tại hoặc không có Expo push token để gửi thông báo",
-    );
-    return;
-  }
-
-  const expoPushToken = existingUser.fcm_token;
-
-  const message = {
-    title: "Cập nhật trạng thái phản ánh",
-    body: `Phản ánh của bạn với mã ${phanAnh.ma_phan_anh} đã được cập nhật trạng thái: ${trangThai}`,
-    data: {
-      ma_phan_anh: phanAnh.ma_phan_anh,
-      ghi_chu: ghiChu ?? "",
-      id: phanAnh.id,
-    },
-  };
-
-  try {
-    if (expoPushToken.length !== 0) {
-      for (let token of expoPushToken) {
-        await ExpoNotiRepository.sendNotification(token, message);
-      }
-    }
-  } catch (err) {
-    console.error("Expo push error:", err);
-  }
-};
-
-const handleSendNotification = (phanAnh, trangThai, ghiChu) => {
-  // Gửi thông báo qua socket.io
-  console.log(
-    `Gửi thông báo trạng thái phản ánh [${phanAnh.ma_phan_anh}] mới: ${trangThai} đến người dùng ID: ${phanAnh.nguoi_tao}`,
-  );
-
-  const io = getIO();
-
-  const targetRoom = `user_${phanAnh.nguoi_tao}`;
-
-  const payload = {
-    ma_phan_anh: phanAnh.ma_phan_anh,
-    trang_thai: trangThai,
-    tieu_de: "Phản ánh của bạn đã được cập nhật",
-    ghi_chu: ghiChu,
-  };
-
-  io.to(targetRoom).emit("phan-anh.update-status", payload);
-
-  console.log(`Đã gửi thông báo đến room: ${targetRoom}`);
-};
-
-const handleSendNotificationByFirebase = async (
-  phanAnh,
-  trangThai,
-  ghiChu,
-  userId,
-) => {
-  const existingUser = await UserRepository.findById(userId);
-  if (!existingUser || !existingUser.fcm_token) {
-    console.log(
-      `Người dùng không tồn tại hoặc không có FCM token để gửi thông báo`,
-    );
-    return;
-  }
-  const fcmToken = existingUser.fcm_token;
-  const title = "Cập nhật trạng thái phản ánh";
-  const body = `Phản ánh của bạn với mã ${phanAnh.ma_phan_anh} đã được cập nhật trạng thái: ${trangThai}`;
-  let fcm = adminFirebase.messaging();
-  const data = {
-    ma_phan_anh: phanAnh.ma_phan_anh,
-    ghi_chu: ghiChu ?? "",
-  };
-  try {
-    await fcm.send({
-      token: fcmToken,
-      notification: { title, body },
-      data,
-    });
-  } catch (err) {
-    console.error("FCM send error:", err);
-  }
-};
-
-const handleSendMailNotification = async (
-  phanAnh,
-  trangThai,
-  ghiChu,
-  userId,
-  managerMailList,
-) => {
-  const existingUser = await UserRepository.findById(userId);
-
-  const safeUrl = (base, id) => {
-    if (!base) return null;
-    return `${base}/${id}`;
-  };
-
-  const urlUser = safeUrl(URL_PHAN_ANH_USER, phanAnh.ma_phan_anh);
-  const urlManager = safeUrl(URL_PHAN_ANH_MANAGER, phanAnh.id);
-
-  const timestampVN = new Date().toLocaleString("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    hour12: false,
-  });
-
-  if (existingUser && existingUser?.email) {
-    const userData = {
-      maPhanAnh: phanAnh.ma_phan_anh,
-      trangThaiMoi: trangThai,
-      ghiChu,
-      tieuDe: phanAnh.tieu_de,
-      moTa: phanAnh.mo_ta,
-      updatedAt: timestampVN,
-    };
-
-    if (urlUser) {
-      userData.url = urlUser;
-    }
-
-    await MailService.sendMail(
-      existingUser.email,
-      MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
-      userData,
-    );
-  } else {
-    console.log("User không có email → không gửi thông báo cho user");
-  }
-
-  const managerData = {
-    maPhanAnh: phanAnh.ma_phan_anh,
-    trangThaiMoi: trangThai,
-    ghiChu,
-    tieuDe: phanAnh.tieu_de,
-    moTa: phanAnh.mo_ta,
-    updatedAt: timestampVN,
-  };
-
-  if (urlManager) {
-    managerData.url = urlManager;
-  }
-
-  let allAdmin = await UserRepository.getAllAdmin();
-
-  let bcc = [...allAdmin, ...managerMailList];
-
-  const uniqueEmails = [...new Set(bcc)];
-
-  await MailService.sendMailCC({
-    bcc: uniqueEmails,
-    type: MAIL_TYPE.PHAN_ANH_STATUS_UPDATED,
-    data: managerData,
-  });
-};
-
-const resolveMailTarget = (firstAdminEmail, managerMailList) => {
-  if (firstAdminEmail) {
-    return {
-      to: firstAdminEmail,
-      cc: managerMailList,
-    };
-  }
-
-  if (managerMailList.length > 0) {
-    return {
-      to: managerMailList[0],
-      cc: managerMailList.slice(1),
-    };
-  }
-
-  return null;
 };
 
 export default PhanAnhService;

@@ -1,6 +1,5 @@
-import "./config/environment.config.js";
-import LeaderMeetingRatingRepository from "./repositories/leader-meeting-rating.repository.js";
-import LeaderMeetingRatingService from "./services/leader-meeting-rating.service.js";
+import "../../src/config/environment.config.js";
+import LeaderMeetingRatingService from "../../src/services/leader-meeting-rating.service.js";
 
 async function main() {
   const adminUser = { userId: "7ee1e0a8-a3df-4bc0-820e-0b75acd540e0", roles: ["ADMIN"] };

@@ -1,5 +1,5 @@
-import "./config/environment.config.js";
-import prisma from "./config/database.config.js";
+import "../../src/config/environment.config.js";
+import prisma from "../../src/config/database.config.js";
 
 async function main() {
   const ratings = await prisma.danh_gia_gap_lanh_dao.findMany({
@@ -9,15 +9,13 @@ async function main() {
           khung_gio_gap_lanh_dao: {
             include: {
               lich_gap_lanh_dao: {
-                include: {
-                  lanh_dao: true
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                include: { lanh_dao: true },
+              },
+            },
+          },
+        },
+      },
+    },
   });
   console.log("ALL RATINGS COUNT:", ratings.length);
   console.log("ALL RATINGS:", JSON.stringify(ratings, null, 2));
@@ -30,8 +28,8 @@ async function main() {
       trang_thai: true,
       is_active: true,
       is_delete: true,
-      danh_gia_gap_lanh_dao: true
-    }
+      danh_gia_gap_lanh_dao: true,
+    },
   });
   console.log("ALL REGISTRATIONS:", JSON.stringify(completedRegistrations, null, 2));
 }
