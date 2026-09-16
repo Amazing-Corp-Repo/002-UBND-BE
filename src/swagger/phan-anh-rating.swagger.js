@@ -58,6 +58,15 @@ const PhanAnhRatingSwagger = {
       responses: { 200: { description: "Lấy cấu hình đánh giá phản ánh thành công" } },
     },
   },
+  "/api/phan-anh-ratings/by-code/{complaintCode}": {
+    get: {
+      tags: ["PhanAnhRating"],
+      summary: "Kiểm tra và lấy thông tin đánh giá của phản ánh theo mã",
+      description: "API công khai cho người dân kiểm tra trạng thái đánh giá phản ánh.",
+      parameters: [{ name: "complaintCode", in: "path", required: true, schema: { type: "string", pattern: "^[A-Z0-9]{8}$", example: "PA260010" } }],
+      responses: { 200: { description: "Lấy thông tin đánh giá phản ánh thành công" }, 400: { description: "Mã phản ánh không hợp lệ" }, 404: { description: "Không tìm thấy mã phản ánh" } },
+    },
+  },
   "/api/phan-anh-ratings/statistics": {
     get: {
       tags: ["PhanAnhRating"],

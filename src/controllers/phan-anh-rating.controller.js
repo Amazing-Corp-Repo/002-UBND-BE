@@ -5,6 +5,10 @@ const PhanAnhRatingController = {
   getConfiguration(_req, res) {
     return successResponse(res, PhanAnhRatingService.getConfiguration(), "Lấy cấu hình đánh giá phản ánh thành công");
   },
+  async getByComplaintCode(req, res) {
+    const data = await PhanAnhRatingService.getByComplaintCode(req.validatedParams.complaintCode);
+    return successResponse(res, data, "Lấy thông tin đánh giá phản ánh thành công");
+  },
 
   async create(req, res) {
     const data = await PhanAnhRatingService.create(req.body);

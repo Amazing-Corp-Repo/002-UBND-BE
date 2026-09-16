@@ -98,33 +98,28 @@ import("../src/workers/export-phan-anh.worker.js")
 import("./cron/cleanup-chunks.cron.js")
   .then((m) => {
     m.registerCleanupCron();
-    console.log("Cron job started cùng server");
   })
   .catch((err) => console.error("Cron error:", err));
 
 import("./cron/daily-overview-report.cron.js")
   .then((m) => {
     m.registerDailyOverviewReportCron();
-    console.log("Daily overview report cron started cùng server");
   })
   .catch((err) => console.error("Daily overview report cron error:", err));
 
 // Đồng bộ ngay trước khi mở HTTP server, sau đó chỉ đặt timer tại ca hợp lệ kế tiếp.
 // Không để import động khiến lỗi khởi tạo chỉ được log rồi server vẫn chạy.
 await registerLeaderMeetingStatusCron();
-console.log("Leader meeting status cron started cùng server");
 
 import("./cron/cleanup-thu-vien.cron.js")
   .then((m) => {
     m.registerCleanupThuVienCron();
-    console.log("Thu vien cleanup cron started cùng server");
   })
   .catch((err) => console.error("Thu vien cleanup cron error:", err));
 
 import("./cron/phan-anh-overdue.cron.js")
   .then((m) => {
     m.registerPhanAnhOverdueCron();
-    console.log("Phan anh overdue cron started cùng server");
   })
   .catch((err) => console.error("Phan anh overdue cron error:", err));
 

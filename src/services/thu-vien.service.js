@@ -5,6 +5,7 @@ import { convertBigInt } from "../utils/number.util.js";
 import prisma from "../config/database.config.js";
 import ExcelJS from "exceljs";
 import FileService from "./file.service.js";
+import { processMedia as processLibraryMedia, processTags as processLibraryTags } from "./thu-vien-media.service.js";
 
 const decodeOriginalName = (name) => {
   if (!name) return name;
@@ -605,62 +606,11 @@ const ThuVienService = {
   },
 
   async processTags(idTaiLieu, tagsStr, currentUser) {
-    if (!tagsStr || tagsStr.trim() === "") return;
-
-    let tags = [];
-    try {
-      tags = JSON.parse(tagsStr);
-    } catch {
-      tags = tagsStr.split(",").map((t) => t.trim()).filter(Boolean);
-    }
-
-    if (!Array.isArray(tags)) tags = [tags];
-
-    for (const tagName of tags) {
-      if (!tagName || tagName.trim() === "") continue;
-      const trimmed = tagName.trim().toLowerCase();
-
-      let tag = await ThuVienRepository.findTagByName(trimmed);
-      if (!tag) {
-        tag = await ThuVienRepository.createTag(trimmed);
-      }
-
-      await ThuVienRepository.createTagLink(idTaiLieu, tag.id);
-    }
+    return processLibraryTags(idTaiLieu, tagsStr, currentUser);
   },
 
   async processMedia(idTaiLieu, files, currentUser) {
-    if (!files) return;
-
-    // Xử lý ảnh
-    if (files.images && files.images.length > 0) {
-      for (const img of files.images) {
-        await ThuVienRepository.createMedia({
-          id_tai_lieu: idTaiLieu,
-          loai: "IMAGE",
-          ten_file_goc: decodeOriginalName(img.originalname),
-          url: img.relativeUrl,
-          kich_thuoc: img.size,
-          mime_type: img.mimetype,
-          nguoi_tao: currentUser,
-        });
-      }
-    }
-
-    // Xử lý video
-    if (files.videos && files.videos.length > 0) {
-      for (const vid of files.videos) {
-        await ThuVienRepository.createMedia({
-          id_tai_lieu: idTaiLieu,
-          loai: "VIDEO",
-          ten_file_goc: decodeOriginalName(vid.originalname),
-          url: vid.relativeUrl,
-          kich_thuoc: vid.size,
-          mime_type: vid.mimetype,
-          nguoi_tao: currentUser,
-        });
-      }
-    }
+    return processLibraryMedia(idTaiLieu, files, currentUser);
   },
 };
 

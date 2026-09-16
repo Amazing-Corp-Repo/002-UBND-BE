@@ -69,6 +69,10 @@ const PhanAnhRatingRepository = {
     return prisma.danh_gia_phan_anh.create({ data });
   },
 
+  async findRatingStatusByComplaintCode(complaintCode) {
+    return prisma.phan_anh.findFirst({ where: { ma_phan_anh: complaintCode }, select: { id: true, ma_phan_anh: true, tieu_de: true, linh_vuc_phan_anh: { select: { id: true, ten: true } }, lich_su_trang_thai: { orderBy: { thoi_gian_tao: "desc" }, take: 1, select: { ten: true, thoi_gian_tao: true } }, danh_gia_phan_anh: { where: { is_active: true, is_delete: false }, select: { id: true, diem: true, nhan_xet: true, thoi_gian_tao: true } } } });
+  },
+
   async findAll(filters) {
     const where = getRatingWhere(filters);
     const [data, totalItems] = await Promise.all([
