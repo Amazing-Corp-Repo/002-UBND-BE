@@ -123,7 +123,5 @@ import("./cron/phan-anh-overdue.cron.js")
   })
   .catch((err) => console.error("Phan anh overdue cron error:", err));
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port: ${PORT}`);
-});
+server.listen(PORT);
 
