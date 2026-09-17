@@ -42,10 +42,4 @@ export const CreateAccountSeed = async () => {
     await RoleRepository.assignRoleToUser(user.id, adminRole.id);
   }
 
-  console.log(
-    "Admin account have been created with username: ",
-    username,
-    " password: ",
-    password
-  );
 };

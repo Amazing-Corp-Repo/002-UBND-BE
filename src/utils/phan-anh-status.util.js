@@ -35,16 +35,35 @@ const getPhanAnhLifecycleHistory = (history = []) => (
 // Trả về đầy đủ lịch sử cập nhật cho timeline hiển thị công khai và quản trị
 const getPhanAnhDisplayHistory = (history = []) => {
   if (!Array.isArray(history)) return [];
-  return history.map((item) => {
+  return history.flatMap((item, index) => {
+    if (item?.ten === PHAN_ANH_STATUS.DA_GIA_HAN) {
+      const previousLifecycleStatus = history
+        .slice(index + 1)
+        .find((entry) => isPhanAnhLifecycleStatus(entry?.ten));
+
+      if (!previousLifecycleStatus) return [];
+
+      return [{
+        ...item,
+        ten: previousLifecycleStatus.ten,
+        ghi_chu: item.ghi_chu
+          ? `Lý do gia hạn: ${item.ghi_chu}`
+          : "Cập nhật hạn xử lý",
+        is_gia_han: true,
+        is_xin_gia_han: false,
+        is_qua_han: false,
+      }];
+    }
+
     const isGiaHan = item?.ten === PHAN_ANH_STATUS.DA_GIA_HAN || item?.is_gia_han === true;
     const isXinGiaHan = item?.ten === PHAN_ANH_STATUS.XIN_GIA_HAN || item?.is_xin_gia_han === true;
     const isQuaHan = item?.ten === PHAN_ANH_STATUS.QUA_HAN || item?.is_qua_han === true;
-    return {
+    return [{
       ...item,
       is_gia_han: isGiaHan,
       is_xin_gia_han: isXinGiaHan,
       is_qua_han: isQuaHan,
-    };
+    }];
   });
 };
 
