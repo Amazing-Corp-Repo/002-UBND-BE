@@ -255,6 +255,8 @@ model nguoi_dung {
   phan_anh_phan_anh_id_toTonguoi_dung                                                       phan_anh[]                        @relation("phan_anh_id_to_nguoi_dung")
   phan_anh_phan_anh_nguoi_cap_nhatTonguoi_dung                                              phan_anh[]                        @relation("phan_anh_nguoi_cap_nhatTonguoi_dung")
   phan_anh_phan_anh_nguoi_taoTonguoi_dung                                                   phan_anh[]                        @relation("phan_anh_nguoi_taoTonguoi_dung")
+  de_nghi_gia_han_nguoi_de_nghi                                                            de_nghi_gia_han_phan_anh[]        @relation("de_nghi_gia_han_nguoi_de_nghi")
+  de_nghi_gia_han_nguoi_duyet                                                              de_nghi_gia_han_phan_anh[]        @relation("de_nghi_gia_han_nguoi_duyet")
   refresh_token                                                                             refresh_token[]
   roles_roles_nguoi_cap_nhatTonguoi_dung                                                    roles[]                           @relation("roles_nguoi_cap_nhatTonguoi_dung")
   roles_roles_nguoi_taoTonguoi_dung                                                         roles[]                           @relation("roles_nguoi_taoTonguoi_dung")
@@ -364,6 +366,7 @@ model phan_anh {
   dinh_kem_phan_anh                              dinh_kem_phan_anh[]
   lich_su_trang_thai                             lich_su_trang_thai[]
   danh_gia_phan_anh                              danh_gia_phan_anh[]
+  de_nghi_gia_han_phan_anh                       de_nghi_gia_han_phan_anh[]
   linh_vuc_phan_anh                              linh_vuc_phan_anh?   @relation(fields: [id_linh_vuc_phan_anh], references: [id], onUpdate: NoAction, map: "fk_linh_vuc_phan_anh_phan_anh")
   to_phu_trach                                   nguoi_dung?          @relation("phan_anh_id_to_nguoi_dung", fields: [id_to], references: [id], onUpdate: NoAction, map: "fk_phan_anh_id_to")
   nguoi_dung_phan_anh_nguoi_cap_nhatTonguoi_dung nguoi_dung?          @relation("phan_anh_nguoi_cap_nhatTonguoi_dung", fields: [nguoi_cap_nhat], references: [id], onUpdate: NoAction, map: "fk_phan_anh_nguoi_cap_nhat")
@@ -376,6 +379,41 @@ model phan_anh {
   @@index([ma_phan_anh], map: "idx_phan_anh_ma_phan_anh")
   @@index([nguoi_tao], map: "idx_phan_anh_nguoi_tao")
   @@index([thoi_gian_tao], map: "idx_phan_anh_thoi_gian_tao")
+}
+
+model de_nghi_gia_han_phan_anh {
+  id                    String                      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_phan_anh           String                      @db.Uuid
+  id_nguoi_de_nghi      String                      @db.Uuid
+  id_nguoi_duyet        String?                     @db.Uuid
+  han_ban_dau           DateTime                    @db.Timestamp(6)
+  han_de_xuat_moi       DateTime                    @db.Timestamp(6)
+  ly_do_gia_han         String
+  ly_do_tu_choi         String?
+  trang_thai            String                      @default("PENDING") @db.VarChar(50)
+  thoi_gian_tao         DateTime?                   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  thoi_gian_duyet       DateTime?                   @db.Timestamp(6)
+  phan_anh              phan_anh                    @relation(fields: [id_phan_anh], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_de_nghi_gia_han_phan_anh")
+  nguoi_de_nghi         nguoi_dung                  @relation("de_nghi_gia_han_nguoi_de_nghi", fields: [id_nguoi_de_nghi], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_de_nghi_gia_han_nguoi_de_nghi")
+  nguoi_duyet           nguoi_dung?                 @relation("de_nghi_gia_han_nguoi_duyet", fields: [id_nguoi_duyet], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_de_nghi_gia_han_nguoi_duyet")
+  de_nghi_gia_han_file  de_nghi_gia_han_file[]
+
+  @@index([id_phan_anh], map: "idx_de_nghi_gia_han_id_phan_anh")
+  @@index([trang_thai], map: "idx_de_nghi_gia_han_trang_thai")
+  @@index([id_nguoi_de_nghi], map: "idx_de_nghi_gia_han_nguoi_de_nghi")
+}
+
+model de_nghi_gia_han_file {
+  id                    String                     @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  id_de_nghi_gia_han    String                     @db.Uuid
+  ten_file              String                     @db.VarChar(255)
+  url_file              String                     @db.VarChar(500)
+  dinh_dang_file        String                     @db.VarChar(150)
+  kich_thuoc_file_mb    Decimal?                   @db.Decimal(10, 2)
+  thoi_gian_tao         DateTime?                  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamp(6)
+  de_nghi_gia_han       de_nghi_gia_han_phan_anh   @relation(fields: [id_de_nghi_gia_han], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_de_nghi_gia_han_file_de_nghi")
+
+  @@index([id_de_nghi_gia_han], map: "idx_de_nghi_gia_han_file_de_nghi")
 }
 
 model refresh_token {

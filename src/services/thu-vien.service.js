@@ -5,6 +5,16 @@ import { convertBigInt } from "../utils/number.util.js";
 import prisma from "../config/database.config.js";
 import ExcelJS from "exceljs";
 import FileService from "./file.service.js";
+import { processMedia as processLibraryMedia, processTags as processLibraryTags } from "./thu-vien-media.service.js";
+
+const decodeOriginalName = (name) => {
+  if (!name) return name;
+  try {
+    return Buffer.from(name, "latin1").toString("utf8");
+  } catch {
+    return name;
+  }
+};
 
 // Ánh xạ cột FE gửi lên → header hiển thị + cách lấy giá trị
 const COLUMN_MAP = {
@@ -200,7 +210,7 @@ const ThuVienService = {
     if (files && files.file && files.file.length > 0) {
       createData.thu_vien_tai_lieu_file = {
         create: {
-          ten_file: files.file[0].originalname,
+          ten_file: decodeOriginalName(files.file[0].originalname),
           duong_dan: files.file[0].relativeUrl,
           dinh_dang: files.file[0].mimetype,
           kich_thuoc_mb: files.file[0].sizeMB,
@@ -283,7 +293,7 @@ const ThuVienService = {
       await ThuVienRepository.update(id, {
         thu_vien_tai_lieu_file: {
           create: {
-            ten_file: files.file[0].originalname,
+            ten_file: decodeOriginalName(files.file[0].originalname),
             duong_dan: files.file[0].relativeUrl,
             dinh_dang: files.file[0].mimetype,
             kich_thuoc_mb: files.file[0].sizeMB,
@@ -596,62 +606,11 @@ const ThuVienService = {
   },
 
   async processTags(idTaiLieu, tagsStr, currentUser) {
-    if (!tagsStr || tagsStr.trim() === "") return;
-
-    let tags = [];
-    try {
-      tags = JSON.parse(tagsStr);
-    } catch {
-      tags = tagsStr.split(",").map((t) => t.trim()).filter(Boolean);
-    }
-
-    if (!Array.isArray(tags)) tags = [tags];
-
-    for (const tagName of tags) {
-      if (!tagName || tagName.trim() === "") continue;
-      const trimmed = tagName.trim().toLowerCase();
-
-      let tag = await ThuVienRepository.findTagByName(trimmed);
-      if (!tag) {
-        tag = await ThuVienRepository.createTag(trimmed);
-      }
-
-      await ThuVienRepository.createTagLink(idTaiLieu, tag.id);
-    }
+    return processLibraryTags(idTaiLieu, tagsStr, currentUser);
   },
 
   async processMedia(idTaiLieu, files, currentUser) {
-    if (!files) return;
-
-    // Xử lý ảnh
-    if (files.images && files.images.length > 0) {
-      for (const img of files.images) {
-        await ThuVienRepository.createMedia({
-          id_tai_lieu: idTaiLieu,
-          loai: "IMAGE",
-          ten_file_goc: img.originalname,
-          url: img.relativeUrl,
-          kich_thuoc: img.size,
-          mime_type: img.mimetype,
-          nguoi_tao: currentUser,
-        });
-      }
-    }
-
-    // Xử lý video
-    if (files.videos && files.videos.length > 0) {
-      for (const vid of files.videos) {
-        await ThuVienRepository.createMedia({
-          id_tai_lieu: idTaiLieu,
-          loai: "VIDEO",
-          ten_file_goc: vid.originalname,
-          url: vid.relativeUrl,
-          kich_thuoc: vid.size,
-          mime_type: vid.mimetype,
-          nguoi_tao: currentUser,
-        });
-      }
-    }
+    return processLibraryMedia(idTaiLieu, files, currentUser);
   },
 };
 

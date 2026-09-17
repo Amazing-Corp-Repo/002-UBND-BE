@@ -158,7 +158,7 @@ const LeaderMeetingRegistrationRepository = {
     let overdueWhere = undefined;
 
     if (status === "OVERDUE") {
-      trangThaiWhere = { in: ["PENDING", "APPROVED"] };
+      trangThaiWhere = "PENDING";
       overdueWhere = { is_qua_han: true };
     } else if (status === "PENDING") {
       trangThaiWhere = "PENDING";
@@ -476,20 +476,60 @@ const LeaderMeetingRegistrationRepository = {
     return LeaderMeetingRegistrationRepository.findManagementDetail(id, leaderId);
   },
 
-  async findOverdueCandidates() {
+  async findOverdueCandidates(fromDate) {
     return prisma.dang_ky_gap_lanh_dao.findMany({
       where: {
-        trang_thai: { in: ["PENDING", "APPROVED"] },
+        trang_thai: "PENDING",
         is_qua_han: false,
         is_active: true,
         is_delete: false,
+        ngay_hen: { gte: new Date(`${fromDate}T00:00:00.000Z`) },
       },
       select: {
         id: true,
         trang_thai: true,
         is_qua_han: true,
         ngay_hen: true,
-        khung_gio_gap_lanh_dao: { select: { gio_ket_thuc: true } },
+        khung_gio_gap_lanh_dao: { select: { gio_bat_dau: true } },
+      },
+    });
+  },
+
+  async findAutoProcessCandidates(fromDate) {
+    return prisma.dang_ky_gap_lanh_dao.findMany({
+      where: {
+        trang_thai: "APPROVED",
+        is_qua_han: false,
+        is_active: true,
+        is_delete: false,
+        ngay_hen: { gte: new Date(`${fromDate}T00:00:00.000Z`) },
+      },
+      select: {
+        id: true,
+        trang_thai: true,
+        is_qua_han: true,
+        ngay_hen: true,
+        khung_gio_gap_lanh_dao: {
+          select: { gio_bat_dau: true, gio_ket_thuc: true },
+        },
+      },
+    });
+  },
+
+  async markInProgress(ids, startedAt) {
+    if (!ids.length) return { count: 0 };
+    return prisma.dang_ky_gap_lanh_dao.updateMany({
+      where: {
+        id: { in: ids },
+        trang_thai: "APPROVED",
+        is_qua_han: false,
+        is_active: true,
+        is_delete: false,
+      },
+      data: {
+        trang_thai: "IN_PROGRESS",
+        thoi_gian_bat_dau_xu_ly: startedAt,
+        thoi_gian_cap_nhat: startedAt,
       },
     });
   },
@@ -499,7 +539,7 @@ const LeaderMeetingRegistrationRepository = {
     return prisma.dang_ky_gap_lanh_dao.updateMany({
       where: {
         id: { in: ids },
-        trang_thai: { in: ["PENDING", "APPROVED"] },
+        trang_thai: "PENDING",
         is_qua_han: false,
         is_active: true,
         is_delete: false,

@@ -1,6 +1,8 @@
 import PhanAnhService from "../services/phan-anh.service.js";
 import { successResponse } from "../utils/response.util.js";
 import { parseStringToArray } from "../utils/string.util.js";
+import { toDbPhanAnhStatus } from "../utils/phan-anh-status.util.js";
+import { formatVietnamDate } from "../utils/vietnam-time.util.js";
 
 const PhanAnhController = {
   async createPhanAnh(req, res) {
@@ -14,7 +16,6 @@ const PhanAnhController = {
       soDienThoaiNguoiPhanAnh,
       khuPho,
       moTaViTri,
-      userId,
       idVideo,
     } = req.body;
     const file = req.files;
@@ -29,7 +30,7 @@ const PhanAnhController = {
       soDienThoaiNguoiPhanAnh,
       khuPho,
       moTaViTri,
-      userId,
+      req.payload.userId,
       file,
       idVideo,
     );
@@ -46,18 +47,27 @@ const PhanAnhController = {
     const {
       idLinhVucPhanAnh,
       trangThai,
+      slaStatus,
+      tinhTrang,
       mucDo,
       maPhanAnh,
+      idLinhVuc,
+      startDate,
+      endDate,
+      khuPho,
+      search,
       page = 1,
       size = 10,
       sortTime,
       sortBy,
       sortOrder,
+      includePendingExtension,
     } = req.validatedQuery;
     const payload = req.payload;
-    let { data, pagination } = await PhanAnhService.getAll(
+    const effectiveSlaStatus = slaStatus || tinhTrang;
+    let { data, pagination, stats } = await PhanAnhService.getAll(
       idLinhVucPhanAnh,
-      trangThai,
+      toDbPhanAnhStatus(trangThai),
       mucDo,
       maPhanAnh,
       parseInt(page),
@@ -66,18 +76,36 @@ const PhanAnhController = {
       payload,
       sortBy,
       sortOrder,
+      {
+        idLinhVuc,
+        startDate,
+        endDate,
+        khuPho,
+        search,
+        slaStatus: effectiveSlaStatus,
+        includePendingExtension:
+          includePendingExtension === true ||
+          includePendingExtension === "true" ||
+          effectiveSlaStatus === "PENDING_EXTENSION" ||
+          effectiveSlaStatus === "CHO_GIA_HAN" ||
+          effectiveSlaStatus === "CHỜ GIA HẠN",
+      },
     );
     return successResponse(
       res,
       data,
       "Lấy danh sách phản ánh thành công",
       pagination,
+      { stats }
     );
   },
 
   async getLichSuTrangThaiPhanAnh(req, res) {
     const { idPhanAnh } = req.validatedParams;
-    let result = await PhanAnhService.getLichSuTrangThaiPhanAnh(idPhanAnh);
+    let result = await PhanAnhService.getLichSuTrangThaiPhanAnh(
+      idPhanAnh,
+      req.payload,
+    );
     return successResponse(
       res,
       result,
@@ -108,7 +136,7 @@ const PhanAnhController = {
 
   async getPhanAnhById(req, res) {
     const { idPhanAnh } = req.validatedParams;
-    let result = await PhanAnhService.getPhanAnhById(idPhanAnh);
+    let result = await PhanAnhService.getPhanAnhById(idPhanAnh, req.payload);
     return successResponse(res, result, "Lấy phản ánh thành công");
   },
 
@@ -117,6 +145,7 @@ const PhanAnhController = {
     const {
       trangThai,
       ghiChu,
+      ngayDuKienHoanThanh,
       idVideoGiaiQuyet,
     } = req.body;
     const currentUser = req.payload.userId;
@@ -125,6 +154,7 @@ const PhanAnhController = {
       idPhanAnh,
       trangThai,
       ghiChu,
+      ngayDuKienHoanThanh,
       currentUser,
       file,
       idVideoGiaiQuyet,
@@ -153,6 +183,37 @@ const PhanAnhController = {
     );
   },
 
+  async exportPhanAnhExcel(req, res) {
+    const buffer = await PhanAnhService.exportPhanAnhExcel({
+      ...req.body,
+      payload: req.payload,
+    });
+    const date = formatVietnamDate(new Date()) || new Date().toISOString().slice(0, 10);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="danh_sach_phan_anh_${date}.xlsx"`,
+    );
+    return res.send(Buffer.from(buffer));
+  },
+
+  async updateMucDoPhanAnh(req, res) {
+    const { idPhanAnh } = req.validatedParams;
+    const { mucDo, lyDo } = req.body;
+    const currentUser = req.payload.userId;
+    const result = await PhanAnhService.updateMucDoPhanAnh(
+      idPhanAnh,
+      mucDo,
+      lyDo,
+      currentUser,
+      req.payload,
+    );
+    return successResponse(res, result, "Cập nhật mức độ phản ánh thành công");
+  },
+
   async getAssignableUsers(req, res) {
     const { idPhanAnh } = req.validatedParams;
     let result = await PhanAnhService.getAssignableUsers(idPhanAnh);
@@ -177,7 +238,19 @@ const PhanAnhController = {
   },
 
   async getTongQuanPhanAnh(req, res) {
-    let result = await PhanAnhService.getTongQuanPhanAnh();
+    const { preset, startDate, endDate, khuPho, idLinhVuc } =
+      req.validatedQuery;
+    const payload = req.payload || {};
+    let result = await PhanAnhService.getTongQuanPhanAnh({
+      preset: preset || (startDate && endDate ? "custom" : "today"),
+      startDate,
+      endDate,
+      khuPho,
+      idLinhVuc,
+      userId: payload.userId,
+      permissions: payload.permissions,
+      cate: payload.cate,
+    });
     return successResponse(res, result, "Lấy tổng quát phản ánh thành công");
   },
 

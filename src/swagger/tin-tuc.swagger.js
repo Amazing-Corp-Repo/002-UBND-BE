@@ -190,6 +190,14 @@ const TinTucSwagger = {
             responses: {}
         },
     },
+    '/api/tin-tuc/statistics': {
+        get: {
+            tags: ['TinTuc'],
+            summary: 'Thống kê tin tức',
+            security: [{ bearerAuth: [] }],
+            responses: {}
+        },
+    },
 };
 
 export default TinTucSwagger;

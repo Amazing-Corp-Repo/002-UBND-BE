@@ -93,12 +93,23 @@ export const PERMISSION = {
   PA_UPDATE_STATUS: "PA_UPDATE_STATUS",
   PA_GET_DETAIL: "PA_GET_DETAIL",
   PA_GET_ALL: "PA_GET_ALL",
+  PA_EXPORT: "PA_EXPORT",
   PA_THUONG_TRUC: "PA_THUONG_TRUC",
   PA_ASSIGN: "PA_ASSIGN",
   PA_APPROVE: "PA_APPROVE",
   PA_REJECT: "PA_REJECT",
   PA_UPDATE_LINH_VUC: "PA_UPDATE_LINH_VUC",
   PA_GET_STATS: "PA_GET_STATS",
+  PA_EXTENSION_CREATE: "PA_EXTENSION_CREATE",
+  PA_EXTENSION_GET_ALL: "PA_EXTENSION_GET_ALL",
+  PA_EXTENSION_GET_DETAIL: "PA_EXTENSION_GET_DETAIL",
+  PA_EXTENSION_APPROVE: "PA_EXTENSION_APPROVE",
+  PA_EXTENSION_REJECT: "PA_EXTENSION_REJECT",
+
+  // Đánh giá phản ánh
+  PART_GET_ALL: "PART_GET_ALL",
+  PART_GET_DETAIL: "PART_GET_DETAIL",
+  PART_GET_STATS: "PART_GET_STATS",
 
   // Report
   RPT_GET_DETAIL: "RPT_GET_DETAIL",
@@ -223,6 +234,7 @@ export const PERMISSION_DESC = {
   PA_UPDATE_STATUS: "Cập nhật trạng thái phản ánh",
   PA_GET_DETAIL: "Xem chi tiết phản ánh",
   PA_GET_ALL: "Xem tất cả phản ánh",
+  PA_EXPORT: "Xuất danh sách phản ánh",
   PA_THUONG_TRUC: "Thường trực - nhận báo cáo thống kê phản ánh hằng ngày",
   PA_UPDATE_LINH_VUC: "Cập nhật lĩnh vực phản ánh",
   PA_ASSIGN: "Phân công chuyên viên xử lý phản ánh",
@@ -234,6 +246,10 @@ export const PERMISSION_DESC = {
   PA_EXTENSION_GET_DETAIL: "Xem chi tiết đề nghị gia hạn phản ánh",
   PA_EXTENSION_APPROVE: "Phê duyệt đề nghị gia hạn phản ánh",
   PA_EXTENSION_REJECT: "Từ chối đề nghị gia hạn phản ánh",
+
+  PART_GET_ALL: "Xem danh sách đánh giá phản ánh",
+  PART_GET_DETAIL: "Xem chi tiết đánh giá phản ánh",
+  PART_GET_STATS: "Xem thống kê đánh giá phản ánh",
 
   RPT_GET_DETAIL: "Xem báo cáo",
   RPT_GET_EXCEL: "Xuất báo cáo Excel",
@@ -282,6 +298,7 @@ export const PERMISSION_CATEGORIES = {
   LVTTHC: "Lĩnh vực thủ tục hành chính",
   MD: "Mẫu đơn",
   PA: "Phản ánh",
+  PART: "Đánh giá phản ánh",
   RPT: "Báo cáo",
   TT: "Thủ tục hành chính",
   TTIN: "Tin tức",

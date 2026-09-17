@@ -1,5 +1,7 @@
 import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
+import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
+import PhanAnhDashboardRepository from "./phan-anh-dashboard.repository.js";
 
 const ATTACHMENT_SELECT = {
   id: true,
@@ -131,8 +133,15 @@ const PhanAnhRepository = {
             thoi_gian_tao: "desc",
           },
           select: {
+            id: true,
+            id_phan_anh: true,
             ten: true,
             thoi_gian_tao: true,
+            ghi_chu: true,
+            nguoi_tao: true,
+            nguoi_dung: {
+              select: { id: true, ho_va_ten: true, ten_dang_nhap: true },
+            },
           },
         },
         dinh_kem_phan_anh: {
@@ -141,6 +150,14 @@ const PhanAnhRepository = {
         linh_vuc_phan_anh: {
           select: {
             ten: true,
+          },
+        },
+        de_nghi_gia_han_phan_anh: {
+          where: { trang_thai: PHAN_ANH_EXTENSION_STATUS.APPROVED },
+          orderBy: { thoi_gian_duyet: "desc" },
+          select: {
+            ly_do_gia_han: true,
+            thoi_gian_duyet: true,
           },
         },
       },
@@ -176,7 +193,11 @@ const PhanAnhRepository = {
       (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
-    let whereSql = `WHERE 1=1 AND (pa.is_approve = true OR pa.is_approve IS NULL)`;
+    let whereSql = `WHERE 1=1
+      AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
+        WHERE dngh.id_phan_anh = pa.id
+      )`;
 
     if (idLinhVucPhanAnh) {
       params.push(idLinhVucPhanAnh);
@@ -211,6 +232,7 @@ const PhanAnhRepository = {
             SELECT DISTINCT ON (id_phan_anh)
                 id_phan_anh, ten, thoi_gian_tao
             FROM lich_su_trang_thai
+            WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
             ORDER BY id_phan_anh, thoi_gian_tao DESC
         ) lst ON lst.id_phan_anh = pa.id
         ${whereSql}
@@ -235,6 +257,7 @@ const PhanAnhRepository = {
             SELECT DISTINCT ON (id_phan_anh)
                 id_phan_anh, ten, thoi_gian_tao
             FROM lich_su_trang_thai
+            WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
             ORDER BY id_phan_anh, thoi_gian_tao DESC
         ) lst ON lst.id_phan_anh = pa.id
         ${whereSql};
@@ -272,6 +295,273 @@ const PhanAnhRepository = {
       data: phanAnhs,
       totalItems: total[0].count,
     };
+  },
+
+  async getAllScoped({
+    idLinhVucPhanAnh,
+    trangThai,
+    slaStatus,
+    mucDo,
+    maPhanAnh,
+    search,
+    khuPho,
+    start,
+    end,
+    scopedLinhVucIds,
+    page,
+    size,
+    sortTime,
+    sortBy,
+    sortOrder,
+    includePendingExtension = false,
+  }) {
+    const skip = (page - 1) * size;
+    const SORT_COLUMNS = {
+      thoi_gian_tao: "pa.thoi_gian_tao",
+      ma_phan_anh: "pa.ma_phan_anh",
+      tieu_de: "pa.tieu_de",
+      muc_do: "pa.muc_do",
+      trang_thai: "lst.ten",
+    };
+    const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
+    const orderDirection = (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
+    const params = [];
+    let whereSql = "WHERE 1=1";
+
+    const normalizedSla = (slaStatus || "").toUpperCase();
+
+    if (!includePendingExtension && normalizedSla !== "PENDING_EXTENSION" && normalizedSla !== "CHO_GIA_HAN" && normalizedSla !== "CHỜ GIA HẠN") {
+      whereSql += ` AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh extension_req
+        WHERE extension_req.id_phan_anh = pa.id
+        AND extension_req.trang_thai = 'PENDING'
+      )`;
+    }
+
+    if (Array.isArray(scopedLinhVucIds)) {
+      if (scopedLinhVucIds.length === 0) whereSql += " AND 1=0";
+      else {
+        params.push(scopedLinhVucIds);
+        whereSql += ` AND pa.id_linh_vuc_phan_anh = ANY($${params.length}::uuid[])`;
+      }
+    }
+    if (idLinhVucPhanAnh) {
+      params.push(idLinhVucPhanAnh);
+      whereSql += ` AND pa.id_linh_vuc_phan_anh = $${params.length}::uuid`;
+    }
+    if (mucDo) {
+      params.push(mucDo);
+      whereSql += ` AND pa.muc_do = $${params.length}`;
+    }
+    if (maPhanAnh) {
+      params.push(maPhanAnh);
+      whereSql += ` AND pa.ma_phan_anh = $${params.length}`;
+    }
+    if (trangThai) {
+      params.push(trangThai);
+      whereSql += ` AND lst.ten = $${params.length}`;
+    }
+    if (khuPho && khuPho !== "all") {
+      params.push(khuPho);
+      whereSql += ` AND pa.khu_pho = $${params.length}`;
+    }
+    if (start && end) {
+      params.push(start, end);
+      whereSql += ` AND pa.thoi_gian_tao >= $${params.length - 1} AND pa.thoi_gian_tao <= $${params.length}`;
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      whereSql += ` AND (pa.ma_phan_anh ILIKE $${params.length} OR pa.tieu_de ILIKE $${params.length} OR pa.ten_nguoi_phan_anh ILIKE $${params.length} OR pa.sdt_nguoi_phan_anh ILIKE $${params.length})`;
+    }
+
+    if (normalizedSla) {
+      if (normalizedSla === "OVERDUE" || normalizedSla === "QUA_HAN" || normalizedSla === "QUÁ HẠN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn')`;
+      } else if (normalizedSla === "NEAR_DUE" || normalizedSla === "SAP_DEN_HAN" || normalizedSla === "SẮP ĐẾN HẠN") {
+        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL))`;
+      } else if (normalizedSla === "ON_TIME" || normalizedSla === "CON_HAN" || normalizedSla === "CÒN HẠN" || normalizedSla === "DUNG_HAN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
+      } else if (normalizedSla === "PENDING_EXTENSION" || normalizedSla === "CHO_GIA_HAN" || normalizedSla === "CHỜ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'PENDING')`;
+      } else if (normalizedSla === "EXTENDED" || normalizedSla === "DA_GIA_HAN" || normalizedSla === "ĐÃ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'APPROVED')`;
+      } else if (normalizedSla === "REJECTED_EXTENSION" || normalizedSla === "TU_CHOI_GIA_HAN" || normalizedSla === "TỪ CHỐI GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'REJECTED')`;
+      }
+    }
+
+    const joinLatestStatus = `
+      JOIN (
+        SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
+        FROM lich_su_trang_thai
+        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}' AND ten <> '${PHAN_ANH_STATUS.XIN_GIA_HAN}'
+        ORDER BY id_phan_anh, thoi_gian_tao DESC
+      ) lst ON lst.id_phan_anh = pa.id`;
+
+    // 1. Thống kê KPI tổng thể theo phạm vi (lĩnh vực, khu phố, kỳ báo cáo) - không bị thu hẹp bởi filter trạng thái/SLA
+    const statParams = [];
+    let statWhereSql = "WHERE 1=1";
+    if (Array.isArray(scopedLinhVucIds)) {
+      if (scopedLinhVucIds.length === 0) statWhereSql += " AND 1=0";
+      else {
+        statParams.push(scopedLinhVucIds);
+        statWhereSql += ` AND pa.id_linh_vuc_phan_anh = ANY($${statParams.length}::uuid[])`;
+      }
+    }
+    if (idLinhVucPhanAnh) {
+      statParams.push(idLinhVucPhanAnh);
+      statWhereSql += ` AND pa.id_linh_vuc_phan_anh = $${statParams.length}::uuid`;
+    }
+    if (khuPho && khuPho !== "all") {
+      statParams.push(khuPho);
+      statWhereSql += ` AND pa.khu_pho = $${statParams.length}`;
+    }
+    if (start && end) {
+      statParams.push(start, end);
+      statWhereSql += ` AND pa.thoi_gian_tao >= $${statParams.length - 1} AND pa.thoi_gian_tao <= $${statParams.length}`;
+    }
+
+    const statRows = await prisma.$queryRawUnsafe(
+      `SELECT 
+        COUNT(*)::int AS total,
+        COUNT(CASE WHEN lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') THEN 1 END)::int AS resolved,
+        COUNT(CASE WHEN lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG', 'Từ chối', 'TU_CHOI') OR lst.ten IS NULL THEN 1 END)::int AS processing,
+        COUNT(CASE WHEN (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn' THEN 1 END)::int AS overdue
+       FROM phan_anh pa ${joinLatestStatus} ${statWhereSql}`,
+      ...statParams,
+    );
+    const stats = statRows[0] || { total: 0, resolved: 0, processing: 0, overdue: 0 };
+
+    // 2. Lấy dữ liệu danh sách đã lọc kèm phân trang
+    const countParams = [...params];
+    params.push(size, skip);
+    const [rows, countRows] = await Promise.all([
+      prisma.$queryRawUnsafe(
+        `SELECT pa.id FROM phan_anh pa ${joinLatestStatus} ${whereSql}
+         ORDER BY ${sortColumn} ${orderDirection}, pa.thoi_gian_tao DESC
+         LIMIT $${params.length - 1} OFFSET $${params.length}`,
+        ...params,
+      ),
+      prisma.$queryRawUnsafe(
+        `SELECT COUNT(*)::int AS total FROM phan_anh pa ${joinLatestStatus} ${whereSql}`,
+        ...countParams,
+      ),
+    ]);
+
+    const ids = rows.map((row) => row.id);
+    const totalItems = countRows[0]?.total || 0;
+
+    if (ids.length === 0) {
+      return { data: [], totalItems: 0, stats };
+    }
+
+    const data = await prisma.phan_anh.findMany({
+      where: { id: { in: ids } },
+      include: {
+        lich_su_trang_thai: { orderBy: { thoi_gian_tao: "desc" }, take: 1, select: { ten: true, thoi_gian_tao: true } },
+        linh_vuc_phan_anh: { select: { id: true, ten: true } },
+        to_phu_trach: { select: { id: true, ho_va_ten: true, email: true } },
+      },
+    });
+    const idOrder = new Map(ids.map((id, index) => [id, index]));
+    data.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
+    return { data, totalItems, stats };
+  },
+
+  async getAllForExcelExport({
+    idLinhVucPhanAnh,
+    trangThai,
+    slaStatus,
+    mucDo,
+    search,
+    khuPho,
+    start,
+    end,
+    scopedLinhVucIds,
+    sortTime,
+  }) {
+    const params = [];
+    let whereSql = "WHERE 1=1";
+
+    const normalizedSla = (slaStatus || "").toUpperCase();
+
+    if (Array.isArray(scopedLinhVucIds)) {
+      if (scopedLinhVucIds.length === 0) whereSql += " AND 1=0";
+      else {
+        params.push(scopedLinhVucIds);
+        whereSql += ` AND pa.id_linh_vuc_phan_anh = ANY($${params.length}::uuid[])`;
+      }
+    }
+    if (idLinhVucPhanAnh) {
+      params.push(idLinhVucPhanAnh);
+      whereSql += ` AND pa.id_linh_vuc_phan_anh = $${params.length}::uuid`;
+    }
+    if (mucDo) {
+      params.push(mucDo);
+      whereSql += ` AND pa.muc_do = $${params.length}`;
+    }
+    if (trangThai) {
+      params.push(trangThai);
+      whereSql += ` AND lst.ten = $${params.length}`;
+    }
+    if (khuPho && khuPho !== "all") {
+      params.push(khuPho);
+      whereSql += ` AND pa.khu_pho = $${params.length}`;
+    }
+    if (start && end) {
+      params.push(start, end);
+      whereSql += ` AND pa.thoi_gian_tao >= $${params.length - 1} AND pa.thoi_gian_tao <= $${params.length}`;
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      whereSql += ` AND (pa.ma_phan_anh ILIKE $${params.length} OR pa.tieu_de ILIKE $${params.length} OR pa.ten_nguoi_phan_anh ILIKE $${params.length} OR pa.sdt_nguoi_phan_anh ILIKE $${params.length})`;
+    }
+
+    if (normalizedSla) {
+      if (normalizedSla === "OVERDUE" || normalizedSla === "QUA_HAN" || normalizedSla === "QUÁ HẠN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn')`;
+      } else if (normalizedSla === "NEAR_DUE" || normalizedSla === "SAP_DEN_HAN" || normalizedSla === "SẮP ĐẾN HẠN") {
+        whereSql += ` AND (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh >= NOW() AND pa.ngay_du_kien_hoan_thanh <= NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL))`;
+      } else if (normalizedSla === "ON_TIME" || normalizedSla === "CON_HAN" || normalizedSla === "CÒN HẠN" || normalizedSla === "DUNG_HAN") {
+        whereSql += ` AND ((pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh > NOW() + INTERVAL '24 hours' AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG'))`;
+      } else if (normalizedSla === "PENDING_EXTENSION" || normalizedSla === "CHO_GIA_HAN" || normalizedSla === "CHỜ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'PENDING')`;
+      } else if (normalizedSla === "EXTENDED" || normalizedSla === "DA_GIA_HAN" || normalizedSla === "ĐÃ GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'APPROVED')`;
+      } else if (normalizedSla === "REJECTED_EXTENSION" || normalizedSla === "TU_CHOI_GIA_HAN" || normalizedSla === "TỪ CHỐI GIA HẠN") {
+        whereSql += ` AND EXISTS (SELECT 1 FROM de_nghi_gia_han_phan_anh ext WHERE ext.id_phan_anh = pa.id AND ext.trang_thai = 'REJECTED')`;
+      }
+    }
+
+    const joinLatestStatus = `
+      JOIN (
+        SELECT DISTINCT ON (id_phan_anh) id_phan_anh, ten, thoi_gian_tao
+        FROM lich_su_trang_thai
+        WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}' AND ten <> '${PHAN_ANH_STATUS.XIN_GIA_HAN}'
+        ORDER BY id_phan_anh, thoi_gian_tao DESC
+      ) lst ON lst.id_phan_anh = pa.id`;
+    const orderDirection = sortTime === "asc" ? "ASC" : "DESC";
+    const rows = await prisma.$queryRawUnsafe(
+      `SELECT pa.id FROM phan_anh pa ${joinLatestStatus} ${whereSql}
+       ORDER BY pa.thoi_gian_tao ${orderDirection}, pa.id ASC`,
+      ...params,
+    );
+    const ids = rows.map((row) => row.id);
+    if (ids.length === 0) return [];
+
+    const data = await prisma.phan_anh.findMany({
+      where: { id: { in: ids } },
+      include: {
+        lich_su_trang_thai: {
+          orderBy: { thoi_gian_tao: "desc" },
+          select: { ten: true, thoi_gian_tao: true },
+        },
+        linh_vuc_phan_anh: { select: { ten: true } },
+      },
+    });
+    const idOrder = new Map(ids.map((id, index) => [id, index]));
+    data.sort((a, b) => idOrder.get(a.id) - idOrder.get(b.id));
+    return data;
   },
 
   async getLichSuTrangThaiPhanAnh(idPhanAnh) {
@@ -339,6 +629,25 @@ const PhanAnhRepository = {
         },
       });
 
+      // Lấy thoi_gian_tao lớn nhất trong lịch sử hiện tại của phản ánh này để đảm bảo trạng thái mới luôn là mới nhất
+      const latestHistory = await tx.lich_su_trang_thai.findFirst({
+        where: { id_phan_anh: idPhanAnh },
+        orderBy: { thoi_gian_tao: "desc" },
+        select: { thoi_gian_tao: true },
+      });
+
+      const now = new Date();
+      let statusTime = now;
+      if (
+        latestHistory &&
+        latestHistory.thoi_gian_tao &&
+        new Date(latestHistory.thoi_gian_tao).getTime() >= now.getTime()
+      ) {
+        statusTime = new Date(
+          new Date(latestHistory.thoi_gian_tao).getTime() + 1000,
+        );
+      }
+
       // Tạo bản ghi lịch sử trạng thái
       await tx.lich_su_trang_thai.create({
         data: {
@@ -346,6 +655,7 @@ const PhanAnhRepository = {
           ten: historyData.ten,
           ghi_chu: historyData.ghi_chu,
           nguoi_tao: historyData.nguoi_tao,
+          thoi_gian_tao: statusTime,
         },
       });
 
@@ -358,97 +668,8 @@ const PhanAnhRepository = {
     });
   },
 
-  async getTongQuanPhanAnh() {
-    const now = new Date();
-
-    const startOfTodayUTC = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0,
-        0,
-        0,
-        0,
-      ),
-    );
-
-    const endOfTodayUTC = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        23,
-        59,
-        59,
-        999,
-      ),
-    );
-
-    // Tổng số trạng thái tạo hôm nay theo UTC
-    const tongHomNay = await prisma.phan_anh.count({
-      where: {
-        thoi_gian_tao: {
-          gte: startOfTodayUTC,
-          lte: endOfTodayUTC,
-        },
-      },
-    });
-
-    const rows = await prisma.$queryRawUnsafe(`
-            WITH latest_status AS (
-                SELECT
-                    ls.id_phan_anh,
-                    ls.ten,
-                    ls.thoi_gian_tao,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY ls.id_phan_anh
-                        ORDER BY ls.thoi_gian_tao DESC
-                    ) AS rn
-                FROM lich_su_trang_thai ls
-            )
-            SELECT ten, COUNT(*)::int AS count
-            FROM latest_status
-            WHERE rn = 1
-            GROUP BY ten;
-        `);
-
-    const thongKeTheoTrangThai = {};
-    rows.forEach((r) => {
-      thongKeTheoTrangThai[r.ten] = Number(r.count) || 0;
-    });
-
-    // đảm bảo đủ tất cả trạng thái
-    Object.values(PHAN_ANH_STATUS).forEach((status) => {
-      if (!thongKeTheoTrangThai[status]) {
-        thongKeTheoTrangThai[status] = 0;
-      }
-    });
-
-    let nhat_ky_hoat_dong = await prisma.audit_logs.findMany({
-      select: {
-        table_name: true,
-        nguoi_dung: {
-          select: {
-            id: true,
-            ho_va_ten: true,
-            email: true,
-          },
-        },
-        response_status_code: true,
-        timestamp: true,
-      },
-      orderBy: {
-        timestamp: "desc",
-      },
-      take: 5,
-    });
-
-    return {
-      tong_hom_nay: tongHomNay,
-      thong_ke_theo_trang_thai: thongKeTheoTrangThai,
-      nhat_ky_hoat_dong,
-    };
+  async getTongQuanPhanAnh(options = {}) {
+    return PhanAnhDashboardRepository.getTongQuanPhanAnh(options);
   },
 
   async searhByTieuDe(search) {
@@ -481,6 +702,7 @@ const PhanAnhRepository = {
         },
         thoi_gian_tao: true,
         lich_su_trang_thai: {
+          where: { ten: { not: PHAN_ANH_STATUS.DA_GIA_HAN } },
           orderBy: {
             thoi_gian_tao: "desc",
           },
@@ -520,7 +742,11 @@ const PhanAnhRepository = {
       (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
 
     const params = [];
-    let whereSql = `WHERE 1=1`;
+    let whereSql = `WHERE 1=1
+      AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh dngh
+        WHERE dngh.id_phan_anh = pa.id
+      )`;
 
     if (idLinhVucPhanAnh) {
       params.push(idLinhVucPhanAnh);
@@ -556,6 +782,7 @@ const PhanAnhRepository = {
           SELECT DISTINCT ON (id_phan_anh)
               id_phan_anh, ten, thoi_gian_tao
           FROM lich_su_trang_thai
+          WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
           ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id
       ${whereSql}
@@ -576,6 +803,7 @@ const PhanAnhRepository = {
           SELECT DISTINCT ON (id_phan_anh)
               id_phan_anh, ten, thoi_gian_tao
           FROM lich_su_trang_thai
+          WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}'
           ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id
       ${whereSql};
@@ -698,6 +926,24 @@ const PhanAnhRepository = {
   },
 
   async updateLinhVucWithHistory(idPhanAnh, patch, historyData) {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.phan_anh.update({
+        where: { id: idPhanAnh },
+        data: patch,
+      });
+      await tx.lich_su_trang_thai.create({
+        data: {
+          id_phan_anh: idPhanAnh,
+          ten: historyData.ten,
+          ghi_chu: historyData.ghi_chu,
+          nguoi_tao: historyData.nguoi_tao,
+        },
+      });
+      return updated;
+    });
+  },
+
+  async updateMucDoWithHistory(idPhanAnh, patch, historyData) {
     return await prisma.$transaction(async (tx) => {
       const updated = await tx.phan_anh.update({
         where: { id: idPhanAnh },

@@ -542,7 +542,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Bắt đầu xử lý đăng ký gặp lãnh đạo",
       description:
-        "Yêu cầu quyền LMR_PROCESS. Chỉ đúng lãnh đạo của lịch hẹn được chuyển đơn từ APPROVED sang IN_PROGRESS. Backend tự ghi người và thời điểm bắt đầu xử lý; ghi chú là tùy chọn. API không sử dụng thông tin quầy.",
+        "Yêu cầu quyền LMR_PROCESS. Hệ thống tự chuyển đơn APPROVED sang IN_PROGRESS khi đến giờ bắt đầu ca, đồng thời ghi thời điểm hệ thống chuyển trạng thái. API này cho phép đúng lãnh đạo của lịch hẹn chuyển thủ công sớm hơn khi cần; ghi chú là tùy chọn. API không sử dụng thông tin quầy.",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -707,7 +707,7 @@ const LeaderMeetingRegistrationSwagger = {
       tags: ["LeaderMeetingRegistration"],
       summary: "Hủy đăng ký gặp lãnh đạo",
       description:
-        "Yêu cầu permission LMR_CANCEL. Tài khoản chỉ được chuyển đơn từ APPROVED sang CANCELED trong phạm vi được permission cho phép. Lý do là bắt buộc. Người dân được đăng ký lại ở khung giờ khác nhưng chỗ cũ không được hoàn lại.",
+        "Yêu cầu permission LMR_CANCEL. Tài khoản chỉ được chuyển đơn từ APPROVED sang CANCELED trước khi ca gặp tự động bắt đầu trong phạm vi được permission cho phép. Lý do là bắt buộc. Người dân được đăng ký lại ở khung giờ khác nhưng chỗ cũ không được hoàn lại.",
       security: [{ bearerAuth: [] }],
       parameters: [{
         name: "id",

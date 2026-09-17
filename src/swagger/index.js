@@ -11,6 +11,7 @@ import DanhMucTinTucSwagger from './danh-muc-tin-tuc.swagger.js';
 import LichTiepDanSwagger from './lich-tiep-dan.swagger.js';
 import LinhVucPhanAnhSwagger from './linh-vuc-phan-anh.swagger.js';
 import PhanAnhSwagger from './phan-anh.swagger.js';
+import PhanAnhRatingSwagger from './phan-anh-rating.swagger.js';
 import VideoUploadSwagger from './video-upload.swagger.js';
 import ReportSwagger from './report.swagger.js';
 import RoleSwagger from './role.swagger.js';
@@ -21,7 +22,6 @@ import ExportSwagger from './export.swagger.js';
 import AddressVote from './address-vote.swagger.js';
 import DangKyTiepDanSwagger from './dang-ky-tiep-dan.swagger.js';
 import ReceptionScheduleSwagger from './reception-schedule.swagger.js';
-import ReceptionScheduleManagementSwagger from './reception-schedule-management.swagger.js';
 import ReceptionRatingSwagger from './reception-rating.swagger.js';
 import ReceptionCounterSwagger from './reception-counter.swagger.js';
 import ReceptionCounterAssignmentSwagger from './reception-counter-assignment.swagger.js';
@@ -29,23 +29,10 @@ import LeaderMeetingScheduleSwagger from './leader-meeting-schedule.swagger.js';
 import LeaderMeetingRegistrationSwagger from './leader-meeting-registration.swagger.js';
 import LeaderMeetingRatingSwagger from './leader-meeting-rating.swagger.js';
 import ThuVienSwagger from './thu-vien.swagger.js';
+import LogSwagger from './log.swagger.js';
+import { fillEmptyResponses } from './response.util.js';
 
-const swaggerDocument = {
-
-    openapi: '3.0.0',
-    info: {
-        title: `${env.APP_NAME} API Documentation`,
-        version: '1.0.0',
-    },
-
-    // servers: [
-    //     {
-    //         url: 'http://localhost:8880',  // Địa chỉ API cho môi trường phát triển
-    //         description: 'Local Development',
-    //     },
-    // ],
-
-    paths: {
+const swaggerPaths = {
         ...AuthSwagger,
         ...UserSwagger,
         ...MauDonSwagger,
@@ -58,6 +45,7 @@ const swaggerDocument = {
         ...LichTiepDanSwagger,
         ...LinhVucPhanAnhSwagger,
         ...PhanAnhSwagger,
+        ...PhanAnhRatingSwagger,
         ...VideoUploadSwagger,
         ...ReportSwagger,
         ...RoleSwagger,
@@ -68,7 +56,6 @@ const swaggerDocument = {
         ...AddressVote,
         ...DangKyTiepDanSwagger,
         ...ReceptionScheduleSwagger,
-        ...ReceptionScheduleManagementSwagger,
         ...ReceptionRatingSwagger,
         ...ReceptionCounterSwagger,
         ...ReceptionCounterAssignmentSwagger,
@@ -76,7 +63,25 @@ const swaggerDocument = {
         ...LeaderMeetingRegistrationSwagger,
         ...LeaderMeetingRatingSwagger,
         ...ThuVienSwagger,
+        ...LogSwagger,
+    };
+
+const swaggerDocument = {
+
+    openapi: '3.0.0',
+    info: {
+        title: `${env.APP_NAME} API Documentation`,
+        version: '1.0.0',
     },
+
+    servers: [
+        {
+            url: '/',
+            description: 'Current Swagger host',
+        },
+    ],
+
+    paths: fillEmptyResponses(swaggerPaths),
 
     components: {
         schemas: {

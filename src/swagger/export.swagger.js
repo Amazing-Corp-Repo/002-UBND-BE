@@ -2,6 +2,7 @@ const ExportSwagger = {
   "/api/export/phan-anh": {
     post: {
       tags: ["Export"],
+      summary: "Tạo yêu cầu xuất ZIP phản ánh",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -44,6 +45,7 @@ const ExportSwagger = {
     },
     get: {
       tags: ["Export"],
+      summary: "Lấy danh sách file ZIP phản ánh đã xuất",
       security: [{ bearerAuth: [] }],
       responses: {},
     },
@@ -51,6 +53,7 @@ const ExportSwagger = {
   "/api/export/phan-anh/{fileName}/download": {
     get: {
       tags: ["Export"],
+      summary: "Tải file ZIP phản ánh đã xuất",
       security: [{ bearerAuth: [] }],
       parameters: [
         {
@@ -69,6 +72,7 @@ const ExportSwagger = {
   "/api/export/phan-anh/{fileName}/delete": {
     delete: {
       tags: ["Export"],
+      summary: "Xóa file ZIP phản ánh đã xuất",
       security: [{ bearerAuth: [] }],
       parameters: [
         {

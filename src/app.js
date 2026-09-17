@@ -15,6 +15,7 @@ import basicAuth from "express-basic-auth";
 import { connectRabbitMQ } from "./config/rabbitmq.config.js";
 import "./utils/logger.util.js";
 import { isCorsOriginAllowed } from "./config/cors.config.js";
+import { registerLeaderMeetingStatusCron } from "./cron/leader-meeting-status.cron.js";
 
 const app = express();
 // Render đứng trước ứng dụng một lớp proxy và gửi X-Forwarded-For.
@@ -97,31 +98,30 @@ import("../src/workers/export-phan-anh.worker.js")
 import("./cron/cleanup-chunks.cron.js")
   .then((m) => {
     m.registerCleanupCron();
-    console.log("Cron job started cùng server");
   })
   .catch((err) => console.error("Cron error:", err));
 
 import("./cron/daily-overview-report.cron.js")
   .then((m) => {
     m.registerDailyOverviewReportCron();
-    console.log("Daily overview report cron started cùng server");
   })
   .catch((err) => console.error("Daily overview report cron error:", err));
 
-import("./cron/leader-meeting-status.cron.js")
-  .then((m) => {
-    m.registerLeaderMeetingStatusCron();
-    console.log("Leader meeting status cron started cùng server");
-  })
-  .catch((err) => console.error("Leader meeting status cron error:", err));
+// Đồng bộ ngay trước khi mở HTTP server, sau đó chỉ đặt timer tại ca hợp lệ kế tiếp.
+// Không để import động khiến lỗi khởi tạo chỉ được log rồi server vẫn chạy.
+await registerLeaderMeetingStatusCron();
 
 import("./cron/cleanup-thu-vien.cron.js")
   .then((m) => {
     m.registerCleanupThuVienCron();
-    console.log("Thu vien cleanup cron started cùng server");
   })
   .catch((err) => console.error("Thu vien cleanup cron error:", err));
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port: ${PORT}`);
-});
+import("./cron/phan-anh-overdue.cron.js")
+  .then((m) => {
+    m.registerPhanAnhOverdueCron();
+  })
+  .catch((err) => console.error("Phan anh overdue cron error:", err));
+
+server.listen(PORT);
+

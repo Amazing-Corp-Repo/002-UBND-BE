@@ -1,5 +1,3 @@
-import { randomInt } from "node:crypto";
-import path from "node:path";
 import fs from "node:fs";
 import LeaderMeetingRegistrationRepository from "../repositories/leader-meeting-registration.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
@@ -8,275 +6,75 @@ import { hasPermission } from "../utils/auth-context.util.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import { TRANG_THAI_GAP_LANH_DAO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 import {
-  getEffectiveLeaderMeetingStatus,
+  getLeaderMeetingGraceDeadline,
+  getLeaderMeetingStartTime,
   isLeaderMeetingOverdue,
+  isLeaderMeetingReadyToProcess,
 } from "../utils/leader-meeting-overdue.util.js";
-
-const MAX_RETRIES = 10;
-const PRIVATE_UPLOAD_ROOT = path.resolve(
-  process.cwd(),
-  "src",
-  "private",
-  "uploads",
-  "leader-meetings"
-);
-
-const createCode = () => `LD${String(randomInt(0, 1000000)).padStart(6, "0")}`;
-
-const vietnamDate = (date = new Date()) =>
-  new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-
-const vietnamTime = (date = new Date()) =>
-  new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).format(date);
-
-const buildAttachments = (files = {}) => {
-  const mapFile = (file, type) => ({
-    loai_dinh_kem: type,
-    ten_file_goc: Buffer.from(file.originalname, "latin1").toString("utf8"),
-    duong_dan_file: path.relative(process.cwd(), file.path).replace(/\\/g, "/"),
-    mime_type: file.mimetype,
-    kich_thuoc: file.size,
-  });
-
-  return [
-    ...(files.citizenIdFront || []).map((file) => mapFile(file, "CCCD_FRONT")),
-    ...(files.citizenIdBack || []).map((file) => mapFile(file, "CCCD_BACK")),
-    ...(files.supportingDocuments || []).map((file) =>
-      mapFile(file, "SUPPORTING_DOCUMENT")
-    ),
-  ];
-};
-
-const conflictMessages = {
-  SLOT_UNAVAILABLE: [404, "Khung giờ gặp lãnh đạo không tồn tại hoặc đã ngừng hoạt động"],
-  SLOT_PASSED: [409, "Khung giờ gặp lãnh đạo đã qua"],
-  SLOT_FULL: [409, "Khung giờ gặp lãnh đạo đã đủ sức chứa"],
-  PHONE_DAILY_LIMIT: [409, "Số điện thoại đã có đăng ký giữ chỗ trong ngày hẹn này"],
-  CITIZEN_DAILY_LIMIT: [409, "CCCD đã có đăng ký giữ chỗ trong ngày hẹn này"],
-  PHONE_SLOT_ALREADY_USED: [
-    409,
-    "Số điện thoại đã từng đăng ký khung giờ này, vui lòng chọn khung giờ khác",
-  ],
-  CITIZEN_SLOT_ALREADY_USED: [
-    409,
-    "CCCD đã từng đăng ký khung giờ này, vui lòng chọn khung giờ khác",
-  ],
-};
-
-const uniqueErrorText = (error) => {
-  try {
-    return `${error?.message || ""} ${JSON.stringify(error?.meta || {})}`.toLowerCase();
-  } catch {
-    return String(error?.message || "").toLowerCase();
-  }
-};
-
-const mapUniqueConflict = (error) => {
-  if (error?.code !== "P2002") return null;
-  const text = uniqueErrorText(error);
-  if (text.includes("uq_leader_meeting_slot_phone")) {
-    return "PHONE_SLOT_ALREADY_USED";
-  }
-  if (text.includes("uq_leader_meeting_slot_citizen")) {
-    return "CITIZEN_SLOT_ALREADY_USED";
-  }
-  if (text.includes("ngay_sdt") || text.includes("sdt")) return "PHONE_DAILY_LIMIT";
-  if (text.includes("ngay_cccd") || text.includes("cccd")) return "CITIZEN_DAILY_LIMIT";
-  return null;
-};
-
-const mapCreated = ({ registration, slot }) => ({
-  id: registration.id,
-  registrationCode: registration.ma_dang_ky,
-  status: getEffectiveLeaderMeetingStatus(registration),
-  applicationDate: vietnamDate(registration.ngay_lam_don),
-  address: registration.dia_chi,
-  reason: registration.ly_do,
-  receptionDate: vietnamDate(slot.lich_gap_lanh_dao.ngay),
-  timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
-  leaderName: slot.lich_gap_lanh_dao.lanh_dao.ho_va_ten,
-});
-
-const mapCitizenLookup = (registration) => {
-  const slot = registration.khung_gio_gap_lanh_dao;
-  const schedule = slot.lich_gap_lanh_dao;
-  const rating = registration.danh_gia_gap_lanh_dao;
-  return {
-    id: registration.id,
-    registrationCode: registration.ma_dang_ky,
-    status: getEffectiveLeaderMeetingStatus(registration),
-    receptionDate: vietnamDate(registration.ngay_hen),
-    timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
-    applicant: {
-      fullName: registration.ho_ten,
-    },
-    leader: {
-      id: schedule.lanh_dao.id,
-      fullName: schedule.lanh_dao.ho_va_ten,
-    },
-    location: schedule.dia_diem,
-    rejectionReason: registration.ly_do_tu_choi,
-    rejectedAt: registration.thoi_gian_tu_choi,
-    cancellationReason: registration.ly_do_huy,
-    canceledAt: registration.thoi_gian_huy,
-    approvedAt: registration.thoi_gian_phe_duyet,
-    processingAt: registration.thoi_gian_bat_dau_xu_ly,
-    completedAt: registration.thoi_gian_hoan_thanh,
-    ratingStatus: rating ? "RATED" : "NOT_RATED",
-    rating: rating
-      ? {
-          score: rating.diem_tong,
-          comment: rating.nhan_xet || "",
-          createdAt: rating.thoi_gian_tao,
-        }
-      : null,
-    createdAt: registration.thoi_gian_tao,
-    updatedAt: registration.thoi_gian_cap_nhat,
-  };
-};
-
-const mapManagementListItem = (registration) => {
-  const slot = registration.khung_gio_gap_lanh_dao;
-  const schedule = slot.lich_gap_lanh_dao;
-  return {
-    id: registration.id,
-    registrationCode: registration.ma_dang_ky,
-    isOverdue: isLeaderMeetingOverdue(registration),
-    applicant: {
-      fullName: registration.ho_ten,
-      phoneNumber: registration.sdt,
-      citizenId: registration.cccd,
-    },
-    reason: registration.ly_do || "",
-    status: getEffectiveLeaderMeetingStatus(registration),
-    receptionDate: vietnamDate(registration.ngay_hen),
-    timeSlot: `${slot.gio_bat_dau} - ${slot.gio_ket_thuc}`,
-    location: schedule.dia_diem,
-    leader: {
-      id: schedule.lanh_dao.id,
-      fullName: schedule.lanh_dao.ho_va_ten,
-    },
-    processingResult: registration.ghi_chu_hoan_thanh || registration.ghi_chu_xu_ly || null,
-    ratingStatus: registration.danh_gia_gap_lanh_dao ? "RATED" : "NOT_RATED",
-    approvedAt: registration.thoi_gian_phe_duyet,
-    processingAt: registration.thoi_gian_bat_dau_xu_ly,
-    completedAt: registration.thoi_gian_hoan_thanh,
-    rejectedAt: registration.thoi_gian_tu_choi,
-    canceledAt: registration.thoi_gian_huy,
-    createdAt: registration.thoi_gian_tao,
-  };
-};
-
-const mapOperator = (operator, operatedAt) =>
-  operator
-    ? { id: operator.id, fullName: operator.ho_va_ten, operatedAt }
-    : null;
-
-const mapManagementDetail = (registration) => {
-  const slot = registration.khung_gio_gap_lanh_dao;
-  const schedule = slot.lich_gap_lanh_dao;
-  return {
-    id: registration.id,
-    registrationCode: registration.ma_dang_ky,
-    status: getEffectiveLeaderMeetingStatus(registration),
-    applicationDate: registration.ngay_lam_don
-      ? vietnamDate(registration.ngay_lam_don)
-      : null,
-    appointment: {
-      date: vietnamDate(registration.ngay_hen),
-      slotId: slot.id,
-      startTime: slot.gio_bat_dau,
-      endTime: slot.gio_ket_thuc,
-      location: schedule.dia_diem,
-      scheduleNote: schedule.ghi_chu,
-      leader: {
-        id: schedule.lanh_dao.id,
-        fullName: schedule.lanh_dao.ho_va_ten,
-        email: schedule.lanh_dao.email,
-        phoneNumber: schedule.lanh_dao.so_dien_thoai,
-      },
-    },
-    applicant: {
-      fullName: registration.ho_ten,
-      phoneNumber: registration.sdt,
-      citizenId: registration.cccd,
-      citizenIdIssuedDate: registration.ngay_cap_cccd
-        ? vietnamDate(registration.ngay_cap_cccd)
-        : null,
-      citizenIdIssuedPlace: registration.noi_cap_cccd,
-      address: registration.dia_chi,
-    },
-    reason: registration.ly_do,
-    workflow: {
-      approver: mapOperator(
-        registration.nguoi_duyet,
-        registration.thoi_gian_phe_duyet
-      ),
-      processor: mapOperator(
-        registration.nguoi_bat_dau_xu_ly_ref,
-        registration.thoi_gian_bat_dau_xu_ly
-      ),
-      completer: mapOperator(
-        registration.nguoi_hoan_thanh_ref,
-        registration.thoi_gian_hoan_thanh
-      ),
-      rejecter: mapOperator(
-        registration.nguoi_tu_choi_ref,
-        registration.thoi_gian_tu_choi
-      ),
-      canceler: mapOperator(
-        registration.nguoi_huy_ref,
-        registration.thoi_gian_huy
-      ),
-      processingNote: registration.ghi_chu_xu_ly,
-      completionNote: registration.ghi_chu_hoan_thanh,
-      rejectionReason: registration.ly_do_tu_choi,
-      cancellationReason: registration.ly_do_huy,
-    },
-    attachments: registration.dinh_kem_dang_ky_gap_lanh_dao.map((item) => ({
-      id: item.id,
-      type: item.loai_dinh_kem,
-      originalName: item.ten_file_goc,
-      mimeType: item.mime_type,
-      size: item.kich_thuoc,
-      createdAt: item.thoi_gian_tao,
-      contentEndpoint: `/api/leader-meeting-registrations/${registration.id}/attachments/${item.id}`,
-      canDownload: item.loai_dinh_kem === "SUPPORTING_DOCUMENT",
-    })),
-    rating: registration.danh_gia_gap_lanh_dao
-      ? {
-          id: registration.danh_gia_gap_lanh_dao.id,
-          score: registration.danh_gia_gap_lanh_dao.diem_tong,
-          criteria: registration.danh_gia_gap_lanh_dao.tieu_chi,
-          reasons: registration.danh_gia_gap_lanh_dao.ly_do,
-          comment: registration.danh_gia_gap_lanh_dao.nhan_xet,
-          createdAt: registration.danh_gia_gap_lanh_dao.thoi_gian_tao,
-        }
-      : null,
-    createdAt: registration.thoi_gian_tao,
-    updatedAt: registration.thoi_gian_cap_nhat,
-  };
-};
+import {
+  MAX_RETRIES,
+  PRIVATE_UPLOAD_ROOT,
+  createCode,
+  vietnamDate,
+  vietnamTime,
+  refreshLeaderMeetingStatusSchedule,
+  buildAttachments,
+  conflictMessages,
+  mapUniqueConflict,
+  mapCreated,
+  mapCitizenLookup,
+  mapManagementListItem,
+  mapManagementDetail,
+} from "./leader-meeting-registration.helpers.js";
 
 const LeaderMeetingRegistrationService = {
   async markOverdueRegistrations(now = new Date()) {
-    const candidates = await LeaderMeetingRegistrationRepository.findOverdueCandidates();
+    const candidates = await LeaderMeetingRegistrationRepository.findOverdueCandidates(
+      vietnamDate(now)
+    );
     const ids = candidates
       .filter((registration) => isLeaderMeetingOverdue(registration, now))
       .map((registration) => registration.id);
     if (ids.length === 0) return { transitioned: 0 };
     const result = await LeaderMeetingRegistrationRepository.markOverdue(ids, now);
     return { transitioned: result.count };
+  },
+
+  async startDueApprovedRegistrations(now = new Date()) {
+    const candidates =
+      await LeaderMeetingRegistrationRepository.findAutoProcessCandidates(vietnamDate(now));
+    const ids = candidates
+      .filter((registration) => isLeaderMeetingReadyToProcess(registration, now))
+      .map((registration) => registration.id);
+    if (ids.length === 0) return { transitioned: 0 };
+    const result = await LeaderMeetingRegistrationRepository.markInProgress(ids, now);
+    return { transitioned: result.count };
+  },
+
+  async getNextStatusTransitionAt(now = new Date()) {
+    const fromDate = vietnamDate(now);
+    const [pending, approved] = await Promise.all([
+      LeaderMeetingRegistrationRepository.findOverdueCandidates(fromDate),
+      LeaderMeetingRegistrationRepository.findAutoProcessCandidates(fromDate),
+    ]);
+    const candidates = [
+      ...pending.map((registration) =>
+        getLeaderMeetingGraceDeadline(
+          registration.ngay_hen,
+          registration.khung_gio_gap_lanh_dao?.gio_bat_dau
+        )
+      ),
+      ...approved.map((registration) =>
+        getLeaderMeetingStartTime(
+          registration.ngay_hen,
+          registration.khung_gio_gap_lanh_dao?.gio_bat_dau
+        )
+      ),
+    ].filter((time) => time && time > now);
+
+    return candidates.length > 0
+      ? new Date(Math.min(...candidates.map((time) => time.getTime())))
+      : null;
   },
 
   async create(input, files = {}) {
@@ -415,6 +213,7 @@ const LeaderMeetingRegistrationService = {
     if (!updated) {
       throw new BaseError(409, "Đăng ký đã được xử lý bởi yêu cầu khác");
     }
+    refreshLeaderMeetingStatusSchedule();
     return mapManagementDetail(updated);
   },
 
@@ -568,7 +367,7 @@ const LeaderMeetingRegistrationService = {
       throw new BaseError(404, "Đăng ký gặp lãnh đạo không tồn tại hoặc không thuộc lịch của bạn");
     }
     if (registration.trang_thai !== TRANG_THAI_GAP_LANH_DAO.APPROVED) {
-      throw new BaseError(409, "Chỉ đăng ký đã được phê duyệt mới được hủy");
+      throw new BaseError(409, "Chỉ đăng ký đã được duyệt mới được hủy");
     }
     const now = new Date();
     const updated = await LeaderMeetingRegistrationRepository.cancelApproved(

@@ -29,7 +29,7 @@ export const runDailyOverviewReport = async () => {
   }
 
   const { tong_hom_nay, thong_ke_theo_trang_thai } =
-    await PhanAnhService.getTongQuanPhanAnh();
+    await PhanAnhService.getTongQuanPhanAnh({ isInternal: true });
 
   const data = {
     ngay: formatNgay(new Date()),

@@ -1,5 +1,7 @@
 import { LichTiepDanSchemas } from "../schemas/lich-tiep-dan.schema.js";
 
+import { fillEmptyResponses } from "./response.util.js";
+
 const LichTiepDanSwagger = {
     '/api/lich-tiep-dan/import': {
         post: {
@@ -288,4 +290,4 @@ const LichTiepDanSwagger = {
     },
 }
 
-export default LichTiepDanSwagger;
+export default fillEmptyResponses(LichTiepDanSwagger);

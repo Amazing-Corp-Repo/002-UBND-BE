@@ -73,6 +73,7 @@ export const createUploader = ({
             file.originalname,
             "latin1",
           ).toString("utf8");
+          file.originalname = originalName;
           const ext = path.extname(originalName);
           const base = path.basename(originalName, ext);
 

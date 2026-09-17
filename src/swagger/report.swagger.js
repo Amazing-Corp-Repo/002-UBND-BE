@@ -226,6 +226,143 @@ const ReportSwagger = {
       responses: {},
     },
   },
+
+  "/api/report/phan-anh/theo-thang": {
+    get: {
+      tags: ["Report"],
+      security: [{ bearerAuth: [] }],
+      summary: "Lấy báo cáo phản ánh theo tháng",
+      parameters: [
+        {
+          name: "from",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        {
+          name: "to",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        {
+          name: "id_linh_vuc",
+          in: "query",
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {},
+    },
+  },
+
+  "/api/report/phan-anh/chi-tiet": {
+    get: {
+      tags: ["Report"],
+      security: [{ bearerAuth: [] }],
+      summary: "Lấy chi tiết phản ánh",
+      parameters: [
+        {
+          name: "from",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        {
+          name: "to",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        {
+          name: "id_linh_vuc",
+          in: "query",
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "trang_thai",
+          in: "query",
+          schema: { type: "string" },
+        },
+        {
+          name: "page",
+          in: "query",
+          schema: { type: "integer", minimum: 1, default: 1 },
+        },
+        {
+          name: "size",
+          in: "query",
+          schema: { type: "integer", minimum: 1, default: 10 },
+        },
+      ],
+      responses: {},
+    },
+  },
+
+  "/api/report/phan-anh/chi-tiet/export": {
+    get: {
+      tags: ["Report"],
+      security: [{ bearerAuth: [] }],
+      summary: "Xuất chi tiết phản ánh ra Excel",
+      parameters: [
+        {
+          name: "from",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        {
+          name: "to",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        {
+          name: "id_linh_vuc",
+          in: "query",
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "trang_thai",
+          in: "query",
+          schema: { type: "string" },
+        },
+      ],
+      responses: {
+        200: {
+          description: "File Excel chi tiết phản ánh",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+      },
+    },
+  },
+
+  "/api/report/danh-gia/export": {
+    get: {
+      tags: ["Report"],
+      security: [{ bearerAuth: [] }],
+      summary: "Xuất danh sách đánh giá ra Excel",
+      parameters: [
+        {
+          name: "from",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+        {
+          name: "to",
+          in: "query",
+          schema: { type: "string", format: "date" },
+        },
+      ],
+      responses: {
+        200: {
+          description: "File Excel danh sách đánh giá",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+      },
+    },
+  },
 };
 
 export default ReportSwagger;

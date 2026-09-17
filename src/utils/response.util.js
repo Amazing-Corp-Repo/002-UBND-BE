@@ -11,12 +11,13 @@ export const createPagination = (currentPage, pageSize, totalItems) => {
     };
 };
 
-export const successResponse = (res, data = {}, message = "Success", pagination = null) => {
+export const successResponse = (res, data = {}, message = "Success", pagination = null, extra = {}) => {
     return res.json(convertBigInt({
         success: true,
         data,
         message,
         pagination,
+        ...extra,
     }));
 };
 
