@@ -48,9 +48,6 @@ export const scheduleNextLeaderMeetingStatusTransition = async () => {
     }
   }, Math.min(delay, MAX_TIMER_DELAY_MS));
 
-  console.log(
-    `[leader-meeting-status] Lần đồng bộ tiếp theo: ${nextAt.toISOString()}`
-  );
   return nextAt;
 };
 
