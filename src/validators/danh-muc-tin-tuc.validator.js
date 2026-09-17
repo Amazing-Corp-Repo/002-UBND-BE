@@ -1,4 +1,3 @@
-import e from 'cors';
 import Joi from 'joi';
 
 export const CreateDanhMucTinTucRequest = Joi.object({

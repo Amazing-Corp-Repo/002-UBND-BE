@@ -31,6 +31,7 @@ import LeaderMeetingRatingSwagger from './leader-meeting-rating.swagger.js';
 import ThuVienSwagger from './thu-vien.swagger.js';
 import LogSwagger from './log.swagger.js';
 import { fillEmptyResponses } from './response.util.js';
+import { fillMissingExamples } from './example.util.js';
 
 const swaggerPaths = {
         ...AuthSwagger,
@@ -81,7 +82,16 @@ const swaggerDocument = {
         },
     ],
 
-    paths: fillEmptyResponses(swaggerPaths),
+    paths: fillMissingExamples(fillEmptyResponses(swaggerPaths), {
+        LibraryCategoryRequest: {
+            type: "object",
+            required: ["name"],
+            properties: {
+                name: { type: "string" },
+                description: { type: "string", nullable: true },
+            },
+        },
+    }),
 
     components: {
         schemas: {
