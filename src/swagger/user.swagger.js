@@ -14,7 +14,7 @@ const UserSwagger = {
     get: {
       tags: ["Users"],
       security: [{ bearerAuth: [] }],
-      summary: "Lấy danh sách người dùng có phân trang",
+      summary: "Lấy danh sách người dùng có phân trang (cần quyền ND_GET_DETAIL)",
       description:
         "Trả về danh sách người dùng theo phân trang. Yêu cầu tham số truy vấn page và size.",
       parameters: [
@@ -95,7 +95,7 @@ const UserSwagger = {
   "/api/users/statistics": {
     get: {
       tags: ["Users"],
-      summary: "Thống kê người dùng",
+      summary: "Thống kê người dùng (cần quyền ND_GET_DETAIL)",
       description: "Lấy thống kê tổng quan người dùng.",
       security: [{ bearerAuth: [] }],
       responses: {},
@@ -202,7 +202,7 @@ const UserSwagger = {
   "/api/users/search": {
     get: {
       tags: ["Users"],
-      summary: "Tìm kiếm người dùng",
+      summary: "Tìm kiếm người dùng (cần quyền ND_GET_DETAIL)",
       description:
         "Tìm kiếm người dùng dựa trên từ khóa trong tên đăng nhập, họ và tên hoặc email",
       security: [{ bearerAuth: [] }],

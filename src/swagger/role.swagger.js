@@ -4,7 +4,8 @@ const RoleSwagger = {
   "/api/role": {
     get: {
       tags: ["Role"],
-      summary: "Lấy tất cả role",
+      security: [{ bearerAuth: [] }],
+      summary: "Lấy tất cả role (yêu cầu quyền quản trị role/phân quyền)",
       parameters: [
         {
           name: "search",
@@ -17,7 +18,7 @@ const RoleSwagger = {
         },
       ],
       description:
-        "API trả về danh sách tất cả các role hiện có trong hệ thống.",
+        "Yêu cầu ít nhất một quyền quản trị role hoặc PERM_GET_ALL.",
       responses: {},
     },
     post: {
@@ -40,9 +41,10 @@ const RoleSwagger = {
   '/api/role/pagination': {
     get: {
       tags: ["Role"],
-      summary: "Lấy tất cả vai trò với phân trang",
+      security: [{ bearerAuth: [] }],
+      summary: "Lấy tất cả vai trò với phân trang (yêu cầu quyền quản trị)",
       description:
-        "API trả về danh sách tất cả các vai trò hiện có trong hệ thống với phân trang.",
+        "Yêu cầu ít nhất một quyền quản trị role hoặc PERM_GET_ALL.",
       parameters: [
         {
           name: "isActive",
@@ -89,9 +91,10 @@ const RoleSwagger = {
   '/api/role/{roleId}': {
     get: {
       tags: ["Role"],
-      summary: "Lấy chi tiết vai trò",
+      security: [{ bearerAuth: [] }],
+      summary: "Lấy chi tiết vai trò (yêu cầu quyền quản trị)",
       description:
-        "API trả về chi tiết của một vai trò dựa trên roleId.",
+        "Yêu cầu ít nhất một quyền quản trị role hoặc PERM_GET_ALL.",
       parameters: [
         {
           name: "roleId",

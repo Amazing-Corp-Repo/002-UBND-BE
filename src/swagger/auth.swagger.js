@@ -90,7 +90,13 @@ const AuthSwagger = {
                     }
                 }
             },
-            responses: {}
+            responses: {
+                200: { description: 'Đổi mật khẩu thành công' },
+                400: { description: 'Mật khẩu hiện tại không đúng hoặc dữ liệu đổi mật khẩu không hợp lệ' },
+                401: { description: 'Thiếu hoặc sai access token' },
+                403: { description: 'Tài khoản người dùng không hoạt động' },
+                404: { description: 'Không tìm thấy người dùng' },
+            }
         }
     },
     '/api/auths/enable-or-disable-2fa': {

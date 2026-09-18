@@ -233,7 +233,7 @@ export const GetAllPhanAnhQuery = Joi.object({
   includePendingExtension: Joi.alternatives()
     .try(Joi.boolean(), Joi.string().valid("true", "false"))
     .optional()
-    .default(false),
+    .default(true),
 }).custom((value, helpers) => {
   if (Boolean(value.startDate) !== Boolean(value.endDate)) {
     return helpers.error("date.pair");

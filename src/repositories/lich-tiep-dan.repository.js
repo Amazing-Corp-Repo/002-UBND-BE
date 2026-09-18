@@ -248,6 +248,16 @@ const LichTiepDanRepository = {
       },
     });
   },
+
+  async findByNgay(ngay_tiep_dan, excludeId = null) {
+    return await prisma.lich_tiep_dan.findMany({
+      where: {
+        ngay_tiep_dan,
+        is_delete: false,
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+    });
+  },
 };
 
 export default LichTiepDanRepository;

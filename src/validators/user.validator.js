@@ -208,3 +208,17 @@ export const UpdateFirstLoginRequest = Joi.object({
             'any.required': 'reCAPTCHA token là bắt buộc',
         }),
 });
+
+export const SearchUsersQuery = Joi.object({
+    search: Joi.string()
+        .trim()
+        .min(1)
+        .max(255)
+        .required()
+        .messages({
+            'string.empty': 'Từ khóa tìm kiếm không được để trống',
+            'string.min': 'Từ khóa tìm kiếm không được để trống',
+            'string.max': 'Từ khóa tìm kiếm không được vượt quá 255 ký tự',
+            'any.required': 'Từ khóa tìm kiếm là bắt buộc',
+        }),
+});

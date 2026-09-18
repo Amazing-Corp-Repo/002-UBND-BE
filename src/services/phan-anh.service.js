@@ -493,6 +493,35 @@ const PhanAnhService = {
         "Không thể cập nhật trạng thái cho phản ánh đã được giải quyết hoặc đóng",
       );
     }
+    const currentDeadline = phanAnh.ngay_du_kien_hoan_thanh
+      ? new Date(phanAnh.ngay_du_kien_hoan_thanh)
+      : null;
+    const isOverdue = currentDeadline && currentDeadline.getTime() <= Date.now();
+
+    // Một đơn đã quá hạn phải đi qua luồng xin/phê duyệt gia hạn. Không dựa vào
+    // mốc lịch sử "Quá hạn" vì job đánh dấu quá hạn có thể chưa kịp chạy.
+    if (isOverdue && trangThai === PHAN_ANH_STATUS.DA_GIAI_QUYET) {
+      throw new BaseError(
+        409,
+        "Phản ánh đã quá hạn, vui lòng tạo đề nghị gia hạn và chờ phê duyệt trước khi giải quyết",
+      );
+    }
+    if (isOverdue && ngayDuKienHoanThanh !== undefined) {
+      throw new BaseError(
+        409,
+        "Phản ánh đã quá hạn, không thể cập nhật hạn trực tiếp; vui lòng tạo đề nghị gia hạn",
+      );
+    }
+    if (ngayDuKienHoanThanh !== undefined) {
+      const proposedDeadline = new Date(ngayDuKienHoanThanh);
+
+      if (Number.isNaN(proposedDeadline.getTime()) || proposedDeadline <= new Date()) {
+        throw new BaseError(400, "Hạn xử lý mới phải sau thời điểm hiện tại");
+      }
+      if (currentDeadline && proposedDeadline <= currentDeadline) {
+        throw new BaseError(400, "Chỉ được gia hạn, không được rút ngắn hạn xử lý");
+      }
+    }
     if (trangThai === PHAN_ANH_STATUS.TU_CHOI) {
       if (lastStatus !== PHAN_ANH_STATUS.DA_GUI) {
         throw new BaseError(400, "Chỉ được từ chối phản ánh ở trạng thái Đã gửi");

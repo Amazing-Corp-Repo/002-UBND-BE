@@ -243,7 +243,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnh"],
       summary: "Cập nhật trạng thái phản ánh",
       security: [{ bearerAuth: [] }],
-      description: "Cập nhật trạng thái phản ánh theo ID",
+      description: "Cập nhật trạng thái phản ánh theo ID. Khi gửi ngayDuKienHoanThanh, hạn mới phải sau thời điểm hiện tại và chỉ được lớn hơn hạn hiện tại; không hỗ trợ rút ngắn hạn xử lý. Phản ánh đã quá hạn không được giải quyết hoặc đổi hạn trực tiếp: phải tạo đề nghị gia hạn và chờ phê duyệt.",
       parameters: [
         {
           name: "idPhanAnh",
@@ -498,7 +498,7 @@ const PhanAnhSwagger = {
       tags: ["PhanAnhExtension"],
       summary: "Gửi đề nghị gia hạn phản ánh",
       security: [{ bearerAuth: [] }],
-      description: "Yêu cầu PA_EXTENSION_CREATE; chỉ tạo cho phản ánh thuộc lĩnh vực trong cate của tài khoản. Có thể xin gia hạn trước khi đơn quá hạn hoặc sau khi đơn đã quá hạn. Điều kiện thời gian duy nhất: requestedDeadline phải lớn hơn hạn xử lý hiện tại.",
+      description: "Yêu cầu PA_EXTENSION_CREATE; chỉ tạo cho phản ánh thuộc lĩnh vực trong cate của tài khoản. Có thể xin gia hạn trước khi đơn quá hạn hoặc sau khi đơn đã quá hạn. requestedDeadline phải sau thời điểm gửi yêu cầu và lớn hơn hạn xử lý hiện tại. Không có thời gian chờ 24 giờ; đề nghị được chuyển sang chờ phê duyệt ngay.",
       requestBody: {
         required: true,
         content: {
@@ -511,7 +511,7 @@ const PhanAnhSwagger = {
                 requestedDeadline: {
                   type: "string",
                   format: "date-time",
-                  description: "Hạn đề xuất mới; phải lớn hơn hạn xử lý hiện tại của phản ánh. Không bắt buộc phải lớn hơn thời điểm gửi yêu cầu.",
+                  description: "Hạn đề xuất mới; phải sau thời điểm gửi yêu cầu và lớn hơn hạn xử lý hiện tại của phản ánh.",
                 },
                 reason: { type: "string", minLength: 5, maxLength: 4000 },
                 file: { type: "array", items: { type: "string", format: "binary" }, maxItems: 5 },
