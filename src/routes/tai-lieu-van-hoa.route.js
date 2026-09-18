@@ -122,7 +122,7 @@ taiLieuVanHoaRouter.post(
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
     fields: [
-      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf"] },
       { fieldName: "images", maxCount: 10, maxSizeMB: 10, allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp"] },
       { fieldName: "videos", maxCount: 5, maxSizeMB: 200, allowed_types: ["video/mp4", "video/mpeg", "video/quicktime"] },
     ],
@@ -140,7 +140,7 @@ taiLieuVanHoaRouter.put(
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
     fields: [
-      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf"] },
       { fieldName: "images", maxCount: 10, maxSizeMB: 10, allowed_types: ["image/jpeg", "image/png", "image/gif", "image/webp"] },
       { fieldName: "videos", maxCount: 5, maxSizeMB: 200, allowed_types: ["video/mp4", "video/mpeg", "video/quicktime"] },
     ],

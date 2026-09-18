@@ -12,19 +12,21 @@ export const UpdateLStatusLichTiepDanRequest = Joi.object({
 export const CreateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()
         .trim()
-        .max(255)
-        .optional()
-        .allow(null, '')
+        .max(50)
+        .required()
         .messages({
-            'string.max': 'Địa điểm không được vượt quá 255 ký tự',
+            'string.empty': 'Địa điểm tiếp dân không được để trống',
+            'string.max': 'Địa điểm không được vượt quá 50 ký tự',
+            'any.required': 'Địa điểm tiếp dân là bắt buộc',
         }),
     tenCanBo: Joi.string()
         .trim()
-        .max(255)
-        .optional()
-        .allow(null, '')
+        .max(50)
+        .required()
         .messages({
-            'string.max': 'Tên cán bộ không được vượt quá 255 ký tự',
+            'string.empty': 'Tên cán bộ không được để trống',
+            'string.max': 'Tên cán bộ không được vượt quá 50 ký tự',
+            'any.required': 'Tên cán bộ là bắt buộc',
         }),
     batDau: Joi.string()
         .pattern(timeRegex)
@@ -61,19 +63,21 @@ export const CreateLichTiepDanRequest = Joi.object({
 export const UpdateLichTiepDanRequest = Joi.object({
     diaDiem: Joi.string()
         .trim()
-        .max(255)
-        .optional()
-        .allow(null, '')
+        .max(50)
+        .required()
         .messages({
-            'string.max': 'Địa điểm không được vượt quá 255 ký tự',
+            'string.empty': 'Địa điểm tiếp dân không được để trống',
+            'string.max': 'Địa điểm không được vượt quá 50 ký tự',
+            'any.required': 'Địa điểm tiếp dân là bắt buộc',
         }),
     tenCanBo: Joi.string()
         .trim()
-        .max(255)
-        .optional()
-        .allow(null, '')
+        .max(50)
+        .required()
         .messages({
-            'string.max': 'Tên cán bộ không được vượt quá 255 ký tự',
+            'string.empty': 'Tên cán bộ không được để trống',
+            'string.max': 'Tên cán bộ không được vượt quá 50 ký tự',
+            'any.required': 'Tên cán bộ là bắt buộc',
         }),
     batDau: Joi.string()
         .pattern(timeRegex)
