@@ -44,3 +44,10 @@ export const RejectPhanAnhExtensionRequest = Joi.object({
     "any.required": "Lý do từ chối là bắt buộc",
   }),
 });
+
+export const GetPhanAnhExtensionStatsQuery = Joi.object({
+  search: Joi.string().trim().max(255).optional().allow(""),
+  mucDo: Joi.string().valid("KHAN_CAP", "BINH_THUONG", "Khẩn cấp", "Thông thường").optional(),
+  idLinhVuc: Joi.string().uuid().optional(),
+});
+

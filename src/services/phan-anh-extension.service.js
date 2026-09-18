@@ -149,6 +149,16 @@ const PhanAnhExtensionService = {
     };
   },
 
+  async getStatistics({ search, mucDo, idLinhVuc, permissions, cate }) {
+    const { scopedLinhVucIds } = resolveExtensionScope({ permissions, cate, idLinhVuc });
+    return PhanAnhExtensionRepository.getStatistics({
+      search,
+      mucDo: toDbPhanAnhMucDo(mucDo),
+      idLinhVuc,
+      scopedLinhVucIds,
+    });
+  },
+
   async exportExcel({ status, search, mucDo, idLinhVuc, permissions, cate }) {
     const { scopedLinhVucIds } = resolveExtensionScope({ permissions, cate, idLinhVuc });
     const extensions = await PhanAnhExtensionRepository.getAllForExport({

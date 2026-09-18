@@ -29,6 +29,7 @@ import {
   ApprovePhanAnhExtensionRequest,
   CreatePhanAnhExtensionRequest,
   GetPhanAnhExtensionsQuery,
+  GetPhanAnhExtensionStatsQuery,
   PhanAnhExtensionIdParams,
   RejectPhanAnhExtensionRequest,
 } from "../validators/phan-anh-extension.validator.js";
@@ -168,6 +169,19 @@ phanAnhRouter.get(
   ]),
   validateQuery(GetPhanAnhExtensionsQuery),
   PhanAnhExtensionController.exportExcel,
+);
+
+phanAnhRouter.get(
+  "/extension/stats",
+  authenticate,
+  authorizeAny([
+    PERMISSION.PA_EXTENSION_GET_ALL,
+    PERMISSION.PA_EXTENSION_CREATE,
+    PERMISSION.PA_EXTENSION_APPROVE,
+    PERMISSION.PA_EXTENSION_REJECT,
+  ]),
+  validateQuery(GetPhanAnhExtensionStatsQuery),
+  PhanAnhExtensionController.getStats,
 );
 
 phanAnhRouter.get(

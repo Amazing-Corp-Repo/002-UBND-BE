@@ -558,6 +558,46 @@ const PhanAnhSwagger = {
       },
     },
   },
+  "/api/phan-anh/extension/stats": {
+    get: {
+      tags: ["PhanAnhExtension"],
+      summary: "Thống kê số lượng đề nghị gia hạn phản ánh (card counts)",
+      description: "Trả về số lượng tổng số, chờ phê duyệt, đã phê duyệt và đã từ chối theo thẩm quyền cate/permissions của tài khoản.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "search", in: "query", schema: { type: "string" } },
+        { name: "mucDo", in: "query", schema: { type: "string", enum: ["KHAN_CAP", "BINH_THUONG"] } },
+        { name: "idLinhVuc", in: "query", schema: { type: "string", format: "uuid" } },
+      ],
+      responses: {
+        200: {
+          description: "Lấy thống kê đề nghị gia hạn thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      all: { type: "integer", example: 4 },
+                      pending: { type: "integer", example: 2 },
+                      approved: { type: "integer", example: 1 },
+                      rejected: { type: "integer", example: 1 },
+                    },
+                  },
+                  message: { type: "string", example: "Lấy thống kê đề nghị gia hạn thành công" },
+                },
+              },
+            },
+          },
+        },
+        401: { description: "Chưa xác thực" },
+        403: { description: "Không có permission hợp lệ" },
+      },
+    },
+  },
   "/api/phan-anh/extension/{id}": {
     get: {
       tags: ["PhanAnhExtension"],
