@@ -84,8 +84,8 @@ const PhanAnhController = {
         search,
         slaStatus: effectiveSlaStatus,
         includePendingExtension:
-          includePendingExtension === true ||
-          includePendingExtension === "true" ||
+          (includePendingExtension !== false &&
+            includePendingExtension !== "false") ||
           effectiveSlaStatus === "PENDING_EXTENSION" ||
           effectiveSlaStatus === "CHO_GIA_HAN" ||
           effectiveSlaStatus === "CHỜ GIA HẠN",

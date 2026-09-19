@@ -27,6 +27,18 @@ const PhanAnhExtensionController = {
     return successResponse(res, data, "Lấy danh sách đề nghị gia hạn thành công", pagination);
   },
 
+  async getStats(req, res) {
+    const { search, mucDo, idLinhVuc } = req.validatedQuery || req.query || {};
+    const result = await PhanAnhExtensionService.getStatistics({
+      search,
+      mucDo,
+      idLinhVuc,
+      permissions: req.payload.permissions || [],
+      cate: req.payload.cate,
+    });
+    return successResponse(res, result, "Lấy thống kê đề nghị gia hạn thành công");
+  },
+
   async exportExcel(req, res) {
     const buffer = await PhanAnhExtensionService.exportExcel({
       ...req.validatedQuery,

@@ -328,26 +328,29 @@ const PhanAnhDashboardRepository = {
           rate: item.count ? Number(((item.resolved / item.count) * 100).toFixed(1)) : 0,
         })),
       thong_ke_theo_linh_vuc: thongKeTheoLinhVuc,
-      thong_ke_theo_han_xu_ly: [
-        {
-          label: "Đúng hạn",
-          count: currentSla.onTime,
-          percent: currentItems.length ? Number(((currentSla.onTime / currentItems.length) * 100).toFixed(1)) : 0,
-          color: "#10B981",
-        },
-        {
-          label: "Sắp trễ hạn",
-          count: currentSla.soon,
-          percent: currentItems.length ? Number(((currentSla.soon / currentItems.length) * 100).toFixed(1)) : 0,
-          color: "#F59E0B",
-        },
-        {
-          label: "Quá hạn",
-          count: currentSla.overdue,
-          percent: currentItems.length ? Number(((currentSla.overdue / currentItems.length) * 100).toFixed(1)) : 0,
-          color: "#EF4444",
-        },
-      ],
+      thong_ke_theo_han_xu_ly: (() => {
+        const totalSla = currentSla.onTime + currentSla.soon + currentSla.overdue;
+        return [
+          {
+            label: "Đúng hạn",
+            count: currentSla.onTime,
+            percent: totalSla ? Number(((currentSla.onTime / totalSla) * 100).toFixed(1)) : 0,
+            color: "#10B981",
+          },
+          {
+            label: "Sắp trễ hạn",
+            count: currentSla.soon,
+            percent: totalSla ? Number(((currentSla.soon / totalSla) * 100).toFixed(1)) : 0,
+            color: "#F59E0B",
+          },
+          {
+            label: "Quá hạn",
+            count: currentSla.overdue,
+            percent: totalSla ? Number(((currentSla.overdue / totalSla) * 100).toFixed(1)) : 0,
+            color: "#EF4444",
+          },
+        ];
+      })(),
       xu_huong_phan_anh: [...trendMap.values()]
         .sort((a, b) => a.key.localeCompare(b.key))
         .map(({ date, tongPhanAnh, hoanThanh, daGiaiQuyet, quaHan }) => ({

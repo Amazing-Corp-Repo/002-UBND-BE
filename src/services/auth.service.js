@@ -99,7 +99,10 @@ const AuthService = {
       throw new BaseError(403, "Tài khoản người dùng không hoạt động");
     }
     if (!(await compare(mat_khau_hien_tai, user.mat_khau))) {
-      throw new BaseError(401, "Mật khẩu hiện tại không đúng");
+      // A mismatched current password is invalid form input, not an expired or
+      // invalid access token. Keeping it out of 401 prevents clients from
+      // treating this recoverable form error as a forced logout.
+      throw new BaseError(400, "Mật khẩu hiện tại không đúng");
     }
     const hashedPassword = await hash(mat_khau_moi);
 

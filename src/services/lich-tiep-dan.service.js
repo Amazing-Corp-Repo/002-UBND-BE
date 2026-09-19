@@ -35,6 +35,60 @@ const sortedLichTiepDan = (data) => {
   });
 };
 
+const toMinutes = (time) => {
+  const match = /^(\d{2}):(\d{2})$/.exec(String(time || "").trim());
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const getTimeRange = (startTime, endTime) => {
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+  if (start === null || end === null || start >= end) {
+    throw new BaseError(400, "Giờ kết thúc phải sau giờ bắt đầu");
+  }
+  return { start, end };
+};
+
+const getStoredTimeRange = (schedule) => {
+  const [startTime, endTime] = String(schedule.thoi_gian || "").split(" - ");
+  try {
+    return getTimeRange(startTime, endTime);
+  } catch {
+    return null;
+  }
+};
+
+const hasSameValue = (left, right) =>
+  String(left || "").trim().localeCompare(String(right || "").trim(), "vi", {
+    sensitivity: "accent",
+  }) === 0;
+
+const isOverlapping = (left, right) => left.start < right.end && left.end > right.start;
+
+const assertNoScheduleConflict = async ({ tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, excludeId }) => {
+  const requestedRange = getTimeRange(batDau, ketThuc);
+  const schedules = await LichTiepDanRepository.findByNgay(ngayTiepDan, excludeId);
+  const conflict = schedules.find((schedule) => {
+    const existingRange = getStoredTimeRange(schedule);
+    return existingRange && isOverlapping(requestedRange, existingRange) && (
+      hasSameValue(schedule.ten_can_bo, tenCanBo) ||
+      hasSameValue(schedule.dia_diem, diaDiem)
+    );
+  });
+
+  if (!conflict) return;
+
+  const sameOfficer = hasSameValue(conflict.ten_can_bo, tenCanBo);
+  const sameLocation = hasSameValue(conflict.dia_diem, diaDiem);
+  const resource = sameOfficer && sameLocation
+    ? "Cán bộ và phòng tiếp dân"
+    : sameOfficer
+      ? "Cán bộ tiếp dân"
+      : "Phòng tiếp dân";
+  throw new BaseError(400, `${resource} đã có ca trực trong khung giờ đã chọn`);
+};
+
 const LichTiepDanService = {
   async handleImport(file = [], currentUser) {
     if (!file || file.length === 0) {
@@ -151,6 +205,14 @@ const LichTiepDanService = {
     if (!existing) {
       throw new BaseError(404, "Lịch tiếp dân không tồn tại");
     }
+    const timeRange = getStoredTimeRange(existing);
+    const startTime = String(existing.thoi_gian || "").split(" - ")[0]?.trim();
+    if (!timeRange || !isReceptionScheduleInFuture({
+      receptionDate: existing.ngay_tiep_dan,
+      startTime,
+    })) {
+      throw new BaseError(400, "Không thể xoá lịch tiếp dân đã diễn ra hoặc đang diễn ra");
+    }
     if (existing.is_active === true) {
       throw new BaseError(
         400,
@@ -214,16 +276,13 @@ const LichTiepDanService = {
     }
     const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || "Cán bộ tiếp dân";
     const finalDiaDiem = (diaDiem && diaDiem.trim()) || "Phòng tiếp công dân";
-    const existing = await LichTiepDanRepository.findByCanBoAndNgay(
-      finalTenCanBo,
-      ngayTiepDan
-    );
-    if (existing) {
-      throw new BaseError(
-        400,
-        "Lịch tiếp dân vào ngày này đã tồn tại"
-      );
-    }
+    await assertNoScheduleConflict({
+      tenCanBo: finalTenCanBo,
+      diaDiem: finalDiaDiem,
+      ngayTiepDan,
+      batDau,
+      ketThuc,
+    });
     let thoiGian = `${batDau} - ${ketThuc}`;
     const data = await LichTiepDanRepository.create({
       ten_can_bo: finalTenCanBo,
@@ -256,17 +315,14 @@ const LichTiepDanService = {
     const finalTenCanBo = (tenCanBo && tenCanBo.trim()) || existing.ten_can_bo || "Cán bộ tiếp dân";
     const finalDiaDiem = (diaDiem && diaDiem.trim()) || existing.dia_diem || "Phòng tiếp công dân";
 
-    const duplicate = await LichTiepDanRepository.findByCanBoAndNgayExcludeId(
-      finalTenCanBo,
+    await assertNoScheduleConflict({
+      tenCanBo: finalTenCanBo,
+      diaDiem: finalDiaDiem,
       ngayTiepDan,
-      id
-    );
-    if (duplicate) {
-      throw new BaseError(
-        400,
-        "Lịch tiếp dân vào ngày này đã tồn tại"
-      );
-    }
+      batDau,
+      ketThuc,
+      excludeId: id,
+    });
     let thoiGian = `${batDau} - ${ketThuc}`;
     const data = await LichTiepDanRepository.update(id, {
       ten_can_bo: finalTenCanBo,

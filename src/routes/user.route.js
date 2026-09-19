@@ -14,7 +14,9 @@ import {
   UpdateProfileByAdminRequest,
   UpdateProfileRequest,
   UpdateStatusByAdminRequest,
+  SearchUsersQuery,
 } from "../validators/user.validator.js";
+import validateQuery from "../middlewares/validate-query.middleware.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import {
   AUDIT_LOGS,
@@ -30,7 +32,12 @@ const userRoute = express.Router();
 
 userRoute.get("/my-profile", authenticate, UserController.getMyProfile);
 
-userRoute.get("", authenticate, UserController.getAllUsers);
+userRoute.get(
+  "",
+  authenticate,
+  authorize([PERMISSION.ND_GET_DETAIL]),
+  UserController.getAllUsers,
+);
 
 userRoute.post(
   "/create-account",
@@ -85,9 +92,20 @@ userRoute.put(
 
 userRoute.get("/khu-pho", UserController.getKhuPhoUsers);
 
-userRoute.get("/search", authenticate, UserController.searchUsers);
+userRoute.get(
+  "/search",
+  authenticate,
+  authorize([PERMISSION.ND_GET_DETAIL]),
+  validateQuery(SearchUsersQuery),
+  UserController.searchUsers,
+);
 
-userRoute.get("/statistics", authenticate, UserController.getUserStatistics);
+userRoute.get(
+  "/statistics",
+  authenticate,
+  authorize([PERMISSION.ND_GET_DETAIL]),
+  UserController.getUserStatistics,
+);
 
 userRoute.get(
   "/:id",

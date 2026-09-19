@@ -2,7 +2,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs-extra";
 import { BaseError } from "../utils/base-error.util.js";
-import { toSnakeCaseNonAccent } from "../utils/string.util.js";
+import { toSnakeCaseNonAccent, cleanOriginalFileName } from "../utils/string.util.js";
 import UPLOAD_TYPE from "../constants/upload.constant.js";
 
 const cleanupUploadFolder = async (req) => {
@@ -68,11 +68,8 @@ export const createUploader = ({
     filename: async (req, file, cb) => {
       try {
         if (type !== UPLOAD_TYPE.ADDRESS_VOTE) {
-          // ✅ Fix lỗi tiếng Việt bị sai encoding
-          const originalName = Buffer.from(
-            file.originalname,
-            "latin1",
-          ).toString("utf8");
+          // ✅ Chuẩn hóa tên tiếng Việt có dấu an toàn (NFC, loại bỏ null byte)
+          const originalName = cleanOriginalFileName(file.originalname);
           file.originalname = originalName;
           const ext = path.extname(originalName);
           const base = path.basename(originalName, ext);
@@ -82,10 +79,8 @@ export const createUploader = ({
           cb(null, `${safeName}-${Date.now()}${ext}`);
         } else {
           // ✅ Lấy đuôi file
-          const originalName = Buffer.from(
-            file.originalname,
-            "latin1",
-          ).toString("utf8");
+          const originalName = cleanOriginalFileName(file.originalname);
+          file.originalname = originalName;
           const ext = path.extname(originalName);
           const fileName = `address_vote_uploads${ext}`;
 

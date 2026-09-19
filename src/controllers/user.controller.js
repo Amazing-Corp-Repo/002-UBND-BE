@@ -142,7 +142,7 @@ const UserController = {
   },
 
   async searchUsers(req, res) {
-    const { search } = req.query;
+    const { search } = req.validatedQuery;
     const result = await UserService.searchUsers(search);
     return successResponse(res, result, "Tìm kiếm người dùng thành công");
   },

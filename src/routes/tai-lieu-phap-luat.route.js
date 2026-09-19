@@ -125,7 +125,7 @@ taiLieuPhapLuatRouter.post(
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
     fields: [
-      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf"] },
     ],
   }),
   validate(CreatePhapLuatRequest),
@@ -141,7 +141,7 @@ taiLieuPhapLuatRouter.put(
   createUploader({
     type: UPLOAD_TYPE.THU_VIEN,
     fields: [
-      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+      { fieldName: "file", maxCount: 1, maxSizeMB: 50, allowed_types: ["application/pdf"] },
     ],
   }),
   validate(UpdatePhapLuatRequest),

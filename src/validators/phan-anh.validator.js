@@ -100,6 +100,9 @@ export const CreatePhanAnhRequest = Joi.object({
   moTaViTri: Joi.string().trim().max(COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH).optional().allow(null, "").messages({
     "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
+  // Tương thích Mobile cũ có gửi userId. Giá trị này bị loại khỏi payload;
+  // người tạo luôn được lấy từ JWT trong controller, không tin dữ liệu client.
+  userId: Joi.string().uuid().optional().strip(),
   idVideo: videoIdsSchema,
 });
 
@@ -233,7 +236,7 @@ export const GetAllPhanAnhQuery = Joi.object({
   includePendingExtension: Joi.alternatives()
     .try(Joi.boolean(), Joi.string().valid("true", "false"))
     .optional()
-    .default(false),
+    .default(true),
 }).custom((value, helpers) => {
   if (Boolean(value.startDate) !== Boolean(value.endDate)) {
     return helpers.error("date.pair");

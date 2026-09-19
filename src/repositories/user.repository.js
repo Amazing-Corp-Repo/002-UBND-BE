@@ -112,6 +112,7 @@ const UserRepository = {
               { ten_dang_nhap: { contains: search, mode: "insensitive" } },
               { ho_va_ten: { contains: search, mode: "insensitive" } },
               { email: { contains: search, mode: "insensitive" } },
+              { so_dien_thoai: { contains: search, mode: "insensitive" } },
             ],
           }
         : {}),

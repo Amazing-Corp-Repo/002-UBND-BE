@@ -5,13 +5,8 @@ const ReportRepository = {
     let whereClause = {
       ...(idLinhVuc && { id_linh_vuc_phan_anh: idLinhVuc }),
     };
-    let whereClauseNotIncludeLinhVuc = {};
     if (from && to) {
       whereClause.thoi_gian_tao = {
-        gte: from,
-        lte: to,
-      };
-      whereClauseNotIncludeLinhVuc.thoi_gian_tao = {
         gte: from,
         lte: to,
       };
@@ -41,6 +36,7 @@ const ReportRepository = {
     });
 
     let phanAnhMoiCapNhat = await prisma.phan_anh.findMany({
+      where: whereClause,
       select: {
         ma_phan_anh: true,
         tieu_de: true,
@@ -93,7 +89,7 @@ const ReportRepository = {
     });
 
     let totalPhanAnh = await prisma.phan_anh.count({
-      where: whereClauseNotIncludeLinhVuc,
+      where: whereClause,
     });
 
     return { phanAnh, phanAnhMoiCapNhat, linh_vuc, totalPhanAnh };

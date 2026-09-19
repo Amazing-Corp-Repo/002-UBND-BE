@@ -1,6 +1,6 @@
 import express from "express";
 import RoleController from "../controllers/role.controller.js";
-import { authenticate, authorize } from "../middlewares/auth.middleware.js";
+import { authenticate, authorize, authorizeAny } from "../middlewares/auth.middleware.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import validate from "../middlewares/validate.middleware.js";
 import {
@@ -10,6 +10,13 @@ import {
 } from "../validators/role.validator.js";
 
 const roleRouter = express.Router();
+const roleReadPermissions = [
+  PERMISSION.ROLE_CREATE,
+  PERMISSION.ROLE_UPDATE,
+  PERMISSION.ROLE_DELETE,
+  PERMISSION.ROLE_UPDATE_STATUS,
+  PERMISSION.PERM_GET_ALL,
+];
 
 roleRouter.post(
   "",
@@ -19,11 +26,11 @@ roleRouter.post(
   RoleController.createRole
 );
 
-roleRouter.get("", RoleController.findAll);
+roleRouter.get("", authenticate, authorizeAny(roleReadPermissions), RoleController.findAll);
 
-roleRouter.get("/pagination", RoleController.findAllRolesWithPagination);
+roleRouter.get("/pagination", authenticate, authorizeAny(roleReadPermissions), RoleController.findAllRolesWithPagination);
 
-roleRouter.get("/:roleId", RoleController.getRoleDetails);
+roleRouter.get("/:roleId", authenticate, authorizeAny(roleReadPermissions), RoleController.getRoleDetails);
 
 roleRouter.put(
   "/update-status/:roleId",

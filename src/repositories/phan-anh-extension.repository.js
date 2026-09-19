@@ -186,6 +186,23 @@ const PhanAnhExtensionRepository = {
     });
   },
 
+  async getStatistics({ search, mucDo, idLinhVuc, scopedLinhVucIds }) {
+    const baseWhere = buildExtensionWhere({ status: "ALL", search, mucDo, idLinhVuc, scopedLinhVucIds });
+    const [all, pending, approved, rejected] = await Promise.all([
+      prisma.de_nghi_gia_han_phan_anh.count({ where: baseWhere }),
+      prisma.de_nghi_gia_han_phan_anh.count({
+        where: { ...baseWhere, trang_thai: PHAN_ANH_EXTENSION_STATUS.PENDING },
+      }),
+      prisma.de_nghi_gia_han_phan_anh.count({
+        where: { ...baseWhere, trang_thai: PHAN_ANH_EXTENSION_STATUS.APPROVED },
+      }),
+      prisma.de_nghi_gia_han_phan_anh.count({
+        where: { ...baseWhere, trang_thai: PHAN_ANH_EXTENSION_STATUS.REJECTED },
+      }),
+    ]);
+    return { all, pending, approved, rejected };
+  },
+
   async approve(id, userId, ghiChu) {
     return prisma.$transaction(async (tx) => {
       const extension = await tx.de_nghi_gia_han_phan_anh.findUnique({

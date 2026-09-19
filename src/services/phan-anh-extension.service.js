@@ -98,6 +98,9 @@ const PhanAnhExtensionService = {
     }
 
     const proposedDeadline = new Date(requestedDeadline);
+    if (Number.isNaN(proposedDeadline.getTime()) || proposedDeadline <= new Date()) {
+      throw new BaseError(400, "Hạn đề xuất mới phải sau thời điểm hiện tại");
+    }
     if (proposedDeadline <= new Date(complaint.ngay_du_kien_hoan_thanh)) {
       throw new BaseError(400, "Hạn đề xuất mới phải sau hạn xử lý hiện tại");
     }
@@ -147,6 +150,16 @@ const PhanAnhExtensionService = {
       data: result.data.map(mapExtension),
       pagination: createPagination(page, size, result.totalItems),
     };
+  },
+
+  async getStatistics({ search, mucDo, idLinhVuc, permissions, cate }) {
+    const { scopedLinhVucIds } = resolveExtensionScope({ permissions, cate, idLinhVuc });
+    return PhanAnhExtensionRepository.getStatistics({
+      search,
+      mucDo: toDbPhanAnhMucDo(mucDo),
+      idLinhVuc,
+      scopedLinhVucIds,
+    });
   },
 
   async exportExcel({ status, search, mucDo, idLinhVuc, permissions, cate }) {

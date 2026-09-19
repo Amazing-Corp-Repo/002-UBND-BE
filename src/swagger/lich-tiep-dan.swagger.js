@@ -192,7 +192,7 @@ const LichTiepDanSwagger = {
     '/api/lich-tiep-dan/{id}': {
         delete: {
             tags: ['LichTiepDan'],
-            summary: 'Xoá lịch tiếp dân theo ID',
+            summary: 'Xoá lịch tiếp dân chưa diễn ra theo ID',
             security: [{ bearerAuth: [] }],
             parameters: [
                 {

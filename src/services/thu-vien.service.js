@@ -6,14 +6,10 @@ import prisma from "../config/database.config.js";
 import ExcelJS from "exceljs";
 import FileService from "./file.service.js";
 import { processMedia as processLibraryMedia, processTags as processLibraryTags } from "./thu-vien-media.service.js";
+import { cleanOriginalFileName, sanitizeNullBytes } from "../utils/string.util.js";
 
 const decodeOriginalName = (name) => {
-  if (!name) return name;
-  try {
-    return Buffer.from(name, "latin1").toString("utf8");
-  } catch {
-    return name;
-  }
+  return cleanOriginalFileName(name);
 };
 
 // Ánh xạ cột FE gửi lên → header hiển thị + cách lấy giá trị
@@ -182,9 +178,9 @@ const ThuVienService = {
   async create({ loai, data, files, currentUser }) {
     const createData = {
       loai,
-      tieu_de: data.tieuDe,
+      tieu_de: sanitizeNullBytes(data.tieuDe),
       id_danh_muc: data.idDanhMuc || null,
-      mo_ta: data.moTa || null,
+      mo_ta: sanitizeNullBytes(data.moTa) || null,
       pham_vi: data.phamVi || "CONG_KHAI",
       trang_thai: data.trangThai || "CHO_DUYET",
       nguoi_tao: currentUser,
@@ -193,15 +189,15 @@ const ThuVienService = {
 
     // Văn hóa fields
     if (loai === "VAN_HOA") {
-      createData.ten_di_tich = data.tenDiTich || null;
-      createData.dia_chi = data.diaChi || null;
-      createData.noi_dung = data.noiDung || null;
+      createData.ten_di_tich = sanitizeNullBytes(data.tenDiTich) || null;
+      createData.dia_chi = sanitizeNullBytes(data.diaChi) || null;
+      createData.noi_dung = sanitizeNullBytes(data.noiDung) || null;
     }
 
     // Pháp luật fields
     if (loai === "PHAP_LUAT") {
-      createData.so_hieu = data.soHieu || null;
-      createData.co_quan_ban_hanh = data.coQuanBanHanh || null;
+      createData.so_hieu = sanitizeNullBytes(data.soHieu) || null;
+      createData.co_quan_ban_hanh = sanitizeNullBytes(data.coQuanBanHanh) || null;
       createData.ngay_hieu_luc = data.ngayHieuLuc ? new Date(data.ngayHieuLuc) : null;
       createData.ngay_het_han = data.ngayHetHan ? new Date(data.ngayHetHan) : null;
     }
