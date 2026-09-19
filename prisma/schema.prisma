@@ -902,8 +902,6 @@ model dang_ky_gap_lanh_dao {
   @@index([trang_thai], map: "idx_dang_ky_gap_trang_thai")
   @@index([thoi_gian_tao], map: "idx_dang_ky_gap_thoi_gian_tao")
   @@index([ngay_hen], map: "idx_dang_ky_gap_ngay_hen")
-  @@unique([id_khung_gio_gap, sdt], map: "uq_leader_meeting_slot_phone")
-  @@unique([id_khung_gio_gap, cccd], map: "uq_leader_meeting_slot_citizen")
 }
 
 // Ảnh CCCD và tài liệu đính kèm đăng ký gặp lãnh đạo

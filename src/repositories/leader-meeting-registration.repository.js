@@ -1,7 +1,8 @@
 import prisma from "../config/database.config.js";
 import { isLeaderMeetingOverdue } from "../utils/leader-meeting-overdue.util.js";
+import { TRANG_THAI_GAP_LANH_DAO_GIU_CHO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 
-const activeHoldingStatuses = [
+const dailyHoldingStatuses = [
   "PENDING",
   "APPROVED",
   "IN_PROGRESS",
@@ -50,13 +51,18 @@ const LeaderMeetingRegistrationRepository = {
       }
       const [heldCount, duplicatePhone, duplicateCitizen] = await Promise.all([
         tx.dang_ky_gap_lanh_dao.count({
-          where: { id_khung_gio_gap: slotId, is_active: true, is_delete: false },
+          where: {
+            id_khung_gio_gap: slotId,
+            trang_thai: { in: TRANG_THAI_GAP_LANH_DAO_GIU_CHO },
+            is_active: true,
+            is_delete: false,
+          },
         }),
         tx.dang_ky_gap_lanh_dao.findFirst({
           where: {
             ngay_hen: appointmentDate,
             sdt: phoneNumber,
-            trang_thai: { in: activeHoldingStatuses },
+            trang_thai: { in: dailyHoldingStatuses },
             is_active: true,
             is_delete: false,
           },
@@ -66,7 +72,7 @@ const LeaderMeetingRegistrationRepository = {
           where: {
             ngay_hen: appointmentDate,
             cccd: citizenId,
-            trang_thai: { in: activeHoldingStatuses },
+            trang_thai: { in: dailyHoldingStatuses },
             is_active: true,
             is_delete: false,
           },
