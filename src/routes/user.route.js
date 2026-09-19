@@ -15,6 +15,7 @@ import {
   UpdateProfileRequest,
   UpdateStatusByAdminRequest,
   SearchUsersQuery,
+  GetAllUsersQuery,
 } from "../validators/user.validator.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
@@ -36,6 +37,7 @@ userRoute.get(
   "",
   authenticate,
   authorize([PERMISSION.ND_GET_DETAIL]),
+  validateQuery(GetAllUsersQuery),
   UserController.getAllUsers,
 );
 

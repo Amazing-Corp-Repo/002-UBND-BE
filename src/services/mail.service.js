@@ -107,7 +107,7 @@ const MailService = {
       html,
     };
     try {
-      transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Lỗi gửi email:", error);
       return null;
@@ -147,7 +147,7 @@ const MailService = {
       html,
     };
     try {
-      transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Lỗi gửi email với CC/BCC:", error);
       return null;

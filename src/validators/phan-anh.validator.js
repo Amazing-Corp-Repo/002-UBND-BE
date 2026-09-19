@@ -104,7 +104,7 @@ export const CreatePhanAnhRequest = Joi.object({
   // người tạo luôn được lấy từ JWT trong controller, không tin dữ liệu client.
   userId: Joi.string().uuid().optional().strip(),
   idVideo: videoIdsSchema,
-});
+}).rename("idVideo[]", "idVideo", { alias: false, override: false });
 
 export const UpdatePhanAnhStatusRequest = Joi.object({
   trangThai: Joi.string().trim().valid(...PHAN_ANH_LIFECYCLE_STATUS, "DA_GUI", "DANG_XU_LY", "DA_GIAI_QUYET", "DONG", "TU_CHOI").required().messages({
@@ -194,7 +194,7 @@ export const CreatePhanAnhPublicRequest = Joi.object({
     "string.max": `Mô tả vị trí không được vượt quá ${COMPLAINT_LOCATION_DESCRIPTION_MAX_LENGTH} ký tự`,
   }),
   idVideo: videoIdsSchema,
-});
+}).rename("idVideo[]", "idVideo", { alias: false, override: false });
 
 export const PhanAnhIdParams = Joi.object({
   idPhanAnh: Joi.string().uuid().required().messages({
@@ -298,6 +298,8 @@ export const ExportPhanAnhExcelRequest = Joi.object({
     return value;
   }).optional().allow(""),
   sortTime: Joi.string().valid("asc", "desc").default("desc"),
+  sortBy: Joi.string().valid(...sortFields).optional(),
+  sortOrder: Joi.string().valid("asc", "desc").optional(),
 }).custom((value, helpers) => {
   if (Boolean(value.startDate) !== Boolean(value.endDate)) {
     return helpers.error("date.pair");

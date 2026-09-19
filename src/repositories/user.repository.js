@@ -1,5 +1,12 @@
 import prisma from "../config/database.config.js";
 
+const toBooleanFilter = (value) => {
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+};
+
 const UserRepository = {
   async findUserByUsername(ten_dang_nhap) {
     return await prisma.nguoi_dung.findUnique({
@@ -79,6 +86,37 @@ const UserRepository = {
     });
   },
 
+  async resetLoginFailures(userId) {
+    return prisma.nguoi_dung.update({
+      where: { id: userId },
+      data: {
+        failed_login_attempts: 0,
+        locked_until: null,
+      },
+    });
+  },
+
+  async recordFailedLogin(userId, { maxAttempts, lockDurationMs }) {
+    return prisma.$transaction(async (tx) => {
+      const user = await tx.nguoi_dung.update({
+        where: { id: userId },
+        data: { failed_login_attempts: { increment: 1 } },
+        select: { failed_login_attempts: true },
+      });
+
+      if (user.failed_login_attempts < maxAttempts) return user;
+
+      return tx.nguoi_dung.update({
+        where: { id: userId },
+        data: {
+          failed_login_attempts: 0,
+          locked_until: new Date(Date.now() + lockDurationMs),
+        },
+        select: { failed_login_attempts: true, locked_until: true },
+      });
+    });
+  },
+
   async findById(userId) {
     if (!userId) return null;
     return await prisma.nguoi_dung.findUnique({
@@ -101,10 +139,11 @@ const UserRepository = {
   },
 
   async getAllUsers(page, size, isActive, role, search) {
+    const activeFilter = toBooleanFilter(isActive);
     const whereBase = {
       is_delete: false,
-      ...(isActive !== undefined && isActive !== ""
-        ? { is_active: isActive === "true" }
+      ...(activeFilter !== undefined
+        ? { is_active: activeFilter }
         : {}),
       ...(search
         ? {

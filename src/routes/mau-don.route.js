@@ -4,10 +4,12 @@ import { createUploader } from "../middlewares/upload.middleware.js";
 import UPLOAD_TYPE from "../constants/upload.constant.js";
 import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
+import validateQuery from "../middlewares/validate-query.middleware.js";
 import {
   CreateMauDonRequest,
   UpdateMauDonRequest,
   UpdateStatusMauDonRequest,
+  GetMauDonPagingQuery,
 } from "../validators/mau-don.validator.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
@@ -74,7 +76,7 @@ mauDonRouter.put(
   MauDonController.updateStatusMauDon
 );
 
-mauDonRouter.get("/paging", MauDonController.getAllMauDonWithPaging);
+mauDonRouter.get("/paging", validateQuery(GetMauDonPagingQuery), MauDonController.getAllMauDonWithPaging);
 
 mauDonRouter.get("/:id", MauDonController.getMauDonById);
 

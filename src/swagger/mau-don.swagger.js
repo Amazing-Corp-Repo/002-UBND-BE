@@ -132,16 +132,16 @@ const MauDonSwagger = {
                 {
                     name: 'page',
                     in: 'query',
-                    required: true,
-                    schema: { type: 'integer', default: 1 },
-                    description: 'Số trang',
+                    required: false,
+                    schema: { type: 'integer', minimum: 1, default: 1 },
+                    description: 'Số trang, mặc định là 1',
                 },
                 {
                     name: 'size',
                     in: 'query',
-                    required: true,
-                    schema: { type: 'integer', default: 10 },
-                    description: 'Số mục trên mỗi trang',
+                    required: false,
+                    schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+                    description: 'Số mục trên mỗi trang, từ 1 đến 100; mặc định là 10',
                 },
                 {
                     name: 'isActive',

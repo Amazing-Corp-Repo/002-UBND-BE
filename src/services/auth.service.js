@@ -11,6 +11,9 @@ import PermissionRepository from "../repositories/permission.repository.js";
 import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.repository.js";
 import RoleRepository from "../repositories/role.repository.js";
 
+const LOGIN_MAX_FAILED_ATTEMPTS = 5;
+const LOGIN_LOCK_DURATION_MS = 15 * 60 * 1000;
+
 const AuthService = {
   async login(tenDangNhap, matKhau, ip, device) {
     const user = await UserRepository.findUserByUsername(tenDangNhap);
@@ -21,9 +24,23 @@ const AuthService = {
       throw new BaseError(403, "Tài khoản người dùng không hoạt động");
     }
 
+    const now = new Date();
+    if (user.locked_until && new Date(user.locked_until) > now) {
+      throw new BaseError(429, "Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau 15 phút");
+    }
+    if (user.locked_until && new Date(user.locked_until) <= now) {
+      await UserRepository.resetLoginFailures(user.id);
+    }
+
     if (!(await compare(matKhau, user.mat_khau))) {
+      await UserRepository.recordFailedLogin(user.id, {
+        maxAttempts: LOGIN_MAX_FAILED_ATTEMPTS,
+        lockDurationMs: LOGIN_LOCK_DURATION_MS,
+      });
       throw new BaseError(401, "Mật khẩu không đúng");
     }
+
+    await UserRepository.resetLoginFailures(user.id);
 
     if (user.is_enable_two_factor) {
       await OTPService.sendOTP(user.id, user.email, OTP_TYPE.LOGIN_2FA);

@@ -47,7 +47,7 @@ const MauDonController = {
     },
 
     async getAllMauDonWithPaging(req, res) {
-        let { page, size, isActive, search } = req.query;
+        let { page, size, isActive, search } = req.validatedQuery;
         let { data, pagination } = await MauDonService.getAllMauDonWithPaging(page, size, isActive, search);
         return successResponse(res,data, "Lấy danh sách mẫu đơn thành công", pagination);
     },

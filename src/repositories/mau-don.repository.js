@@ -1,5 +1,12 @@
 import prisma from "../config/database.config.js";
 
+const toBooleanFilter = (value) => {
+    if (typeof value === "boolean") return value;
+    if (value === "true") return true;
+    if (value === "false") return false;
+    return undefined;
+};
+
 const MauDonRepository = {
     async createMauDon(data) {
         return await prisma.mau_don.create({
@@ -56,9 +63,10 @@ const MauDonRepository = {
     },
 
     async getAllMauDon(isActive, search) {
+        const activeFilter = toBooleanFilter(isActive);
         const where = {
-            ...(isActive !== undefined && isActive !== ''
-                ? { is_active: isActive === 'true' }
+            ...(activeFilter !== undefined
+                ? { is_active: activeFilter }
                 : {}),
             ...(search
                 ? {
@@ -96,9 +104,10 @@ const MauDonRepository = {
     },
 
     async getAllMauDonWithPaging(page, size, isActive, search) {
+        const activeFilter = toBooleanFilter(isActive);
         const where = {
-            ...(isActive !== undefined && isActive !== ''
-                ? { is_active: isActive === 'true' }
+            ...(activeFilter !== undefined
+                ? { is_active: activeFilter }
                 : {}),
             ...(search
                 ? {
