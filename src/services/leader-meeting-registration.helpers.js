@@ -4,6 +4,7 @@ import {
   getEffectiveLeaderMeetingStatus,
   isLeaderMeetingOverdue,
 } from "../utils/leader-meeting-overdue.util.js";
+import { cleanOriginalFileName } from "../utils/string.util.js";
 const MAX_RETRIES = 10;
 const PRIVATE_UPLOAD_ROOT = path.resolve(
   process.cwd(),
@@ -46,7 +47,7 @@ const refreshLeaderMeetingStatusSchedule = () => {
 const buildAttachments = (files = {}) => {
   const mapFile = (file, type) => ({
     loai_dinh_kem: type,
-    ten_file_goc: Buffer.from(file.originalname, "latin1").toString("utf8"),
+    ten_file_goc: cleanOriginalFileName(file.originalname),
     duong_dan_file: path.relative(process.cwd(), file.path).replace(/\\/g, "/"),
     mime_type: file.mimetype,
     kich_thuoc: file.size,

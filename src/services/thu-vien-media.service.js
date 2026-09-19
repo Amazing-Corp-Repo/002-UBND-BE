@@ -1,8 +1,8 @@
 import ThuVienRepository from "../repositories/thu-vien.repository.js";
+import { cleanOriginalFileName } from "../utils/string.util.js";
 
 const decodeOriginalName = (name) => {
-  if (!name) return name;
-  try { return Buffer.from(name, "latin1").toString("utf8"); } catch { return name; }
+  return cleanOriginalFileName(name);
 };
 
 export const processTags = async (idTaiLieu, tagsStr) => {

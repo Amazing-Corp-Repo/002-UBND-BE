@@ -3,7 +3,7 @@ import path from "node:path";
 import multer from "multer";
 import fs from "fs-extra";
 import { BaseError } from "../utils/base-error.util.js";
-import { toSnakeCaseNonAccent } from "../utils/string.util.js";
+import { toSnakeCaseNonAccent, cleanOriginalFileName } from "../utils/string.util.js";
 
 const PRIVATE_UPLOAD_ROOT = path.join(
   process.cwd(),
@@ -23,8 +23,7 @@ const DOCUMENT_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
 
-const normalizeOriginalName = (name) =>
-  Buffer.from(name, "latin1").toString("utf8");
+const normalizeOriginalName = (name) => cleanOriginalFileName(name);
 
 const storage = multer.diskStorage({
   destination: async (req, _file, callback) => {

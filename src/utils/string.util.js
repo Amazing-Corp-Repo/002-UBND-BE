@@ -223,3 +223,40 @@ export const buildContentTxt = (pa) => {
 
   return lines.join("\n");
 };
+
+/**
+ * Chuẩn hóa tên file an toàn cho tiếng Việt (giữ nguyên có dấu chuẩn NFC, không sinh null byte 0x00)
+ */
+export const cleanOriginalFileName = (raw) => {
+  if (!raw) return raw;
+  let name = String(raw);
+
+  try {
+    // Chỉ decode latin1 -> utf8 nếu phát hiện chuỗi bị lỗi mã hóa mojibake
+    if (/(?:[\xC2\xC3][\x80-\xBF]|á[º»][\x80-\xBF])/.test(name)) {
+      const decoded = Buffer.from(name, "latin1").toString("utf8");
+      if (!decoded.includes("\uFFFD") && decoded.length < name.length) {
+        name = decoded;
+      }
+    }
+  } catch {}
+
+  try {
+    // Chuẩn hóa mọi dạng Unicode tổ hợp (NFD) về dạng dựng sẵn (NFC) chuẩn
+    name = name.normalize("NFC");
+  } catch {}
+
+  // Lọc bỏ ký tự null byte (0x00) gây crash PostgreSQL
+  name = name.replace(/\0/g, "").trim();
+  return name;
+};
+
+/**
+ * Lọc bỏ ký tự null byte trong chuỗi để tránh lỗi PostgreSQL 22021
+ */
+export const sanitizeNullBytes = (val) => {
+  if (typeof val === "string") {
+    return val.replace(/\0/g, "").trim();
+  }
+  return val;
+};
