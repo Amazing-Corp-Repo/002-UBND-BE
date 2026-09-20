@@ -1,5 +1,9 @@
 import prisma from "../config/database.config.js";
 import FileService from "../services/file.service.js";
+import {
+    sanitizeAuditPayload,
+    sanitizeAuditResponseBody,
+} from "../utils/audit-log-sanitizer.util.js";
 
 export const audit_logs = (action, entityName) => {
     return async (req, res, next) => {
@@ -48,8 +52,10 @@ export const audit_logs = (action, entityName) => {
                         local_address: req.localAddress,
                         duration_ms: new Date() - new Date(req.requestAt),
                         response_status_code: res.statusCode,
-                        request_body: req.body || {},
-                        response_body: responseBody || {},
+                        // Never persist credentials or bearer/refresh tokens in audit data.
+                        // This covers nested payloads too, without modifying the live request.
+                        request_body: sanitizeAuditPayload(req.body || {}),
+                        response_body: sanitizeAuditResponseBody(responseBody),
                         performed_by: userId,
                         response_sent_at: new Date().toISOString(),
                         request_received_at: req.requestAt,

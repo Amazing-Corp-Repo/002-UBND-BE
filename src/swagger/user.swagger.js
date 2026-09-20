@@ -29,8 +29,8 @@ const UserSwagger = {
           name: "size",
           in: "query",
           required: true,
-          schema: { type: "integer", minimum: 1 },
-          description: "Số người dùng trên mỗi trang",
+          schema: { type: "integer", minimum: 1, maximum: 100 },
+          description: "Số người dùng trên mỗi trang, từ 1 đến 100",
         },
         {
           name: "isActive",
@@ -43,8 +43,8 @@ const UserSwagger = {
           name: "vaiTro",
           in: "query",
           required: false,
-          schema: { type: "string" },
-          description: "Lọc người dùng theo vai trò",
+          schema: { type: "string", format: "uuid" },
+          description: "Lọc người dùng theo ID vai trò (UUID)",
         },
         {
           name: "search",

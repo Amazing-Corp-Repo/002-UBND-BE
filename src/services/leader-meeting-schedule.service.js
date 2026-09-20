@@ -3,6 +3,7 @@ import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
 import { hasPermission } from "../utils/auth-context.util.js";
 import { PERMISSION } from "../constants/permission.constant.js";
+import { TRANG_THAI_GAP_LANH_DAO_GIU_CHO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 import {
   DEFAULT_LEADER_MEETING_LOCATION,
   DEFAULT_LEADER_MEETING_NOTE,
@@ -81,7 +82,9 @@ const mapManagementDetail = (schedule) => ({
       },
       {}
     );
-    const heldCount = slot.dang_ky_gap_lanh_dao.length;
+    const heldCount = slot.dang_ky_gap_lanh_dao.filter((registration) =>
+      TRANG_THAI_GAP_LANH_DAO_GIU_CHO.includes(registration.trang_thai)
+    ).length;
     return {
       id: slot.id,
       startTime: slot.gio_bat_dau,

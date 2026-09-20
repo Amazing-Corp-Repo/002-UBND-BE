@@ -479,6 +479,8 @@ const PhanAnhRepository = {
     end,
     scopedLinhVucIds,
     sortTime,
+    sortBy,
+    sortOrder,
   }) {
     const params = [];
     let whereSql = "WHERE 1=1";
@@ -540,10 +542,18 @@ const PhanAnhRepository = {
         WHERE ten <> '${PHAN_ANH_STATUS.DA_GIA_HAN}' AND ten <> '${PHAN_ANH_STATUS.XIN_GIA_HAN}'
         ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id`;
-    const orderDirection = sortTime === "asc" ? "ASC" : "DESC";
+    const SORT_COLUMNS = {
+      thoi_gian_tao: "pa.thoi_gian_tao",
+      ma_phan_anh: "pa.ma_phan_anh",
+      tieu_de: "pa.tieu_de",
+      muc_do: "pa.muc_do",
+      trang_thai: "lst.ten",
+    };
+    const sortColumn = SORT_COLUMNS[sortBy] || "pa.thoi_gian_tao";
+    const orderDirection = (sortBy ? sortOrder : sortTime) === "asc" ? "ASC" : "DESC";
     const rows = await prisma.$queryRawUnsafe(
       `SELECT pa.id FROM phan_anh pa ${joinLatestStatus} ${whereSql}
-       ORDER BY pa.thoi_gian_tao ${orderDirection}, pa.id ASC`,
+       ORDER BY ${sortColumn} ${orderDirection}, pa.id ASC`,
       ...params,
     );
     const ids = rows.map((row) => row.id);
@@ -557,6 +567,9 @@ const PhanAnhRepository = {
           select: { ten: true, thoi_gian_tao: true },
         },
         linh_vuc_phan_anh: { select: { ten: true } },
+        de_nghi_gia_han_phan_anh: {
+          select: { trang_thai: true },
+        },
       },
     });
     const idOrder = new Map(ids.map((id, index) => [id, index]));

@@ -50,6 +50,25 @@ const getTimeRange = (startTime, endTime) => {
   return { start, end };
 };
 
+const assertBusinessSession = ({ start, end }) => {
+  const isMorning = start === 7 * 60 && end === 11 * 60 + 30;
+  const isAfternoon = start === 13 * 60 + 30 && end === 17 * 60;
+  if (!isMorning && !isAfternoon) {
+    throw new BaseError(
+      400,
+      "Khung giờ tiếp dân chỉ được là 07:00 - 11:30 hoặc 13:30 - 17:00",
+    );
+  }
+};
+
+const RECEPTION_SESSIONS = Object.freeze({
+  "07:00 - 11:30": { batDau: "07:00", ketThuc: "11:30" },
+  "13:30 - 17:00": { batDau: "13:30", ketThuc: "17:00" },
+});
+
+const getImportReceptionSession = (value) =>
+  RECEPTION_SESSIONS[String(value || "").trim()] || null;
+
 const getStoredTimeRange = (schedule) => {
   const [startTime, endTime] = String(schedule.thoi_gian || "").split(" - ");
   try {
@@ -68,6 +87,7 @@ const isOverlapping = (left, right) => left.start < right.end && left.end > righ
 
 const assertNoScheduleConflict = async ({ tenCanBo, diaDiem, ngayTiepDan, batDau, ketThuc, excludeId }) => {
   const requestedRange = getTimeRange(batDau, ketThuc);
+  assertBusinessSession(requestedRange);
   const schedules = await LichTiepDanRepository.findByNgay(ngayTiepDan, excludeId);
   const conflict = schedules.find((schedule) => {
     const existingRange = getStoredTimeRange(schedule);
@@ -107,11 +127,19 @@ const LichTiepDanService = {
         }
 
         const receptionDate = parseVietnamImportDate(record.ngay_tiep_dan);
-        const tu = parseVietnamImportTime(record.tu);
-        const den = parseVietnamImportTime(record.den);
+        const selectedSession = getImportReceptionSession(record.ca_tiep_dan);
+        if (record.ca_tiep_dan && !selectedSession) {
+          throw new BaseError(
+            400,
+            `Dòng ${index + 2}: Ca tiếp dân chỉ được là 07:00 - 11:30 hoặc 13:30 - 17:00`,
+          );
+        }
+        const tu = selectedSession?.batDau || parseVietnamImportTime(record.tu);
+        const den = selectedSession?.ketThuc || parseVietnamImportTime(record.den);
         if (!receptionDate || !tu || !den || tu >= den) {
           throw new BaseError(400, "Ngày hoặc giờ tiếp dân trong file không hợp lệ");
         }
+        assertBusinessSession(getTimeRange(tu, den));
         if (!isReceptionScheduleInFuture({ receptionDate, startTime: tu })) {
           throw new BaseError(
             400,
@@ -124,8 +152,18 @@ const LichTiepDanService = {
         const location = String(record.dia_diem || "Phòng tiếp công dân").trim();
         const existing = await LichTiepDanRepository.findByCanBoAndNgay(
           officerName,
-          record.ngay_tiep_dan
+          record.ngay_tiep_dan,
+          thoi_gian,
         );
+
+        await assertNoScheduleConflict({
+          tenCanBo: officerName,
+          diaDiem: location,
+          ngayTiepDan: record.ngay_tiep_dan,
+          batDau: tu,
+          ketThuc: den,
+          excludeId: existing?.id,
+        });
 
         if (existing) {
           await LichTiepDanRepository.update(existing.id, {

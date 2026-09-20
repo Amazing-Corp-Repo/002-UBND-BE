@@ -25,8 +25,7 @@ const UserController = {
   },
 
   async getAllUsers(req, res) {
-    const { page, size, isActive, vaiTro, search } = req.query;
-    if (!page || !size) throw new BaseError(400, "page và size là bắt buộc");
+    const { page, size, isActive, vaiTro, search } = req.validatedQuery;
     const result = await UserService.getAllUsers(
       parseInt(page),
       parseInt(size),

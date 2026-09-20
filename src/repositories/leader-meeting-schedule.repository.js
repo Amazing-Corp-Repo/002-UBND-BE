@@ -1,4 +1,5 @@
 import prisma from "../config/database.config.js";
+import { TRANG_THAI_GAP_LANH_DAO_GIU_CHO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 
 const LeaderMeetingScheduleRepository = {
   async findAvailableBetweenDates({ fromDate, toDate, leaderId }) {
@@ -38,7 +39,11 @@ const LeaderMeetingScheduleRepository = {
             gio_ket_thuc: true,
             suc_chua: true,
             dang_ky_gap_lanh_dao: {
-              where: { is_active: true, is_delete: false },
+              where: {
+                trang_thai: { in: TRANG_THAI_GAP_LANH_DAO_GIU_CHO },
+                is_active: true,
+                is_delete: false,
+              },
               select: { id: true },
             },
           },
@@ -180,7 +185,11 @@ const LeaderMeetingScheduleRepository = {
             is_active: true,
             is_delete: true,
             dang_ky_gap_lanh_dao: {
-              where: { is_active: true, is_delete: false },
+              where: {
+                trang_thai: { in: TRANG_THAI_GAP_LANH_DAO_GIU_CHO },
+                is_active: true,
+                is_delete: false,
+              },
               select: { id: true, trang_thai: true },
             },
           },

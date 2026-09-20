@@ -1,6 +1,7 @@
 import { BaseError } from "../utils/base-error.util.js";
 import jwtUtils from "../utils/jwt.util.js";
 import env from "../config/environment.config.js";
+import UserRepository from "../repositories/user.repository.js";
 
 export const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -14,6 +15,11 @@ export const authenticate = async (req, res, next) => {
     decoded = jwtUtils.verifyAccessToken(token);
   } catch (err) {
     throw new BaseError(401, "Acceess token không hợp lệ");
+  }
+
+  const user = await UserRepository.findById(decoded.userId);
+  if (!user || !user.is_active) {
+    throw new BaseError(401, "Tài khoản đã bị khóa hoặc không còn tồn tại");
   }
 
   // ---- Lấy IP ----

@@ -59,3 +59,10 @@ export const UpdateStatusMauDonRequest = Joi.object({
             'any.required': 'Trạng thái hoạt động là bắt buộc',
         }),
 });
+
+export const GetMauDonPagingQuery = Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    size: Joi.number().integer().min(1).max(100).default(10),
+    isActive: Joi.boolean().truthy('true').falsy('false').optional(),
+    search: Joi.string().trim().max(255).allow('').optional(),
+});

@@ -15,6 +15,7 @@ import NotificationRepository from "../repositories/notification.repository.js";
 import env from "../config/environment.config.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
+import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
 import DINH_KEM_LOAI from "../constants/dinh-kem-loai.constant.js";
 import { PERMISSION } from "../constants/permission.constant.js";
 import {
@@ -81,7 +82,17 @@ const formatExcelDateTime = (value) => {
   return `${parts.hour}:${parts.minute} ${parts.day}/${parts.month}/${parts.year}`;
 };
 
-const getExcelSlaLabel = (item) => {
+export const getExcelSlaLabel = (item) => {
+  const extensions = item.de_nghi_gia_han_phan_anh || [];
+  if (extensions.some((item) => item.trang_thai === PHAN_ANH_EXTENSION_STATUS.PENDING)) {
+    return "Chờ gia hạn";
+  }
+  if (extensions.some((item) => item.trang_thai === PHAN_ANH_EXTENSION_STATUS.APPROVED)) {
+    return "Đã gia hạn";
+  }
+  if (extensions.some((item) => item.trang_thai === PHAN_ANH_EXTENSION_STATUS.REJECTED)) {
+    return "Từ chối gia hạn";
+  }
   const history = item.lich_su_trang_thai || [];
   const latestStatus = getLatestPhanAnhLifecycleHistory(history);
   const completedAt = latestStatus?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET
@@ -339,6 +350,8 @@ const PhanAnhService = {
     startDate,
     endDate,
     sortTime,
+    sortBy,
+    sortOrder,
     payload,
   }) {
     const scope = resolvePhanAnhScope({
@@ -359,6 +372,8 @@ const PhanAnhService = {
       end: period?.end,
       scopedLinhVucIds: scope.scopedLinhVucIds,
       sortTime,
+      sortBy,
+      sortOrder,
     });
 
     const columnDefs = columns.map((key) => EXCEL_COLUMN_MAP[key]);
@@ -763,13 +778,10 @@ const PhanAnhService = {
     }
 
     const lastStatus = getLatestPhanAnhLifecycleHistory(phanAnh.lich_su_trang_thai)?.ten;
-    if (
-      lastStatus === PHAN_ANH_STATUS.DA_GIAI_QUYET ||
-      lastStatus === PHAN_ANH_STATUS.DONG
-    ) {
+    if (lastStatus !== PHAN_ANH_STATUS.DANG_XU_LY) {
       throw new BaseError(
         400,
-        "Không thể phân công cho phản ánh đã được giải quyết hoặc đóng",
+        "Chỉ được phân công phản ánh đang xử lý",
       );
     }
 

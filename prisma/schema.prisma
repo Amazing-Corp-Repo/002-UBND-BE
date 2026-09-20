@@ -225,6 +225,8 @@ model nguoi_dung {
   so_dien_thoai                                                                             String?                           @db.VarChar(20)
   is_enable_two_factor                                                                      Boolean?                          @default(false)
   is_active                                                                                 Boolean?                          @default(true)
+  failed_login_attempts                                                                     Int                               @default(0)
+  locked_until                                                                              DateTime?                         @db.Timestamp(6)
   is_delete                                                                                 Boolean?                          @default(false)
   nguoi_tao                                                                                 String?                           @db.Uuid
   nguoi_cap_nhat                                                                            String?                           @db.Uuid
@@ -293,6 +295,7 @@ model nguoi_dung {
   @@index([is_active], map: "idx_nguoi_dung_is_active")
   @@index([is_delete], map: "idx_nguoi_dung_is_delete")
   @@index([ten_dang_nhap], map: "idx_nguoi_dung_ten_dang_nhap")
+  @@index([locked_until], map: "idx_nguoi_dung_locked_until")
 }
 
 model notifications {
@@ -902,8 +905,6 @@ model dang_ky_gap_lanh_dao {
   @@index([trang_thai], map: "idx_dang_ky_gap_trang_thai")
   @@index([thoi_gian_tao], map: "idx_dang_ky_gap_thoi_gian_tao")
   @@index([ngay_hen], map: "idx_dang_ky_gap_ngay_hen")
-  @@unique([id_khung_gio_gap, sdt], map: "uq_leader_meeting_slot_phone")
-  @@unique([id_khung_gio_gap, cccd], map: "uq_leader_meeting_slot_citizen")
 }
 
 // Ảnh CCCD và tài liệu đính kèm đăng ký gặp lãnh đạo

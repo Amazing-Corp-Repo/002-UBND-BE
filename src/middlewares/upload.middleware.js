@@ -174,7 +174,7 @@ export const createUploader = ({
           case "LIMIT_FILE_COUNT":
           case "LIMIT_UNEXPECTED_FILE":
             return next(
-              new BaseError(400, `Chỉ được upload tối đa số lượng cho phép`),
+              new BaseError(400, `Chỉ được upload tối đa ${maxCount} tệp`),
             );
           default:
             return next(new BaseError(400, err.message));

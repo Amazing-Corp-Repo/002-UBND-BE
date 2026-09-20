@@ -222,3 +222,11 @@ export const SearchUsersQuery = Joi.object({
             'any.required': 'Từ khóa tìm kiếm là bắt buộc',
         }),
 });
+
+export const GetAllUsersQuery = Joi.object({
+    page: Joi.number().integer().min(1).required(),
+    size: Joi.number().integer().min(1).max(100).required(),
+    isActive: Joi.boolean().truthy('true').falsy('false').optional(),
+    vaiTro: Joi.string().uuid().optional(),
+    search: Joi.string().trim().max(255).allow('').optional(),
+});

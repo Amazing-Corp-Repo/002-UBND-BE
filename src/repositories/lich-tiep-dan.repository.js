@@ -8,11 +8,12 @@ dayjs.extend(isoWeek);
 dayjs.extend(utc);
 
 const LichTiepDanRepository = {
-  async findByCanBoAndNgay(ten_can_bo, ngay_tiep_dan) {
+  async findByCanBoAndNgay(ten_can_bo, ngay_tiep_dan, thoi_gian) {
     return await prisma.lich_tiep_dan.findFirst({
       where: {
         ten_can_bo,
         ngay_tiep_dan,
+        ...(thoi_gian ? { thoi_gian } : {}),
         is_delete: false,
       },
     });

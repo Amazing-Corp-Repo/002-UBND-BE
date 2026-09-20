@@ -233,7 +233,7 @@ export const cleanOriginalFileName = (raw) => {
 
   try {
     // Chỉ decode latin1 -> utf8 nếu phát hiện chuỗi bị lỗi mã hóa mojibake
-    if (/(?:[\xC2\xC3][\x80-\xBF]|á[º»][\x80-\xBF])/.test(name)) {
+    if (/[\xC0-\xFF][\x80-\xBF]/.test(name) || /(?:[\xC2\xC3\xCC\xCD\xE0-\xEF][\x80-\xBF]|á[º»][\x80-\xBF])/.test(name)) {
       const decoded = Buffer.from(name, "latin1").toString("utf8");
       if (!decoded.includes("\uFFFD") && decoded.length < name.length) {
         name = decoded;
