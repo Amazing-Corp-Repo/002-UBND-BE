@@ -111,7 +111,14 @@ export const UpdatePhanAnhStatusRequest = Joi.object({
     "any.only": "Trạng thái phản ánh không hợp lệ",
     "any.required": "Trạng thái là bắt buộc",
   }),
-  ghiChu: Joi.string().trim().max(2000).optional().allow(null, "").messages({
+  ghiChu: Joi.string().trim().max(2000).when("trangThai", {
+    is: Joi.valid(PHAN_ANH_STATUS.DONG, "DONG"),
+    then: Joi.required().messages({
+      "any.required": "Lý do từ chối tiếp nhận là bắt buộc khi đóng phản ánh",
+      "string.empty": "Lý do từ chối tiếp nhận không được để trống",
+    }),
+    otherwise: Joi.optional().allow(null, ""),
+  }).messages({
     "string.base": "Ghi chú phải là chuỗi ký tự",
     "string.max": "Ghi chú không được vượt quá 2000 ký tự",
   }),
