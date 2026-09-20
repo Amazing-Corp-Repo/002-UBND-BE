@@ -5,6 +5,7 @@ import {
   getDatePartsInVietnam,
   getSlaClassification,
 } from "../utils/dashboard.util.js";
+import { getKhuPhoVariants } from "../utils/string.util.js";
 
 const PhanAnhDashboardRepository = {
   async getTongQuanPhanAnh({
@@ -15,6 +16,8 @@ const PhanAnhDashboardRepository = {
     effectiveLinhVucIds,
     scopedLinhVucIds,
   } = {}) {
+    const khuPhoVariants = getKhuPhoVariants(khuPho);
+
     const buildWhere = (period, customLinhVucIds = effectiveLinhVucIds) => ({
       ...(period && (period.start || period.end)
         ? {
@@ -24,7 +27,7 @@ const PhanAnhDashboardRepository = {
             },
           }
         : {}),
-      ...(khuPho && khuPho !== "all" ? { khu_pho: khuPho } : {}),
+      ...(khuPhoVariants.length > 0 ? { khu_pho: { in: khuPhoVariants } } : {}),
       ...(Array.isArray(customLinhVucIds)
         ? { id_linh_vuc_phan_anh: { in: customLinhVucIds } }
         : {}),
@@ -48,7 +51,7 @@ const PhanAnhDashboardRepository = {
 
     const buildAccumulatedWhere = (maxDate) => ({
       ...(maxDate ? { thoi_gian_tao: { lte: maxDate } } : {}),
-      ...(khuPho && khuPho !== "all" ? { khu_pho: khuPho } : {}),
+      ...(khuPhoVariants.length > 0 ? { khu_pho: { in: khuPhoVariants } } : {}),
       ...(Array.isArray(effectiveLinhVucIds)
         ? { id_linh_vuc_phan_anh: { in: effectiveLinhVucIds } }
         : {}),

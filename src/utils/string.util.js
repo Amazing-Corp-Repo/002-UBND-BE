@@ -46,6 +46,29 @@ export const normalizeKhuPho = (value) => {
   return match ? `Khu phố ${Number(match[1])}` : null;
 };
 
+export const getKhuPhoVariants = (value) => {
+  if (!value || typeof value !== "string" || value.toLowerCase() === "all") return [];
+  const match = /(\d+)/.exec(value);
+  if (!match) return [value];
+  const num = Number(match[1]);
+  const numPad = String(num).padStart(2, "0");
+  return Array.from(
+    new Set([
+      `Khu phố ${num}`,
+      `Khu phố ${numPad}`,
+      `Khu Phố ${num}`,
+      `Khu Phố ${numPad}`,
+      `KP ${num}`,
+      `KP ${numPad}`,
+      `KP${num}`,
+      `KP${numPad}`,
+      String(num),
+      numPad,
+      value,
+    ])
+  );
+};
+
 export const appendDeleteSuffixc = (str) => {
   if (typeof str !== "string") {
     return str;
