@@ -9,22 +9,36 @@ const PUBLIC_LIBRARY_SORT_FIELDS = [
 ];
 
 export const CreateLibraryCategoryRequest = Joi.object({
-  name: Joi.string().trim().min(2).max(100).required().messages({
-    "string.min": "Tên danh mục phải có ít nhất 2 ký tự",
-    "string.max": "Tên danh mục không được vượt quá 100 ký tự",
-    "any.required": "Tên danh mục là bắt buộc",
-  }),
+  name: Joi.string()
+    .trim()
+    .min(2)
+    .max(100)
+    .pattern(/^[\p{L}\p{N}\s\-]+$/u)
+    .required()
+    .messages({
+      "string.min": "Tên danh mục phải có ít nhất 2 ký tự",
+      "string.max": "Tên danh mục không được vượt quá 100 ký tự",
+      "string.pattern.base": "Tên danh mục chỉ được chứa chữ cái, chữ số và dấu gạch ngang (-)",
+      "any.required": "Tên danh mục là bắt buộc",
+    }),
   description: Joi.string().trim().max(500).allow(null, "").optional().messages({
     "string.max": "Mô tả không được vượt quá 500 ký tự",
   }),
 });
 
 export const UpdateLibraryCategoryRequest = Joi.object({
-  name: Joi.string().trim().min(2).max(100).required().messages({
-    "string.min": "Tên danh mục phải có ít nhất 2 ký tự",
-    "string.max": "Tên danh mục không được vượt quá 100 ký tự",
-    "any.required": "Tên danh mục là bắt buộc",
-  }),
+  name: Joi.string()
+    .trim()
+    .min(2)
+    .max(100)
+    .pattern(/^[\p{L}\p{N}\s\-]+$/u)
+    .required()
+    .messages({
+      "string.min": "Tên danh mục phải có ít nhất 2 ký tự",
+      "string.max": "Tên danh mục không được vượt quá 100 ký tự",
+      "string.pattern.base": "Tên danh mục chỉ được chứa chữ cái, chữ số và dấu gạch ngang (-)",
+      "any.required": "Tên danh mục là bắt buộc",
+    }),
   description: Joi.string().trim().max(500).allow(null, "").optional().messages({
     "string.max": "Mô tả không được vượt quá 500 ký tự",
   }),

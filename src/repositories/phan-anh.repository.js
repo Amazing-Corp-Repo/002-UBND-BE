@@ -2,6 +2,7 @@ import prisma from "../config/database.config.js";
 import PHAN_ANH_STATUS from "../constants/phan-anh-status.constant.js";
 import PHAN_ANH_EXTENSION_STATUS from "../constants/phan-anh-extension-status.constant.js";
 import PhanAnhDashboardRepository from "./phan-anh-dashboard.repository.js";
+import { getKhuPhoVariants } from "../utils/string.util.js";
 
 const ATTACHMENT_SELECT = {
   id: true,
@@ -361,9 +362,10 @@ const PhanAnhRepository = {
       params.push(trangThai);
       whereSql += ` AND lst.ten = $${params.length}`;
     }
-    if (khuPho && khuPho !== "all") {
-      params.push(khuPho);
-      whereSql += ` AND pa.khu_pho = $${params.length}`;
+    const khuPhoVariants = getKhuPhoVariants(khuPho);
+    if (khuPhoVariants.length > 0) {
+      params.push(khuPhoVariants);
+      whereSql += ` AND pa.khu_pho = ANY($${params.length})`;
     }
     if (start && end) {
       params.push(start, end);
@@ -412,9 +414,9 @@ const PhanAnhRepository = {
       statParams.push(idLinhVucPhanAnh);
       statWhereSql += ` AND pa.id_linh_vuc_phan_anh = $${statParams.length}::uuid`;
     }
-    if (khuPho && khuPho !== "all") {
-      statParams.push(khuPho);
-      statWhereSql += ` AND pa.khu_pho = $${statParams.length}`;
+    if (khuPhoVariants.length > 0) {
+      statParams.push(khuPhoVariants);
+      statWhereSql += ` AND pa.khu_pho = ANY($${statParams.length})`;
     }
     if (start && end) {
       statParams.push(start, end);
@@ -506,9 +508,10 @@ const PhanAnhRepository = {
       params.push(trangThai);
       whereSql += ` AND lst.ten = $${params.length}`;
     }
-    if (khuPho && khuPho !== "all") {
-      params.push(khuPho);
-      whereSql += ` AND pa.khu_pho = $${params.length}`;
+    const exportKhuPhoVariants = getKhuPhoVariants(khuPho);
+    if (exportKhuPhoVariants.length > 0) {
+      params.push(exportKhuPhoVariants);
+      whereSql += ` AND pa.khu_pho = ANY($${params.length})`;
     }
     if (start && end) {
       params.push(start, end);
