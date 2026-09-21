@@ -225,8 +225,6 @@ model nguoi_dung {
   so_dien_thoai                                                                             String?                           @db.VarChar(20)
   is_enable_two_factor                                                                      Boolean?                          @default(false)
   is_active                                                                                 Boolean?                          @default(true)
-  failed_login_attempts                                                                     Int                               @default(0)
-  locked_until                                                                              DateTime?                         @db.Timestamp(6)
   is_delete                                                                                 Boolean?                          @default(false)
   nguoi_tao                                                                                 String?                           @db.Uuid
   nguoi_cap_nhat                                                                            String?                           @db.Uuid
@@ -295,7 +293,6 @@ model nguoi_dung {
   @@index([is_active], map: "idx_nguoi_dung_is_active")
   @@index([is_delete], map: "idx_nguoi_dung_is_delete")
   @@index([ten_dang_nhap], map: "idx_nguoi_dung_ten_dang_nhap")
-  @@index([locked_until], map: "idx_nguoi_dung_locked_until")
 }
 
 model notifications {
