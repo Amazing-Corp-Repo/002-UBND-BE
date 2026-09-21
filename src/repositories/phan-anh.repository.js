@@ -597,7 +597,10 @@ const PhanAnhRepository = {
     };
     const phanAnhs = await prisma.phan_anh.findMany({
       where: {
-        nguoi_tao: userId,
+        OR: [
+          { nguoi_tao: userId },
+          { id_to: userId },
+        ],
       },
       orderBy,
       include: {
