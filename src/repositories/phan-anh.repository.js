@@ -400,9 +400,18 @@ const PhanAnhRepository = {
         ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id`;
 
-    // 1. Thống kê KPI tổng thể theo phạm vi (lĩnh vực, khu phố, kỳ báo cáo) - không bị thu hẹp bởi filter trạng thái/SLA
+    // 1. Thống kê KPI tổng thể theo phạm vi (lĩnh vực, khu phố, kỳ báo cáo, mức độ, tìm kiếm) - không bị thu hẹp bởi filter trạng thái/SLA
     const statParams = [];
     let statWhereSql = "WHERE 1=1";
+
+    if (!includePendingExtension && normalizedSla !== "PENDING_EXTENSION" && normalizedSla !== "CHO_GIA_HAN" && normalizedSla !== "CHỜ GIA HẠN") {
+      statWhereSql += ` AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh extension_req
+        WHERE extension_req.id_phan_anh = pa.id
+        AND extension_req.trang_thai = 'PENDING'
+      )`;
+    }
+
     if (Array.isArray(scopedLinhVucIds)) {
       if (scopedLinhVucIds.length === 0) statWhereSql += " AND 1=0";
       else {
@@ -414,6 +423,14 @@ const PhanAnhRepository = {
       statParams.push(idLinhVucPhanAnh);
       statWhereSql += ` AND pa.id_linh_vuc_phan_anh = $${statParams.length}::uuid`;
     }
+    if (mucDo) {
+      statParams.push(mucDo);
+      statWhereSql += ` AND pa.muc_do = $${statParams.length}`;
+    }
+    if (maPhanAnh) {
+      statParams.push(maPhanAnh);
+      statWhereSql += ` AND pa.ma_phan_anh = $${statParams.length}`;
+    }
     if (khuPhoVariants.length > 0) {
       statParams.push(khuPhoVariants);
       statWhereSql += ` AND pa.khu_pho = ANY($${statParams.length})`;
@@ -421,6 +438,10 @@ const PhanAnhRepository = {
     if (start && end) {
       statParams.push(start, end);
       statWhereSql += ` AND pa.thoi_gian_tao >= $${statParams.length - 1} AND pa.thoi_gian_tao <= $${statParams.length}`;
+    }
+    if (search) {
+      statParams.push(`%${search}%`);
+      statWhereSql += ` AND (pa.ma_phan_anh ILIKE $${statParams.length} OR pa.tieu_de ILIKE $${statParams.length} OR pa.ten_nguoi_phan_anh ILIKE $${statParams.length} OR pa.sdt_nguoi_phan_anh ILIKE $${statParams.length})`;
     }
 
     const statRows = await prisma.$queryRawUnsafe(
