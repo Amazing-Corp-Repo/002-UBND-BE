@@ -426,13 +426,15 @@ const PhanAnhRepository = {
     const statRows = await prisma.$queryRawUnsafe(
       `SELECT 
         COUNT(*)::int AS total,
-        COUNT(CASE WHEN lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') THEN 1 END)::int AS resolved,
-        COUNT(CASE WHEN lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG', 'Từ chối', 'TU_CHOI') OR lst.ten IS NULL THEN 1 END)::int AS processing,
+        COUNT(CASE WHEN lst.ten IN ('Đã gửi', 'DA_GUI') OR lst.ten IS NULL THEN 1 END)::int AS submitted,
+        COUNT(CASE WHEN lst.ten IN ('Đang xử lý', 'DANG_XU_LY') THEN 1 END)::int AS processing,
+        COUNT(CASE WHEN lst.ten IN ('Đã giải quyết', 'DA_GIAI_QUYET') THEN 1 END)::int AS resolved,
+        COUNT(CASE WHEN lst.ten IN ('Đóng', 'DONG') THEN 1 END)::int AS closed,
         COUNT(CASE WHEN (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn' THEN 1 END)::int AS overdue
        FROM phan_anh pa ${joinLatestStatus} ${statWhereSql}`,
       ...statParams,
     );
-    const stats = statRows[0] || { total: 0, resolved: 0, processing: 0, overdue: 0 };
+    const stats = statRows[0] || { total: 0, submitted: 0, processing: 0, resolved: 0, closed: 0, overdue: 0 };
 
     // 2. Lấy dữ liệu danh sách đã lọc kèm phân trang
     const countParams = [...params];
@@ -571,7 +573,16 @@ const PhanAnhRepository = {
         },
         linh_vuc_phan_anh: { select: { ten: true } },
         de_nghi_gia_han_phan_anh: {
-          select: { trang_thai: true },
+          orderBy: { thoi_gian_tao: "desc" },
+          select: {
+            id: true,
+            trang_thai: true,
+            han_ban_dau: true,
+            han_de_xuat_moi: true,
+            ly_do_gia_han: true,
+            thoi_gian_tao: true,
+            thoi_gian_duyet: true,
+          },
         },
       },
     });
