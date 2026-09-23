@@ -5,7 +5,7 @@ const LinhVucPhanAnhRepository = {
   async findByName(ten) {
     return await prisma.linh_vuc_phan_anh.findFirst({
       where: {
-        ten: ten,
+        ten: { equals: ten, mode: "insensitive" },
         is_delete: false,
       },
     });
@@ -154,7 +154,7 @@ const LinhVucPhanAnhRepository = {
   async findByNameExcludingId(id, ten) {
     return await prisma.linh_vuc_phan_anh.findFirst({
       where: {
-        ten: ten,
+        ten: { equals: ten, mode: "insensitive" },
         id: { not: id },
         is_delete: false,
       },
