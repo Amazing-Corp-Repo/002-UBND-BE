@@ -25,13 +25,14 @@ const UserController = {
   },
 
   async getAllUsers(req, res) {
-    const { page, size, isActive, vaiTro, search } = req.validatedQuery;
+    const { page, size, isActive, vaiTro, permission, search } = req.validatedQuery;
     const result = await UserService.getAllUsers(
       parseInt(page),
       parseInt(size),
       isActive,
       vaiTro,
       search,
+      permission,
     );
     return successResponse(
       res,

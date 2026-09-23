@@ -45,13 +45,14 @@ const UserService = {
     return toUserResponse(userUpdated);
   },
 
-  async getAllUsers(page, size, isActive, role, search) {
+  async getAllUsers(page, size, isActive, role, search, permission) {
     const { users, total } = await UserRepository.getAllUsers(
       page,
       size,
       isActive,
       role,
       search,
+      permission,
     );
     const userResponses = users.map((user) => {
       let vai_tro = "";

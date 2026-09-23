@@ -228,5 +228,6 @@ export const GetAllUsersQuery = Joi.object({
     size: Joi.number().integer().min(1).max(100).required(),
     isActive: Joi.boolean().truthy('true').falsy('false').optional(),
     vaiTro: Joi.string().uuid().optional(),
+    permission: Joi.string().trim().max(100).allow('').optional(),
     search: Joi.string().trim().max(255).allow('').optional(),
 });
