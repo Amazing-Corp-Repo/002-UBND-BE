@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import LeaderMeetingRegistrationRepository from "../repositories/leader-meeting-registration.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";

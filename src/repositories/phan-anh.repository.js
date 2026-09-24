@@ -400,9 +400,18 @@ const PhanAnhRepository = {
         ORDER BY id_phan_anh, thoi_gian_tao DESC
       ) lst ON lst.id_phan_anh = pa.id`;
 
-    // 1. Thống kê KPI tổng thể theo phạm vi (lĩnh vực, khu phố, kỳ báo cáo) - không bị thu hẹp bởi filter trạng thái/SLA
+    // 1. Thống kê KPI tổng thể theo phạm vi (lĩnh vực, khu phố, kỳ báo cáo, mức độ, tìm kiếm) - không bị thu hẹp bởi filter trạng thái/SLA
     const statParams = [];
     let statWhereSql = "WHERE 1=1";
+
+    if (!includePendingExtension && normalizedSla !== "PENDING_EXTENSION" && normalizedSla !== "CHO_GIA_HAN" && normalizedSla !== "CHỜ GIA HẠN") {
+      statWhereSql += ` AND NOT EXISTS (
+        SELECT 1 FROM de_nghi_gia_han_phan_anh extension_req
+        WHERE extension_req.id_phan_anh = pa.id
+        AND extension_req.trang_thai = 'PENDING'
+      )`;
+    }
+
     if (Array.isArray(scopedLinhVucIds)) {
       if (scopedLinhVucIds.length === 0) statWhereSql += " AND 1=0";
       else {
@@ -414,6 +423,14 @@ const PhanAnhRepository = {
       statParams.push(idLinhVucPhanAnh);
       statWhereSql += ` AND pa.id_linh_vuc_phan_anh = $${statParams.length}::uuid`;
     }
+    if (mucDo) {
+      statParams.push(mucDo);
+      statWhereSql += ` AND pa.muc_do = $${statParams.length}`;
+    }
+    if (maPhanAnh) {
+      statParams.push(maPhanAnh);
+      statWhereSql += ` AND pa.ma_phan_anh = $${statParams.length}`;
+    }
     if (khuPhoVariants.length > 0) {
       statParams.push(khuPhoVariants);
       statWhereSql += ` AND pa.khu_pho = ANY($${statParams.length})`;
@@ -422,17 +439,23 @@ const PhanAnhRepository = {
       statParams.push(start, end);
       statWhereSql += ` AND pa.thoi_gian_tao >= $${statParams.length - 1} AND pa.thoi_gian_tao <= $${statParams.length}`;
     }
+    if (search) {
+      statParams.push(`%${search}%`);
+      statWhereSql += ` AND (pa.ma_phan_anh ILIKE $${statParams.length} OR pa.tieu_de ILIKE $${statParams.length} OR pa.ten_nguoi_phan_anh ILIKE $${statParams.length} OR pa.sdt_nguoi_phan_anh ILIKE $${statParams.length})`;
+    }
 
     const statRows = await prisma.$queryRawUnsafe(
       `SELECT 
         COUNT(*)::int AS total,
-        COUNT(CASE WHEN lst.ten IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG') THEN 1 END)::int AS resolved,
-        COUNT(CASE WHEN lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'DA_GIAI_QUYET', 'DONG', 'Từ chối', 'TU_CHOI') OR lst.ten IS NULL THEN 1 END)::int AS processing,
+        COUNT(CASE WHEN lst.ten IN ('Đã gửi', 'DA_GUI') OR lst.ten IS NULL THEN 1 END)::int AS submitted,
+        COUNT(CASE WHEN lst.ten IN ('Đang xử lý', 'DANG_XU_LY') THEN 1 END)::int AS processing,
+        COUNT(CASE WHEN lst.ten IN ('Đã giải quyết', 'DA_GIAI_QUYET') THEN 1 END)::int AS resolved,
+        COUNT(CASE WHEN lst.ten IN ('Đóng', 'DONG') THEN 1 END)::int AS closed,
         COUNT(CASE WHEN (pa.ngay_du_kien_hoan_thanh IS NOT NULL AND pa.ngay_du_kien_hoan_thanh < NOW() AND (lst.ten NOT IN ('Đã giải quyết', 'Đóng', 'Từ chối', 'DA_GIAI_QUYET', 'DONG', 'TU_CHOI') OR lst.ten IS NULL)) OR lst.ten = 'Quá hạn' THEN 1 END)::int AS overdue
        FROM phan_anh pa ${joinLatestStatus} ${statWhereSql}`,
       ...statParams,
     );
-    const stats = statRows[0] || { total: 0, resolved: 0, processing: 0, overdue: 0 };
+    const stats = statRows[0] || { total: 0, submitted: 0, processing: 0, resolved: 0, closed: 0, overdue: 0 };
 
     // 2. Lấy dữ liệu danh sách đã lọc kèm phân trang
     const countParams = [...params];
@@ -571,7 +594,16 @@ const PhanAnhRepository = {
         },
         linh_vuc_phan_anh: { select: { ten: true } },
         de_nghi_gia_han_phan_anh: {
-          select: { trang_thai: true },
+          orderBy: { thoi_gian_tao: "desc" },
+          select: {
+            id: true,
+            trang_thai: true,
+            han_ban_dau: true,
+            han_de_xuat_moi: true,
+            ly_do_gia_han: true,
+            thoi_gian_tao: true,
+            thoi_gian_duyet: true,
+          },
         },
       },
     });

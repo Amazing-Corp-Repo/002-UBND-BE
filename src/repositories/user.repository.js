@@ -107,7 +107,7 @@ const UserRepository = {
     });
   },
 
-  async getAllUsers(page, size, isActive, role, search) {
+  async getAllUsers(page, size, isActive, role, search, permission) {
     const activeFilter = toBooleanFilter(isActive);
     const whereBase = {
       is_delete: false,
@@ -136,9 +136,28 @@ const UserRepository = {
         }
       : {};
 
+    const permissionFilter = permission
+      ? {
+          user_roles: {
+            some: {
+              roles: {
+                is_delete: false,
+                is_active: true,
+                role_permissions: {
+                  some: permission.endsWith("_") || !permission.includes("_")
+                    ? { permission_code: { startsWith: permission } }
+                    : { permission_code: permission },
+                },
+              },
+            },
+          },
+        }
+      : {};
+
     const finalWhere = {
       ...whereBase,
       ...roleFilter,
+      ...permissionFilter,
     };
 
     const skip = (page - 1) * size;

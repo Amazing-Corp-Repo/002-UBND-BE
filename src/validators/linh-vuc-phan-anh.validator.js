@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const CreateLinhVucPhanAnhRequest = Joi.object({
-  ten: Joi.string().max(255).required().messages({
+  ten: Joi.string().trim().max(255).required().messages({
     "string.base": `Tên lĩnh vực phản ánh phải là một chuỗi`,
     "string.empty": `Tên lĩnh vực phản ánh không được để trống`,
     "string.max": `Tên lĩnh vực phản ánh không được vượt quá 255 ký tự`,
@@ -29,7 +29,7 @@ export const CreateLinhVucPhanAnhRequest = Joi.object({
 });
 
 export const UpdateLinhVucPhanAnhRequest = Joi.object({
-  ten: Joi.string().max(255).required().messages({
+  ten: Joi.string().trim().max(255).required().messages({
     "string.base": `Tên lĩnh vực phản ánh phải là một chuỗi`,
     "string.empty": `Tên lĩnh vực phản ánh không được để trống`,
     "string.max": `Tên lĩnh vực phản ánh không được vượt quá 255 ký tự`,

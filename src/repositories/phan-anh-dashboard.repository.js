@@ -319,7 +319,7 @@ const PhanAnhDashboardRepository = {
         : 0,
       qua_han: currentSla.overdue,
       khan_cap: currentItems.filter(
-        (item) => item.muc_do === PHAN_ANH_MUC_DO.KHAN_CAP && isOpen(item),
+        (item) => item.muc_do === PHAN_ANH_MUC_DO.KHAN_CAP && (getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DA_GUI || !getLatestStatus(item)?.ten),
       ).length,
       thong_ke_theo_trang_thai: currentStatus,
       thong_ke_theo_khu_pho: thongKeTheoKhuPho,

@@ -2,10 +2,12 @@ import LinhVucPhanAnhRepository from "../repositories/linh-vuc-phan-anh.reposito
 import UserRepository from "../repositories/user.repository.js";
 import { BaseError } from "../utils/base-error.util.js";
 import { createPagination } from "../utils/response.util.js";
-import { appendDeleteSuffixc, capitalizeWords } from "../utils/string.util.js";
+import { appendDeleteSuffixc } from "../utils/string.util.js";
 import MailService from "./mail.service.js";
 import MAIL_TYPE from "../constants/mail.constant.js";
 import env from "../config/environment.config.js";
+
+const normalizeName = (value) => value.trim();
 
 const LinhVucPhanAnhService = {
   // Gửi mail báo cho những người MỚI được phân công quản lý lĩnh vực phản ánh.
@@ -38,7 +40,7 @@ const LinhVucPhanAnhService = {
       throw new BaseError(400, "Danh sách người quản lý không được để trống");
     }
 
-    ten = capitalizeWords(ten);
+    ten = normalizeName(ten);
     const existingLinhVuc = await LinhVucPhanAnhRepository.findByName(ten);
     if (existingLinhVuc) {
       throw new BaseError(409, "Lĩnh vực phản ánh đã tồn tại");
@@ -76,7 +78,7 @@ const LinhVucPhanAnhService = {
       throw new BaseError(400, "Danh sách người quản lý không được để trống");
     }
 
-    ten = capitalizeWords(ten);
+    ten = normalizeName(ten);
     if (id === null || id === undefined) {
       throw new BaseError(400, "ID lĩnh vực phản ánh không được để trống");
     }
