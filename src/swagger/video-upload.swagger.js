@@ -5,7 +5,7 @@ const VideoUploadSwagger = {
         post: {
             tags: ['VideoUpload'],
             summary: 'Tải video phản ánh',
-            description: 'API for uploading videos related to citizen feedback',
+            description: 'Tải video phản ánh theo từng chunk. Tổng dung lượng mỗi video tối đa 300 MB; mỗi request chỉ nhận một chunk video MP4, MOV, AVI hoặc MKV.',
             security: [ { bearerAuth: [] } ],
             requestBody: {
                 required: true,

@@ -1,7 +1,6 @@
 import express from "express";
 import VideoUploadController from "../controllers/video-upload.controller.js";
-import UPLOAD_TYPE from "../constants/upload.constant.js";
-import { createUploader } from "../middlewares/upload.middleware.js";
+import { videoChunkUpload } from "../middlewares/video-chunk-upload.middleware.js";
 import {
   createApiRateLimiter,
   toPositiveInteger,
@@ -30,15 +29,7 @@ const videoUploadRouter = express.Router();
 videoUploadRouter.post(
   "/upload",
   uploadChunkLimiter,
-  createUploader({
-    type: UPLOAD_TYPE.PHAN_ANH,
-    fieldName: "file",
-    maxCount: 1,
-    maxSizeMB: 150,
-    allowed_types: ["video/mp4", "video/mov", "video/avi", "video/mkv"],
-    basePathSegments: ["src", "private", "uploads", "videos"],
-    isPublic: false,
-  }),
+  videoChunkUpload,
   validate(VideoUploadRequest),
   VideoUploadController.uploadVideo
 );

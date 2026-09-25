@@ -1,8 +1,10 @@
 import PhanAnhController from "../controllers/phan-anh.controller.js";
 import PhanAnhExtensionController from "../controllers/phan-anh-extension.controller.js";
 import express from "express";
-import { createUploader } from "../middlewares/upload.middleware.js";
-import UPLOAD_TYPE from "../constants/upload.constant.js";
+import {
+  phanAnhCreateUpload,
+  phanAnhStatusUpdateUpload,
+} from "../middlewares/phan-anh-upload.middleware.js";
 import { audit_logs } from "../middlewares/audit-logs.middleware.js";
 import { AUDIT_LOGS } from "../constants/audit-logs-action.constant.js";
 import { authenticate, authorize, authorizeAny } from "../middlewares/auth.middleware.js";
@@ -43,13 +45,7 @@ const phanAnhRouter = express.Router();
 // API công khai - Tạo phản ánh không cần đăng nhập
 phanAnhRouter.post(
   "/public/create",
-  createUploader({
-    type: UPLOAD_TYPE.PHAN_ANH,
-    fieldName: "file",
-    maxCount: 5,
-    maxSizeMB: 3,
-    allowed_types: ["image/jpeg", "image/png"],
-  }),
+  phanAnhCreateUpload,
   requirePhanAnhImage,
   validate(CreatePhanAnhPublicRequest),
   PhanAnhController.createPhanAnhPublic,
@@ -60,13 +56,7 @@ phanAnhRouter.post(
   "/",
   authenticate,
   authorize([PERMISSION.PA_CREATE]),
-  createUploader({
-    type: UPLOAD_TYPE.PHAN_ANH,
-    fieldName: "file",
-    maxCount: 5,
-    maxSizeMB: 3,
-    allowed_types: ["image/jpeg", "image/png"],
-  }),
+  phanAnhCreateUpload,
   requirePhanAnhImage,
   validate(CreatePhanAnhRequest),
   audit_logs(AUDIT_LOGS.CREATE, PERMISSION_DESC.PA_CREATE),
@@ -244,21 +234,7 @@ phanAnhRouter.put(
   validateParams(PhanAnhIdParams),
   // Cho phép đính kèm ảnh hiện trường khi cập nhật trạng thái (bắt buộc khi "Đã giải quyết").
   // Uploader chạy TRƯỚC validate để multer parse text fields vào req.body + ảnh vào req.files.
-  createUploader({
-    type: UPLOAD_TYPE.PHAN_ANH,
-    fieldName: "file",
-    maxCount: 5,
-    maxSizeMB: 10,
-    allowed_types: [
-      "image/jpeg",
-      "image/png",
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ],
-  }),
+  phanAnhStatusUpdateUpload,
   validate(UpdatePhanAnhStatusRequest),
   audit_logs(AUDIT_LOGS.UPDATE, PERMISSION_DESC.PA_UPDATE_STATUS),
   PhanAnhController.updateStatusPhanAnh,
