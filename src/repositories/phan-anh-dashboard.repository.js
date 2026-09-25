@@ -43,9 +43,18 @@ const PhanAnhDashboardRepository = {
       sdt_nguoi_phan_anh: true,
       linh_vuc_phan_anh: { select: { ten: true } },
       lich_su_trang_thai: {
+        where: {
+          ten: {
+            notIn: [PHAN_ANH_STATUS.DA_GIA_HAN, PHAN_ANH_STATUS.XIN_GIA_HAN],
+          },
+        },
         orderBy: { thoi_gian_tao: "desc" },
         take: 1,
         select: { ten: true, thoi_gian_tao: true },
+      },
+      de_nghi_gia_han_phan_anh: {
+        where: { trang_thai: "PENDING" },
+        select: { id: true },
       },
     };
 
@@ -110,11 +119,24 @@ const PhanAnhDashboardRepository = {
         .filter((phone) => Boolean(phone && phone.trim()))
     ).size;
 
-    const getLatestStatus = (item) => item.lich_su_trang_thai
-      .find((entry) => entry.ten !== PHAN_ANH_STATUS.DA_GIA_HAN) || null;
-    const isResolved = (item) => getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DA_GIAI_QUYET;
-    const isClosed = (item) => getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DONG;
-    const isOpen = (item) => !isResolved(item) && !isClosed(item);
+    const getLatestStatus = (item) => item.lich_su_trang_thai?.[0] || null;
+    const isResolved = (item) => {
+      const st = getLatestStatus(item)?.ten;
+      return st === PHAN_ANH_STATUS.DA_GIAI_QUYET || st === "DA_GIAI_QUYET" || st === "Đã giải quyết";
+    };
+    const isClosed = (item) => {
+      const st = getLatestStatus(item)?.ten;
+      return (
+        st === PHAN_ANH_STATUS.DONG ||
+        st === "DONG" ||
+        st === "Đóng" ||
+        st === PHAN_ANH_STATUS.TU_CHOI ||
+        st === "TU_CHOI" ||
+        st === "Từ chối"
+      );
+    };
+    const isCompleted = (item) => isResolved(item) || isClosed(item);
+    const isOpen = (item) => !isCompleted(item);
 
     const statusCounts = (items) => {
       const result = Object.fromEntries(Object.values(PHAN_ANH_STATUS).map((status) => [status, 0]));
@@ -126,21 +148,42 @@ const PhanAnhDashboardRepository = {
     };
 
     const getSlaCounts = (items, now = new Date()) => {
-      const result = { onTime: 0, soon: 0, overdue: 0 };
+      const result = { onTime: 0, soon: 0, overdue: 0, donDangTre: 0, donChoGiaHan: 0 };
       items.forEach((item) => {
         const latestStatus = getLatestStatus(item);
-        const completedAt = isResolved(item) && latestStatus?.thoi_gian_tao
-          ? latestStatus.thoi_gian_tao
-          : null;
-        const classification = getSlaClassification({
-          createdAt: item.thoi_gian_tao,
-          deadline: item.ngay_du_kien_hoan_thanh,
-          completedAt,
-          now,
-        });
-        if (classification === "overdue") result.overdue += 1;
-        if (classification === "soon") result.soon += 1;
-        if (classification === "onTime") result.onTime += 1;
+        if (!isCompleted(item)) {
+          const isOverdue =
+            (item.ngay_du_kien_hoan_thanh && new Date(item.ngay_du_kien_hoan_thanh) < now) ||
+            latestStatus?.ten === "Quá hạn" ||
+            latestStatus?.ten === PHAN_ANH_STATUS.QUA_HAN;
+
+          if (isOverdue) {
+            result.overdue += 1;
+            if (item.de_nghi_gia_han_phan_anh && item.de_nghi_gia_han_phan_anh.length > 0) {
+              result.donChoGiaHan += 1;
+            } else {
+              result.donDangTre += 1;
+            }
+            return;
+          }
+        }
+
+        if (isCompleted(item)) {
+          result.onTime += 1;
+          return;
+        }
+
+        const due = item.ngay_du_kien_hoan_thanh ? new Date(item.ngay_du_kien_hoan_thanh) : null;
+        const created = item.thoi_gian_tao ? new Date(item.thoi_gian_tao) : null;
+        if (due && created) {
+          const totalDuration = due.getTime() - created.getTime();
+          const remainingDuration = due.getTime() - now.getTime();
+          if (totalDuration > 0 && remainingDuration <= totalDuration * (2 / 3)) {
+            result.soon += 1;
+            return;
+          }
+        }
+        result.onTime += 1;
       });
       return result;
     };
@@ -196,15 +239,12 @@ const PhanAnhDashboardRepository = {
       const date = `${String(dateParts.day).padStart(2, "0")}/${String(dateParts.month).padStart(2, "0")}`;
 
       const latestStatus = getLatestStatus(item);
-      const completedAt = isResolved(item) && latestStatus?.thoi_gian_tao
-        ? latestStatus.thoi_gian_tao
-        : null;
-      const classification = getSlaClassification({
-        createdAt: item.thoi_gian_tao,
-        deadline: item.ngay_du_kien_hoan_thanh,
-        completedAt,
-        now: nowForTrend,
-      });
+      const isItemCompleted = isCompleted(item);
+      const isItemOverdue = !isItemCompleted && (
+        (item.ngay_du_kien_hoan_thanh && new Date(item.ngay_du_kien_hoan_thanh) < nowForTrend) ||
+        latestStatus?.ten === "Quá hạn" ||
+        latestStatus?.ten === PHAN_ANH_STATUS.QUA_HAN
+      );
 
       const entry = trendMap.get(key) || {
         key,
@@ -219,7 +259,7 @@ const PhanAnhDashboardRepository = {
         entry.hoanThanh += 1;
         entry.daGiaiQuyet += 1;
       }
-      if (classification === "overdue") {
+      if (isItemOverdue) {
         entry.quaHan += 1;
       }
       trendMap.set(key, entry);
@@ -257,17 +297,13 @@ const PhanAnhDashboardRepository = {
         entry.processing += 1;
       }
 
-      const completedAt = isResolved(item) && latestStatus?.thoi_gian_tao
-        ? latestStatus.thoi_gian_tao
-        : null;
-      const classification = getSlaClassification({
-        createdAt: item.thoi_gian_tao,
-        deadline: item.ngay_du_kien_hoan_thanh,
-        completedAt,
-        now: new Date(),
-      });
+      const isItemOverdue = !isItemResolved && (
+        (item.ngay_du_kien_hoan_thanh && new Date(item.ngay_du_kien_hoan_thanh) < new Date()) ||
+        latestStatus?.ten === "Quá hạn" ||
+        latestStatus?.ten === PHAN_ANH_STATUS.QUA_HAN
+      );
 
-      if (classification === "overdue") {
+      if (isItemOverdue) {
         entry.overdue += 1;
       } else {
         entry.onTime += 1;
@@ -318,6 +354,8 @@ const PhanAnhDashboardRepository = {
         ? Number(((previousStatus[PHAN_ANH_STATUS.DA_GIAI_QUYET] / previousItems.length) * 100).toFixed(1))
         : 0,
       qua_han: currentSla.overdue,
+      don_dang_tre: currentSla.donDangTre,
+      don_cho_gia_han: currentSla.donChoGiaHan,
       khan_cap: currentItems.filter(
         (item) => item.muc_do === PHAN_ANH_MUC_DO.KHAN_CAP && (getLatestStatus(item)?.ten === PHAN_ANH_STATUS.DA_GUI || !getLatestStatus(item)?.ten),
       ).length,

@@ -17,6 +17,7 @@ import {
   CancelLeaderMeetingRegistrationRequest,
   LeaderMeetingAttachmentParams,
   GetLeaderMeetingAttachmentQuery,
+  GetLeaderMeetingStatsQuery,
   EmptyLeaderMeetingRequest,
 } from "../validators/leader-meeting-registration.validator.js";
 import validateQuery from "../middlewares/validate-query.middleware.js";
@@ -32,6 +33,14 @@ leaderMeetingRegistrationRouter.get(
   authorize([PERMISSION.LMR_GET_ALL]),
   validateQuery(GetLeaderMeetingRegistrationsQuery),
   LeaderMeetingRegistrationController.getManagement
+);
+
+leaderMeetingRegistrationRouter.get(
+  "/statistics",
+  authenticate,
+  authorize([PERMISSION.LMR_GET_ALL, PERMISSION.LMR_GET_DETAIL]),
+  validateQuery(GetLeaderMeetingStatsQuery),
+  LeaderMeetingRegistrationController.getStatistics
 );
 
 leaderMeetingRegistrationRouter.get(

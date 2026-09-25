@@ -163,6 +163,21 @@ export const GetLeaderMeetingRegistrationsQuery = Joi.object({
   "date.range": "Từ ngày không được lớn hơn đến ngày",
 });
 
+export const GetLeaderMeetingStatsQuery = Joi.object({
+  leaderId: Joi.string().uuid().optional().messages({
+    "string.guid": "ID lãnh đạo không hợp lệ",
+  }),
+  fromDate: receptionDateFilter.optional(),
+  toDate: receptionDateFilter.optional(),
+}).custom((value, helpers) => {
+  if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
+    return helpers.error("date.range");
+  }
+  return value;
+}).messages({
+  "date.range": "Từ ngày không được lớn hơn đến ngày",
+});
+
 export const LeaderMeetingRegistrationIdParams = Joi.object({
   id: Joi.string().uuid().required().messages({
     "string.guid": "ID đăng ký gặp lãnh đạo không hợp lệ",
