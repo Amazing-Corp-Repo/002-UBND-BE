@@ -38,6 +38,19 @@ const LeaderMeetingRegistrationController = {
     );
   },
 
+  async getStatistics(req, res) {
+    const data =
+      await LeaderMeetingRegistrationService.getStatistics(
+        req.validatedQuery,
+        req.payload
+      );
+    return successResponse(
+      res,
+      data,
+      "Lấy thống kê số lượng đăng ký gặp lãnh đạo thành công"
+    );
+  },
+
   async getManagementDetail(req, res) {
     const data = await LeaderMeetingRegistrationService.getManagementDetail(
       req.validatedParams.id,

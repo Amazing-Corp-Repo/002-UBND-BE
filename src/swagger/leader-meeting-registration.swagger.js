@@ -302,6 +302,48 @@ const LeaderMeetingRegistrationSwagger = {
       },
     },
   },
+  "/api/leader-meeting-registrations/statistics": {
+    get: {
+      tags: ["LeaderMeetingRegistration"],
+      summary: "Lấy thống kê số lượng đơn đăng ký gặp lãnh đạo theo từng trạng thái",
+      description: "Thống kê số lượng đơn đăng ký gặp lãnh đạo theo các trạng thái (PENDING, APPROVED, IN_PROGRESS, COMPLETED, REJECTED, CANCELED, OVERDUE) và tổng số đơn. Hỗ trợ lọc theo leaderId, fromDate, toDate.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: "leaderId", in: "query", schema: { type: "string", format: "uuid" } },
+        { name: "fromDate", in: "query", schema: { type: "string", format: "date", example: "2026-09-01" } },
+        { name: "toDate", in: "query", schema: { type: "string", format: "date", example: "2026-09-30" } },
+      ],
+      responses: {
+        200: {
+          description: "Lấy thống kê thành công",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      total: { type: "integer", example: 8 },
+                      pending: { type: "integer", example: 2 },
+                      approved: { type: "integer", example: 3 },
+                      inProgress: { type: "integer", example: 1 },
+                      completed: { type: "integer", example: 1 },
+                      rejected: { type: "integer", example: 1 },
+                      canceled: { type: "integer", example: 0 },
+                      overdue: { type: "integer", example: 0 },
+                    },
+                  },
+                  message: { type: "string", example: "Lấy thống kê số lượng đăng ký gặp lãnh đạo thành công" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   "/api/leader-meeting-registrations/{id}": {
     get: {
       tags: ["LeaderMeetingRegistration"],

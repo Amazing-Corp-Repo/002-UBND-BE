@@ -46,6 +46,27 @@ app.use(
 );
 
 app.use(express.json());
+
+// Tự động trim toàn bộ chuỗi trong req.body và req.query
+app.use((req, res, next) => {
+  const trimInPlace = (obj) => {
+    if (!obj || typeof obj !== "object") return;
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (typeof val === "string") {
+        obj[key] = val.trim();
+      } else if (Array.isArray(val)) {
+        obj[key] = val.map((item) => (typeof item === "string" ? item.trim() : item));
+      } else if (val !== null && typeof val === "object" && !(val instanceof Date)) {
+        trimInPlace(val);
+      }
+    }
+  };
+  trimInPlace(req.body);
+  trimInPlace(req.query);
+  next();
+});
+
 app.use(express.static("src/public"));
 
 app.use(

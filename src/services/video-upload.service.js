@@ -6,12 +6,12 @@ import env from "../config/environment.config.js";
 import fs from "fs";
 import path from "path";
 
-const MAX_VIDEO_SIZE_BYTES = 150 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 300 * 1024 * 1024;
 
 const VideoUploadService = {
     async handleUploadChunk(file, idVideo, currentIndex, totalChunks, totalSize) {
         if (totalSize > MAX_VIDEO_SIZE_BYTES) {
-            throw new BaseError(400, "Video không được vượt quá 150 MB");
+            throw new BaseError(400, "Video không được vượt quá 300 MB");
         }
 
         if (totalChunks === 1) {
@@ -19,7 +19,7 @@ const VideoUploadService = {
                 throw new BaseError(400, "Không có tệp tin để tải lên");
             }
             if (file[0].size > MAX_VIDEO_SIZE_BYTES) {
-                throw new BaseError(400, "Video không được vượt quá 150 MB");
+                throw new BaseError(400, "Video không được vượt quá 300 MB");
             }
             const now = new Date();
             const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
@@ -82,7 +82,7 @@ const VideoUploadService = {
             0
         );
         if (uploadedSizeBytes + file[0].size > MAX_VIDEO_SIZE_BYTES) {
-            throw new BaseError(400, "Tổng dung lượng video không được vượt quá 150 MB");
+            throw new BaseError(400, "Tổng dung lượng video không được vượt quá 300 MB");
         }
 
         let existingVideoUpload = await VideoUploadRepository.findVideoUploadById(idVideo);

@@ -167,6 +167,18 @@ const LeaderMeetingRegistrationService = {
     };
   },
 
+  async getStatistics(filters, currentUser) {
+    if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
+      throw new BaseError(400, "Ngày bắt đầu không được sau ngày kết thúc");
+    }
+    const canViewAll = hasPermission(currentUser, PERMISSION.LMR_GET_ALL);
+    const stats = await LeaderMeetingRegistrationRepository.getStatistics({
+      ...filters,
+      leaderId: canViewAll ? (filters.leaderId || undefined) : currentUser.userId,
+    });
+    return stats;
+  },
+
   async getManagementDetail(id, currentUser) {
     const canViewAll = hasPermission(currentUser, PERMISSION.LMR_GET_ALL);
     const registration =

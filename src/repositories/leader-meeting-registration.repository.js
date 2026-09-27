@@ -1,5 +1,5 @@
 import prisma from "../config/database.config.js";
-import { isLeaderMeetingOverdue } from "../utils/leader-meeting-overdue.util.js";
+import { isLeaderMeetingOverdue, getEffectiveLeaderMeetingStatus } from "../utils/leader-meeting-overdue.util.js";
 import { TRANG_THAI_GAP_LANH_DAO_GIU_CHO } from "../constants/trang-thai-gap-lanh-dao.constant.js";
 
 const dailyHoldingStatuses = [
@@ -584,6 +584,89 @@ const LeaderMeetingRegistrationRepository = {
         kich_thuoc: true,
       },
     });
+  },
+
+  async getStatistics({ leaderId, fromDate, toDate } = {}) {
+    const where = {
+      is_active: true,
+      is_delete: false,
+      ngay_hen:
+        fromDate || toDate
+          ? {
+              gte: fromDate ? new Date(fromDate) : undefined,
+              lte: toDate ? new Date(toDate) : undefined,
+            }
+          : undefined,
+      khung_gio_gap_lanh_dao: leaderId
+        ? {
+            lich_gap_lanh_dao: {
+              id_lanh_dao: leaderId,
+            },
+          }
+        : undefined,
+    };
+
+    const items = await prisma.dang_ky_gap_lanh_dao.findMany({
+      where,
+      select: {
+        id: true,
+        trang_thai: true,
+        is_qua_han: true,
+        ngay_hen: true,
+        khung_gio_gap_lanh_dao: {
+          select: { gio_bat_dau: true },
+        },
+      },
+    });
+
+    const now = new Date();
+    let pending = 0;
+    let approved = 0;
+    let inProgress = 0;
+    let completed = 0;
+    let rejected = 0;
+    let canceled = 0;
+    let overdue = 0;
+
+    for (const item of items) {
+      const status = getEffectiveLeaderMeetingStatus(item, now);
+      switch (status) {
+        case "PENDING":
+          pending++;
+          break;
+        case "APPROVED":
+          approved++;
+          break;
+        case "IN_PROGRESS":
+          inProgress++;
+          break;
+        case "COMPLETED":
+          completed++;
+          break;
+        case "REJECTED":
+          rejected++;
+          break;
+        case "CANCELED":
+          canceled++;
+          break;
+        case "OVERDUE":
+          overdue++;
+          break;
+        default:
+          break;
+      }
+    }
+
+    return {
+      total: items.length,
+      pending,
+      approved,
+      inProgress,
+      completed,
+      rejected,
+      canceled,
+      overdue,
+    };
   },
 };
 
